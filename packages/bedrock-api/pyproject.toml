@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bedrock-api"
+version = "0.1.0"
+description = "Reusable FastAPI application platform: grid config, auth, app config, schema catalog"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "pydantic[email]",
+    "pandas",
+    "loguru",
+    "python-dotenv",
+    "slowapi",
+    "passlib[bcrypt]",
+    "python-jose[cryptography]",
+    "httpx",
+    "httpx-oauth",
+]
+
+[project.optional-dependencies]
+postgres = ["psycopg2-binary"]
+dev = ["pytest", "pytest-asyncio"]
+
+[tool.setuptools.packages.find]
+include = ["bedrock*"]
