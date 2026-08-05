@@ -1,0 +1,431 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* ── Self-hosted condensed/tabular numeral face (§S9 — Scoreboard) ──────────
+ * Oswald ships via @fontsource (bundled at build time, no CDN request) and
+ * backs the --font-condensed role used for scoreboard numerals, live stat
+ * headlines, and section labels. */
+@import "@fontsource/oswald/400.css";
+@import "@fontsource/oswald/600.css";
+
+@layer base {
+  /* ── Default theme: Light ──────────────────────────────────────────── */
+  :root {
+    --background: 210 20% 97%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 220 65% 25%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 214 25% 93%;
+    --muted-foreground: 215 16% 50%;
+    --accent: 217 85% 46%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 76% 52%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 22% 88%;
+    --input: 214 22% 88%;
+    --ring: 220 65% 25%;
+    --radius: 0.5rem;
+    /* ── Semantic status tokens ── */
+    --positive: 142 76% 36%;
+    --negative: 0 72% 51%;
+    --warning: 38 92% 50%;
+    --info: 217 91% 60%;
+    --neutral: 215 16% 50%;
+    /* ── Scoreboard tokens (§S9) ── */
+    --scoreboard-accent: 38 92% 55%;
+    --live-pulse: 330 85% 55%;
+    /* ── Chart-role tokens (§S9) — aliased to existing semantic tokens rather
+     * than duplicated raw values, so per-theme distinctness comes for free. ── */
+    --chart-1: var(--primary);
+    --chart-2: var(--scoreboard-accent);
+    --chart-3: var(--positive);
+  }
+
+  /* ── the dark theme dark theme ───────────────────────────────────────────────── */
+  .dark {
+    --background: 220 40% 8%;
+    --foreground: 210 35% 94%;
+    --card: 220 35% 12%;
+    --card-foreground: 210 35% 94%;
+    --popover: 220 35% 12%;
+    --popover-foreground: 210 35% 94%;
+    --primary: 214 82% 56%;
+    --primary-foreground: 220 40% 8%;
+    --secondary: 220 28% 18%;
+    --secondary-foreground: 210 35% 94%;
+    --muted: 220 26% 16%;
+    --muted-foreground: 215 18% 62%;
+    --accent: 216 85% 60%;
+    --accent-foreground: 220 40% 8%;
+    --destructive: 0 60% 44%;
+    --destructive-foreground: 210 35% 94%;
+    --border: 220 26% 22%;
+    --input: 220 26% 22%;
+    --ring: 214 82% 56%;
+    /* ── Semantic status tokens (lighter for dark bg) ── */
+    --positive: 142 71% 45%;
+    --negative: 0 91% 71%;
+    --warning: 38 92% 60%;
+    --info: 217 91% 70%;
+    --neutral: 215 18% 62%;
+    /* ── Scoreboard tokens (§S9) ── */
+    --scoreboard-accent: 38 92% 62%;
+    --live-pulse: 330 88% 66%;
+    /* ── Chart-role tokens (§S9) — aliased, see :root above ── */
+    --chart-1: var(--primary);
+    --chart-2: var(--scoreboard-accent);
+    --chart-3: var(--positive);
+  }
+}
+
+@theme {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  /* ── Semantic status tokens ── */
+  --color-positive: hsl(var(--positive));
+  --color-negative: hsl(var(--negative));
+  --color-warning: hsl(var(--warning));
+  --color-info: hsl(var(--info));
+  --color-neutral: hsl(var(--neutral));
+
+  /* ── Scoreboard tokens (§S9) ── */
+  --color-scoreboard-accent: hsl(var(--scoreboard-accent));
+  --color-live-pulse: hsl(var(--live-pulse));
+
+  /* ── Chart-role tokens (§S9) ── */
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* ── Condensed/tabular numeral font role (§S9) — self-hosted via @fontsource/oswald ── */
+  --font-condensed: "Oswald", "Arial Narrow", sans-serif;
+
+  /* ── Scoreboard breakpoints (§S9) — overrides Tailwind defaults to match the
+   * redesign's tested widths (phone / tablet / sidebar-overlay / desktop / wide). ── */
+  --breakpoint-sm: 390px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1440px;
+  --breakpoint-2xl: 1920px;
+
+  /* ── Elevation levels (§S9) — e0 flush through e4 deepest-floating. ── */
+  --shadow-e0: none;
+  --shadow-e1: 0 1px 2px hsl(var(--foreground) / 0.06), 0 1px 1px hsl(var(--foreground) / 0.04);
+  --shadow-e2: 0 2px 6px hsl(var(--foreground) / 0.08), 0 1px 2px hsl(var(--foreground) / 0.06);
+  --shadow-e3: 0 8px 24px hsl(var(--foreground) / 0.12), 0 2px 6px hsl(var(--foreground) / 0.08);
+  --shadow-e4: 0 16px 48px hsl(var(--foreground) / 0.18), 0 4px 12px hsl(var(--foreground) / 0.1);
+}
+
+@variant dark (&:where(.dark, .dark *));
+
+/* ── Structural scale tokens (§S9) ────────────────────────────────────────────
+ * Spacing, z-index, and motion timing are theme-invariant — defined once here,
+ * never mirrored into ThemeContext.tsx's per-theme cssVars (that mechanism is
+ * for color only). Not Tailwind-namespaced (no auto-generated utilities);
+ * consume via arbitrary-value syntax, e.g. `p-[var(--space-md)]`,
+ * `z-[var(--z-modal)]`. */
+:root {
+  /* Spacing scale — 4px-rounded, semantic sizes */
+  --space-3xs: 0.125rem; /* 2px */
+  --space-2xs: 0.25rem;  /* 4px */
+  --space-xs: 0.5rem;    /* 8px */
+  --space-sm: 0.75rem;   /* 12px */
+  --space-md: 1rem;      /* 16px */
+  --space-lg: 1.5rem;    /* 24px */
+  --space-xl: 2rem;      /* 32px */
+  --space-2xl: 3rem;     /* 48px */
+  --space-3xl: 4rem;     /* 64px */
+  --space-4xl: 6rem;     /* 96px */
+
+  /* Z-index scale — app-level stacking layers */
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 1100;
+  --z-overlay: 1200;
+  --z-modal: 1300;
+  --z-popover: 1400;
+  --z-toast: 1500;
+  --z-tooltip: 1600;
+
+  /* Motion — durations and easings, gated by prefers-reduced-motion at the
+   * point of use (see .animate-live-pulse below and §S9 Motion). */
+  --motion-fast: 120ms;
+  --motion-base: 200ms;
+  --motion-slow: 320ms;
+  --motion-stagger: 60ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-emphasized: cubic-bezier(0.3, 0, 0.1, 1);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground transition-colors duration-200;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Thin, themed scrollbars on WebKit */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  /* Themed text selection */
+  ::selection {
+    background: hsl(var(--primary) / 0.2);
+    color: hsl(var(--foreground));
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Scoreboard numeral + live-cell motion mechanics (§S9)
+ *
+ * `.tabular-nums` is intentionally unlayered (not inside @layer utilities) so
+ * it always wins over Tailwind's own generated `tabular-nums` utility (which
+ * only sets font-variant-numeric) — ours additionally swaps in the
+ * self-hosted condensed face so stat digits align on a fixed-width grid.
+ * ────────────────────────────────────────────────────────────────────────── */
+.tabular-nums {
+  font-family: var(--font-condensed);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: 0.01em;
+}
+
+@keyframes live-pulse-flash {
+  0%,
+  100% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: hsl(var(--live-pulse) / 0.18);
+  }
+}
+
+.animate-live-pulse {
+  animation: live-pulse-flash 1.1s var(--ease-standard) 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-live-pulse {
+    animation: none;
+    background-color: hsl(var(--live-pulse) / 0.18);
+  }
+}
+
+/* Page-load stagger (§S9 --motion-stagger) — sibling cards fade/slide in with
+ * an increasing per-item delay. Consumers only add this class when
+ * `useMediaQuery("(prefers-reduced-motion: reduce)")` is false, so the gate
+ * is a JS conditional (component-testable) rather than a CSS @media block —
+ * unlike .animate-live-pulse above, whose static end-state fallback isn't
+ * needed here since "no animation" already renders at full opacity. */
+@keyframes stagger-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stagger-fade-in > * {
+  animation: stagger-fade-in var(--motion-base) var(--ease-standard) both;
+}
+
+.stagger-fade-in > *:nth-child(1) { animation-delay: calc(var(--motion-stagger) * 0); }
+.stagger-fade-in > *:nth-child(2) { animation-delay: calc(var(--motion-stagger) * 1); }
+.stagger-fade-in > *:nth-child(3) { animation-delay: calc(var(--motion-stagger) * 2); }
+.stagger-fade-in > *:nth-child(4) { animation-delay: calc(var(--motion-stagger) * 3); }
+.stagger-fade-in > *:nth-child(5) { animation-delay: calc(var(--motion-stagger) * 4); }
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Swagger UI theme alignment (issue #148 — P4.7)
+ *
+ * The embedded swagger-ui-react widget (Admin → Health → Spec) ships an opaque
+ * light theme with hard-coded whites and its own typography. These overrides
+ * repaint its surface, text, and controls with the platform design tokens so
+ * it reads correctly in both the light (the light theme) and dark (the dark theme)
+ * themes instead of flashing an unreadable white panel.
+ * ────────────────────────────────────────────────────────────────────────── */
+.swagger-ui-theme .swagger-ui,
+.swagger-ui-theme .swagger-ui .info .title,
+.swagger-ui-theme .swagger-ui .opblock-tag,
+.swagger-ui-theme .swagger-ui .opblock .opblock-summary-path,
+.swagger-ui-theme .swagger-ui .opblock .opblock-summary-description,
+.swagger-ui-theme .swagger-ui table thead tr td,
+.swagger-ui-theme .swagger-ui table thead tr th,
+.swagger-ui-theme .swagger-ui .parameter__name,
+.swagger-ui-theme .swagger-ui .response-col_status,
+.swagger-ui-theme .swagger-ui .model,
+.swagger-ui-theme .swagger-ui .model-title {
+  color: hsl(var(--foreground));
+}
+
+.swagger-ui-theme .swagger-ui {
+  background: transparent;
+  font-family: inherit;
+}
+
+.swagger-ui-theme .swagger-ui .info,
+.swagger-ui-theme .swagger-ui .info .description,
+.swagger-ui-theme .swagger-ui .info li,
+.swagger-ui-theme .swagger-ui .info p,
+.swagger-ui-theme .swagger-ui .opblock-description-wrapper p,
+.swagger-ui-theme .swagger-ui .parameter__type,
+.swagger-ui-theme .swagger-ui .parameter__in,
+.swagger-ui-theme .swagger-ui .tab li,
+.swagger-ui-theme .swagger-ui label {
+  color: hsl(var(--muted-foreground));
+}
+
+.swagger-ui-theme .swagger-ui .scheme-container,
+.swagger-ui-theme .swagger-ui .opblock .opblock-section-header {
+  background: hsl(var(--muted) / 0.4);
+  box-shadow: none;
+}
+
+.swagger-ui-theme .swagger-ui .opblock {
+  background: hsl(var(--muted) / 0.2);
+  border-color: hsl(var(--border));
+  box-shadow: none;
+}
+
+.swagger-ui-theme .swagger-ui .opblock .opblock-summary {
+  border-color: hsl(var(--border));
+}
+
+.swagger-ui-theme .swagger-ui section.models,
+.swagger-ui-theme .swagger-ui section.models .model-container {
+  background: hsl(var(--muted) / 0.2);
+  border-color: hsl(var(--border));
+}
+
+.swagger-ui-theme .swagger-ui input[type="text"],
+.swagger-ui-theme .swagger-ui input[type="password"],
+.swagger-ui-theme .swagger-ui input[type="search"],
+.swagger-ui-theme .swagger-ui input[type="email"],
+.swagger-ui-theme .swagger-ui textarea,
+.swagger-ui-theme .swagger-ui select {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border));
+}
+
+/* Neutralise the SVG arrow/expander tint so it tracks the theme foreground. */
+.swagger-ui-theme .swagger-ui .opblock-summary-control svg,
+.swagger-ui-theme .swagger-ui .expand-operation svg,
+.swagger-ui-theme .swagger-ui .model-toggle::after {
+  fill: hsl(var(--muted-foreground));
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+ * Print layout (issue #139 — P4.8)
+ *
+ * Strip the interactive application shell so tables and reports rasterize
+ * cleanly to physical paper / static PDF without horizontal clipping. Every
+ * structural navigation node is purged; the data canvas is re-scaled to the
+ * full printable width so no column cells are truncated. The print trigger is
+ * config-driven per grid (app_grid_settings.allow_print) and lives in the
+ * unified GridHeader; these rules define what the resulting page looks like.
+ * ────────────────────────────────────────────────────────────────────────── */
+@media print {
+  /* Purge the structural shell: sidebar, top header bar, footer, and any
+   * ad-hoc filter toolbars / pagination arrays. */
+  .app-sidebar,
+  .app-header,
+  .app-footer,
+  .page-toolbar,
+  .grid-pagination,
+  .no-print,
+  [data-print-hide="true"] {
+    display: none !important;
+  }
+
+  /* Collapse the sidebar offset so the main column reclaims the full width. */
+  .app-main-column {
+    margin-left: 0 !important;
+    padding-right: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Re-calibrate the page canvas to track 100% of the printable viewport. */
+  html,
+  body {
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  main {
+    overflow: visible !important;
+  }
+
+  main > div {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Keep tabular rows and summary cards intact across page boundaries. */
+  table {
+    width: 100% !important;
+    break-inside: auto;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tr,
+  .break-inside-avoid {
+    break-inside: avoid;
+  }
+
+  .break-after-page {
+    break-after: page;
+  }
+}
