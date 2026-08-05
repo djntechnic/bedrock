@@ -40,6 +40,10 @@ IMPORT_RE = re.compile(r"""(['"])(@/[^'"]+)\1""")
 FORBIDDEN = ("components/domain/", "api/rankingsApi", "hooks/useAdminDomain",
              "hooks/useSearch", "components/TeamLogo", "components/PlayerHeadshot")
 
+#: Package-owned files that must survive a rebuild. `index.ts` is the public
+#: API contract and has no MLBTracker counterpart — it is written by hand.
+PRESERVE = ("index.ts",)
+
 
 def compute_closure(src: pathlib.Path) -> set[str]:
     import collections
@@ -105,6 +109,8 @@ def main() -> int:
         return 0
 
     dst_root = args.out / "src"
+    kept = {rel: (dst_root / rel).read_text(encoding="utf-8")
+            for rel in PRESERVE if (dst_root / rel).exists()}
     if dst_root.exists():
         shutil.rmtree(dst_root)
 
@@ -132,7 +138,12 @@ def main() -> int:
         encoding="utf-8",
     )
 
-    print(f"wrote {len(files)} modules + tokens.css to {dst_root}")
+    for rel, text in kept.items():
+        (dst_root / rel).parent.mkdir(parents=True, exist_ok=True)
+        (dst_root / rel).write_text(text, encoding="utf-8")
+
+    print(f"wrote {len(files)} modules + tokens.css to {dst_root}; "
+          f"preserved {len(kept)} package-owned")
     return 0
 
 
