@@ -52,4 +52,23 @@ class Views:
 
 
 class Indexes:
-    """Platform-owned indexes, created by the baseline migration."""
+    """Platform-owned indexes, created by the baseline schema."""
+
+    IDX_AUTH_ACTIVITY_TS: Final = "idx_auth_activity_ts"
+    IDX_AUTH_ACTIVITY_TYPE: Final = "idx_auth_activity_type"
+    IDX_AUTH_ACTIVITY_USER: Final = "idx_auth_activity_user"
+    IDX_AUTH_SESSIONS_USER: Final = "idx_auth_sessions_user"
+    IDX_LOG_ACTIVITY_EVENT_TYPE_TS: Final = "idx_log_activity_event_type_ts"
+    IDX_LOG_ACTIVITY_USER_ID: Final = "idx_log_activity_user_id"
+
+
+ALL_TABLES: Final = frozenset(v for k, v in vars(Tables).items()
+                              if not k.startswith("_") and isinstance(v, str))
+ALL_VIEWS: Final = frozenset(v for k, v in vars(Views).items()
+                             if not k.startswith("_") and isinstance(v, str))
+ALL_INDEXES: Final = frozenset(v for k, v in vars(Indexes).items()
+                               if not k.startswith("_") and isinstance(v, str))
+ALL_OBJECTS: Final = ALL_TABLES | ALL_VIEWS | ALL_INDEXES
+
+# Tables scheduled for removal — callers should migrate off these.
+DEPRECATED: Final[frozenset[str]] = frozenset([])
