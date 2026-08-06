@@ -8,7 +8,7 @@ from bedrock.services import user_service as _us
 from bedrock.services import auth_activity_service as _audit
 from bedrock.services import admin_users_service as _admin_users
 from bedrock.schemas.admin import (
-    AdminKpiSchema, DatabaseTableSchema, DatabaseSummarySchema,
+    DatabaseTableSchema, DatabaseSummarySchema,
     ConfigSettingSchema, ConfigCreateSchema, GridSettingSchema, GridColumnSettingSchema,
     ExportLogSchema, ExportRunSchema,
     ActivityLogSchema, SyncRunSchema, SyncStatusSchema

@@ -1,6 +1,6 @@
 """
 Module:  db_health.py
-Layer:   api/core
+Layer:   bedrock/core
 Desc:    Boot-time health check for the SQLite database. Guards against two
          silent-failure modes:
 
@@ -14,7 +14,7 @@ Desc:    Boot-time health check for the SQLite database. Guards against two
          Both conditions raise `DatabaseHealthError` from `lifespan()` so
          the app fails fast rather than serving misleading responses.
 
-         Set `MLBTRACKER_ALLOW_EMPTY_DB=1` to downgrade the row-count guard
+         Set `BEDROCK_ALLOW_EMPTY_DB=1` to downgrade the row-count guard
          to a warning — required for CI seed-fixture runs and fresh dev
          checkouts before the first data import.
 """
@@ -106,7 +106,7 @@ def assert_database_healthy() -> DatabaseHealthReport:
     Raises `DatabaseHealthError` when:
       - `PRAGMA integrity_check` does not return `ok`; OR
       - any table the application registered as canonical is empty AND
-        `MLBTRACKER_ALLOW_EMPTY_DB` is not truthy.
+        `BEDROCK_ALLOW_EMPTY_DB` is not truthy.
 
     Otherwise returns the report and logs a summary.
     """
@@ -119,15 +119,15 @@ def assert_database_healthy() -> DatabaseHealthReport:
         )
 
     if report.empty_tables:
-        allow_empty = os.environ.get("MLBTRACKER_ALLOW_EMPTY_DB", "").lower() in ("1", "true", "yes")
+        allow_empty = os.environ.get("BEDROCK_ALLOW_EMPTY_DB", "").lower() in ("1", "true", "yes")
         if not allow_empty:
             raise DatabaseHealthError(
                 f"Canonical tables empty: {list(report.empty_tables)}. "
                 "The database appears to have been rebuilt without a data restore. "
-                "Restore from a backup or set MLBTRACKER_ALLOW_EMPTY_DB=1 to boot anyway."
+                "Restore from a backup or set BEDROCK_ALLOW_EMPTY_DB=1 to boot anyway."
             )
         logger.warning(
-            "canonical tables empty (%s) — allowed via MLBTRACKER_ALLOW_EMPTY_DB.",
+            "canonical tables empty (%s) — allowed via BEDROCK_ALLOW_EMPTY_DB.",
             list(report.empty_tables),
         )
 

@@ -164,13 +164,6 @@ class ExportRunSchema(BaseModel):
     exported_by: str
     model_config = {"from_attributes": True}
 
-class AdminKpiSchema(BaseModel):
-    """Schema for high-level system health metrics shown in Admin Console."""
-    users: int = 1
-    players: int = 0
-    stat_seasons: int = 0
-    last_sync: Optional[str] = None
-
 class DatabaseTableSchema(BaseModel):
     """Schema for database table inventory and row count summary."""
     table_name: str
@@ -246,17 +239,4 @@ class UiQueryConfigSchema(BaseModel):
     description: Optional[str] = None
     modified_at: Optional[str] = None
     modified_by: str = "Admin"
-    model_config = {"from_attributes": True}
-
-
-class PlayerAliasSchema(BaseModel):
-    alias_id: Optional[int] = None
-    player_id: int
-    alias: str
-    alias_raw: str
-    alias_type: str = "manual"
-    source: str = "manual"
-    is_primary: int = 0
-    notes: Optional[str] = None
-    modified_at: Optional[str] = None
     model_config = {"from_attributes": True}

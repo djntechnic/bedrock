@@ -37,8 +37,11 @@ _DEFAULT_SCOPES = ["openid", "email", "profile"]
 
 from dotenv import load_dotenv
 
-project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-load_dotenv(os.path.join(project_root, ".env"), override=True)
+from bedrock.core.paths import app_path
+
+# OAuth client secrets live in the application's .env, not in a directory
+# derived from this file — see bedrock.core.paths for why.
+load_dotenv(app_path(".env"), override=True)
 
 
 def _cfg(key: str, default: str | None = None) -> str | None:

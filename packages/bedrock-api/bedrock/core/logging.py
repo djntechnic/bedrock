@@ -1,6 +1,6 @@
 """
 Module:  logging.py
-Layer:   api/core
+Layer:   bedrock/core
 Desc:    Centralized backend logging bootstrapper using Loguru.
 """
 import os
@@ -9,9 +9,14 @@ import logging
 from loguru import logger
 from dotenv import load_dotenv
 
-# Ensure environment variables from .env are loaded before initialization
-project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-load_dotenv(os.path.join(project_root, ".env"), override=True)
+from bedrock.core.paths import APP_ROOT, app_path
+
+# Ensure environment variables from .env are loaded before initialization.
+# `bedrock.core.config` does this too, but logging is deliberately importable
+# without pulling in the database layer, so it repeats the load rather than
+# depending on import order.
+project_root = APP_ROOT
+load_dotenv(app_path(".env"), override=True)
 
 def _backend_log_format(show_source: bool) -> str:
     """

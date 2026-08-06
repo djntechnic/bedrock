@@ -1,6 +1,6 @@
 """
 Module:  migrations.py
-Layer:   api/core
+Layer:   bedrock/core
 Desc:    Versioned schema migration runner. On startup it ensures a
          `sys_schema_migrations` ledger table exists (auto-renaming the
          legacy `schema_migrations` table if found — §S7 PR-6), then applies
@@ -10,7 +10,7 @@ Desc:    Versioned schema migration runner. On startup it ensures a
          Migration sources, applied in this order:
            1. Inline ADD COLUMN migrations (`_ADD_COLUMN_MIGRATIONS`).
            2. Inline raw SQL migrations (`_RAW_MIGRATIONS`).
-           3. On-disk `.sql` files in `api/core/migrations/`, sorted by filename.
+           3. On-disk `.sql` files in `MIGRATIONS_DIR`, sorted by filename.
 
          Each migration runs in its own try/except. Non-critical failures are
          logged and skipped so a single bad migration never crashes startup;
@@ -23,12 +23,19 @@ import glob
 import logging
 
 from bedrock.core.database import db
+from bedrock.core.paths import resolve_app_path
 from bedrock.core.schema_catalog import Tables as T
 
 logger = logging.getLogger(__name__)
 
-# Directory holding versioned .sql migration files (e.g. 001_*.sql).
-MIGRATIONS_DIR = os.path.join(os.path.dirname(__file__), "migrations")
+#: Directory holding the application's versioned .sql migration files (e.g.
+#: 001_*.sql). These belong to the app, not the runner, so the directory is
+#: resolved against the app root — pointing it inside the installed package
+#: would look for an application's schema history in site-packages. Set
+#: `BEDROCK_MIGRATIONS_DIR` to relocate it; a missing directory is valid and
+#: simply means the app has no on-disk migrations.
+MIGRATIONS_DIR = resolve_app_path(
+    os.environ.get("BEDROCK_MIGRATIONS_DIR"), "migrations")
 
 # ── Migration content (framework boundary) ───────────────────────────────────
 # The inline ADD COLUMN and raw-SQL migrations are the host application's

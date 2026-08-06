@@ -600,7 +600,7 @@ def delete_grid_column_service(*, grid_id: str, column_id: str) -> dict:
     return {"message": f"Column {column_id} deleted"}
 
 
-# ─── Teams CRUD (Phase 5.f) ──────────────────────────────────────────────────
+# ─── Export history ──────────────────────────────────────────────────────────
 
 def list_export_history_service(*, limit: int = 100) -> list[dict]:
     """Return recent export history rows, newest first."""

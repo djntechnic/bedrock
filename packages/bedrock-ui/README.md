@@ -43,10 +43,10 @@ components. `:root` is the light theme, `.dark` the dark one.
 
 ## Extension points
 
-The package is domain-free by construction: an import-closure check
-(`tools/closure_ts.py`) fails the build if a platform module reaches
-application code. Anything app-specific arrives through a registry, registered
-at boot as an import side-effect:
+The package's file set was derived as an import closure of the platform's
+entry points, so no module here can reach application code. Anything
+app-specific arrives through a registry, registered at boot as an import
+side-effect:
 
 | Registry | What the app supplies |
 | --- | --- |
@@ -63,14 +63,12 @@ at boot as an import side-effect:
 `src/index.ts` is the contract. Deep imports resolve but are unsupported — if
 you need one, it belongs in the barrel.
 
-## Rebuilding from MLBTracker
+## Provenance
 
-Until MLBTracker consumes the package, its `frontend/src` remains the source
-of truth:
-
-```bash
-python tools/extract_ui_from_mlbtracker.py --mlbtracker ../MLBTracker
-```
-
-The file set is computed, not listed, so a platform module that grows a
-domain import fails the run rather than dragging the domain module along.
+These files were extracted from MLBTracker by computing the transitive import
+closure of the platform's entry points — a list nobody wrote, so nothing could
+be left off it by accident. The extraction scripts lived in `tools/` through
+v0.1.0 and were removed once MLBTracker began consuming the package: with the
+app downstream, re-deriving these files *from* the app is backwards, and a
+re-run would silently revert any fix made here. They remain in git history if
+the closure ever needs recomputing.
