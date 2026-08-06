@@ -45,6 +45,12 @@ application root the moment it shipped as a library.
 
 ### Added
 
+- **The 19 shadcn UI primitives and both loggers are exported from the
+  barrel.** They shipped in the package from v0.1.0 but `index.ts` never
+  re-exported them, so the only way to reach a `Button` was a deep import the
+  README calls unsupported. Found by migrating MLBTracker's frontend: 17 of
+  the 35 platform modules it imports were unreachable through the contract.
+
 - `tests/test_paths.py` — 18 tests. Alongside the resolution cases it asserts
   the negative directly: no bedrock path may resolve inside the package, and
   no string *value* in the package may name a specific application. That
