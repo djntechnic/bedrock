@@ -198,3 +198,55 @@ class TestPackageIsDomainFree:
                     offenders.append(
                         f"{path.relative_to(PACKAGE_DIR)}:{lineno}: {value!r}")
         assert not offenders, "\n".join(offenders)
+
+
+@pytest.fixture(autouse=True)
+def isolated_schema_objects():
+    """Save, clear and restore the app-object registration around each test.
+
+    `__clear_schema_objects` is name-mangled if referenced from inside a class
+    body, so the reset lives here — the same shape db_health's canonical-table
+    hook is driven with.
+    """
+    from bedrock.core import schema_drift
+
+    saved = schema_drift.registered_schema_objects()
+    schema_drift.__clear_schema_objects()
+    yield
+    schema_drift.register_schema_objects(*saved)
+
+
+class TestSchemaDriftIsComposable:
+    """The drift check must span both halves of the schema.
+
+    `check_schema_drift()` originally diffed the live database against the
+    platform catalog alone. That was correct while the platform *was* the
+    application. Once an app owns tables of its own, the same code reports
+    every one of them as an unexpected object — turning a signal into a wall
+    of noise nobody reads, which is worse than having no check.
+    """
+
+    def test_platform_objects_are_expected_with_nothing_registered(self):
+        from bedrock.core.schema_catalog import ALL_OBJECTS
+        from bedrock.core.schema_drift import expected_objects
+
+        assert expected_objects() == frozenset(ALL_OBJECTS)
+
+    def test_registered_app_objects_join_the_expected_set(self):
+        from bedrock.core.schema_catalog import ALL_OBJECTS
+        from bedrock.core.schema_drift import (expected_objects,
+                                               register_schema_objects)
+
+        register_schema_objects("players", "teams", "v_players_visible")
+        assert expected_objects() == frozenset(ALL_OBJECTS) | {
+            "players", "teams", "v_players_visible"}
+
+    def test_registered_objects_are_not_reported_as_drift(self, monkeypatch):
+        from bedrock.core import schema_drift
+
+        monkeypatch.setattr(schema_drift, "_fetch_live_names",
+                            lambda: set(schema_drift.ALL_OBJECTS) | {"players"})
+
+        assert "players" in schema_drift.check_schema_drift().extra
+        schema_drift.register_schema_objects("players")
+        assert schema_drift.check_schema_drift().clean
