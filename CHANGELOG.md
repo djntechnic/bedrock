@@ -20,6 +20,12 @@ application root the moment it shipped as a library.
   `<APP_ROOT>/migrations`, overridable with `BEDROCK_MIGRATIONS_DIR`. It
   previously resolved inside the package, so an application's schema history
   was looked for in site-packages and silently found to be empty.
+- **The schema-drift check spans both halves of the schema.**
+  `check_schema_drift()` diffed the live database against the platform
+  catalog alone — correct while the platform was the application, and pure
+  noise once an app owns tables of its own, which are all reported as
+  unknown objects. New `register_schema_objects()` takes the app's half;
+  `expected_objects()` is the union. Registering nothing stays valid.
 - **The SQLite default is no longer another app's database file.**
   `SQLITE_DB_PATH` (env, relative values resolved against `APP_ROOT`) with a
   default of `<DATA_DIR>/app.db`, and `BEDROCK_DATA_DIR` to relocate the data
@@ -39,7 +45,7 @@ application root the moment it shipped as a library.
 
 ### Added
 
-- `tests/test_paths.py` — 15 tests. Alongside the resolution cases it asserts
+- `tests/test_paths.py` — 18 tests. Alongside the resolution cases it asserts
   the negative directly: no bedrock path may resolve inside the package, and
   no string *value* in the package may name a specific application. That
   second check exists because the file set is an import closure, and a
