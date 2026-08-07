@@ -5,6 +5,25 @@
 Plan F0 and F1 — the extension-point convention, and the first capability built
 on it.
 
+### Added — F1, the pages the links land on
+
+- **`SetPasswordPage`, `ForgotPasswordPage`, `VerifyEmailPage`** in
+  `bedrock-ui`, plus `AUTH_FLOW_PATHS`, which the backend's link builder and
+  the app's router both read. Until now the emailed links pointed at routes no
+  package provided, so F1 was complete over the API and unusable in a browser.
+  All three are anonymous by construction — someone who has forgotten their
+  password cannot be asked to sign in first. One component serves
+  `/accept-invite` and `/reset-password` because one endpoint serves both;
+  `mode` changes the copy and nothing else.
+- **A test runner for `bedrock-ui`.** The package had `tsc --noEmit` and
+  nothing else — a check that tells you a prop is misspelled and nothing about
+  whether a form submits. Vitest + Testing Library, wired into CI ahead of the
+  type check, with 35 tests over the new flows. It earned itself immediately:
+  the StrictMode case caught `VerifyEmailPage` hanging on "Verifying…" forever
+  in development, because the conventional `let cancelled = false` cleanup
+  cancels the first mount's in-flight response while the single-use guard
+  suppresses the second mount's request.
+
 ### Added — F1, email delivery
 
 Verified absent before this: no SMTP, SendGrid, Mailgun, SES or Postmark

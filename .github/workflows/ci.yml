@@ -25,18 +25,26 @@ jobs:
         run: pytest
 
   frontend:
-    name: bedrock-ui (tsc)
+    name: bedrock-ui (vitest + tsc)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - name: Install peer dependencies
-        # The package ships source and declares only peers, so CI installs
-        # them directly to type-check against the versions consumers get.
-        # Note the absence of --legacy-peer-deps: it makes npm skip the
-        # install entirely and the type check then passes on missing modules.
-        run: npm install --no-save $(node -p "Object.entries(require('./package.json').peerDependencies).map(([k,v])=>k+'@'+v).join(' ')") typescript @types/react @types/react-dom vite
+      - name: Install
+        # The package ships source and declares only peers. npm 7+ installs
+        # peerDependencies alongside devDependencies, so a plain `npm install`
+        # now gets both — the manual peer install this replaced predates the
+        # test stack being declared at all.
+        #
+        # Note the absence of --legacy-peer-deps: it makes npm skip the peer
+        # install entirely, and both the type check and the tests then pass on
+        # modules that are not there.
+        run: npm install --no-audit --no-fund
+      - name: Test
+        run: npm test
       - name: Type check
-        run: npx tsc --noEmit -p packages/bedrock-ui/tsconfig.json
+        # After the tests, so a genuine failure is reported rather than a
+        # missing matcher type on a test file.
+        run: npm run typecheck

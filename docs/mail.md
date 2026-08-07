@@ -146,12 +146,49 @@ or leave it — the table is small and not load-bearing.
 
 ---
 
+## The pages the links land on
+
+`@djntechnic/bedrock-ui` ships the three pages, and the paths are **fixed by the
+platform** — `bedrock.mail.service` builds every link from the same constants,
+so an app that mounts them elsewhere breaks links already sitting in inboxes,
+where no deploy can reach them. Wire the router to `AUTH_FLOW_PATHS`:
+
+```tsx
+import {
+  AUTH_FLOW_PATHS,
+  ForgotPasswordPage,
+  SetPasswordPage,
+  VerifyEmailPage,
+} from "@djntechnic/bedrock-ui";
+
+<Route path={AUTH_FLOW_PATHS.forgotPassword} element={<ForgotPasswordPage />} />
+<Route path={AUTH_FLOW_PATHS.resetPassword} element={<SetPasswordPage mode="reset" />} />
+<Route path={AUTH_FLOW_PATHS.acceptInvite} element={<SetPasswordPage mode="invite" />} />
+<Route path={AUTH_FLOW_PATHS.verifyEmail} element={<VerifyEmailPage />} />
+```
+
+All four are **anonymous** — outside `<ProtectedRoute>`, and they must stay
+there. Someone who has forgotten their password cannot be asked to sign in
+first, an invited user has no password to sign in with, and a verification link
+is opened from a mail client that may not be the browser holding the session.
+
+`SetPasswordPage` is one component for two routes because the backend serves
+both from one endpoint; `mode` changes only the wording. It validates length and
+confirmation locally before posting, so a typo does not spend a rate-limit slot.
+
+Add the entry point to your own login form:
+
+```tsx
+<Link to={AUTH_FLOW_PATHS.forgotPassword}>Forgot your password?</Link>
+```
+
+bedrock does not ship the login page — it is the one auth surface an app almost
+always restyles — so this link is the app's to place.
+
+---
+
 ## What is not here yet
 
-- **The SPA pages** the links point at (`/accept-invite`, `/reset-password`,
-  `/verify-email`). The paths are fixed by the platform so every bedrock app has
-  the same shape and a scaffold can generate them; the pages themselves land
-  with the frontend work.
 - **Retry.** A failed send is logged and dropped. Retrying inside a request
   handler means holding the connection open across a backoff; retry belongs in
   a queue, which is F6.

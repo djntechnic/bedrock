@@ -278,6 +278,12 @@ export const API_ROUTES = {
         ? `/api/v1/auth/google/authorize?state=${encodeURIComponent(state)}`
         : "/api/v1/auth/google/authorize",
     googleCallback: () => "/api/v1/auth/google/callback",
+    // Mail-driven flows (F1). `passwordResetComplete` also redeems invitation
+    // tokens — see the endpoint's docstring for why they share a route.
+    passwordResetRequest: () => "/api/v1/auth/password-reset/request",
+    passwordResetComplete: () => "/api/v1/auth/password-reset/complete",
+    verifyEmailRequest: () => "/api/v1/auth/verify-email/request",
+    verifyEmailConfirm: () => "/api/v1/auth/verify-email/confirm",
   },
 
   // ── Modules (Phase 5.9) ──────────────────────────────────────────────────
