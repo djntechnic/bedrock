@@ -69,3 +69,26 @@ def test_login_rate_limit_trips_after_configured_attempts(client, monkeypatch):
                    for e in events)
     finally:
         db.set_config("rate_limit_login", "10/minute")
+
+
+def test_password_reset_request_is_rate_limited(client):
+    """F1 — the send endpoints are bounded, and tighter than login.
+
+    The abuse here is different in kind: every accepted request costs an
+    outbound email, so an unbounded endpoint is a way to mail-bomb someone
+    else's inbox from this domain. Note the address below does not exist —
+    the limit has to apply to the miss as well, or an attacker simply picks
+    addresses that are not registered.
+    """
+    db.set_config("rate_limit_password_reset", "2/minute")
+    try:
+        for _ in range(2):
+            r = client.post("/api/v1/auth/password-reset/request",
+                            json={"email": _bad_login_email()})
+            assert r.status_code == 202, r.text
+        r = client.post("/api/v1/auth/password-reset/request",
+                        json={"email": _bad_login_email()})
+        assert r.status_code == 429, r.text
+        assert r.json()["detail"]["code"] == "rate_limit_exceeded"
+    finally:
+        db.set_config("rate_limit_password_reset", "5/hour")

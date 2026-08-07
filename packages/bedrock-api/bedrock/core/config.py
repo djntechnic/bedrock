@@ -54,6 +54,31 @@ class Config:
     CLOUDFLARE_API_TOKEN = os.environ.get("CLOUDFLARE_API_TOKEN", "")
     CLOUDFLARE_IMAGES_HASH = os.environ.get("CLOUDFLARE_IMAGES_HASH", "")
 
+    # SMTP relay — read by bedrock.mail.smtp when `mail_provider` is "smtp".
+    #
+    # These are environment settings rather than `app_config_settings` rows,
+    # which is a deliberate departure from §S4: SMTP_PASSWORD is a credential,
+    # and app config is rendered in an admin UI and returned by the config
+    # export endpoint. The Cloudflare token above draws the same line. What is
+    # admin-editable — which provider is active, the From address and display
+    # name — lives in config, where an operator can change it without a deploy.
+    SMTP_HOST = os.environ.get("SMTP_HOST", "")
+    #: 587 is the submission port, which is what a relay expects for STARTTLS.
+    #: Use 465 with SMTP_USE_SSL=true for implicit TLS.
+    SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
+    #: Blank disables SMTP AUTH, the normal shape for a relay on localhost.
+    SMTP_USERNAME = os.environ.get("SMTP_USERNAME", "")
+    SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+    #: Implicit TLS from the first byte. Mutually exclusive with STARTTLS.
+    SMTP_USE_SSL = os.environ.get("SMTP_USE_SSL", "false").lower() == "true"
+    #: Upgrade the connection after greeting. On by default: an unencrypted
+    #: submission carrying a password-reset link is not a default worth
+    #: shipping, and a relay that cannot STARTTLS is the unusual case.
+    SMTP_USE_STARTTLS = os.environ.get("SMTP_USE_STARTTLS", "true").lower() == "true"
+    #: Seconds. Low because this runs inside a request handler — a relay that
+    #: has not answered in ten seconds will not make the response fast either.
+    SMTP_TIMEOUT = float(os.environ.get("SMTP_TIMEOUT", 10))
+
     # Application Settings
     DEBUG = os.environ.get("DEBUG", "false").lower() == "true"
     PORT = int(os.environ.get("PORT", 8000))

@@ -8,9 +8,15 @@ Desc:    Versioned schema migration runner. On startup it ensures a
          migration_id so re-running is fully idempotent.
 
          Migration sources, applied in this order:
+           0. Platform `.sql` files shipped inside the package
+              (`PLATFORM_MIGRATIONS_DIR`), sorted by filename.
            1. Inline ADD COLUMN migrations (`_ADD_COLUMN_MIGRATIONS`).
            2. Inline raw SQL migrations (`_RAW_MIGRATIONS`).
            3. On-disk `.sql` files in `MIGRATIONS_DIR`, sorted by filename.
+
+         Platform migrations run first because an application's migration may
+         reference a platform table and never the reverse — bedrock has no
+         knowledge of an application's schema to depend on.
 
          Each migration runs in its own try/except. Non-critical failures are
          logged and skipped so a single bad migration never crashes startup;
@@ -36,6 +42,27 @@ logger = logging.getLogger(__name__)
 #: simply means the app has no on-disk migrations.
 MIGRATIONS_DIR = resolve_app_path(
     os.environ.get("BEDROCK_MIGRATIONS_DIR"), "migrations")
+
+#: Directory holding the *platform's* own versioned .sql migrations, shipped
+#: inside the package. This one is anchored to `__file__` on purpose, which is
+#: the opposite of every other path in bedrock (see `paths.py`) — these files
+#: are the package's, not the application's, so site-packages is exactly where
+#: they should be found.
+#:
+#: This is the mechanism by which a bedrock upgrade can add a platform table to
+#: an application that already exists. `baseline.sql` only reaches databases
+#: created after the change; without this, every consuming app would have to
+#: hand-copy a migration for a table it does not own.
+PLATFORM_MIGRATIONS_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "schema", "migrations",
+)
+
+#: Prefix on every platform migration_id in the ledger. Applications name their
+#: files freely, so without a namespace an app's `001_initial.sql` and the
+#: platform's `001_auth_email_tokens.sql` would collide on `001_...` and the
+#: second one to run would be silently recorded as already applied.
+PLATFORM_MIGRATION_PREFIX = "bedrock_"
 
 # ── Migration content (framework boundary) ───────────────────────────────────
 # The inline ADD COLUMN and raw-SQL migrations are the host application's
@@ -243,9 +270,37 @@ def _discover_sql_files() -> list[str]:
     return sorted(glob.glob(os.path.join(MIGRATIONS_DIR, "*.sql")))
 
 
+def _discover_platform_sql_files() -> list[str]:
+    """Return sorted absolute paths of the platform's own .sql migrations.
+
+    An empty list is a legitimate result for a source checkout laid out
+    differently or an installation that dropped the package data, and is
+    treated the same as "no platform migrations yet" rather than as an error —
+    the tables in question are also in `baseline.sql`, so a fresh database is
+    unaffected either way.
+    """
+    if not os.path.isdir(PLATFORM_MIGRATIONS_DIR):
+        logger.debug("No platform migrations directory at %s", PLATFORM_MIGRATIONS_DIR)
+        return []
+    return sorted(glob.glob(os.path.join(PLATFORM_MIGRATIONS_DIR, "*.sql")))
+
+
+def _run_sql_file(path: str) -> None:
+    """Apply every statement in one .sql migration file."""
+    with open(path, "r", encoding="utf-8") as fh:
+        script = fh.read()
+    for statement in _split_sql_statements(script):
+        _execute_statement(statement)
+
+
 def apply_migrations() -> None:
     """Run all pending migrations through the versioned ledger. Idempotent."""
     _ensure_ledger_table()
+
+    # 0. Platform migrations, before anything the application owns.
+    for path in _discover_platform_sql_files():
+        stem = os.path.splitext(os.path.basename(path))[0]
+        _apply_one(f"{PLATFORM_MIGRATION_PREFIX}{stem}", lambda p=path: _run_sql_file(p))
 
     # 1. Raw inline migrations.
     for migration_id, sql in _RAW_MIGRATIONS:
@@ -280,11 +335,4 @@ def apply_migrations() -> None:
     # 3. On-disk .sql files, applied in sorted filename order.
     for path in _discover_sql_files():
         migration_id = os.path.splitext(os.path.basename(path))[0]
-
-        def _runner(p=path):
-            with open(p, "r", encoding="utf-8") as fh:
-                script = fh.read()
-            for statement in _split_sql_statements(script):
-                _execute_statement(statement)
-
-        _apply_one(migration_id, _runner)
+        _apply_one(migration_id, lambda p=path: _run_sql_file(p))

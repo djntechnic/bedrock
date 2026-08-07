@@ -36,3 +36,11 @@ dev = ["pytest", "pytest-asyncio", "httpx"]
 
 [tool.setuptools.packages.find]
 include = ["bedrock*"]
+
+# The schema ships with the code. `include_package_data` defaults to true for a
+# pyproject-configured build, so these files are already installed today — this
+# says so explicitly rather than relying on a default, because the failure mode
+# if it ever changes is the quiet kind: the source tree works and the installed
+# package has no baseline and no migrations.
+[tool.setuptools.package-data]
+bedrock = ["schema/*.sql", "schema/migrations/*.sql"]

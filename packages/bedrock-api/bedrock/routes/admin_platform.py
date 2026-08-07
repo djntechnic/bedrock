@@ -4,6 +4,7 @@ from pydantic import BaseModel, EmailStr, Field
 from bedrock.core.database import db as _db
 from bedrock.core.schema_catalog import Tables as T
 from bedrock.dependencies import require_role
+from bedrock.mail import service as _mailer
 from bedrock.services import user_service as _us
 from bedrock.services import auth_activity_service as _audit
 from bedrock.services import admin_users_service as _admin_users
@@ -70,7 +71,13 @@ class UserInvitePayload(BaseModel):
     email: EmailStr
     display_name: str | None = Field(default=None, max_length=120)
     role: str = Field(default="collector")
+    #: Set a password directly instead of letting the invitee choose one. This
+    #: predates the invitation email and is kept for the case where an admin is
+    #: provisioning an account out of band; the normal path is to omit it.
     password: str | None = Field(default=None, min_length=8, max_length=128)
+    #: Send the invitation email. Off means the admin will deliver access some
+    #: other way — useful when creating a service account nobody reads mail for.
+    send_email: bool = True
 
 def _row_to_admin_user(row: dict) -> AdminUserRow:
     roles = _us.get_user_roles(int(row["user_id"]))
@@ -177,9 +184,18 @@ def invite_user(
     request: Request,
     admin: Annotated[_us.UserRecord, require_role("admin")],
 ):
-    """Create a new user with the given role. If `password` is omitted the
-    invited user gets a random provisional password (OAuth login only until
-    an admin communicates it or the user resets)."""
+    """Create a new user and email them a link to set their password.
+
+    Until F1 this endpoint created an account and stopped — there was no way to
+    tell the invitee it existed, so "invite" meant "an admin now reads the
+    password out over some other channel". The email is what makes the name
+    accurate.
+
+    `password` is still honoured for out-of-band provisioning, and
+    `send_email: false` skips the mail entirely. The response `message` says
+    which of those happened, because an admin who thinks an email went out and
+    is wrong will wait for a reply that never comes.
+    """
     try:
         provisional = payload.password or None
         new_user = _us.create_user(
@@ -191,12 +207,33 @@ def invite_user(
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
+    invite_sent = False
+    if payload.send_email:
+        invite_sent = _mailer.send_invite(
+            user_id=new_user.user_id,
+            email=new_user.email,
+            display_name=new_user.display_name,
+            invited_by=admin.email,
+        )
+
     _audit.record("user_invited", user_id=admin.user_id,
                   target_user_id=new_user.user_id, request=request,
-                  detail={"email": new_user.email, "role": payload.role})
+                  detail={"email": new_user.email, "role": payload.role,
+                          "invite_email_sent": invite_sent})
     fresh = _admin_users.get_admin_user_row(new_user.user_id)
     assert fresh is not None, "user vanished immediately after invite"
-    return ApiResponse(status="ok", data=_row_to_admin_user(fresh))
+
+    if invite_sent:
+        message = f"Invitation sent to {new_user.email}."
+    elif payload.send_email:
+        message = (
+            f"User created, but the invitation email to {new_user.email} was "
+            "not sent — no mail provider is configured, or delivery failed. "
+            "Check the server log."
+        )
+    else:
+        message = f"User created. No invitation email was sent to {new_user.email}."
+    return ApiResponse(status="ok", message=message, data=_row_to_admin_user(fresh))
 
 
 # ─── Sessions (Phase 5.11 backend) ──────────────────────────────────────────
