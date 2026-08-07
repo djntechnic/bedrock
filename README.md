@@ -35,8 +35,16 @@ are registered, configuration picks one, and exactly one wins.
 | `core.database.register_current_season_resolver` | the app's current period |
 | `core.migrations.APP_MIGRATION_MODULE` | inline schema migrations |
 
-Providers are declared with `core.providers.ProviderRegistry`. The capabilities
-that will use it — mail, media storage, error reporting — land in v0.2.0.
+Providers are declared with `core.providers.ProviderRegistry`.
+
+| Provider | Config key | Ships with |
+| --- | --- | --- |
+| `mail.provider.mail` | `mail_provider` | `smtp`, `console`, `null` |
+
+Media storage and error reporting are next. Mail is documented in
+[`docs/mail.md`](docs/mail.md): invitation, password reset and email
+verification, all of which degrade to a logged no-op when nothing is
+configured.
 
 Every extension point degrades sensibly when nothing is registered, so a
 brand-new application boots before it has any data. That property is what makes
@@ -45,6 +53,18 @@ the package genuinely reusable rather than MLBTracker with the names filed off
 
 Full contract, including which kind to reach for and why the failure policy
 differs per registry: [`docs/extension_points.md`](docs/extension_points.md).
+
+## Schema
+
+`packages/bedrock-api/bedrock/schema/` holds `baseline.sql` (the platform's
+tables, applied by a new application before its own migrations), `seed.sql`
+(the reference rows auth cannot work without), and `migrations/` — the
+platform's own versioned migrations, applied by the runner ahead of the
+application's.
+
+A platform schema change is **both**: the baseline, for applications created
+from now on, and a migration, for the ones that already exist. Either one alone
+reaches half the databases.
 
 ## Verification
 

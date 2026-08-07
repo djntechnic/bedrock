@@ -2,11 +2,75 @@
 
 ## Unreleased
 
-Plan F0 — settling the extension-point convention before the capabilities that
-depend on it (mail, media storage, error reporting) get built on top of it.
-Everything here is additive; no existing extension point changes shape.
+Plan F0 and F1 — the extension-point convention, and the first capability built
+on it.
 
-### Added
+### Added — F1, email delivery
+
+Verified absent before this: no SMTP, SendGrid, Mailgun, SES or Postmark
+anywhere in the package, while `POST /admin/users/invite` created a user with no
+way to tell them and `auth_activity_service` had declared
+`password_reset_request` / `password_reset_complete` event types since Phase 5
+with no route implementing either. This is that designed-but-unbuilt feature.
+
+- **`bedrock.mail` — the mail capability**, declared with `ProviderRegistry` and
+  the first real consumer of F0. Two backends ship, because neither needs any
+  application knowledge: `smtp` (a relay — the right default for a self-hosted
+  app) and `console` (renders the message to the log, which is how you read a
+  reset link in development without standing up a mail server). An application
+  registers its own the same way it registers anything else.
+- **Invitation, password reset and email verification**, templated in both
+  plain text and HTML. Four new endpoints: `POST /auth/password-reset/request`
+  and `/complete`, `POST /auth/verify-email/request` and `/confirm`.
+  `/admin/users/invite` now emails the invitee a link to set their password,
+  and says in its response whether the mail went out — an admin who believes an
+  email was sent and is wrong waits for a reply that never comes.
+- **`auth_email_tokens`** — single-use expiring tokens behind all three flows.
+  Only the SHA-256 is stored, so a database read does not yield a working reset
+  link. Single use is enforced by `UPDATE … WHERE consumed_at IS NULL` and the
+  row count rather than a check-then-act; issuing supersedes the outstanding
+  token for that purpose; expired, spent, unknown and wrong-purpose all fail
+  identically, because which one it was is what an attacker probing tokens
+  wants told.
+- **Platform-owned migrations.** `bedrock/schema/migrations/*.sql`, applied by
+  the runner ahead of the application's and namespaced `bedrock_` in the ledger.
+  Without this a bedrock release could not add a platform table to an
+  application that already exists — `baseline.sql` only reaches databases
+  created after the change, so every consumer would have had to hand-copy a
+  migration for a table it does not own.
+- **`docs/mail.md`** — the operator's view: what to set, what the three flows
+  do, and what is deliberately not built yet.
+
+### Fixed — F1
+
+- **`revoke_all_sessions`, called on a password reset.** Rotating a password
+  did nothing to a JWT already issued — valid for seven days and carrying no
+  password material — so "I reset my password" and "they are locked out" were
+  different statements.
+
+### Changed — F1
+
+- `pyproject.toml` names the schema files as package data explicitly. They were
+  already installed — `include_package_data` defaults to true for a
+  pyproject-configured build — but the platform migrations are now read from
+  the installed package at runtime, and relying on a default for that is how
+  you get a source tree that works and an install that silently has no schema.
+- `FRAMEWORK_CATEGORIES` gains `auth` and `mail`, which token lifetimes and
+  mail settings need to be legal config keys at all. Adding a framework
+  category only widens the accepted set.
+- SMTP connection settings are read from the environment rather than
+  `app_config_settings` — a deliberate §S4 departure, since `SMTP_PASSWORD` is
+  a credential and app config is rendered in an admin UI and returned by the
+  export endpoint. The Cloudflare Images token already drew this line.
+- `baseline.sql` is maintained by hand from here on, and
+  `tools/generate_baseline_sql.py` is removed. It re-derived the baseline from
+  MLBTracker's migration chain, which was the authoritative description of the
+  platform schema while the platform lived inside the application. Now that
+  MLBTracker consumes this package, a re-run would delete every table bedrock
+  has added since — the same reasoning that removed the other extraction
+  scripts in v0.1.1.
+
+### Added — F0, the extension-point convention
 
 - **`bedrock.core.providers` — the second kind of extension point.** The seven
   existing registries are all *additive*: they answer "what else should the
@@ -26,7 +90,7 @@ Everything here is additive; no existing extension point changes shape.
   the shape rather than describing it, and fails when a new `register_*`
   function appears in `bedrock.core` without being listed.
 
-### Fixed
+### Fixed — F0
 
 - **`register_current_season_resolver` now matches the other six registries.**
   It had no `registered_*` reader, no `__clear_*` test helper, and an

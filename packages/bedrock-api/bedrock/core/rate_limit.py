@@ -59,6 +59,19 @@ def oauth_callback_limit() -> str:
     return str(db.get_config("rate_limit_oauth_callback", "10/minute"))
 
 
+def password_reset_limit() -> str:
+    """Limit for the endpoints that send mail to an address on request.
+
+    Per hour rather than per minute, and tighter than login, because the abuse
+    this bounds is different: each accepted request costs an outbound email, so
+    an unbounded endpoint is a way to mail-bomb someone else's inbox from your
+    domain. It also caps how fast the endpoint can be farmed for the timing
+    differences its fixed response is designed to hide.
+    """
+    from bedrock.core.database import db
+    return str(db.get_config("rate_limit_password_reset", "5/hour"))
+
+
 def rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
     """FastAPI exception handler. Records the trip in auth_activity_log
     so admins can spot brute-force attempts in the Security Log tab.

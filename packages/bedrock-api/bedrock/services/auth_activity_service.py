@@ -35,6 +35,8 @@ EVENT_TYPES: frozenset[str] = frozenset({
     "password_reset_request",
     "password_reset_complete",
     "password_changed",
+    "email_verification_request",
+    "email_verified",
     "role_granted",
     "role_revoked",
     "role_access_denied",

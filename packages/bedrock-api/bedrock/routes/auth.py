@@ -17,9 +17,12 @@ from pydantic import BaseModel, EmailStr, Field
 
 from bedrock.core.rate_limit import (
     limiter, login_limit, register_limit, oauth_callback_limit,
+    password_reset_limit,
 )
 from bedrock.dependencies import get_current_active_user
+from bedrock.mail import service as mailer
 from bedrock.services import auth_activity_service as audit
+from bedrock.services import email_token_service as tokens
 from bedrock.services import oauth_service as oauth
 from bedrock.services import user_service as us
 
@@ -61,6 +64,19 @@ class UserOut(BaseModel):
 class ChangePasswordIn(BaseModel):
     current_password: str = Field(min_length=1, max_length=128)
     new_password: str = Field(min_length=8, max_length=128)
+
+
+class PasswordResetRequestIn(BaseModel):
+    email: EmailStr
+
+
+class PasswordResetCompleteIn(BaseModel):
+    token: str = Field(min_length=1, max_length=512)
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+class VerifyEmailIn(BaseModel):
+    token: str = Field(min_length=1, max_length=512)
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -250,4 +266,125 @@ def change_password(
     us.set_password(user.user_id, payload.new_password)
     audit.record("password_changed", user_id=user.user_id, request=request)
     logger.info("Password changed user_id={}", user.user_id)
+    return None
+
+
+# ── Password reset (F1) ──────────────────────────────────────────────────────
+# The event types these two endpoints record — `password_reset_request` and
+# `password_reset_complete` — have been in the audit vocabulary since Phase 5
+# with nothing implementing them. This is the feature that was designed then.
+
+
+@router.post("/password-reset/request", status_code=status.HTTP_202_ACCEPTED,
+             description="Send a password reset link to the address, if an account exists. Always returns 202 — the response deliberately does not reveal whether the address is registered.")
+@limiter.limit(password_reset_limit)
+def request_password_reset(payload: PasswordResetRequestIn, request: Request):
+    """Email a reset link, if there is anywhere to send it.
+
+    Returns 202 unconditionally. Not out of politeness: a 404 for an unknown
+    address turns this endpoint into a way to test whether a given person has
+    an account here, which for a collector site or any site with a membership
+    worth knowing about is exactly the information not to give away. The same
+    reasoning covers an inactive account and an unconfigured mail backend —
+    every path below returns the same thing.
+    """
+    user = us.get_user_by_email(payload.email)
+    if user is None or not user.is_active:
+        # Recorded without a user_id: an admin reading the security log should
+        # be able to see reset attempts against addresses that do not exist,
+        # which is what a spray against this endpoint looks like.
+        audit.record("password_reset_request", request=request,
+                     detail={"attempted_email": payload.email, "matched": False})
+        logger.info("Password reset requested for unknown or inactive email={}",
+                    payload.email)
+        return None
+
+    mailer.send_password_reset(
+        user_id=user.user_id, email=user.email, display_name=user.display_name,
+    )
+    audit.record("password_reset_request", user_id=user.user_id, request=request,
+                 detail={"matched": True})
+    logger.info("Password reset requested user_id={}", user.user_id)
+    return None
+
+
+@router.post("/password-reset/complete", status_code=status.HTTP_204_NO_CONTENT,
+             description="Set a new password using a token from a reset or invitation email. Also accepts invitation tokens, which is how an invited user chooses their first password.")
+@limiter.limit(password_reset_limit)
+def complete_password_reset(payload: PasswordResetCompleteIn, request: Request):
+    """Redeem a reset or invitation token and set the new password.
+
+    Both purposes land here because they are the same action: someone who
+    proved control of the address is choosing a password. Separating them would
+    mean two endpoints whose bodies are identical apart from one constant.
+    """
+    user_id = tokens.consume(
+        payload.token, (tokens.PURPOSE_PASSWORD_RESET, tokens.PURPOSE_INVITE)
+    )
+    if user_id is None:
+        # One message for expired, spent, unknown and wrong-purpose. Which of
+        # those it was is exactly what an attacker probing tokens wants told.
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This link is invalid or has expired. Request a new one.",
+        )
+
+    us.set_password(user_id, payload.new_password)
+    # Receiving the link proves control of the address, which is the same proof
+    # the verification flow asks for — so an invited user is verified without a
+    # second round trip.
+    us.set_verified(user_id, True)
+    revoked = us.revoke_all_sessions(user_id)
+    audit.record("password_reset_complete", user_id=user_id, request=request,
+                 detail={"sessions_revoked": revoked})
+    logger.info("Password reset completed user_id={} sessions_revoked={}",
+                user_id, revoked)
+    return None
+
+
+# ── Email verification (F1) ──────────────────────────────────────────────────
+@router.post("/verify-email/request", status_code=status.HTTP_202_ACCEPTED,
+             description="Send a verification link to the caller's own address. No-op for an already-verified account.")
+@limiter.limit(password_reset_limit)
+def request_email_verification(
+    request: Request,
+    user: Annotated[us.UserRecord, Depends(get_current_active_user)],
+):
+    """Email a confirmation link to the caller's own address.
+
+    Authenticated, and it sends only to the address already on the account —
+    there is no recipient parameter, so this cannot be pointed at a third
+    party. That is what makes it safe to expose at a looser rate limit than an
+    unauthenticated send would need.
+    """
+    if user.is_verified:
+        logger.info("Verification requested for already-verified user_id={}",
+                    user.user_id)
+        return None
+
+    mailer.send_email_verification(
+        user_id=user.user_id, email=user.email, display_name=user.display_name,
+    )
+    audit.record("email_verification_request", user_id=user.user_id, request=request)
+    logger.info("Email verification requested user_id={}", user.user_id)
+    return None
+
+
+@router.post("/verify-email/confirm", status_code=status.HTTP_204_NO_CONTENT,
+             description="Confirm an email address with the token from a verification email.")
+def confirm_email_verification(payload: VerifyEmailIn, request: Request):
+    """Redeem a verification token and mark the address confirmed.
+
+    Unauthenticated by design: the link is opened from an email client, which
+    may well not be the browser holding the session.
+    """
+    user_id = tokens.consume(payload.token, tokens.PURPOSE_EMAIL_VERIFICATION)
+    if user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This link is invalid or has expired. Request a new one.",
+        )
+    us.set_verified(user_id, True)
+    audit.record("email_verified", user_id=user_id, request=request)
+    logger.info("Email verified user_id={}", user_id)
     return None

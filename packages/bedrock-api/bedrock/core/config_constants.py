@@ -35,14 +35,22 @@ import re
 from typing import Final
 
 #: Categories owned by the reusable application platform.
+#:
+#: `auth` and `mail` arrived with email delivery: token lifetimes are an auth
+#: policy and the active mail backend plus its sender identity are mail
+#: settings, and both need a category prefix to be legal keys at all. Adding a
+#: framework category only widens the accepted set, so it cannot invalidate an
+#: application's existing keys.
 FRAMEWORK_CATEGORIES: Final[tuple[str, ...]] = (
     "system",
     "api",
+    "auth",
     "display",
     "logging",
     "grid",
     "shortcuts",
     "diagnostics",
+    "mail",
 )
 
 #: Dotted path to the app module exporting an `APP_CATEGORIES` tuple. The

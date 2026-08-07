@@ -110,18 +110,32 @@ A provider is a swappable *implementation* of a capability where exactly one
 wins and the choice is deployment configuration. `bedrock.core.providers`
 implements this.
 
+### The capabilities today
+
+| Capability | Config key | Ships with | Docs |
+| --- | --- | --- | --- |
+| `mail.provider.mail` | `mail_provider` | `smtp`, `console`, `null` | [`mail.md`](mail.md) |
+
+Media storage and error reporting are the next two, and are why this kind
+exists. Note that bedrock **ships** the SMTP backend rather than leaving it to
+the application: sending mail through a relay needs no application knowledge,
+so a backend the platform can write is one every consumer would otherwise write
+identically. The rule is unchanged — an application registers what only it can
+know — and "which relay" is configuration, not knowledge.
+
 ### Declaring a capability
 
 The platform module that owns the capability declares one registry at module
-scope, parameterised on a `Protocol` describing what it calls:
+scope, parameterised on a `Protocol` describing what it calls. This is
+`bedrock/mail/provider.py`, abridged:
 
 ```python
 class MailProvider(Protocol):
-    def send(self, to: str, subject: str, body: str) -> None: ...
+    def send(self, message: MailMessage) -> None: ...
 
 class NullMailProvider:
-    def send(self, to: str, subject: str, body: str) -> None:
-        logger.info(f"mail not configured; dropping message to {to!r}")
+    def send(self, message: MailMessage) -> None:
+        logger.info(f"mail not configured; dropping message to {message.to!r}")
 
 mail = ProviderRegistry[MailProvider](
     capability="mail",
@@ -130,21 +144,44 @@ mail = ProviderRegistry[MailProvider](
 )
 ```
 
+Keep the protocol to what the platform actually calls. `MailProvider` has one
+method and `MailMessage` has four fields, with no cc, reply-to or attachments,
+because the platform sends three fixed messages and none of them need one —
+guessing at a wider surface forces every provider to implement what nothing
+calls.
+
 ### Registering and using
 
-The app registers at startup — an import for side effect from `main.py`,
-exactly like a registry:
+Registration is an import for side effect at startup, exactly like a registry.
+The application does it for backends only it can know about:
 
 ```python
-mail.register("smtp", lambda: SmtpMailProvider(host=..., port=...))
+mail.register("postmark", PostmarkProvider)
 ```
 
 Platform code asks for the winner without knowing the field:
 
 ```python
 if mail.is_configured():
-    mail.active().send(to=user.email, subject=..., body=...)
+    mail.active().send(message)
 ```
+
+### A provider raises; the caller decides
+
+The division of labour that matters. A provider that cannot deliver **raises** —
+swallowing the failure turns "the relay rejected it" into "sent" in the log, and
+only the caller knows whether that is survivable.
+
+For mail it always is, and `bedrock.mail.service` absorbs every exception, which
+looks wrong until you ask what the caller would do differently: a password-reset
+endpoint returns the same 202 whether the address exists, whether mail is
+configured, and whether the relay accepted it, because anything else makes it an
+account-enumeration oracle. Given the response is fixed, propagating would only
+convert a delivery problem into a 500 that tells the attacker something the user
+cannot use. The failure is logged at `error` either way.
+
+Write that reasoning down where the swallowing happens. "This function does not
+raise" is a promise a future reader will otherwise assume is an oversight.
 
 ### Guarantees
 

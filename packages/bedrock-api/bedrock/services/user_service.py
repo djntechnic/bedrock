@@ -196,6 +196,19 @@ def set_password(user_id: int, raw_password: str, *, database: DatabaseManager |
     )
 
 
+def set_verified(user_id: int, verified: bool, *, database: DatabaseManager | None = None) -> None:
+    """Mark whether the user has proven control of their email address.
+
+    Set by the verification and invitation flows — clicking a link delivered to
+    an address is the proof — and never by the user directly.
+    """
+    d = database or db
+    d.execute(
+        f"UPDATE {T.AUTH_USERS} SET is_verified = %s WHERE user_id = %s",
+        (1 if verified else 0, user_id),
+    )
+
+
 def set_active(user_id: int, active: bool, *, database: DatabaseManager | None = None) -> None:
     d = database or db
     d.execute(
@@ -318,3 +331,22 @@ def revoke_session(jti: str, *, database: DatabaseManager | None = None) -> bool
         (jti,),
     )
     return True
+
+
+def revoke_all_sessions(user_id: int, *, database: DatabaseManager | None = None) -> int:
+    """Revoke every live session this user holds.
+
+    Called on a password reset. A reset exists to end an attacker's access, and
+    a rotated password does nothing about a JWT they already hold — the token
+    is valid for seven days and carries no password material to invalidate.
+    Without this, "I reset my password" and "they are locked out" are different
+    statements.
+
+    :returns: How many sessions were revoked.
+    """
+    d = database or db
+    return d.execute(
+        f"UPDATE {T.AUTH_SESSIONS} SET revoked_at = datetime('now') "
+        f"WHERE user_id = %s AND revoked_at IS NULL",
+        (user_id,),
+    )
