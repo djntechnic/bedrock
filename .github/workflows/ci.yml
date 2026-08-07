@@ -27,9 +27,6 @@ jobs:
   frontend:
     name: bedrock-ui (tsc)
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/bedrock-ui
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -38,6 +35,8 @@ jobs:
       - name: Install peer dependencies
         # The package ships source and declares only peers, so CI installs
         # them directly to type-check against the versions consumers get.
+        # Note the absence of --legacy-peer-deps: it makes npm skip the
+        # install entirely and the type check then passes on missing modules.
         run: npm install --no-save $(node -p "Object.entries(require('./package.json').peerDependencies).map(([k,v])=>k+'@'+v).join(' ')") typescript @types/react @types/react-dom vite
       - name: Type check
-        run: npx tsc --noEmit -p tsconfig.json
+        run: npx tsc --noEmit -p packages/bedrock-ui/tsconfig.json

@@ -5,12 +5,12 @@
   "type": "module",
   "license": "UNLICENSED",
   "exports": {
-    ".": "./src/index.ts",
-    "./styles/tokens.css": "./src/styles/tokens.css",
-    "./*": "./src/*"
+    ".": "./packages/bedrock-ui/src/index.ts",
+    "./styles/tokens.css": "./packages/bedrock-ui/src/styles/tokens.css",
+    "./*": "./packages/bedrock-ui/src/*"
   },
   "files": [
-    "src"
+    "packages/bedrock-ui/src"
   ],
   "peerDependencies": {
     "@dnd-kit/core": "^6.3.1",

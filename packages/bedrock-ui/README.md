@@ -58,6 +58,17 @@ side-effect:
 | `apiPreviewRegistry` | Per-grid endpoint bindings the Grid Editor previews against. |
 | `datasetSchemas` | Column-name schemas for the editor's unknown-column tripwire. |
 
+## Where the manifest lives
+
+`package.json` is at the **repository root**, not in this directory, and its
+`exports` map points back down here. That is not tidiness — npm cannot install
+a package from a subdirectory of a git repository, so a manifest sitting in
+`packages/bedrock-ui/` is unreachable by `github:djntechnic/bedrock#<ref>`.
+(pip has no such limitation, which is why `bedrock-api` keeps its
+`pyproject.toml` in place and is installed with `#subdirectory=`.)
+
+The source still lives here. Only the manifest moved.
+
 ## Public API
 
 `src/index.ts` is the contract. Deep imports resolve but are unsupported — if

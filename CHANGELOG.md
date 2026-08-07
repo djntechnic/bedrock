@@ -33,6 +33,14 @@ application root the moment it shipped as a library.
 
 ### Changed
 
+- **The npm manifest moved to the repository root.** npm cannot install a
+  package from a subdirectory of a git repository, so a `package.json` under
+  `packages/bedrock-ui/` is simply unreachable by
+  `github:djntechnic/bedrock#<ref>` — the install fails with ENOENT looking
+  for a root manifest. `exports` now maps back down into
+  `packages/bedrock-ui/src/`; the source did not move. pip has no equivalent
+  limitation, which is why `bedrock-api` keeps its `pyproject.toml` in place.
+
 - `MLBTRACKER_ALLOW_EMPTY_DB` is now `BEDROCK_ALLOW_EMPTY_DB`.
 - Removed `Config.MLB_API_BASE` and `Config.SRC_DIR`. The first is
   application data; the second assumed the app keeps its backend in `api/`.
