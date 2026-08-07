@@ -1,6 +1,6 @@
 {
   "name": "@djntechnic/bedrock-ui",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Reusable React application platform: config-driven grid engine, admin Grid Editor, auth shell, design tokens",
   "type": "module",
   "license": "UNLICENSED",
