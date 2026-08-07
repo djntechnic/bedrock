@@ -11,7 +11,19 @@ import { Search } from "lucide-react";
 import { useCommandPaletteStore } from "../store/commandPaletteStore";
 import { isMacPlatform } from "../lib/shortcuts";
 
-export default function GlobalSearchBar() {
+export interface GlobalSearchBarProps {
+  /**
+   * Prompt text. The default is true of any application; an app that registers
+   * entity search sources should name them — "Search players, teams, pages…"
+   * is what this said unconditionally before it became a prop, in a package
+   * with no players and no teams.
+   */
+  placeholder?: string;
+}
+
+export default function GlobalSearchBar({
+  placeholder = "Search pages and records…",
+}: GlobalSearchBarProps = {}) {
   const setOpen = useCommandPaletteStore((s) => s.setOpen);
   const [isMac, setIsMac] = useState(false);
 
@@ -26,7 +38,7 @@ export default function GlobalSearchBar() {
       className="flex w-72 lg:w-80 items-center gap-2 rounded-md border border-border/60 bg-muted/40 px-2.5 h-8 text-sm text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
     >
       <Search className="h-3.5 w-3.5 shrink-0" />
-      <span className="flex-1 text-left truncate">Search players, teams, pages…</span>
+      <span className="flex-1 text-left truncate">{placeholder}</span>
       <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-border bg-background px-1.5 py-0.5 text-[10px] font-medium select-none">
         <span>{isMac ? "⌘" : "Ctrl"}</span>
         <span>K</span>

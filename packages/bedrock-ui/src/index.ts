@@ -54,6 +54,18 @@ export { default as ModuleDisabled } from "./components/ModuleDisabled";
 export * from "./context/AuthContext";
 export * from "./hooks/useAuth";
 export * from "./hooks/useModules";
+// Mail-driven flows (F1). The paths these mount at are fixed by the platform —
+// the backend builds the emailed links from the same constants — so an app
+// wires them to `AUTH_FLOW_PATHS` rather than choosing its own.
+export { default as SetPasswordPage } from "./components/auth/SetPasswordPage";
+export type { SetPasswordPageProps } from "./components/auth/SetPasswordPage";
+export { default as ForgotPasswordPage } from "./components/auth/ForgotPasswordPage";
+export type { ForgotPasswordPageProps } from "./components/auth/ForgotPasswordPage";
+export { default as VerifyEmailPage } from "./components/auth/VerifyEmailPage";
+export type { VerifyEmailPageProps } from "./components/auth/VerifyEmailPage";
+export { default as AuthFlowCard } from "./components/auth/AuthFlowCard";
+export type { AuthFlowCardProps } from "./components/auth/AuthFlowCard";
+export * from "./components/auth/authFlowApi";
 
 // ── Hooks ────────────────────────────────────────────────────────────────────
 export * from "./hooks/useGridConfig";

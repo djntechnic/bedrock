@@ -44,7 +44,8 @@ Providers are declared with `core.providers.ProviderRegistry`.
 Media storage and error reporting are next. Mail is documented in
 [`docs/mail.md`](docs/mail.md): invitation, password reset and email
 verification, all of which degrade to a logged no-op when nothing is
-configured.
+configured. `bedrock-ui` ships the three pages those links land on; mount them
+at `AUTH_FLOW_PATHS`, which is also what the backend builds the links from.
 
 Every extension point degrades sensibly when nothing is registered, so a
 brand-new application boots before it has any data. That property is what makes
