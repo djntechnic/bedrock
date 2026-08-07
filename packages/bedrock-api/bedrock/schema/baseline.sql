@@ -289,6 +289,43 @@ CREATE TABLE IF NOT EXISTS auth_email_tokens (
 CREATE INDEX IF NOT EXISTS idx_auth_email_tokens_lookup
     ON auth_email_tokens (user_id, purpose, consumed_at);
 
+-- Media assets (F4). Keyed by (entity_type, entity_id) rather than a foreign
+-- key to any particular table — that is what lets one table serve a card's
+-- photos, a gallery item's images and a blog post's attachments. The cost is
+-- no referential integrity to the owning row; an application deleting an
+-- entity calls media_service.delete_for_entity.
+CREATE TABLE IF NOT EXISTS media_assets (
+    media_id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity_type         TEXT    NOT NULL,
+    entity_id           INTEGER NOT NULL,
+    owner_id            INTEGER,
+    storage_key         TEXT    NOT NULL,
+    storage_provider    TEXT    NOT NULL DEFAULT 'local',
+    url                 TEXT,
+    filename            TEXT    NOT NULL,
+    content_type        TEXT,
+    file_size_bytes     INTEGER,
+    width               INTEGER,
+    height              INTEGER,
+    content_hash        TEXT,
+    status              TEXT    NOT NULL DEFAULT 'pending',
+    sort_order          INTEGER,
+    tags                TEXT,
+    source_url          TEXT,
+    submitted_by_user_id INTEGER,
+    reviewed_by_user_id  INTEGER,
+    reviewed_at         TEXT,
+    reject_reason       TEXT,
+    created_at          TEXT    NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_media_assets_entity
+    ON media_assets (entity_type, entity_id, status);
+CREATE INDEX IF NOT EXISTS idx_media_assets_status
+    ON media_assets (status, created_at);
+CREATE INDEX IF NOT EXISTS idx_media_assets_hash
+    ON media_assets (content_hash);
+
 CREATE TABLE IF NOT EXISTS "auth_modules" (
     module_id   INTEGER PRIMARY KEY AUTOINCREMENT,
     slug        TEXT    NOT NULL UNIQUE,                         -- dashboard | leaderboards | rankings | trends | players | inventory | admin | health

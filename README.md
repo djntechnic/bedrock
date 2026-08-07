@@ -40,8 +40,9 @@ Providers are declared with `core.providers.ProviderRegistry`.
 | Provider | Config key | Ships with |
 | --- | --- | --- |
 | `mail.provider.mail` | `mail_provider` | `smtp`, `console`, `null` |
+| `storage.provider.storage` | `storage_provider` | `local`, `cloudflare_images` |
 
-Media storage and error reporting are next. Mail is documented in
+Error reporting is next. Mail is documented in
 [`docs/mail.md`](docs/mail.md): invitation, password reset and email
 verification, all of which degrade to a logged no-op when nothing is
 configured. `bedrock-ui` ships the three pages those links land on; mount them
