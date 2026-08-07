@@ -39,6 +39,26 @@ unused constant and a string literal are invisible to both.
   bar and palette prompted "Search players, teams, pages…" in a package with
   neither. All three are props now, with defaults true of any application.
 
+### Added — F4, media and storage
+
+- **`bedrock.storage`** — a storage provider with local-disk and Cloudflare
+  Images backends. Three methods, because the platform calls three; a wider
+  guessed surface forces every backend to implement what nothing calls.
+  **The fallback is local disk, not a no-op** — a deliberate divergence from
+  mail, where dropping the message is survivable. A dropped file is data loss
+  the user watched succeed, and local disk needs no configuration, so there is
+  no reason to reach for a black hole.
+- **`media_service`** — `attach_media(entity_type, entity_id, …)`, the approval
+  queue, and deletion, generalised out of MLBTracker's `photo_service`, whose
+  every function took a `collection_card_id`. Uploads land `pending` so an
+  unreviewed image cannot reach a public CDN, `list_for_entity` filters to
+  approved by default, and approve/reject move only pending rows in the WHERE
+  clause so two admins on one queue cannot both count the same asset.
+- **`media_assets`**, keyed by `(entity_type, entity_id)` with no foreign key
+  to any application table — which is what lets one table serve a card's
+  photos, a gallery's images and a post's attachments, and which means nothing
+  cascades. `docs/media.md` says so and names the call an app makes instead.
+
 ### Added — F1, the pages the links land on
 
 - **`SetPasswordPage`, `ForgotPasswordPage`, `VerifyEmailPage`** in
