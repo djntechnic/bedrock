@@ -14,7 +14,17 @@ dependencies = [
     "loguru",
     "python-dotenv",
     "slowapi",
-    "passlib[bcrypt]",
+    "passlib[bcrypt]>=1.7.4",
+    # bcrypt 4.1 removed the `__about__` attribute that passlib 1.7.x
+    # introspects to detect the backend version. passlib traps that
+    # AttributeError, then — unable to tell whether the backend has the 2011
+    # wraparound bug — falls back to a probe that hashes a >72-byte value.
+    # bcrypt 5.0 raises on over-length input instead of truncating, so the
+    # probe throws and *every* hash fails, reporting "password cannot be
+    # longer than 72 bytes" for a 5-character password. Pin until passlib 1.8
+    # ships; 1.7.4 is from 2020. MLBTracker already carries this same pin in
+    # its requirements.txt — it belongs here, with the code that hashes.
+    "bcrypt>=4.0.1,<4.1",
     "python-jose[cryptography]",
     "httpx",
     "httpx-oauth",
