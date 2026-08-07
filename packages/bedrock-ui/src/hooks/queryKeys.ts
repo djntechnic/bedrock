@@ -74,6 +74,8 @@ export const queryKeys = {
     teamsAll: () => ["admin", "teams"] as const,
     audit: () => ["admin", "audit"] as const,
     auditHistory: (limit: number) => ["admin", "audit-history", limit] as const,
+    /** Broad prefix — invalidates every audit-history page regardless of limit. */
+    auditHistoryAll: () => ["admin", "audit-history"] as const,
     auditRun: (runId: string | number) =>
       ["admin", "audit-run", runId] as const,
   },
