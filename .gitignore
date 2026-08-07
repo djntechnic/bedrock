@@ -6,3 +6,9 @@ node_modules/
 dist/
 build/
 *.db
+
+# Never commit an environment file. deploy/.env.example is the template;
+# a real .env holds JWT_SECRET and SMTP_PASSWORD.
+.env
+.env.*
+!.env.example

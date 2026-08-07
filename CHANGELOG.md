@@ -5,6 +5,36 @@
 Plan F0 and F1 — the extension-point convention, and the first capability built
 on it.
 
+### Added — F2, deployment
+
+Verified absent before this: 14 Windows `.bat` files, no Dockerfile, no
+compose file, no service units. MLBTracker runs on a desktop; every app after
+it is hosted.
+
+- **`deploy/`** — multi-stage `Dockerfile.api` (no compiler in the runtime
+  stage, non-root, `BEDROCK_APP_ROOT` set explicitly), `Dockerfile.web`
+  (Vite → nginx), `nginx.conf` (SPA history fallback, `/api` proxy,
+  `X-Forwarded-For`), `docker-compose.yml` (Postgres + API + web), and
+  `.env.example`. Templates rather than a base image: bedrock is a library
+  with no `main.py`, so the app owns the build and these are what it copies.
+- **`GET /health/live` and `GET /health/ready`.** The existing `/health`
+  answers **200 even when the database is unreachable** — correct for the
+  admin Health page, which reads the body to report what is broken, and
+  actively harmful as a container healthcheck: it marks a dead app healthy, so
+  nothing restarts and a rolling deploy promotes it over a working container.
+  Readiness returns 503, and checks a read *and* a write, because a replica
+  promoted read-only answers `SELECT 1` and fails every login.
+- **`bedrock-healthcheck`** — a console script the image's `HEALTHCHECK` runs.
+  `curl` is not in a slim Python image and installing it adds a package and a
+  CVE surface to every deploy for a three-line request. Standard library only,
+  no bedrock imports, because it must work in the states where the application
+  cannot import.
+- **`docs/deployment.md`**, including why the stack runs one worker: the rate
+  limiter and the diagnostics scheduler both hold per-process state, so N
+  workers means N× the configured limit and N runs of every scheduled job.
+- **`.env` is gitignored.** It was not, and F1 gave the file a `SMTP_PASSWORD`
+  to hold.
+
 ### Fixed — the application inside the platform package
 
 Found while adding the F1 pages, and all the same defect: code that reads
