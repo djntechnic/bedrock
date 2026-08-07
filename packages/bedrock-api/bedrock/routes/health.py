@@ -1,14 +1,31 @@
 """
 Module:  health.py
 Layer:   api/routes
-Desc:    Infrastructure health checks. Verifies API liveness, database
-         read/write, filesystem writability, and key data counts.
+Desc:    Infrastructure health checks.
+
+         Three endpoints, and the distinction matters as soon as something
+         automated is watching:
+
+         * ``GET /health``       — the rich diagnostic. Always 200, because it
+           is a *report*: the caller reads the body to see what is wrong. This
+           is what the admin Health page renders.
+         * ``GET /health/live``  — the process is running. No dependency
+           checks, no database, no allocation worth speaking of.
+         * ``GET /health/ready`` — the process can serve traffic, and **503
+           when it cannot**. This is the one a container healthcheck, a load
+           balancer, or a deploy gate must use.
+
+         The split exists because /health answering 200 with
+         ``db_reachable: false`` is right for a dashboard and useless to an
+         orchestrator: a healthcheck pointed at it reports healthy while every
+         request 500s, so nothing restarts and a rolling deploy promotes a
+         broken container over a working one.
 """
 import os
 import time
 import tempfile
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Response, status
 from bedrock.core.database import db
 from bedrock.core.config import config
 from bedrock.core.health_metrics import (
@@ -123,3 +140,51 @@ def health_check():
             **counters,
         },
     )
+
+
+@router.get("/health/live", response_model=ApiResponse[dict])
+def liveness():
+    """Is the process running?
+
+    Deliberately does nothing. A liveness probe that touches the database
+    conflates "the app is wedged" with "Postgres is restarting", and an
+    orchestrator acting on the second by killing the app makes an outage
+    longer rather than shorter.
+    """
+    return ApiResponse(status="ok", data={"alive": True})
+
+
+@router.get("/health/ready", response_model=ApiResponse[dict])
+def readiness(response: Response):
+    """Can the process serve traffic? **503 when it cannot.**
+
+    Checks the database round-trip only. Not the mail relay, not the storage
+    backend, not any registered counter: readiness answers "should this
+    container receive requests", and every one of those degrades to a logged
+    no-op by design. Failing readiness because SMTP is down would take a
+    perfectly serviceable site out of rotation.
+
+    A write is included, not just a read. A Postgres replica promoted to
+    read-only answers `SELECT 1` happily and fails every login, which is
+    exactly the state a readiness probe exists to catch.
+    """
+    ok = False
+    detail: str | None = None
+    try:
+        result = db.query("SELECT 1 AS ok")
+        if not (result is not None and len(result) > 0):
+            detail = "database read returned no rows"
+        else:
+            db.execute("CREATE TEMP TABLE IF NOT EXISTS _health_ping (ts INTEGER)")
+            db.execute("INSERT INTO _health_ping VALUES (:ts)", {"ts": int(time.time())})
+            db.execute("DELETE FROM _health_ping")
+            ok = True
+    except Exception as exc:  # noqa: BLE001 — any failure here means not ready.
+        detail = str(exc)
+
+    if not ok:
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return ApiResponse(status="error", message=detail or "not ready",
+                           data={"ready": False})
+
+    return ApiResponse(status="ok", data={"ready": True})

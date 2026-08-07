@@ -1,0 +1,77 @@
+# Local stack: Postgres, the API, the SPA behind nginx.
+#
+# This is the development and single-host production shape. It is not a
+# clustering story — see docs/deployment.md for what changes when you run more
+# than one API container.
+#
+#   docker compose -f deploy/docker-compose.yml up --build
+#   → http://localhost:8080
+#
+# Copy deploy/.env.example to .env at the repository root first. Compose reads
+# it, and so does bedrock itself inside the container.
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bedrock}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-bedrock}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    # Not published to the host by default. An exposed Postgres with a
+    # development password is the single most common way one of these stacks
+    # gets owned; uncomment only when you need a local client, and then only
+    # bound to loopback.
+    # ports:
+    #   - "127.0.0.1:5432:5432"
+    healthcheck:
+      # `-U`/`-d` matter: the default `pg_isready` probes a database named
+      # after the OS user, which does not exist here, so the check would fail
+      # forever and the API would never start.
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bedrock} -d ${POSTGRES_DB:-bedrock}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    env_file:
+      - ../.env
+    environment:
+      # Overrides whatever .env says: inside the network the host is `db`, not
+      # localhost, and getting this wrong is the first thing that breaks when
+      # a working local .env is reused for compose.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-bedrock}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-bedrock}
+      PORT: "8000"
+    depends_on:
+      db:
+        # Not just `started`. The API applies migrations at boot, and against a
+        # Postgres that is still initialising that fails and takes the
+        # container with it.
+        condition: service_healthy
+    volumes:
+      # Uploads and any SQLite file. Named rather than bind-mounted so it
+      # survives `docker compose down` and does not inherit host ownership.
+      - api_data:/app/data
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.web
+      args:
+        # Empty: the browser talks to nginx, which proxies /api to the API
+        # container. One origin, no CORS.
+        VITE_API_BASE_URL: ""
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  api_data:

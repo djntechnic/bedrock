@@ -67,6 +67,14 @@ A platform schema change is **both**: the baseline, for applications created
 from now on, and a migration, for the ones that already exist. Either one alone
 reaches half the databases.
 
+## Deployment
+
+`deploy/` holds the image, compose and nginx templates an application copies,
+and `.env.example` is the environment contract. Point every healthcheck at
+`/api/v1/health/ready`, which answers 503 when the database is unreachable —
+`/health` is a diagnostic report and always answers 200.
+[`docs/deployment.md`](docs/deployment.md).
+
 ## Verification
 
 ```bash
