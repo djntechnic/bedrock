@@ -81,6 +81,8 @@ export * from "./hooks/useAppSettings";
 export * from "./hooks/useMediaQuery";
 export * from "./hooks/usePersistedDisclosure";
 export * from "./hooks/queryKeys";
+// Per-route document head (F5). The sitemap half is server-side.
+export * from "./hooks/useDocumentHead";
 
 // ── Context + stores ─────────────────────────────────────────────────────────
 export * from "./context/AppConfigContext";

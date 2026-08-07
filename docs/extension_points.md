@@ -76,6 +76,7 @@ Backend:
 | `core.diagnostics_registry.register_diagnostic_check` | data-quality checks |
 | `core.schema_drift.register_schema_objects` | the app's half of the schema |
 | `core.database.register_current_season_resolver` | the app's current period |
+| `core.sitemap.register_sitemap_source` | the app's public URLs |
 | `core.config_constants.APP_CATEGORY_MODULE` | app config categories (dotted path) |
 | `core.migrations.APP_MIGRATION_MODULE` | inline schema migrations (dotted path) |
 
@@ -115,9 +116,14 @@ implements this.
 | Capability | Config key | Ships with | Docs |
 | --- | --- | --- | --- |
 | `mail.provider.mail` | `mail_provider` | `smtp`, `console`, `null` | [`mail.md`](mail.md) |
+| `storage.provider.storage` | `storage_provider` | `local`, `cloudflare_images` | [`media.md`](media.md) |
 
-Media storage and error reporting are the next two, and are why this kind
-exists. Note that bedrock **ships** the SMTP backend rather than leaving it to
+Error reporting is next. Note that storage diverges on one point worth
+reading before copying the pattern: its fallback is local disk rather than a
+no-op, because a dropped file is data loss where a dropped email is not — see
+[`media.md`](media.md).
+
+bedrock also **ships** the SMTP backend rather than leaving it to
 the application: sending mail through a relay needs no application knowledge,
 so a backend the platform can write is one every consumer would otherwise write
 identically. The rule is unchanged — an application registers what only it can

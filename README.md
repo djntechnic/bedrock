@@ -33,6 +33,7 @@ are registered, configuration picks one, and exactly one wins.
 | `core.diagnostics_registry.register_diagnostic_check` | data-quality checks |
 | `core.schema_drift.register_schema_objects` | the app's half of the schema |
 | `core.database.register_current_season_resolver` | the app's current period |
+| `core.sitemap.register_sitemap_source` | the app's public URLs |
 | `core.migrations.APP_MIGRATION_MODULE` | inline schema migrations |
 
 Providers are declared with `core.providers.ProviderRegistry`.

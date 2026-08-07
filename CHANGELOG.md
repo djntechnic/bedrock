@@ -69,6 +69,24 @@ unused constant and a string literal are invisible to both.
   bar and palette prompted "Search players, teams, pages…" in a package with
   neither. All three are props now, with defaults true of any application.
 
+### Added — F5, public-site essentials
+
+- **`useDocumentHead`** — per-route title, description, canonical and the
+  Open Graph / Twitter tags a link preview reads. No `react-helmet`: a peer
+  dependency, a provider every consumer mounts and a competing scheduler, to
+  write four lines into `document.head`. What Helmet buys is SSR, which bedrock
+  does not do; if that changes this is one module to replace.
+- **A sitemap registry and `robots.txt`.** The platform owns the format,
+  escaping, the 50,000-URL ceiling and the caching; the application registers
+  what its URLs are, because the platform cannot know one. A raising source is
+  logged and skipped rather than failing the file — a sitemap that 500s makes a
+  crawler back off the whole site rather than one section — and an app that
+  registers nothing gets a valid empty `<urlset>`.
+- **`docs/seo.md`**, including the nginx blocks these two paths need (they are
+  only honoured at the root of a host, so mounting under `/api/v1` produces
+  files no crawler will request) and what is still missing: a scraper that does
+  not run JavaScript sees `index.html`'s static tags, which is a rendering
+  decision rather than a head-management one.
 ### Added — F4, media and storage
 
 - **`bedrock.storage`** — a storage provider with local-disk and Cloudflare

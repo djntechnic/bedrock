@@ -60,6 +60,12 @@ REGISTRIES = [
         "registered_current_season_resolver",
         "__clear_current_season_resolver",
     ),
+    (
+        "bedrock.core.sitemap",
+        "register_sitemap_source",
+        "registered_source_names",
+        "__clear_sitemap_sources",
+    ),
 ]
 
 IDS = [module.rsplit(".", 1)[-1] for module, *_ in REGISTRIES]
