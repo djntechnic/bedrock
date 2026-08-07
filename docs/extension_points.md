@@ -116,9 +116,14 @@ implements this.
 | Capability | Config key | Ships with | Docs |
 | --- | --- | --- | --- |
 | `mail.provider.mail` | `mail_provider` | `smtp`, `console`, `null` | [`mail.md`](mail.md) |
+| `storage.provider.storage` | `storage_provider` | `local`, `cloudflare_images` | [`media.md`](media.md) |
 
-Media storage and error reporting are the next two, and are why this kind
-exists. Note that bedrock **ships** the SMTP backend rather than leaving it to
+Error reporting is next. Note that storage diverges on one point worth
+reading before copying the pattern: its fallback is local disk rather than a
+no-op, because a dropped file is data loss where a dropped email is not — see
+[`media.md`](media.md).
+
+bedrock also **ships** the SMTP backend rather than leaving it to
 the application: sending mail through a relay needs no application knowledge,
 so a backend the platform can write is one every consumer would otherwise write
 identically. The rule is unchanged — an application registers what only it can
