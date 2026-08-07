@@ -1,9 +1,36 @@
 # Changelog
 
-## Unreleased
+## v0.2.0
 
-Plan F0 and F1 — the extension-point convention, and the first capability built
-on it.
+Plan Phase 3.5, Tier A. The gap this release closes is the one between "a
+platform MLBTracker uses" and "a platform a *hosted, public, multi-user* site
+can be built on" — every item below was a verified absence, not a wishlist
+entry.
+
+| | |
+| --- | --- |
+| **F0** | the provider extension point, and the convention for choosing between the two kinds |
+| **F1** | email delivery, the token store, and the four auth routes that had been designed since Phase 5 and never built |
+| **F2** | container images, compose, and a readiness endpoint that returns 503 |
+| **F3** | server-side pagination, as a prop existing call sites never pass |
+| **F4** | media storage keyed by `(entity_type, entity_id)`, with an approval queue |
+| **F5** | per-route document head, sitemap, robots.txt |
+
+Also, and not planned: MLBTracker was still inside the package. Its whole route
+map, its query keys, a hook calling one of its endpoints, its role name on the
+auth context, and its product name in the footer. None of it failed a type
+check or the import-closure audit, because an unused constant and a string
+literal are invisible to both — which is the finding, more than the fix.
+
+`bedrock-ui` also gained a test runner. It had `tsc --noEmit` and nothing else
+across 96 modules, and it caught a real hang on its first run.
+
+**Upgrading from v0.1.1:** `API_ROUTES`, `queryKeys`, `useAdminKpi`, `AdminKpi`
+and `AuthContextValue.isCollector` lose members that were never the platform's.
+An application takes back its own route map and query keys, composing them with
+what the package still exports; `hasRole("collector")` replaces `isCollector`
+exactly. `AppFooter`, `GlobalSearchBar` and `CommandPalette` take their copy as
+props. See MLBTracker's adoption for a worked example.
 
 ### Added — F2, deployment
 

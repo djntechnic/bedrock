@@ -11,8 +11,8 @@ of it.
 
 | Package | Status |
 | --- | --- |
-| `packages/bedrock-api` | v0.1.1 — 30 modules, 53 endpoints, imports and mounts standalone |
-| `packages/bedrock-ui` | v0.1.1 — grid engine, Grid Editor, auth, shell, ships TS source |
+| `packages/bedrock-api` | v0.2.0 — 56 modules, 63 endpoints, mail + storage providers, imports and mounts standalone |
+| `packages/bedrock-ui` | v0.2.0 — grid engine, Grid Editor, auth flows, shell, ships TS source |
 
 ## The contract
 
@@ -87,11 +87,11 @@ python -c "import bedrock.routes.admin_platform"   # no MLBTracker on the path
 ## Consuming it
 
 ```
-bedrock-api @ git+https://github.com/djntechnic/bedrock@v0.1.1#subdirectory=packages/bedrock-api
+bedrock-api @ git+https://github.com/djntechnic/bedrock@v0.2.0#subdirectory=packages/bedrock-api
 ```
 
 ```json
-"@djntechnic/bedrock-ui": "github:djntechnic/bedrock#v0.1.1"
+"@djntechnic/bedrock-ui": "github:djntechnic/bedrock#v0.2.0"
 ```
 
 Git tags rather than a package registry: real version pinning, no publishing
