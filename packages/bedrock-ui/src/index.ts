@@ -67,6 +67,7 @@ export * from "./hooks/usePersistedDisclosure";
 export * from "./hooks/queryKeys";
 
 // ── Context + stores ─────────────────────────────────────────────────────────
+export * from "./context/AppConfigContext";
 export * from "./context/ThemeContext";
 export * from "./context/KeyboardShortcutsContext";
 export * from "./store/commandPaletteStore";

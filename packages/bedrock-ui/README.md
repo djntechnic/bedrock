@@ -71,8 +71,14 @@ The source still lives here. Only the manifest moved.
 
 ## Public API
 
-`src/index.ts` is the contract. Deep imports resolve but are unsupported — if
-you need one, it belongs in the barrel.
+`src/index.ts` is the contract. Deep imports resolve, via the `./*` export,
+but are unsupported for application code — if an app needs one, it belongs in
+the barrel.
+
+The one standing exception is a white-box test of a package internal. Those
+tests should live in this repository rather than in a consumer's, and until
+they move here they reach their subject by deep import instead of forcing a
+private component into the public API to make a test compile.
 
 ## Provenance
 
