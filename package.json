@@ -7,7 +7,11 @@
   "exports": {
     ".": "./packages/bedrock-ui/src/index.ts",
     "./styles/tokens.css": "./packages/bedrock-ui/src/styles/tokens.css",
-    "./*": "./packages/bedrock-ui/src/*"
+    "./*": [
+      "./packages/bedrock-ui/src/*.ts",
+      "./packages/bedrock-ui/src/*.tsx",
+      "./packages/bedrock-ui/src/*"
+    ]
   },
   "files": [
     "packages/bedrock-ui/src"

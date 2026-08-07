@@ -10,6 +10,7 @@
 
 // ── Grid engine ──────────────────────────────────────────────────────────────
 export { default as DataGrid } from "./components/grids/DataGrid";
+export type { CustomCellCtx, CustomHeaderCtx, DataGridProps } from "./components/grids/DataGrid";
 export { default as GridHeader } from "./components/grids/GridHeader";
 export { default as EditableCell } from "./components/grids/EditableCell";
 export * from "./components/grids/PresentationalTableChrome";

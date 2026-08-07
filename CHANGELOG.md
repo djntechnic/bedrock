@@ -33,6 +33,14 @@ application root the moment it shipped as a library.
 
 ### Changed
 
+- **Deep imports actually resolve now.** `exports` mapped `./*` to a path with
+  no extension, so `@djntechnic/bedrock-ui/api/client` pointed at a file that
+  does not exist and TypeScript reported the module as missing. The pattern is
+  now an ordered array trying `.ts`, `.tsx`, then the literal path.
+- **`CustomCellCtx`, `CustomHeaderCtx` and `DataGridProps` are exported.** The
+  barrel republished `DataGrid` but none of the types a caller needs to write
+  a custom cell renderer, so typing one was impossible through the contract.
+
 - **The npm manifest moved to the repository root.** npm cannot install a
   package from a subdirectory of a git repository, so a `package.json` under
   `packages/bedrock-ui/` is simply unreachable by
