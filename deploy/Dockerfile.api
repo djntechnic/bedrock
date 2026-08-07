@@ -1,0 +1,93 @@
+# bedrock API image.
+#
+# A template, not a base image. bedrock is a library — it has no `main.py` and
+# no migrations of its own to run at boot — so this file lives in the
+# application's repository and is parameterised by the two things that differ:
+# where the ASGI app is (`APP_MODULE`) and which package directory holds it.
+# Copy it to your app, adjust the two ARGs if your layout differs, and it works
+# unmodified for a standard bedrock layout.
+#
+# Build:  docker build -f deploy/Dockerfile.api -t myapp-api .
+# Run:    docker run --env-file .env -p 8000:8000 myapp-api
+
+# ── Stage 1: build the wheels ────────────────────────────────────────────────
+# Separated so the runtime image never carries a compiler. psycopg2 and bcrypt
+# need one to build; keeping gcc out of the final image is the single largest
+# reduction in both size and CVE surface available here.
+FROM python:3.11-slim AS builder
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential libpq-dev git \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /build
+
+# Requirements first, as their own layer: application source changes on every
+# commit and dependencies change rarely, so this ordering is what makes an
+# incremental build take seconds instead of minutes.
+COPY requirements.txt ./
+RUN pip wheel --no-cache-dir --wheel-dir /wheels -r requirements.txt
+
+# ── Stage 2: runtime ─────────────────────────────────────────────────────────
+FROM python:3.11-slim AS runtime
+
+# libpq5 is the Postgres client library psycopg2 links against at runtime —
+# the -dev headers from the builder stage are not needed here.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libpq5 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Non-root. The application writes to /app/data and nothing else; running as
+# root would mean a container escape starts with the host's root filesystem.
+RUN useradd --create-home --uid 10001 bedrock
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PORT=8000 \
+    # bedrock resolves the application's .env, data directory and migrations
+    # relative to this. Without it, paths resolve against the working
+    # directory, which is the same value here but stops being so the moment
+    # something runs the process from elsewhere.
+    BEDROCK_APP_ROOT=/app
+
+WORKDIR /app
+
+COPY --from=builder /wheels /wheels
+COPY requirements.txt ./
+RUN pip install --no-index --find-links=/wheels -r requirements.txt \
+    && rm -rf /wheels
+
+# Application source. Adjust these to your layout; everything above is
+# layout-independent.
+ARG API_DIR=api
+ARG APP_DIRS="${API_DIR} bedrock_app migrations"
+COPY ${APP_DIRS} ./
+
+# `data` is a mount point in every real deployment (see the compose file). It
+# is created and owned here so the container still starts — and the migration
+# runner still has somewhere to put a SQLite file — when nothing is mounted.
+RUN mkdir -p /app/data && chown -R bedrock:bedrock /app
+
+USER bedrock
+EXPOSE 8000
+
+# Points at the readiness endpoint, which answers 503 when the database is
+# unreachable. `/health` would answer 200 in that state — it is a diagnostic
+# report, not a gate — and the container would be marked healthy while every
+# request failed.
+#
+# start-period covers migrations on first boot: a fresh database applies the
+# whole chain before the app serves, and without it the container is killed
+# mid-migration and restarts into a half-applied schema.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+    CMD ["bedrock-healthcheck"]
+
+ARG APP_MODULE=api.main:app
+ENV APP_MODULE=${APP_MODULE}
+
+# `sh -c` so $PORT and $APP_MODULE expand. One worker by default: bedrock's
+# rate limiter and the diagnostics scheduler both hold per-process state, so
+# scaling means more containers behind a load balancer, not more workers in
+# one. See docs/deployment.md.
+CMD ["sh", "-c", "exec uvicorn \"$APP_MODULE\" --host 0.0.0.0 --port \"$PORT\""]

@@ -16,6 +16,7 @@ export { default as EditableCell } from "./components/grids/EditableCell";
 export type { EditableCellProps } from "./components/grids/EditableCell";
 export * from "./components/grids/PresentationalTableChrome";
 export { default as GridWrapper } from "./components/GridWrapper";
+export type { ManualPagination } from "./components/GridWrapper";
 export * from "./components/SortableTableHead";
 export * from "./components/EmptyTableRow";
 export { default as ColumnToggle } from "./components/ColumnToggle";

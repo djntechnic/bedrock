@@ -41,8 +41,9 @@ Providers are declared with `core.providers.ProviderRegistry`.
 | Provider | Config key | Ships with |
 | --- | --- | --- |
 | `mail.provider.mail` | `mail_provider` | `smtp`, `console`, `null` |
+| `storage.provider.storage` | `storage_provider` | `local`, `cloudflare_images` |
 
-Media storage and error reporting are next. Mail is documented in
+Error reporting is next. Mail is documented in
 [`docs/mail.md`](docs/mail.md): invitation, password reset and email
 verification, all of which degrade to a logged no-op when nothing is
 configured. `bedrock-ui` ships the three pages those links land on; mount them
@@ -67,6 +68,14 @@ application's.
 A platform schema change is **both**: the baseline, for applications created
 from now on, and a migration, for the ones that already exist. Either one alone
 reaches half the databases.
+
+## Deployment
+
+`deploy/` holds the image, compose and nginx templates an application copies,
+and `.env.example` is the environment contract. Point every healthcheck at
+`/api/v1/health/ready`, which answers 503 when the database is unreachable —
+`/health` is a diagnostic report and always answers 200.
+[`docs/deployment.md`](docs/deployment.md).
 
 ## Verification
 

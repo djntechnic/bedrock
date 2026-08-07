@@ -5,6 +5,36 @@
 Plan F0 and F1 — the extension-point convention, and the first capability built
 on it.
 
+### Added — F2, deployment
+
+Verified absent before this: 14 Windows `.bat` files, no Dockerfile, no
+compose file, no service units. MLBTracker runs on a desktop; every app after
+it is hosted.
+
+- **`deploy/`** — multi-stage `Dockerfile.api` (no compiler in the runtime
+  stage, non-root, `BEDROCK_APP_ROOT` set explicitly), `Dockerfile.web`
+  (Vite → nginx), `nginx.conf` (SPA history fallback, `/api` proxy,
+  `X-Forwarded-For`), `docker-compose.yml` (Postgres + API + web), and
+  `.env.example`. Templates rather than a base image: bedrock is a library
+  with no `main.py`, so the app owns the build and these are what it copies.
+- **`GET /health/live` and `GET /health/ready`.** The existing `/health`
+  answers **200 even when the database is unreachable** — correct for the
+  admin Health page, which reads the body to report what is broken, and
+  actively harmful as a container healthcheck: it marks a dead app healthy, so
+  nothing restarts and a rolling deploy promotes it over a working container.
+  Readiness returns 503, and checks a read *and* a write, because a replica
+  promoted read-only answers `SELECT 1` and fails every login.
+- **`bedrock-healthcheck`** — a console script the image's `HEALTHCHECK` runs.
+  `curl` is not in a slim Python image and installing it adds a package and a
+  CVE surface to every deploy for a three-line request. Standard library only,
+  no bedrock imports, because it must work in the states where the application
+  cannot import.
+- **`docs/deployment.md`**, including why the stack runs one worker: the rate
+  limiter and the diagnostics scheduler both hold per-process state, so N
+  workers means N× the configured limit and N runs of every scheduled job.
+- **`.env` is gitignored.** It was not, and F1 gave the file a `SMTP_PASSWORD`
+  to hold.
+
 ### Fixed — the application inside the platform package
 
 Found while adding the F1 pages, and all the same defect: code that reads
@@ -57,6 +87,25 @@ unused constant and a string literal are invisible to both.
   files no crawler will request) and what is still missing: a scraper that does
   not run JavaScript sees `index.html`'s static tags, which is a rendering
   decision rather than a head-management one.
+### Added — F4, media and storage
+
+- **`bedrock.storage`** — a storage provider with local-disk and Cloudflare
+  Images backends. Three methods, because the platform calls three; a wider
+  guessed surface forces every backend to implement what nothing calls.
+  **The fallback is local disk, not a no-op** — a deliberate divergence from
+  mail, where dropping the message is survivable. A dropped file is data loss
+  the user watched succeed, and local disk needs no configuration, so there is
+  no reason to reach for a black hole.
+- **`media_service`** — `attach_media(entity_type, entity_id, …)`, the approval
+  queue, and deletion, generalised out of MLBTracker's `photo_service`, whose
+  every function took a `collection_card_id`. Uploads land `pending` so an
+  unreviewed image cannot reach a public CDN, `list_for_entity` filters to
+  approved by default, and approve/reject move only pending rows in the WHERE
+  clause so two admins on one queue cannot both count the same asset.
+- **`media_assets`**, keyed by `(entity_type, entity_id)` with no foreign key
+  to any application table — which is what lets one table serve a card's
+  photos, a gallery's images and a post's attachments, and which means nothing
+  cascades. `docs/media.md` says so and names the call an app makes instead.
 
 ### Added — F1, the pages the links land on
 

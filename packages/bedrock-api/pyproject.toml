@@ -32,7 +32,14 @@ dependencies = [
 
 [project.optional-dependencies]
 postgres = ["psycopg2-binary"]
-dev = ["pytest", "pytest-asyncio", "httpx"]
+# pyyaml parses deploy/docker-compose.yml in test_deployment.py — the
+# manifests are checked for the invariants that break a deploy silently.
+dev = ["pytest", "pytest-asyncio", "httpx", "pyyaml"]
+
+# Operational entry points. `bedrock-healthcheck` is what a container's
+# HEALTHCHECK runs — see deploy/Dockerfile.api and docs/deployment.md.
+[project.scripts]
+bedrock-healthcheck = "bedrock.tools.healthcheck:main"
 
 [tool.setuptools.packages.find]
 include = ["bedrock*"]
