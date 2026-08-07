@@ -53,6 +53,7 @@ except ImportError:
     psycopg2 = None  # type: ignore[assignment]
 from contextlib import contextmanager
 from time import monotonic
+from typing import Callable
 from bedrock.core.config import config
 from bedrock.core.schema_catalog import Tables as T
 
@@ -69,11 +70,13 @@ _season_cache_lock = threading.Lock()
 # Resolver supplying the current season. Registered by the host application
 # (see api/domain/current_season.py) so this module carries no season-table
 # knowledge; None means "no season concept", handled in get_current_season().
-_current_season_resolver = None
+_current_season_resolver: Callable[[], int] | None = None
 
 
-def register_current_season_resolver(fn) -> None:
+def register_current_season_resolver(fn: Callable[[], int]) -> None:
     """Register the callable that resolves the current season.
+
+    Re-registering overwrites, which keeps repeated imports idempotent.
 
     :param fn: Zero-argument callable returning an int. Exceptions are caught
         by `get_current_season()` and fall back to the calendar year.
@@ -81,6 +84,26 @@ def register_current_season_resolver(fn) -> None:
     global _current_season_resolver, _current_season_cache, _current_season_expires_at
     _current_season_resolver = fn
     # Drop any value cached under a previous resolver.
+    with _season_cache_lock:
+        _current_season_cache = None
+        _current_season_expires_at = 0.0
+
+
+def registered_current_season_resolver() -> tuple[Callable[[], int], ...]:
+    """:returns: The registered resolver as a 0- or 1-tuple.
+
+    A tuple rather than `Callable | None` so this reader matches the other
+    registries' shape (see `docs/extension_points.md`) — every `registered_*`
+    hands back an immutable snapshot, and callers test it the same way
+    regardless of whether the registry holds one contribution or many.
+    """
+    return () if _current_season_resolver is None else (_current_season_resolver,)
+
+
+def __clear_current_season_resolver() -> None:
+    """Test helper: drops the registration. Not used by application code."""
+    global _current_season_resolver, _current_season_cache, _current_season_expires_at
+    _current_season_resolver = None
     with _season_cache_lock:
         _current_season_cache = None
         _current_season_expires_at = 0.0

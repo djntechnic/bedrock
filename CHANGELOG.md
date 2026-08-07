@@ -1,5 +1,38 @@
 # Changelog
 
+## Unreleased
+
+Plan F0 — settling the extension-point convention before the capabilities that
+depend on it (mail, media storage, error reporting) get built on top of it.
+Everything here is additive; no existing extension point changes shape.
+
+### Added
+
+- **`bedrock.core.providers` — the second kind of extension point.** The seven
+  existing registries are all *additive*: they answer "what else should the
+  platform include?" and every registration runs. Mail, storage and error
+  reporting are not that shape — several implementations are registered,
+  configuration picks one, and exactly one wins. `ProviderRegistry` is that
+  contract: typed registration, lazy thread-safe instantiation, selection
+  re-read from `app_config_settings` so the admin UI can switch backends
+  without a restart, and a no-op fallback so an app that configures nothing
+  still boots. An unknown provider name logs once and degrades rather than
+  raising, because the selecting value is admin-editable and a typo must not
+  be able to halt the process.
+- **`docs/extension_points.md`.** Which kind to reach for, the naming
+  convention, and why the failure policy deliberately differs per registry — a
+  failing health counter is swallowed, a failing config section is not.
+- **A conformance test** (`test_extension_point_convention.py`) that asserts
+  the shape rather than describing it, and fails when a new `register_*`
+  function appears in `bedrock.core` without being listed.
+
+### Fixed
+
+- **`register_current_season_resolver` now matches the other six registries.**
+  It had no `registered_*` reader, no `__clear_*` test helper, and an
+  unannotated parameter — the only registry a test could not undo. All three
+  added; the resolver's behaviour is unchanged.
+
 ## v0.1.1
 
 Bug fixes found by making MLBTracker consume the package (plan Phase 3). All
