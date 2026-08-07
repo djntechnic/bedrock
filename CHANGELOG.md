@@ -5,6 +5,40 @@
 Plan F0 and F1 — the extension-point convention, and the first capability built
 on it.
 
+### Fixed — the application inside the platform package
+
+Found while adding the F1 pages, and all the same defect: code that reads
+correctly in MLBTracker and is wrong the moment a second app consumes it.
+None of it failed a type check or the import-closure audit, because an
+unused constant and a string literal are invisible to both.
+
+- **`api/routes.ts` held MLBTracker's entire API** — `analytics`,
+  `leaderboard`, `trend`, `players`, `search`, `collection`, `catalog`,
+  `transactions`, `inventory`, `cardPhotos`, `photoAdmin`, plus the domain
+  half of `/admin` (seasons, aliases, teams, inventory statuses, sync trigger,
+  KPI). None of it is served by `bedrock-api`. The map now holds only routes
+  the platform mounts, and `routes.test.ts` asserts the *shape of the whole
+  map* rather than individual paths — a test listing what is present would
+  have passed before the cleanup too.
+- **`queryKeys.ts` had the matching problem**, exporting cache keys for
+  `inventory`, `catalog`, `collection`, `transactions`, `leaderboard`,
+  `trend`, `players`, `rankings`, `search`, `cardPhotos` and `photoAdmin`.
+- **`useAdminKpi` called an application endpoint.** `/admin/kpi` is served by
+  MLBTracker, and `AdminKpi` counted players and stat seasons. A platform hook
+  pointed at an app route compiles and 404s in the next app.
+- **`CommandPalette` sorted groups by a hardcoded list** of MLBTracker's
+  headings. A second app's groups matched none of them, so every static route
+  registered, matched the query, and rendered nowhere. Ordering is now first
+  appearance in the registered list, which is what `commandRoutes.ts` already
+  documented.
+- **`AuthContextValue.isCollector`** — one app's role in a platform interface.
+  `hasRole("collector")` reads the same and generalises. `isAdmin` stays,
+  because the platform itself branches on it.
+- **Product copy that named the wrong product.** `AppFooter` rendered the
+  literal "Baseball Analytics Platform" in every consumer's footer; the search
+  bar and palette prompted "Search players, teams, pages…" in a package with
+  neither. All three are props now, with defaults true of any application.
+
 ### Added — F1, the pages the links land on
 
 - **`SetPasswordPage`, `ForgotPasswordPage`, `VerifyEmailPage`** in

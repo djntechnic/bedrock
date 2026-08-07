@@ -2,9 +2,14 @@
  * @file useAdminPlatform.ts
  * @module frontend/src/hooks
  * @description Admin console hooks for the reusable application platform:
- * KPI + database summary, app-config CRUD, grid settings/column CRUD, users,
+ * database summary, app-config CRUD, grid settings/column CRUD, users,
  * sessions, security events, export history, system logs, api-health,
  * diagnostics, and the project audit surface.
+ *
+ * `useAdminKpi` used to live here and does not any more: `/admin/kpi` is
+ * served by the application, and its payload counted players and stat seasons.
+ * A platform hook calling an app endpoint compiles fine and 404s in the next
+ * app.
  *
  * Everything here is app-agnostic — it depends only on tables the platform
  * owns (app_config_settings, app_grid_*, auth_*, log_*, import_*, diag_*).
@@ -19,19 +24,6 @@ import { apiClient, type ApiResponse } from "../api/client";
 import { API_ROUTES } from "../api/routes";
 import { useAppConfigContext, getHookConfig } from "./useAppConfig";
 import { queryKeys } from "./queryKeys";
-
-/** High-level system performance and status metrics. */
-export interface AdminKpi {
-// ...
-  /** Total number of registered users. */
-  users: number;
-  /** Total number of players in the master database. */
-  players: number;
-  /** Number of unique seasons with statistical data. */
-  stat_seasons: number;
-  /** Timestamp of the most recent successful sync run. */
-  last_sync: string | null;
-}
 
 /** User account metadata for the admin console (Phase 5.8). */
 export interface UserRecord {
@@ -330,23 +322,6 @@ export interface LogEntry {
   timestamp: string;
   /** Optional JSON or text block with extra context. */
   detail?: string | null;
-}
-
-/** Fetches high-level administrative KPIs. */
-export function useAdminKpi() {
-  const appConfig = useAppConfigContext();
-  const cfg = getHookConfig("useAdminKpi", appConfig);
-
-  return useQuery<ApiResponse<AdminKpi>>({
-    queryKey: queryKeys.admin.kpi(),
-    queryFn: async () => {
-      const { data } = await apiClient.get(API_ROUTES.admin.kpi());
-      return data;
-    },
-    staleTime: cfg.staleTime,
-    refetchInterval: cfg.refetchInterval ?? undefined,
-    refetchOnWindowFocus: cfg.refetchOnWindowFocus,
-  });
 }
 
 /** Fetches system logs with optional filtering and pagination. */

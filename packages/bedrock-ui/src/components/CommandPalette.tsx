@@ -6,11 +6,12 @@
  *              search sources in one dialog, with recent/pinned static routes
  *              shown first when the query is empty. This is the app's
  *              <=2-action path to every route, including ones with no
- *              persistent-nav entry (e.g. `/health`, `/inventory/management`).
+ *              persistent-nav entry.
  *
- *              What this app searches is *not* known here: entity groups come
- *              from `searchSourceRegistry.ts`, which MLBTracker populates with
- *              players and teams in components/domain/searchSources.tsx.
+ *              What an app searches is *not* known here: entity groups come
+ *              from `searchSourceRegistry.ts`, and route groups from
+ *              `commandRoutes.ts`. Both are registered by the application, and
+ *              nothing in this file may assume what they contain.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -88,15 +89,24 @@ function SearchSourceGroup({
   );
 }
 
-/** Fixed rendering order for the static-route groups. */
-const GROUP_ORDER: CommandRouteItem["group"][] = [
-  "Navigate",
-  "Leaderboards",
-  "Rankings",
-  "Trends",
-  "Inventory",
-  "Admin",
-];
+/**
+ * Rendering order for the static-route groups: first appearance in the
+ * registered route list.
+ *
+ * This was a hardcoded array of MLBTracker's group names — "Leaderboards",
+ * "Rankings", "Trends", "Inventory". A second application's groups would have
+ * matched none of them, and its entire static-route section would have
+ * rendered empty while every route was registered and findable. Registration
+ * order is what `commandRoutes.ts` already documents, and it is stable across
+ * restarts because the app registers in a fixed order.
+ */
+export function groupOrder(items: CommandRouteItem[]): CommandRouteItem["group"][] {
+  const seen: CommandRouteItem["group"][] = [];
+  for (const item of items) {
+    if (!seen.includes(item.group)) seen.push(item.group);
+  }
+  return seen;
+}
 
 function groupRoutes(items: CommandRouteItem[]): Map<CommandRouteItem["group"], CommandRouteItem[]> {
   const map = new Map<CommandRouteItem["group"], CommandRouteItem[]>();
@@ -108,7 +118,18 @@ function groupRoutes(items: CommandRouteItem[]): Map<CommandRouteItem["group"], 
   return map;
 }
 
-export default function CommandPalette() {
+export interface CommandPaletteProps {
+  /**
+   * Prompt text, matching whatever the app's `GlobalSearchBar` shows. Same
+   * reasoning as that prop: the default names nothing this package does not
+   * have.
+   */
+  placeholder?: string;
+}
+
+export default function CommandPalette({
+  placeholder = "Search pages and records…",
+}: CommandPaletteProps = {}) {
   const navigate = useNavigate();
   const { hasModule } = useModules();
 
@@ -167,6 +188,9 @@ export default function CommandPalette() {
     [visibleRoutes, query]
   );
   const groupedMatches = useMemo(() => groupRoutes(routeMatches), [routeMatches]);
+  // Ordered from the full visible set, not from the current matches, so the
+  // section order does not reshuffle as the user types.
+  const orderedGroups = useMemo(() => groupOrder(visibleRoutes), [visibleRoutes]);
 
   const pinnedItems = useMemo(
     () => pinnedIds.map((id) => visibleById.get(id)).filter((r): r is CommandRouteItem => !!r),
@@ -227,10 +251,10 @@ export default function CommandPalette() {
       open={open}
       onOpenChange={setOpen}
       title="Command Palette"
-      description="Jump to any page, player, team, or admin grid"
+      description="Jump to any page, record, or admin grid"
     >
       <CommandInput
-        placeholder="Search players, teams, pages…"
+        placeholder={placeholder}
         value={query}
         onValueChange={setQuery}
       />
@@ -281,7 +305,7 @@ export default function CommandPalette() {
           </CommandGroup>
         )}
 
-        {GROUP_ORDER.map((group) => {
+        {orderedGroups.map((group) => {
           const items = groupedMatches.get(group);
           if (!items || items.length === 0) return null;
           return (
