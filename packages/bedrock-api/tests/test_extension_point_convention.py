@@ -55,6 +55,12 @@ REGISTRIES = [
         "__clear_schema_objects",
     ),
     (
+        "bedrock.core.schema_drift",
+        "register_ignored_objects",
+        "registered_ignored_objects",
+        "__clear_ignored_objects",
+    ),
+    (
         "bedrock.core.database",
         "register_current_season_resolver",
         "registered_current_season_resolver",
@@ -68,7 +74,7 @@ REGISTRIES = [
     ),
 ]
 
-IDS = [module.rsplit(".", 1)[-1] for module, *_ in REGISTRIES]
+IDS = [f"{module.rsplit('.', 1)[-1]}:{register}" for module, register, *_ in REGISTRIES]
 
 #: Functions whose name starts with `register_` but which are not registries.
 #: The scan below is a prefix match, and `register` is a noun as often as a

@@ -161,9 +161,21 @@ class DatabaseManager:
     # ------------------------------------------------------------------ #
     # Connection acquisition
     # ------------------------------------------------------------------ #
-    def _create_sqlite_connection(self) -> sqlite3.Connection:
-        """Create and configure a new SQLite connection with foreign keys enabled."""
-        conn = sqlite3.connect(self.sqlite_path)
+    def _create_sqlite_connection(self, *, explicit_transactions: bool = False
+                                  ) -> sqlite3.Connection:
+        """Create and configure a new SQLite connection with foreign keys enabled.
+
+        :param explicit_transactions: When True the connection is opened in
+            autocommit mode (``isolation_level=None``) and the caller drives
+            BEGIN/COMMIT/ROLLBACK itself. `transaction()` needs this: pysqlite's
+            default mode only opens a transaction ahead of DML, so a CREATE
+            TABLE commits on the spot and survives a later rollback — which for
+            a schema migration is the entire failure mode being guarded against.
+        """
+        conn = sqlite3.connect(
+            self.sqlite_path,
+            isolation_level=None if explicit_transactions else "",
+        )
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys = ON;")
         return conn
@@ -590,7 +602,8 @@ class DatabaseManager:
             finally:
                 pool.putconn(conn)
         else:
-            conn = self._create_sqlite_connection()
+            conn = self._create_sqlite_connection(explicit_transactions=True)
+            conn.execute("BEGIN")
             try:
                 yield conn
                 conn.commit()
