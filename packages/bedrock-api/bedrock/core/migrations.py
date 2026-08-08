@@ -18,9 +18,13 @@ Desc:    Versioned schema migration runner. On startup it ensures a
          reference a platform table and never the reverse — bedrock has no
          knowledge of an application's schema to depend on.
 
-         Each migration runs in its own try/except. Non-critical failures are
-         logged and skipped so a single bad migration never crashes startup;
-         migrations flagged `critical=True` re-raise on failure.
+         Each migration runs inside a single transaction that also writes its
+         ledger row, so "applied" and "recorded" are one atomic fact: a
+         migration that fails part-way leaves the schema exactly as it was.
+         Failures raise. An earlier version logged-and-skipped instead, which
+         sounded resilient and was not — the partial work stayed committed,
+         nothing was recorded, and the same broken file was replayed from
+         statement one on every subsequent boot.
 """
 import importlib
 import os
@@ -142,41 +146,43 @@ def _is_applied(migration_id: str) -> bool:
     return not df.empty
 
 
-def _record(migration_id: str) -> None:
-    """Record a migration_id as applied in the ledger."""
-    db.execute(
-        f"INSERT INTO {T.SYS_SCHEMA_MIGRATIONS} (migration_id) VALUES (%s)",
-        (migration_id,),
-    )
-
-
-def _apply_one(migration_id: str, runner, *, critical: bool = False) -> bool:
+def _apply_one(migration_id: str, runner) -> bool:
     """
-    Apply a single migration exactly once.
+    Apply a single migration exactly once, atomically.
+
+    The migration's statements and its ledger row are written on one
+    connection inside one transaction. Either all of it commits or none of it
+    does, so the ledger can never disagree with the schema.
 
     Args:
         migration_id: Stable unique identifier recorded in the ledger.
-        runner: Zero-arg callable that performs the migration's SQL.
-        critical: When True, a failure re-raises (aborting startup). When
-                  False, failures are logged and skipped.
+        runner: Callable taking the transaction's connection, which performs
+                the migration's SQL on that connection.
 
     Returns:
         bool: True if the migration was applied during this call, False if it
-              was already applied or was skipped due to a non-critical error.
+              was already applied.
+
+    Raises:
+        Exception: Whatever the migration raised, after the transaction has
+                   been rolled back. Startup aborts rather than continuing on
+                   a schema nobody has verified.
     """
     if _is_applied(migration_id):
         return False
 
     try:
-        runner()
+        with db.transaction() as conn:
+            runner(conn)
+            db.execute_conn(
+                conn,
+                f"INSERT INTO {T.SYS_SCHEMA_MIGRATIONS} (migration_id) VALUES (%s)",
+                (migration_id,),
+            )
     except Exception as e:
-        if critical:
-            logger.error("CRITICAL migration failed: %s — %s", migration_id, e)
-            raise
-        logger.warning("Migration skipped (failed): %s — %s", migration_id, e)
-        return False
+        logger.error("Migration failed and was rolled back: %s — %s", migration_id, e)
+        raise
 
-    _record(migration_id)
     logger.info("Migration applied: %s", migration_id)
     return True
 
@@ -204,12 +210,18 @@ _RENAME_COLUMN_RE = re.compile(
 )
 
 
-def _execute_statement(stmt: str) -> None:
-    """Execute one migration statement, no-oping idempotent ADD/RENAME COLUMN cases."""
+def _execute_statement(stmt: str, conn) -> None:
+    """Execute one migration statement, no-oping idempotent ADD/RENAME COLUMN cases.
+
+    Every read and write goes through `conn` — the migration's own transaction.
+    Probing on any other connection would not see DDL committed nowhere yet, so
+    a guard would read "table absent" for a table the file created three
+    statements ago and silently skip work it was supposed to do.
+    """
     m = _ADD_COLUMN_RE.match(stmt)
     if m:
         table, column = m.group("table"), m.group("column")
-        cols = db.query(f"PRAGMA table_info({table})")
+        cols = db.query_conn(conn, f"PRAGMA table_info({table})")
         if cols.empty:
             return  # table absent (likely renamed by a later migration)
         if column in cols["name"].tolist():
@@ -217,13 +229,13 @@ def _execute_statement(stmt: str) -> None:
     m = _RENAME_COLUMN_RE.match(stmt)
     if m:
         table, old, new = m.group("table"), m.group("old"), m.group("new")
-        cols = db.query(f"PRAGMA table_info({table})")
+        cols = db.query_conn(conn, f"PRAGMA table_info({table})")
         if cols.empty:
             return  # table absent (likely renamed by a later migration)
         names = cols["name"].tolist()
         if old not in names and new in names:
             return  # rename already in effect
-    db.execute(stmt)
+    db.execute_conn(conn, stmt)
 
 
 def _split_sql_statements(sql: str) -> list[str]:
@@ -285,12 +297,12 @@ def _discover_platform_sql_files() -> list[str]:
     return sorted(glob.glob(os.path.join(PLATFORM_MIGRATIONS_DIR, "*.sql")))
 
 
-def _run_sql_file(path: str) -> None:
-    """Apply every statement in one .sql migration file."""
+def _run_sql_file(path: str, conn) -> None:
+    """Apply every statement in one .sql migration file on one connection."""
     with open(path, "r", encoding="utf-8") as fh:
         script = fh.read()
     for statement in _split_sql_statements(script):
-        _execute_statement(statement)
+        _execute_statement(statement, conn)
 
 
 def apply_migrations() -> None:
@@ -300,13 +312,16 @@ def apply_migrations() -> None:
     # 0. Platform migrations, before anything the application owns.
     for path in _discover_platform_sql_files():
         stem = os.path.splitext(os.path.basename(path))[0]
-        _apply_one(f"{PLATFORM_MIGRATION_PREFIX}{stem}", lambda p=path: _run_sql_file(p))
+        _apply_one(
+            f"{PLATFORM_MIGRATION_PREFIX}{stem}",
+            lambda conn, p=path: _run_sql_file(p, conn),
+        )
 
     # 1. Raw inline migrations.
     for migration_id, sql in _RAW_MIGRATIONS:
-        def _runner(s=sql):
+        def _runner(conn, s=sql):
             for statement in _split_sql_statements(s):
-                _execute_statement(statement)
+                _execute_statement(statement, conn)
 
         _apply_one(migration_id, _runner)
 
@@ -314,7 +329,7 @@ def apply_migrations() -> None:
     for table, column, col_type in _ADD_COLUMN_MIGRATIONS:
         migration_id = f"alter_{table}_{column}"
 
-        def _runner(t=table, c=column, ct=col_type):
+        def _runner(conn, t=table, c=column, ct=col_type):
             # Check whether the column already exists before attempting ALTER
             # TABLE so the database driver never logs a noisy ERROR for a
             # perfectly expected "duplicate column" scenario. Also skip when
@@ -323,16 +338,16 @@ def apply_migrations() -> None:
             # rankings_daily_scores → rankings_scores), so on any DB where the
             # rename has already applied, the source table no longer exists
             # and the ALTER would otherwise emit a spurious startup ERROR.
-            cols = db.query(f"PRAGMA table_info({t})")
+            cols = db.query_conn(conn, f"PRAGMA table_info({t})")
             if cols.empty:
                 return  # table absent (likely renamed by a later migration)
             if c in cols["name"].tolist():
                 return  # already present — nothing to do
-            db.execute(f"ALTER TABLE {t} ADD COLUMN {c} {ct}")
+            db.execute_conn(conn, f"ALTER TABLE {t} ADD COLUMN {c} {ct}")
 
         _apply_one(migration_id, _runner)
 
     # 3. On-disk .sql files, applied in sorted filename order.
     for path in _discover_sql_files():
         migration_id = os.path.splitext(os.path.basename(path))[0]
-        _apply_one(migration_id, lambda p=path: _run_sql_file(p))
+        _apply_one(migration_id, lambda conn, p=path: _run_sql_file(p, conn))

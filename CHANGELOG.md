@@ -1,5 +1,61 @@
 # Changelog
 
+## v0.2.1
+
+Two fixes to the boot path, both found by running MLBTracker's real migration
+chain from an empty database rather than from a copy of a working one.
+
+### Fixed — a failed migration no longer leaves the schema half-changed
+
+`_run_sql_file` executed a migration's statements one at a time with no
+transaction, and `_apply_one` logged-and-skipped on failure. Together those
+read as resilient and behave as the opposite: the statements before the failing
+one stayed committed, nothing was written to the ledger, and the next boot
+replayed the file from statement one against a database that had already
+received part of it.
+
+Now each migration's statements and its ledger row commit as one transaction,
+and a failure raises rather than being swallowed. A migration that cannot be
+applied stops startup, which is the honest outcome — the alternative was an
+application serving traffic on a schema no migration path describes.
+
+Two supporting changes came with it:
+
+- `_execute_statement` and `_run_sql_file` take the transaction's connection,
+  and the ADD/RENAME COLUMN guards pre-check through it. Probing on any other
+  connection would read "table absent" for a table the same file created three
+  statements earlier, and "absent" makes the guard return quietly — skipping
+  real work and calling the migration a success.
+- `db.transaction()` opens its SQLite connection in autocommit mode and issues
+  an explicit `BEGIN`. pysqlite only starts a transaction ahead of DML, so
+  without this a `CREATE TABLE` committed on the spot and survived the
+  rollback, which for a schema migration is the whole failure mode.
+
+**Upgrading:** a migration that has been failing silently on every boot will
+now abort startup. That is the point, but it means the failure surfaces at the
+worst moment if it has been running unnoticed — check the startup log for
+`Migration skipped (failed)` on v0.2.0 before upgrading.
+
+### Added — `register_ignored_objects`, for objects deliberately uncatalogued
+
+Not every live object belongs in a schema catalog. A DELETE-tripwire table a
+maintenance script installs out of band; scratch tables a long migration
+creates and drops, which linger on any database where it did not finish. Each
+one reported as drift on every boot, and a warning nobody can ever clear is a
+warning nobody reads.
+
+`core.schema_drift.register_ignored_objects(*names, prefixes=())` declares
+them. It is a registry in the F0 sense — additive, overwriting on re-import,
+with `registered_ignored_objects()` / `registered_ignored_prefixes()` readers.
+Both forms exist because both cases do: exact names for one-off objects,
+prefixes for families.
+
+Ignores filter the `extra` half of the drift report only. "Exists live,
+uncatalogued on purpose" says nothing about an object the catalog expects and
+the database does not have, so `missing` is untouched. The `extra` warning also
+stops advising "regenerate the catalog" as the only remedy — wrong advice for
+an object the generator filters deliberately — and names the ignore route too.
+
 ## v0.2.0
 
 Plan Phase 3.5, Tier A. The gap this release closes is the one between "a

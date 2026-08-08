@@ -75,6 +75,7 @@ Backend:
 | `core.db_health.register_canonical_tables` | tables whose emptiness means a wiped DB |
 | `core.diagnostics_registry.register_diagnostic_check` | data-quality checks |
 | `core.schema_drift.register_schema_objects` | the app's half of the schema |
+| `core.schema_drift.register_ignored_objects` | live objects deliberately left out of the catalog |
 | `core.database.register_current_season_resolver` | the app's current period |
 | `core.sitemap.register_sitemap_source` | the app's public URLs |
 | `core.config_constants.APP_CATEGORY_MODULE` | app config categories (dotted path) |
