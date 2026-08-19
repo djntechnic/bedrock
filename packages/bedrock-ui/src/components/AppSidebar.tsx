@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import {
   getNavItems,
+  isNavItemVisible,
   type NavItem,
   type SubItem,
 } from "./navRegistry";
@@ -41,7 +42,7 @@ export default function AppSidebar() {
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
   const { system } = useAppSettings();
   const { hasModule } = useModules();
-  const { user, isAdmin, logout } = useAuth();
+  const { user, isAdmin, hasRole, logout } = useAuth();
 
   const isMobile = useMediaQuery("(max-width: 1023px)");
   const pinned = useSidebarStore((s) => s.pinned);
@@ -168,7 +169,10 @@ export default function AppSidebar() {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-3 space-y-0.5 px-2">
         {getNavItems().map((item) => {
-          if (item.module === "admin" && (!user || !isAdmin)) {
+          // Role and legacy admin-module gating both hide the entry outright.
+          // Module gating below only *disables* it, which is the difference
+          // between "not for you" and "not switched on".
+          if (!isNavItemVisible(item, { user, isAdmin, hasRole })) {
             return null;
           }
           const active = isParentActive(item);

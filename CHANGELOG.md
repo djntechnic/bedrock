@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.2.2
+
+### Added — `NavItem.role`, for a nav entry that hides rather than greys out
+
+`<AppSidebar>` had exactly one way to gate an entry by permission:
+`module: "admin"`, a special case predating the module registry. Any other
+gating went through `module`, and `module` also drives the `hasModule()`
+*disabled* rendering — so an app that gates by role but seeds no module registry
+got a permanently greyed-out entry rather than a hidden one.
+
+`NavItem` now takes an optional `role` slug. Below it the entry is not rendered
+at all, because an admin-only destination should not advertise itself. The guard
+mirrors `<ProtectedRoute requiredRole>`, `isAdmin` short-circuit included, so a
+superuser never loses a link to a route they can in fact open.
+
+The decision is factored out as the pure, exported `isNavItemVisible(item, auth)`
+— the sidebar needs a router, a query client and an auth provider to render, and
+the gating logic is worth testing without all three.
+
+`module: "admin"` keeps its existing meaning, and module gating still only
+*disables*: "not switched on" and "not for you" are different answers and should
+not look alike. Nothing registered today changes behaviour.
+
 ## v0.2.1
 
 Two fixes to the boot path, both found by running MLBTracker's real migration
