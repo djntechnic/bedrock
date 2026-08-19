@@ -84,6 +84,12 @@ import { useRowAccentResolver } from "./rowAccentRegistry";
 
 import { renderCell, renderMediaCell, unwrapCellPayload } from "./cellRenderers";
 import EditableCell from "./EditableCell";
+import { useCellSelection } from "./useCellSelection";
+import type {
+  CellRange,
+  CellRangeFill,
+  CellRangePaste,
+} from "./useCellSelection";
 import {
   prependRankColumn,
   prependSelectionColumn,
@@ -95,6 +101,12 @@ import {
   hasAggregates,
 } from "../../utils/gridUtils";
 import { getRankRowClass } from "../../utils/rankStyle";
+
+/**
+ * Columns the engine prepends itself — chevron, rank, compare checkbox. Not
+ * data, so the cell cursor skips them.
+ */
+const ENGINE_COLUMN_IDS = new Set(["__expander__", "ranking", "_compare"]);
 
 /** Contract passed to a `customCells` override. */
 export interface CustomCellCtx<T> {
@@ -294,6 +306,31 @@ export interface DataGridProps<T extends Record<string, any>> {
    * should verify the two interactions co-exist for their data shape.
    */
   renderSubRow?: (row: T, rowIndex: number) => ReactNode;
+  /**
+   * Spreadsheet cell cursor: a focused cell, a shift-extendable rectangle,
+   * arrow-key navigation, `Ctrl/Cmd+C` to the clipboard as TSV, `Ctrl/Cmd+V`
+   * reported to `onRangePaste`, and a fill handle reported to `onRangeFill`.
+   *
+   * Off by default, and off is exactly what every existing grid gets — no
+   * listeners are bound and the cell render is unchanged but for two data
+   * attributes. Coexists with `selectionOverride`: row selection stays on the
+   * checkbox column, which is excluded from the cell grid.
+   *
+   * The engine reads and reports; it never writes. Paste and fill hand a
+   * rectangle to the consumer because only the consumer knows which rows are
+   * locked, which values are legal, and where its draft buffer is.
+   */
+  cellSelection?: boolean;
+  /** Fired after a range copy, with the payload that reached the clipboard. */
+  onRangeCopy?: (tsv: string, range: CellRange) => void;
+  /**
+   * A paste at the cursor. `anchor` is the top-left of the selection and the
+   * matrix fills right and down from it; rows or columns past the end of the
+   * grid are the consumer's to create, clamp or refuse.
+   */
+  onRangePaste?: (paste: CellRangePaste) => void;
+  /** A fill-handle drag: repeat `source`'s values over `target`'s rows. */
+  onRangeFill?: (fill: CellRangeFill) => void;
 }
 
 /**
@@ -353,6 +390,10 @@ export default function DataGrid<T extends Record<string, any>>({
   onBulkCommit,
   bulkDirtyOverride = false,
   renderSubRow,
+  cellSelection = false,
+  onRangeCopy,
+  onRangePaste,
+  onRangeFill,
 }: DataGridProps<T>) {
   const isVirtualized = variant === "virtualized";
   const navigate = useNavigate();
@@ -940,6 +981,54 @@ export default function DataGrid<T extends Record<string, any>>({
   // and lets `<GridWrapper>` slice the already-sorted set.
   const sortedRows = table.getSortedRowModel().rows.map((r) => r.original);
 
+  // ── Cell selection (opt-in) ───────────────────────────────────────────────
+  // The cursor moves over the sorted+filtered model and the visible leaf
+  // columns, so the rectangle is always the one on screen. The engine's own
+  // prepended columns are not data and are excluded by id: a checkbox is not a
+  // cell you can copy, and including it would put a blank column in the middle
+  // of every paste.
+  const selectionRowModel = table.getSortedRowModel().rows;
+  const cellRowKeys = useMemo(
+    () => (cellSelection ? selectionRowModel.map((r) => r.id) : []),
+    [cellSelection, selectionRowModel],
+  );
+  const visibleLeafColumns = table.getVisibleLeafColumns();
+  const cellColumnIds = useMemo(
+    () =>
+      cellSelection
+        ? visibleLeafColumns
+            .map((c) => c.id)
+            .filter((id) => !ENGINE_COLUMN_IDS.has(id))
+        : [],
+    [cellSelection, visibleLeafColumns],
+  );
+  const rowsByKey = useMemo(() => {
+    if (!cellSelection) return new Map<string, Row<T>>();
+    return new Map(selectionRowModel.map((r) => [r.id, r]));
+  }, [cellSelection, selectionRowModel]);
+  const getCellText = useCallback(
+    (rowKey: string, columnId: string) => {
+      const row = rowsByKey.get(rowKey);
+      if (!row) return "";
+      const cell = row.getVisibleCells().find((c) => c.column.id === columnId);
+      if (!cell) return "";
+      // Through `unwrapCellPayload` so a cell that carries a render payload
+      // copies its value rather than "[object Object]".
+      const { value } = unwrapCellPayload(cell.getValue());
+      return value == null ? "" : String(value);
+    },
+    [rowsByKey],
+  );
+  const cells = useCellSelection({
+    enabled: cellSelection,
+    rowKeys: cellRowKeys,
+    columnIds: cellColumnIds,
+    getCellText,
+    onCopy: onRangeCopy,
+    onPaste: onRangePaste,
+    onFill: onRangeFill,
+  });
+
   // Phase 8 H1: virtualization. The scroll container ref + `useVirtualizer`
   // are set up unconditionally so the hook order stays stable; `count` is
   // pinned to zero outside virtualized mode so the virtualizer is a no-op.
@@ -1203,10 +1292,43 @@ export default function DataGrid<T extends Record<string, any>>({
                         ? String(cellPlainValue)
                         : undefined;
 
+                    // Cell-cursor state. All false when `cellSelection` is off,
+                    // in which case the only difference from before is two data
+                    // attributes — which is also what makes the cursor testable
+                    // and stylable from outside.
+                    const isCellSelectable =
+                      cells.enabled && !ENGINE_COLUMN_IDS.has(cell.column.id);
+                    const isCellFocused =
+                      isCellSelectable && cells.isFocused(row.id, cell.column.id);
+                    const isCellSelected =
+                      isCellSelectable && cells.isSelected(row.id, cell.column.id);
+                    const isCellFillPreview =
+                      isCellSelectable &&
+                      cells.isFillPreview(row.id, cell.column.id);
+                    const showFillHandle =
+                      isCellSelectable &&
+                      !!onRangeFill &&
+                      cells.isFillOrigin(row.id, cell.column.id);
+
                     return (
                       <TableCell
                         key={cell.id}
                         title={titleText}
+                        data-row-key={row.id}
+                        data-column-id={cell.column.id}
+                        data-cell-focused={isCellFocused || undefined}
+                        data-cell-selected={isCellSelected || undefined}
+                        onMouseDown={
+                          isCellSelectable
+                            ? (event) =>
+                                cells.onCellMouseDown(row.id, cell.column.id, event)
+                            : undefined
+                        }
+                        onMouseEnter={
+                          isCellSelectable
+                            ? () => cells.onCellMouseEnter(row.id, cell.column.id)
+                            : undefined
+                        }
                         className={cn(
                           `${cellPad} text-${align}`,
                           "overflow-hidden text-ellipsis",
@@ -1215,6 +1337,14 @@ export default function DataGrid<T extends Record<string, any>>({
                           isNameCol && pinnedSide !== "left" &&
                             "sticky left-0 z-10 bg-card",
                           isFlashing && "animate-live-pulse",
+                          // `primary` rather than a token of its own: the ring
+                          // and the wash are the same affordance the rest of the
+                          // shell uses for "this is what you are acting on".
+                          isCellSelectable && "relative",
+                          isCellSelected && "bg-primary/10",
+                          isCellFillPreview && "bg-primary/5",
+                          isCellFocused &&
+                            "outline outline-1 -outline-offset-1 outline-primary",
                         )}
                         style={{
                           ...(cellMaxWidth !== undefined ? { maxWidth: cellMaxWidth } : {}),
@@ -1226,6 +1356,16 @@ export default function DataGrid<T extends Record<string, any>>({
                         }}
                       >
                         {content}
+                        {showFillHandle && (
+                          <span
+                            role="presentation"
+                            aria-hidden
+                            data-fill-handle=""
+                            title="Drag down to fill"
+                            onMouseDown={cells.onFillHandleMouseDown}
+                            className="absolute right-0 bottom-0 h-1.5 w-1.5 cursor-crosshair bg-primary"
+                          />
+                        )}
                       </TableCell>
                     );
                   })}

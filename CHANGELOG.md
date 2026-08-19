@@ -1,5 +1,64 @@
 # Changelog
 
+## v0.3.0
+
+### Added — a cell cursor and clipboard for `<DataGrid>`, opt-in
+
+The grid engine could select rows and edit one cell at a time. Neither is bulk
+entry: filling forty rows across eight columns meant forty-times-eight
+click-type-Tab cycles, with no way to copy a rectangle out to Excel or paste one
+back in.
+
+`<DataGrid>` now takes `cellSelection`, and with it a spreadsheet cursor —
+click, shift-click, drag, arrow keys, `Shift`+arrows to extend, `Ctrl`+arrows to
+the edge, `Ctrl+A`, `Escape`. `Ctrl+C` writes the selected rectangle to the
+clipboard as TSV; `Ctrl+V` parses TSV back out and reports it. A fill handle on
+the range's bottom-right corner reports a downward fill.
+
+Three things are worth knowing about the shape of it:
+
+- **The engine reads and reports; it never writes.** `onRangePaste` and
+  `onRangeFill` hand the consumer a rectangle and the values destined for it,
+  because the consumer owns the draft buffer — the same reason `onBulkCommit`
+  does not fit an app that stages edits before saving them.
+- **Clipboard access goes through the native `copy`/`paste` events**, not
+  `navigator.clipboard.readText`, which needs a permission Firefox does not
+  grant. `event.clipboardData` is available in every browser during a real
+  keystroke. `writeText` is a fallback for the copy direction only, for when an
+  event arrives carrying no clipboard at all.
+- **The rectangle spans the full sorted and filtered row model**, not the
+  visible page — `GridWrapper` owns pagination internally, so a paste that runs
+  past the last visible row continues onto the next page rather than stopping at
+  a boundary the operator cannot see. A selection whose row is filtered away or
+  whose column is hidden is dropped rather than silently re-pointed.
+
+The cursor skips the columns the engine prepends itself — expander, rank, compare
+checkbox — so a copied rectangle never contains a blank column for a checkbox.
+Row selection and cell selection coexist. Grid keys are ignored while a cell
+editor has focus, so typing a tab inside `<EditableCell>` still belongs to the
+editor.
+
+`useCellSelection` is exported alongside, with `toTsv`/`parseTsv`, for a grid
+that is not a `<DataGrid>`. Every new prop defaults off; disabled, the hook binds
+no listeners. The only change visible to an existing grid is two data attributes
+per cell.
+
+### Added — `GridFocusShell`, a full-viewport workspace for any grid
+
+`admin/gridEditor/GridFocusMode` proved the pattern and is welded to a
+`GridDraft`. `GridFocusShell` is the generic runtime version: `open`, a title, a
+sticky `toolbar` slot, a scrolling grid, and a sticky `footer` slot for a Save
+bar.
+
+Dismissal is deliberately hard. Outside clicks and pointer-downs are prevented,
+because a stray click on the overlay must not be the thing that discards a
+hundred unsaved cell edits. Escape routes through an optional `onEscape` instead
+of closing, so a dirty-state confirmation can own the decision and close the
+shell itself once the operator has answered.
+
+No new design tokens: the cursor and range styling reuse `primary`, so an app's
+token audit stays clean.
+
 ## v0.2.2
 
 ### Added — `NavItem.role`, for a nav entry that hides rather than greys out

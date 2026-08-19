@@ -15,6 +15,17 @@ export { default as GridHeader } from "./components/grids/GridHeader";
 export { default as EditableCell } from "./components/grids/EditableCell";
 export type { EditableCellProps } from "./components/grids/EditableCell";
 export * from "./components/grids/PresentationalTableChrome";
+export { default as GridFocusShell } from "./components/grids/GridFocusShell";
+export type { GridFocusShellProps } from "./components/grids/GridFocusShell";
+export { useCellSelection, parseTsv, toTsv } from "./components/grids/useCellSelection";
+export type {
+  CellRef,
+  CellRange,
+  CellRangeFill,
+  CellRangePaste,
+  CellSelection,
+  UseCellSelectionOptions,
+} from "./components/grids/useCellSelection";
 export { default as GridWrapper } from "./components/GridWrapper";
 export type { ManualPagination } from "./components/GridWrapper";
 export * from "./components/SortableTableHead";
