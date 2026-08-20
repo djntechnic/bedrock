@@ -70,6 +70,7 @@ function Harness({
                     sel.onCellMouseDown(rowKey, columnId, event)
                   }
                   onMouseEnter={() => sel.onCellMouseEnter(rowKey, columnId)}
+                  onDoubleClick={() => sel.onCellDoubleClick(rowKey, columnId)}
                 >
                   {sel.isFillOrigin(rowKey, columnId) && (
                     <span
@@ -463,6 +464,47 @@ describe("clipboard", () => {
     const { event } = clipboardEvent("paste", "x");
     document.dispatchEvent(event);
     expect(onPaste).not.toHaveBeenCalled();
+  });
+});
+
+// ── Double-click to edit ─────────────────────────────────────────────────────
+
+describe("double-click", () => {
+  it("asks the consumer to open an editor, preserving the value", () => {
+    // Seed `null` means "open with what is already there". A double-click is
+    // how an operator opens a cell in order to *look* at it, so seeding
+    // anything else would discard the value they clicked to see.
+    const onBeginEdit = vi.fn().mockReturnValue(true);
+    render(<Harness onBeginEdit={onBeginEdit} />);
+
+    fireEvent.doubleClick(cell("r2", "b"));
+
+    expect(onBeginEdit).toHaveBeenCalledWith(
+      { rowKey: "r2", columnId: "b" },
+      null,
+    );
+  });
+
+  it("moves the cursor to the double-clicked cell", () => {
+    render(<Harness onBeginEdit={() => true} />);
+    fireEvent.mouseDown(cell("r1", "a"), { button: 0 });
+    fireEvent.doubleClick(cell("r3", "c"));
+    expect(focused()).toBe(cell("r3", "c"));
+    // Collapsed to the one cell, not extended from the old anchor.
+    expect(selected()).toBe(1);
+  });
+
+  it("does nothing when the hook is disabled", () => {
+    const onBeginEdit = vi.fn();
+    render(<Harness enabled={false} onBeginEdit={onBeginEdit} />);
+    fireEvent.doubleClick(cell("r1", "a"));
+    expect(onBeginEdit).not.toHaveBeenCalled();
+  });
+
+  it("is inert when the consumer supplies no edit handler", () => {
+    // A read-only grid binds the same handler; it must not throw or select.
+    render(<Harness />);
+    expect(() => fireEvent.doubleClick(cell("r1", "a"))).not.toThrow();
   });
 });
 

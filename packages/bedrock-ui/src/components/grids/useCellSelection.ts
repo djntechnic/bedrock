@@ -140,6 +140,17 @@ export interface CellSelection {
   ) => void;
   /** Mouse over a cell: extends the range or the fill preview mid-drag. */
   onCellMouseEnter: (rowKey: string, columnId: string) => void;
+  /**
+   * Double-click on a cell: sets the cursor and asks the consumer to open an
+   * editor, preserving the current value.
+   *
+   * `onBeginEdit` was previously reachable only by typing, so a grid whose
+   * editable columns render through custom cells had no double-click path at
+   * all — the gesture every operator tries first did nothing. `<EditableCell>`
+   * binds its own `onDoubleClick`, which is why the gap was invisible on the
+   * default render path and showed up only in bulk edit.
+   */
+  onCellDoubleClick: (rowKey: string, columnId: string) => void;
   /** Mouse down on the fill handle. */
   onFillHandleMouseDown: (event: {
     stopPropagation: () => void;
@@ -357,6 +368,22 @@ export function useCellSelection({
       if (!enabled) return;
       if (dragRef.current === "range") setFocus({ rowKey, columnId });
       else if (dragRef.current === "fill") setFillTo(rowKey);
+    },
+    [enabled],
+  );
+
+  const onCellDoubleClick = useCallback<CellSelection["onCellDoubleClick"]>(
+    (rowKey, columnId) => {
+      if (!enabled) return;
+      // A double-click is preceded by its own mousedown, so the cursor is
+      // already here — but set it anyway rather than assume, since a consumer
+      // may bind this without binding `onCellMouseDown`.
+      setAnchor({ rowKey, columnId });
+      setFocus({ rowKey, columnId });
+      // `null` seed: open preserving the current value, the same as F2 and
+      // Enter. Replacing it would silently discard what the operator
+      // double-clicked in order to look at.
+      handlersRef.current.onBeginEdit?.({ rowKey, columnId }, null);
     },
     [enabled],
   );
@@ -609,6 +636,7 @@ export function useCellSelection({
     ),
     onCellMouseDown,
     onCellMouseEnter,
+    onCellDoubleClick,
     onFillHandleMouseDown,
     clear,
   };

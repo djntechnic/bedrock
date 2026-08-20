@@ -13,6 +13,7 @@
 import type { GridSetting } from "../../../hooks/useAdminPlatform";
 import { SwitchRow, NumberRow, TextRow, SelectRow, ColorRow } from "./editorFields";
 import CollapsibleSection from "./CollapsibleSection";
+import DashboardPinRow from "./DashboardPinRow";
 
 interface GridSettingsPanelProps {
   draftGrid: GridSetting;
@@ -135,6 +136,8 @@ export default function GridSettingsPanel({
           placeholder="e.g. player_id, mlb_id, card_id"
           onChange={(v) => setGridField("row_key_column", v || null)} />
       </CollapsibleSection>
+
+      <DashboardPinRow gridId={g.grid_id} />
 
     </div>
   );

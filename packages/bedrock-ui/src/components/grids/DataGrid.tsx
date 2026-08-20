@@ -85,6 +85,7 @@ import { useRowAccentResolver } from "./rowAccentRegistry";
 import { renderCell, renderMediaCell, unwrapCellPayload } from "./cellRenderers";
 import EditableCell from "./EditableCell";
 import { useCellSelection } from "./useCellSelection";
+import { cellPositionClasses } from "./cellPosition";
 import type {
   CellRange,
   CellRangeFill,
@@ -1374,18 +1375,30 @@ export default function DataGrid<T extends Record<string, any>>({
                             ? () => cells.onCellMouseEnter(row.id, cell.column.id)
                             : undefined
                         }
+                        // Bound on the cell rather than left to the renderer:
+                        // `<EditableCell>` binds its own double-click, but a
+                        // custom cell does not, so bulk-edit columns had no
+                        // double-click path at all. The hook declines for a
+                        // column nothing can edit, so this is inert elsewhere.
+                        onDoubleClick={
+                          isCellSelectable
+                            ? () => cells.onCellDoubleClick(row.id, cell.column.id)
+                            : undefined
+                        }
                         className={cn(
                           `${cellPad} text-${align}`,
                           "overflow-hidden text-ellipsis",
-                          pinnedSide === "left" && "sticky z-10 bg-card",
-                          pinnedSide === "right" && "sticky z-10 bg-card",
-                          isNameCol && pinnedSide !== "left" &&
-                            "sticky left-0 z-10 bg-card",
+                          // One decision, one class — see cellPosition.ts for
+                          // why `sticky` and `relative` cannot both be listed.
+                          cellPositionClasses(
+                            pinnedSide,
+                            isNameCol,
+                            isCellSelectable,
+                          ),
                           isFlashing && "animate-live-pulse",
                           // `primary` rather than a token of its own: the ring
                           // and the wash are the same affordance the rest of the
                           // shell uses for "this is what you are acting on".
-                          isCellSelectable && "relative",
                           isCellSelected && "bg-primary/10",
                           isCellFillPreview && "bg-primary/5",
                           isCellFocused &&

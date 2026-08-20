@@ -96,7 +96,7 @@ export function KeyboardShortcutsProvider({
 }: ProviderProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { activeThemeId, palettes, setActiveTheme } = useTheme();
+  const { activeThemeId, resolvedThemeId, palettes, setActiveTheme } = useTheme();
 
   const config = useMemo(
     () => resolveShortcutsConfig(configOverrides),
@@ -159,7 +159,9 @@ export function KeyboardShortcutsProvider({
   );
 
   const toggleTheme = useCallback(() => {
-    const active = palettes.find((p) => p.id === activeThemeId);
+    // Resolved, not chosen: in system mode `activeThemeId` names no palette,
+    // and the hotkey should flip away from what the operator can actually see.
+    const active = palettes.find((p) => p.id === resolvedThemeId);
     const nextId = active?.isDark ? "mlb-classic" : "night-game";
     const target =
       palettes.find((p) => p.id === nextId) ?? BUILT_IN_THEMES[0];
@@ -170,7 +172,7 @@ export function KeyboardShortcutsProvider({
       activeView: locationRef.current,
     });
     setActiveTheme(target.id);
-  }, [activeThemeId, palettes, setActiveTheme]);
+  }, [activeThemeId, resolvedThemeId, palettes, setActiveTheme]);
 
   // ─── Global keydown observer ────────────────────────────────────────────────
   useEffect(() => {
