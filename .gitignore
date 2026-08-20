@@ -2,13 +2,29 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 .pytest_cache/
-node_modules/
+*.db
+
+# Build / Distribution
 dist/
 build/
-*.db
+*.zip
+
+# Editor / IDE / OS Files
+*.code-workspace
+
+# Virtual Environments / Dependencies
+node_modules/
 
 # Never commit an environment file. deploy/.env.example is the template;
 # a real .env holds JWT_SECRET and SMTP_PASSWORD.
 .env
 .env.*
 !.env.example
+
+# Editor state, and Vite's dev-server config cache. Both are per-machine and
+# both show up as a dirty tree mid-run, which the compaction-seam check reads
+# as uncommitted work.
+.vscode/
+
+# TreeFile
+*_FileTree.md
