@@ -273,7 +273,7 @@ _GRID_SETTING_UPDATE_ALLOWED = frozenset({
     "dense_mode", "default_sort_column", "default_sort_direction",
     "show_row_count", "show_ranking", "wrap_text", "min_column_width",
     "sort_asc_color", "sort_desc_color", "hover_color",
-    "allow_selection", "allow_print",
+    "allow_selection", "selection_position", "allow_print",
     "page", "tooltip_delay_duration", "show_search",
     "show_density_toggle", "show_medal_toggles",
     "row_key_column",

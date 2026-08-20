@@ -181,6 +181,8 @@ export interface GridSetting {
   hover_color?: string | null;
   /** Whether a compare-selection checkbox column is prepended. Replaces the prop-driven onSelectionChange pattern. */
   allow_selection?: boolean;
+  /** Which side the selection checkbox column sits on: 'start' | 'end' (default 'end'). */
+  selection_position?: string | null;
   /** Whether the unified GridHeader exposes a clean print / PDF layout trigger for this grid. */
   allow_print?: boolean;
   /** Tooltip open latency (ms) for this grid's TooltipProviders. Null = use appSettings default. */

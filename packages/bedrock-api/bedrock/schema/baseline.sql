@@ -125,6 +125,7 @@ CREATE TABLE IF NOT EXISTS app_grid_settings (
     sort_desc_color       TEXT,
     hover_color           TEXT,
     allow_selection       INTEGER NOT NULL DEFAULT 0,
+    selection_position    TEXT    NOT NULL DEFAULT 'end',  -- 'start' | 'end' — which side the selection checkbox column sits on
     allow_print           INTEGER NOT NULL DEFAULT 0,  -- expose clean print/PDF layout trigger in the unified GridHeader
     page                  TEXT,                        -- screen/page a grid renders on (admin Screen dropdown)
     tooltip_delay_duration INTEGER,                    -- tooltip open latency (ms); null = appSettings default

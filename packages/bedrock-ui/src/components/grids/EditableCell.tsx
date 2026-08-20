@@ -7,9 +7,18 @@
  * inline (no idle/edit split) and commits synchronously on toggle.
  *
  * Contract:
- *   - text/number: Idle renders `children`, double-click (or Enter/Space
+ *   - text/number: Idle renders `children`, double-click (or Enter/Space/F2
  *     when focused) opens an `<Input>` seeded with `rawValue`. Enter/blur
- *     commits, Escape cancels.
+ *     commits, Escape cancels. Typing a printable character opens the editor
+ *     seeded with *that character* instead, and Backspace/Delete open it
+ *     empty — the spreadsheet gesture, where the first keystroke replaces the
+ *     cell rather than being swallowed.
+ *   - `openWith` opens a cell the operator never clicked. A grid's cell cursor
+ *     is not DOM focus, so a keystroke aimed at the focused cell arrives at a
+ *     window listener rather than at this span; `useCellSelection` turns that
+ *     into an `openWith` bump. It is an edge-triggered *request* keyed by
+ *     `nonce`, not a controlled value — editing state stays internal, so no
+ *     existing consumer has to start owning state it never had.
  *   - boolean (Phase 10 B1): renders a `<Switch>` reflecting `rawValue`
  *     (normalized: 1/true → on). Clicking or space/enter toggles state
  *     and calls `onCommit(nextValue ? 1 : 0)` synchronously — no draft
@@ -35,6 +44,7 @@ import { toast } from "sonner";
 import { cn } from "../../lib/utils";
 import { Input } from "../ui/input";
 import { Switch } from "../ui/switch";
+import { seedForKey } from "./useCellSelection";
 
 export interface EditableCellProps {
   /** The pre-rendered cell payload from the DataGrid pipeline. Shown while idle. */
@@ -45,6 +55,18 @@ export interface EditableCellProps {
   cellType?: string | null;
   /** When true, the wrapper is a passive `<span>` around `children`. */
   disabled?: boolean;
+  /**
+   * Edge-triggered request to open the editor from outside.
+   *
+   * `nonce` is the trigger: every change to it opens the editor afresh, which
+   * is what lets a second keystroke on an already-open cell be distinguished
+   * from a re-render. `seed` replaces the value (a printable character, or `""`
+   * for Backspace); `null`/absent keeps `rawValue` and selects it, exactly as
+   * a double-click does.
+   */
+  openWith?: { seed?: string | null; nonce: number } | null;
+  /** Fired when the editor opens or closes, so a host can track the open cell. */
+  onEditingChange?: (editing: boolean) => void;
   /**
    * Commit hook — receives the raw editor value. Reject with a thrown
    * error (or a Promise rejection) to trigger the revert + toast path.
@@ -69,16 +91,29 @@ export default function EditableCell({
   rawValue,
   cellType,
   disabled = false,
+  openWith = null,
+  onEditingChange,
   onCommit,
 }: EditableCellProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(() => stringify(rawValue));
   const [committing, setCommitting] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  /**
+   * Set when the editor was opened with replacement text. It survives exactly
+   * one mount: the reseed effect below must not overwrite it, and the input
+   * must place the caret after it rather than select it.
+   */
+  const seededRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (editing) {
-      setDraft(stringify(rawValue));
+      // A seeded open already holds the text the operator typed; reseeding
+      // from `rawValue` here would eat that first keystroke. Clearing the flag
+      // is this effect's job, not the mount ref's: refs run *before* effects,
+      // so a ref that consumed the seed would let this run reseed over it.
+      if (seededRef.current === null) setDraft(stringify(rawValue));
+      else seededRef.current = null;
     }
     // Focus + select happens once, synchronously, when the input mounts — see
     // the ref callback below. Doing it here via requestAnimationFrame races
@@ -87,20 +122,53 @@ export default function EditableCell({
     // appending.
   }, [editing, rawValue]);
 
+  useEffect(() => {
+    if (!editing) return;
+    onEditingChange?.(true);
+    return () => onEditingChange?.(false);
+    // `onEditingChange` is deliberately out of the deps: a host that passes an
+    // inline arrow would otherwise emit a close/open pair on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editing]);
+
   const inputMountRef = useCallback((node: HTMLInputElement | null) => {
     inputRef.current = node;
-    if (node) {
-      node.focus();
-      node.select();
-    }
+    if (!node) return;
+    node.focus();
+    const seed = seededRef.current;
+    // Seeded: the character is already the whole value, so the caret goes
+    // after it. Unseeded: select, so the next keystroke replaces the old value.
+    if (seed === null) node.select();
+    else node.setSelectionRange(seed.length, seed.length);
   }, []);
 
-  const activate = useCallback(() => {
-    if (disabled || committing) return;
-    setEditing(true);
-  }, [disabled, committing]);
+  const activate = useCallback(
+    (seed?: string | null) => {
+      if (disabled || committing) return;
+      if (seed != null) {
+        seededRef.current = seed;
+        setDraft(seed);
+      }
+      setEditing(true);
+    },
+    [disabled, committing],
+  );
+
+  // Edge-triggered: only a change of nonce opens the cell, so a host may leave
+  // the prop in place across renders without reopening what the operator closed.
+  const lastNonceRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!openWith) {
+      lastNonceRef.current = null;
+      return;
+    }
+    if (lastNonceRef.current === openWith.nonce) return;
+    lastNonceRef.current = openWith.nonce;
+    activate(openWith.seed ?? null);
+  }, [openWith, activate]);
 
   const cancel = useCallback(() => {
+    seededRef.current = null;
     setEditing(false);
     setDraft(stringify(rawValue));
   }, [rawValue]);
@@ -159,10 +227,10 @@ export default function EditableCell({
   const onIdleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLSpanElement>) => {
       if (disabled) return;
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        activate();
-      }
+      const seed = seedForKey(e.key, e.ctrlKey || e.metaKey || e.altKey);
+      if (seed === undefined) return;
+      e.preventDefault();
+      activate(seed);
     },
     [activate, disabled],
   );
@@ -207,9 +275,9 @@ export default function EditableCell({
       <span
         role="button"
         tabIndex={0}
-        onDoubleClick={activate}
+        onDoubleClick={() => activate()}
         onKeyDown={onIdleKeyDown}
-        aria-label="Double-click to edit"
+        aria-label="Double-click or type to edit"
         className={cn(
           "inline-block cursor-text -mx-1 px-1 rounded",
           "hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",

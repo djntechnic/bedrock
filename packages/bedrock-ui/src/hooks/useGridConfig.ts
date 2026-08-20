@@ -45,7 +45,14 @@ export interface GridConfig {
   allowExport: boolean;
   /** Map of column settings keyed by their stable column_id. */
   columns: Record<string, GridColumnSetting>;
-  /** Ordered list of visible column IDs for the table header/body. */
+  /**
+   * Ordered list of **visible** column IDs for the table header/body.
+   *
+   * Visible-only, and that is a trap worth naming: a hidden-but-`editable`
+   * column is absent from here, so anything deriving a working set (bulk edit,
+   * a field picker) must iterate {@link GridConfig.columns} instead. This list
+   * answers "what does the table render", never "what columns exist".
+   */
   columnOrder: string[];
   /** 
    * Global ready flag. Set to true only when both grid and column 
@@ -62,6 +69,14 @@ export interface GridConfig {
   hoverColor: string | null;
   /** Whether a compare-selection checkbox column is prepended. Config-driven replacement for the onSelectionChange prop. */
   allowSelection: boolean;
+  /**
+   * Which side of the grid the selection checkbox column sits on.
+   *
+   * "end" is the default because it is where the engine always put it; a grid
+   * that wants the spreadsheet layout sets `selection_position = 'start'` in
+   * `app_grid_settings` rather than waiting for a release.
+   */
+  selectionPosition: "start" | "end";
   /**
    * Whether the unified GridHeader renders a clean print / PDF layout trigger.
    * Config-driven per grid via the app_grid_settings.allow_print column so no
@@ -258,6 +273,7 @@ export function buildGridConfig(
     sortDescColor: gridSetting?.sort_desc_color ?? null,
     hoverColor: gridSetting?.hover_color ?? null,
     allowSelection: asBool(gridSetting?.allow_selection, false),
+    selectionPosition: gridSetting?.selection_position === "start" ? "start" : "end",
     allowPrintView: asBool(gridSetting?.allow_print, false),
     title: gridSetting?.title ?? null,
     subHeader: gridSetting?.sub_header ?? null,
