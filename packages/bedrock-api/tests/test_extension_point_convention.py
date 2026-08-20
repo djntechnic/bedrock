@@ -84,6 +84,10 @@ IDS = [f"{module.rsplit('.', 1)[-1]}:{register}" for module, register, *_ in REG
 #: pattern that silently swallows a real registry.
 NOT_REGISTRIES = {
     ("bedrock.core.rate_limit", "register_limit"),
+    # Installs the platform's exception handlers onto a FastAPI app. It takes
+    # the app rather than an entry to accumulate, so there is nothing to read
+    # back and nothing to clear — the registry shape does not apply.
+    ("bedrock.core.error_handlers", "register_error_handlers"),
 }
 
 

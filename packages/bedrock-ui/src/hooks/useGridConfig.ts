@@ -54,11 +54,21 @@ export interface GridConfig {
    * answers "what does the table render", never "what columns exist".
    */
   columnOrder: string[];
-  /** 
-   * Global ready flag. Set to true only when both grid and column 
+  /**
+   * Global ready flag. Set to true only when both grid and column
    * metadata have been successfully fetched from the API.
    */
   isLoaded: boolean;
+  /**
+   * True when the config resolved but `app_grid_settings` holds no row for
+   * this `gridId` — the grid was never seeded.
+   *
+   * It is separate from `isLoaded` because the two mean opposite things to a
+   * consumer: not-loaded is "wait", unseeded is "this will never arrive".
+   * Without the distinction the grid renders its defaults over zero columns,
+   * which looks exactly like a grid whose query returned nothing.
+   */
+  isUnseeded: boolean;
   /** Whether the grid data is read-only. */
   readOnly: number;
   /** CSS color applied to header/cells of an ascending-sorted column (null = no highlight). */
@@ -268,6 +278,9 @@ export function buildGridConfig(
     columns,
     columnOrder,
     isLoaded,
+    // Only meaningful once the queries have resolved; before that the absent
+    // row is simply an absent response.
+    isUnseeded: isLoaded && gridSetting === undefined,
     readOnly: asBool(gridSetting?.read_only, false) ? 1 : 0,
     sortAscColor: gridSetting?.sort_asc_color ?? null,
     sortDescColor: gridSetting?.sort_desc_color ?? null,

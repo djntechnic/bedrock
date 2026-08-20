@@ -258,15 +258,40 @@ export function useUserGridConfig(gridId: string): UserGridConfigBundle {
     [],
   );
 
+  // `useMutation` returns a fresh result object on every render. Listing it as
+  // a dependency below made `schedulePatch` — and every persist* callback
+  // derived from it — a new function each render, so a consumer effect keyed
+  // on one of them re-ran on identity alone. That re-armed the debounce, the
+  // PATCH invalidated the preference queries, the refetch re-rendered, and the
+  // cycle sustained itself: an unbounded PATCH/GET loop under an idle grid.
+  // `.mutate` is stable across renders, so holding it in a ref lets the
+  // callbacks depend on values that actually change.
+  const mutateRef = useRef(updateMutation.mutate);
+  useEffect(() => {
+    mutateRef.current = updateMutation.mutate;
+  }, [updateMutation.mutate]);
+
+  // Second guard, independent of identity: never arm the debounce for a
+  // payload we already persisted. Keyed by the update's field set, so an
+  // unchanged sort does not mask a changed filter and vice versa — two
+  // alternating no-op persists would otherwise keep each other alive.
+  const lastPersistedRef = useRef<Map<string, string>>(new Map());
+
   const schedulePatch = useCallback(
     (updates: UserGridPreferenceUpdate) => {
       if (!isAuthenticated) return;
+
+      const fieldSet = Object.keys(updates).sort().join(",");
+      const payload = JSON.stringify(updates);
+      if (lastPersistedRef.current.get(fieldSet) === payload) return;
+      lastPersistedRef.current.set(fieldSet, payload);
+
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => {
-        updateMutation.mutate({ gridId, updates });
+        mutateRef.current({ gridId, updates });
       }, PERSIST_DEBOUNCE_MS);
     },
-    [isAuthenticated, gridId, updateMutation],
+    [isAuthenticated, gridId],
   );
 
   const persistSorting = useCallback(
@@ -309,10 +334,13 @@ export function useUserGridConfig(gridId: string): UserGridConfigBundle {
   const setDashboardPin = useCallback(
     (next: boolean) => {
       if (!isAuthenticated) return;
-      // Discrete toggle — persists immediately, no debounce.
-      updateMutation.mutate({ gridId, updates: { dashboard_pin: next } });
+      // Discrete toggle — persists immediately, no debounce. Goes through the
+      // ref for the same identity reason as `schedulePatch`, and deliberately
+      // skips the last-persisted guard: a toggle is an explicit act and must
+      // reach the server even if it restores the previous value.
+      mutateRef.current({ gridId, updates: { dashboard_pin: next } });
     },
-    [isAuthenticated, gridId, updateMutation],
+    [isAuthenticated, gridId],
   );
 
   return {

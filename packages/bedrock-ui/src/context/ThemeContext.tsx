@@ -5,6 +5,8 @@
  */
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
+import { Toaster } from "../components/ui/sonner";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface ThemePalette {
@@ -23,8 +25,23 @@ export interface ThemePalette {
   cssVars?: Record<string, string>;
 }
 
+/**
+ * The reserved id that means "follow the operating system", rather than naming
+ * a palette. It is a mode, not a palette: it never appears in `palettes`, and
+ * `resolvedThemeId` says which real palette it currently resolves to.
+ */
+export const SYSTEM_THEME_ID = "system";
+
 interface ThemeContextType {
+  /** The user's choice — a palette id, or {@link SYSTEM_THEME_ID}. */
   activeThemeId: string;
+  /**
+   * The palette actually painted. Equal to `activeThemeId` unless that is
+   * `"system"`, in which case it is whichever light/dark palette the OS
+   * preference currently selects. A theme picker highlights `activeThemeId`;
+   * anything asking "is the UI dark right now" wants this.
+   */
+  resolvedThemeId: string;
   palettes: ThemePalette[];
   setActiveTheme: (id: string) => void;
   addPalette: (palette: ThemePalette) => void;
@@ -365,10 +382,85 @@ function applyTheme(palette: ThemePalette) {
   }
 }
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
+/**
+ * Which palette "system" means, given the OS preference of the moment.
+ *
+ * Pure and exported so the rule can be tested without a `matchMedia` stub, and
+ * so a host can ask the same question the provider asks.
+ *
+ * §S9 note: this only ever *selects* a registered palette. It defines no
+ * colour of its own — a system mode that invented a light theme for a host
+ * that ships only dark ones would be exactly the `:root` block the standard
+ * forbids, arrived at by another route.
+ *
+ * @param palettes - Every registered palette, built-in and custom.
+ * @param prefersDark - Whether the OS currently asks for dark.
+ * @param prefs - The host's nominated light/dark palette ids, if any.
+ * @returns The palette to paint, or null when nothing matches.
+ */
+export function resolveSystemPalette(
+  palettes: ThemePalette[],
+  prefersDark: boolean,
+  prefs: { systemLight?: string; systemDark?: string } = {},
+): ThemePalette | null {
+  const wanted = prefersDark ? prefs.systemDark : prefs.systemLight;
+  const named = wanted ? palettes.find((p) => p.id === wanted) : undefined;
+  if (named) return named;
+  // No nomination, or it names a palette that has since been deleted: fall
+  // back to the first palette of the right polarity. Custom palettes sort
+  // after the built-ins, so an unconfigured host gets a built-in.
+  const byPolarity = palettes.find((p) => p.isDark === prefersDark);
+  if (byPolarity) return byPolarity;
+  // A host that registered only dark palettes and whose user asks for light
+  // gets its dark theme rather than an unstyled page.
+  return palettes[0] ?? null;
+}
+
+/** Reads the OS preference, tolerating an environment without `matchMedia`. */
+function prefersDarkNow(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
+interface ThemeProviderProps {
+  children: ReactNode;
+  /**
+   * The palette `"system"` resolves to when the OS asks for light. A host that
+   * ships its own palettes names one here; otherwise the first registered
+   * light palette is used, which for an unconfigured host is a built-in.
+   */
+  systemLight?: string;
+  /** The palette `"system"` resolves to when the OS asks for dark. */
+  systemDark?: string;
+  /**
+   * Mount the platform's toast surface. On by default, because `toast()` is
+   * called from four platform components and used to do nothing at all — a
+   * host had to know to render a `<Toaster>` that the platform never told it
+   * about. Set `false` only if the host owns its own notification surface.
+   */
+  toaster?: boolean;
+}
+
+export function ThemeProvider({
+  children,
+  systemLight,
+  systemDark,
+  toaster = true,
+}: ThemeProviderProps) {
   const [activeThemeId, setActiveThemeId] = useState<string>(
     () => localStorage.getItem(ACTIVE_KEY) ?? "mlb-classic"
   );
+  const [prefersDark, setPrefersDark] = useState<boolean>(prefersDarkNow);
+
+  // Kept live rather than read once at mount: the whole point of system mode
+  // is that the page follows the OS while it is open, not only when it loads.
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const onChange = (e: MediaQueryListEvent) => setPrefersDark(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
   const [customPalettes, setCustomPalettes] = useState<ThemePalette[]>(() => {
     let stored: ThemePalette[];
     try {
@@ -387,12 +479,17 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const palettes = [...BUILT_IN_THEMES, ...customPalettes];
 
+  const resolved =
+    (activeThemeId === SYSTEM_THEME_ID
+      ? resolveSystemPalette(palettes, prefersDark, { systemLight, systemDark })
+      : palettes.find((p) => p.id === activeThemeId)) ?? BUILT_IN_THEMES[0];
+
   useEffect(() => {
-    const all = [...BUILT_IN_THEMES, ...customPalettes];
-    const active = all.find((p) => p.id === activeThemeId) ?? BUILT_IN_THEMES[0];
-    applyTheme(active);
+    applyTheme(resolved);
+    // The *choice* is persisted, not the resolution — storing the resolved id
+    // would freeze a system-mode user onto whichever palette they last had.
     localStorage.setItem(ACTIVE_KEY, activeThemeId);
-  }, [activeThemeId, customPalettes]);
+  }, [activeThemeId, resolved]);
 
   function setActiveTheme(id: string) {
     setActiveThemeId(id);
@@ -419,9 +516,20 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   return (
     <ThemeContext.Provider
-      value={{ activeThemeId, palettes, setActiveTheme, addPalette, updatePalette, removePalette }}
+      value={{
+        activeThemeId,
+        resolvedThemeId: resolved.id,
+        palettes,
+        setActiveTheme,
+        addPalette,
+        updatePalette,
+        removePalette,
+      }}
     >
       {children}
+      {/* Inside the provider so it repaints with the palette, and after the
+          children so it layers over them without needing a z-index of its own. */}
+      {toaster && <Toaster isDark={resolved.isDark} />}
     </ThemeContext.Provider>
   );
 }

@@ -7,7 +7,7 @@
  *              Below the 1024px breakpoint it's fully off-canvas, toggled by
  *              a hamburger button in the app header (see App.tsx).
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, type ReactNode } from "react";
 import { useLocation, Link } from "react-router-dom";
 import {
   ChevronDown,
@@ -37,7 +37,50 @@ import { useSidebarStore } from "../store/sidebarStore";
 // pure application knowledge. This shell renders whatever the app registered.
 // Types and the registry: ./navRegistry.
 
-export default function AppSidebar() {
+/**
+ * The user block: a link when the app routes a profile screen, inert markup
+ * when it does not.
+ *
+ * `forwardRef` because the collapsed variant is a `<TooltipTrigger asChild>`,
+ * and Radix hands its trigger a ref either way.
+ */
+const ProfileTarget = forwardRef<
+  HTMLElement,
+  { to: string | null; className: string; title?: string; children: ReactNode }
+>(function ProfileTarget({ to, className, title, children }, ref) {
+  if (!to) {
+    return (
+      <span ref={ref as React.Ref<HTMLSpanElement>} className={className} title={title}>
+        {children}
+      </span>
+    );
+  }
+  return (
+    <Link
+      ref={ref as React.Ref<HTMLAnchorElement>}
+      to={to}
+      className={className}
+      title={title}
+    >
+      {children}
+    </Link>
+  );
+});
+
+export interface AppSidebarProps {
+  /**
+   * Where the user block links. Defaults to `/profile`, which is where
+   * `<ProfilePage>` is meant to be routed.
+   *
+   * Pass `null` if the app routes no profile screen at all: the block then
+   * renders as plain text instead of a link into `No routes matched location`,
+   * which is what it did for every app that had not built a profile screen of
+   * its own.
+   */
+  profilePath?: string | null;
+}
+
+export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps = {}) {
   const location = useLocation();
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
   const { system } = useAppSettings();
@@ -354,12 +397,17 @@ export default function AppSidebar() {
               <>
                 <Tooltip delayDuration={0}>
                   <TooltipTrigger asChild>
-                    <Link
-                      to="/profile"
-                      className="flex items-center justify-center p-2 rounded-md text-muted-foreground hover:bg-muted hover:text-primary transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    <ProfileTarget
+                      to={profilePath}
+                      className={[
+                        "flex items-center justify-center p-2 rounded-md text-muted-foreground transition-colors outline-none",
+                        profilePath
+                          ? "hover:bg-muted hover:text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                          : "",
+                      ].join(" ")}
                     >
                       <User className="h-4 w-4" />
-                    </Link>
+                    </ProfileTarget>
                   </TooltipTrigger>
                   <TooltipContent side="right" className="text-xs">
                     Profile: {user.display_name || user.email}
@@ -410,14 +458,19 @@ export default function AppSidebar() {
           <div className="flex items-center justify-between gap-1">
             {user ? (
               <>
-                <Link
-                  to="/profile"
-                  title="View profile"
-                  className="flex-1 min-w-0 flex items-center gap-2 px-2 py-1 rounded-md text-xs font-medium text-foreground hover:bg-muted hover:text-primary transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                <ProfileTarget
+                  to={profilePath}
+                  title={profilePath ? "View profile" : undefined}
+                  className={[
+                    "flex-1 min-w-0 flex items-center gap-2 px-2 py-1 rounded-md text-xs font-medium text-foreground transition-colors outline-none",
+                    profilePath
+                      ? "hover:bg-muted hover:text-primary focus-visible:ring-2 focus-visible:ring-ring"
+                      : "",
+                  ].join(" ")}
                 >
                   <User className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <span className="truncate">{user.display_name || user.email}</span>
-                </Link>
+                </ProfileTarget>
                 <button
                   type="button"
                   onClick={() => { void logout(); }}

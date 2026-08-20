@@ -28,9 +28,10 @@ class DatabaseQueryError(RuntimeError):
     """Raised when a SQL SELECT via DatabaseManager.query fails.
 
     Introduced by unified_grid_standard §1.5 / Phase 2.b: db.query() stops
-    swallowing exceptions. FastAPI translates this to HTTPException(500,
-    detail={"code": "GRID_QUERY_FAILED", ...}) via a global handler
-    registered in api/main.py.
+    swallowing exceptions. The platform translates this to a 500 carrying
+    detail={"code": "GRID_QUERY_FAILED", ...} — see
+    `bedrock.core.error_handlers.register_error_handlers`, which an
+    application calls once from its entry point.
     """
 
     def __init__(self, message: str, *, sql: str | None = None, original: BaseException | None = None):

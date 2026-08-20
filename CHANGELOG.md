@@ -1,5 +1,127 @@
 # Changelog
 
+## v0.5.0
+
+### Fixed — four defects that no test could see
+
+Each of these was invisible to the suite, because none of them broke a behaviour
+anyone had asserted on.
+
+- **`useUserGridConfig` issued an unbounded PATCH/GET storm on an idle grid**
+  (#11, #18). `useMutation` returns a fresh result object every render and
+  `schedulePatch` listed it as a dependency, so every `persist*` callback was a
+  new function each render, a consumer effect keyed on one re-ran on identity
+  alone, and the cycle fed itself: debounce re-arms, PATCH invalidates the
+  preference queries, refetch re-renders. The console filled with `[Violation]
+  'setTimeout' handler took XXms`. `.mutate` is stable and moves to a ref, and a
+  second guard keyed by the update's field set refuses to arm the debounce for a
+  payload already persisted — tracked per field set, so an idle sort cannot mask
+  a live filter.
+- **`CellRangePaste` dropped the visible row order** (#30). The payload reported
+  only an anchor, so a consumer had to work out which row came next, and the only
+  order reachable from out there was the DOM's — which reads the *rendered* rows
+  rather than the model's, and pastes into the wrong records the moment rows
+  virtualise. The visible row and column order now ships on the event, clamped to
+  the rows and columns that exist.
+- **The browser logger was inverted relative to its own comment** (#17).
+  `asObject` gave development shipper-shaped objects in which the message was the
+  one part you could not read, and consumers' real warnings drowned in it.
+- **`AlertDialogOverlay` warned on every destructive confirm** (#13) — a plain
+  function component taking a Radix `Presence` ref, which React 18 drops. The
+  package builds against 18, so it is a `forwardRef`.
+
+### Fixed — a pinned column, a reachable column list, a cell you can double-click
+
+- **A pinned column stopped sticking in bulk edit.** `cn()` is tailwind-merge and
+  `sticky`/`relative` are one position group, so the `relative` that selectable
+  cells add collapsed the pin. The decision now happens once, in
+  `cellPosition.ts`, and the tests assert through `cn` — asserting on the raw
+  return would have passed against the defect.
+- **`ColumnToggle` caps the list at the viewport and scrolls it**, with the count
+  and the All/None pair pinned outside the scroll region. A grid that seeds its
+  bulk-edit columns hidden alongside its browse columns put twenty-odd entries in
+  a panel that ran off the bottom of the screen, and the last ones were simply
+  unreachable.
+- **A cell enters edit mode on double-click**, routed through the same begin-edit
+  handler the keyboard path already used.
+
+### Added — the platform says something when a grid fails, is unseeded, or a toast fires
+
+Three silences, all of which looked identical to "there is no data":
+
+- A grid id nothing seeds rendered as a blank area — no error, no log, no pointer
+  at the missing `app_grid_settings` row (#24). `useGridConfig` now derives
+  `isUnseeded`, kept distinct from `isLoaded` because not-loaded means "wait" and
+  unseeded means "this will never arrive", and `<DataGrid>` renders an error
+  state and logs it.
+- `DatabaseQueryError` had documented the `GRID_QUERY_FAILED` envelope since
+  Phase 2.b with nothing registered to produce it, so a failed SELECT reached the
+  client as an empty result set (#21). `register_error_handlers(app)` registers
+  it in one call, so a future platform exception arrives on upgrade rather than
+  in every consumer's entry point. The SQL goes to the log and never to the
+  response.
+- `sonner` was a declared dependency with no `<Toaster>` mounted, so four
+  platform components — a CSV export, two grid-editor saves and a rejected cell
+  commit — called `toast()` and displayed nothing (#16). `ThemeProvider` mounts
+  one, themed from the palette actually painted, with `toaster={false}` for a
+  host that owns its own surface.
+
+### Added — the admin screens the platform's hooks were always for
+
+bedrock served `/admin/logs`, `/admin/config`, `/admin/users` and the auth
+endpoints, and exported a hook for each, while shipping no screen for any of
+them. Every consumer built the same four panels over the same hooks, and the
+sidebar's user block linked to `/profile` — a route the platform never served, so
+clicking your own name rendered `No routes matched location` (#19).
+
+Five screens now ship on the `<GridEditor>` precedent — mount one in a route and
+supply nothing: `<LogViewer>`, `<ConfigEditor>`, `<UsersPanel>`,
+`<PlatformHealthPanel>` and `<ProfilePage>`, plus the `useChangePassword`
+mutation the last one needs.
+
+`<AppSidebar>` gains `profilePath`, defaulting to `/profile` where
+`<ProfilePage>` belongs. An app that routes no profile screen passes `null` and
+gets plain text instead of a link into a dead route.
+
+### Added — a consumer-facing API for the bulk draft store
+
+The store was module-private, so `<EditableCell>` was its only writer. The three
+gestures that make a bulk grid worth having — fill-down, spreadsheet paste,
+apply-to-selected — write many cells at once from outside any cell and had
+nowhere to write, so a consumer reimplemented the buffer, the dirty flag and the
+Save/Discard bar the engine already ships (#15).
+
+Three ways in, all of them the engine's own semantics:
+
+- `draftsOverride={{ drafts, onChange }}`, mirroring `selectionOverride`.
+  Supplying it turns bulk mode on by itself, since a caller that owns the buffer
+  usually owns the save. The reads go through refs so the setter stays
+  identity-stable against the inline object literal a consumer will write.
+- `CustomCellCtx` carries `rowKey`, `draftValue` and `setDraft`, so a consumer's
+  own cell can read and write the pending value for its row.
+- The reducer moves to `bulkDraftStore.ts` and is exported, with `applyDrafts`
+  for the batch gestures — one state update for a paste, not one per cell.
+
+`canEdit` no longer wraps a supplied `customCells` renderer, and
+`editableColumnIds` excludes those columns for the same reason: a consumer that
+provided a cell has already said what the editor is. Opting into bulk mode was
+replacing a 29,000-value typeahead with a plain text box on exactly the columns
+that need the vocabulary.
+
+### Added — a System theme, and Pin to Dashboard in the Grid Editor
+
+`ThemeProvider` gains a System mode following `prefers-color-scheme`, live rather
+than only at load. It selects among registered palettes and defines no colour of
+its own, per §S9. The choice is persisted, not the resolution.
+
+Pin to Dashboard is surfaced in the Grid Editor. It lives in
+`user_grid_preferences`, not `app_grid_settings`, so it saves on toggle and says
+so rather than pretending the Save button covers it.
+
+`<PageHeader>` gains an opt-in `sticky` prop — opt-in because `position: sticky`
+is inert outside a scroll container but the negative-margin bleed is not, so
+defaulting it on would reflow hosts that never asked.
+
 ## v0.4.0
 
 ### Fixed — the grid cursor and the cell editor stop fighting over the keyboard

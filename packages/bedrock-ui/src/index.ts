@@ -11,6 +11,10 @@
 // ── Grid engine ──────────────────────────────────────────────────────────────
 export { default as DataGrid } from "./components/grids/DataGrid";
 export type { CustomCellCtx, CustomHeaderCtx, DataGridProps } from "./components/grids/DataGrid";
+// The bulk-draft reducer, for a consumer driving the store via
+// `draftsOverride` — fill-down, paste and apply-to-selected all write many
+// cells at once and should not each invent their own dirty rules.
+export * from "./components/grids/bulkDraftStore";
 export { default as GridHeader } from "./components/grids/GridHeader";
 export { default as EditableCell } from "./components/grids/EditableCell";
 export type { EditableCellProps } from "./components/grids/EditableCell";
@@ -35,6 +39,22 @@ export * from "./components/grids/cellRegistry";
 export * from "./components/grids/rowAccentRegistry";
 export * from "./components/GridStatus";
 
+// ── Admin screens ────────────────────────────────────────────────────────────
+// The platform served `/admin/logs`, `/admin/config`, `/admin/users` and the
+// auth endpoints while shipping no screen for any of them, so every consumer
+// rebuilt the same four panels over the same hooks. These are those screens,
+// on the `<GridEditor>` precedent: mount one in a route and supply nothing.
+export { default as LogViewer } from "./components/admin/LogViewer";
+export { default as ConfigEditor } from "./components/admin/ConfigEditor";
+export { groupByCategory, boolValue } from "./components/admin/ConfigEditor";
+export { default as UsersPanel } from "./components/admin/UsersPanel";
+export { shortUserAgent } from "./components/admin/UsersPanel";
+export { default as PlatformHealthPanel } from "./components/admin/PlatformHealthPanel";
+export { formatBytes } from "./components/admin/PlatformHealthPanel";
+// `<AppSidebar>` links to `/profile`; this is what belongs behind that link.
+export { default as ProfilePage } from "./components/admin/ProfilePage";
+export * from "./hooks/useProfile";
+
 // ── Admin Grid Editor ────────────────────────────────────────────────────────
 export { default as GridEditor } from "./components/admin/gridEditor/GridEditor";
 export { default as GridPreview } from "./components/admin/gridEditor/GridPreview";
@@ -46,6 +66,7 @@ export * from "./components/admin/gridEditor/useGridDraft";
 
 // ── Shell ────────────────────────────────────────────────────────────────────
 export { default as AppSidebar } from "./components/AppSidebar";
+export type { AppSidebarProps } from "./components/AppSidebar";
 export { default as CommandPalette } from "./components/CommandPalette";
 export { default as GlobalSearchBar } from "./components/GlobalSearchBar";
 export { default as KeyboardShortcutsSheet } from "./components/KeyboardShortcutsSheet";
@@ -56,6 +77,12 @@ export { default as Breadcrumb } from "./components/Breadcrumb";
 export type { BreadcrumbItem } from "./components/Breadcrumb";
 export { default as AppFooter } from "./components/AppFooter";
 export * from "./components/EmptyState";
+// `ThemeProvider` mounts this already; exported for a host that opts out with
+// `toaster={false}` and places its own, and re-exported `toast` so a consumer
+// does not have to depend on `sonner` directly to raise one.
+export { Toaster } from "./components/ui/sonner";
+export type { PlatformToasterProps } from "./components/ui/sonner";
+export { toast } from "sonner";
 export * from "./components/navRegistry";
 export * from "./components/searchSourceRegistry";
 export * from "./lib/commandRoutes";

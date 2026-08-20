@@ -70,6 +70,7 @@ function Harness({
                     sel.onCellMouseDown(rowKey, columnId, event)
                   }
                   onMouseEnter={() => sel.onCellMouseEnter(rowKey, columnId)}
+                  onDoubleClick={() => sel.onCellDoubleClick(rowKey, columnId)}
                 >
                   {sel.isFillOrigin(rowKey, columnId) && (
                     <span
@@ -393,8 +394,56 @@ describe("clipboard", () => {
         ["x", "y"],
         ["z", "w"],
       ],
+      rowKeys: ["r2", "r3"],
+      columnIds: ["a", "b"],
     });
     expect(event.defaultPrevented).toBe(true);
+  });
+
+  it("reports the target rows in the grid's visible order, not the DOM's", () => {
+    // The defect this replaces: only `anchor` shipped, so a consumer had to
+    // answer "which row is next?" itself, and the only order reachable from out
+    // there was the rendered one. Handing it a row order that is deliberately
+    // not the natural one proves the payload comes from the model.
+    const onPaste = vi.fn();
+    const sorted = ["r4", "r2", "r3", "r1"];
+    render(<Harness rowKeys={sorted} onPaste={onPaste} />);
+
+    fireEvent.mouseDown(cell("r2", "b"), { button: 0 });
+    const { event } = clipboardEvent("paste", "x\ny\nz");
+    document.dispatchEvent(event);
+
+    expect(onPaste.mock.calls[0][0].rowKeys).toEqual(["r2", "r3", "r1"]);
+    expect(onPaste.mock.calls[0][0].columnIds).toEqual(["b"]);
+  });
+
+  it("clamps a matrix taller or wider than the rows and columns left", () => {
+    // Overflow is dropped rather than invented: there is no row past the last
+    // one to write into, and a consumer trusting `matrix.length` would index
+    // past the end of its own buffer.
+    const onPaste = vi.fn();
+    render(<Harness onPaste={onPaste} />);
+
+    fireEvent.mouseDown(cell("r3", "b"), { button: 0 });
+    const { event } = clipboardEvent("paste", "1\t2\t3\n4\t5\t6\n7\t8\t9");
+    document.dispatchEvent(event);
+
+    expect(onPaste.mock.calls[0][0].rowKeys).toEqual(["r3", "r4"]);
+    expect(onPaste.mock.calls[0][0].columnIds).toEqual(["b", "c"]);
+    // The matrix itself is untouched — trimming it here would take the "does a
+    // short row clear or skip?" decision away from the consumer.
+    expect(onPaste.mock.calls[0][0].matrix).toHaveLength(3);
+  });
+
+  it("sizes the columns to the widest row of a ragged matrix", () => {
+    const onPaste = vi.fn();
+    render(<Harness onPaste={onPaste} />);
+
+    fireEvent.mouseDown(cell("r1", "a"), { button: 0 });
+    const { event } = clipboardEvent("paste", "x\ny\tz");
+    document.dispatchEvent(event);
+
+    expect(onPaste.mock.calls[0][0].columnIds).toEqual(["a", "b"]);
   });
 
   it("leaves an empty clipboard alone", () => {
@@ -415,6 +464,47 @@ describe("clipboard", () => {
     const { event } = clipboardEvent("paste", "x");
     document.dispatchEvent(event);
     expect(onPaste).not.toHaveBeenCalled();
+  });
+});
+
+// ── Double-click to edit ─────────────────────────────────────────────────────
+
+describe("double-click", () => {
+  it("asks the consumer to open an editor, preserving the value", () => {
+    // Seed `null` means "open with what is already there". A double-click is
+    // how an operator opens a cell in order to *look* at it, so seeding
+    // anything else would discard the value they clicked to see.
+    const onBeginEdit = vi.fn().mockReturnValue(true);
+    render(<Harness onBeginEdit={onBeginEdit} />);
+
+    fireEvent.doubleClick(cell("r2", "b"));
+
+    expect(onBeginEdit).toHaveBeenCalledWith(
+      { rowKey: "r2", columnId: "b" },
+      null,
+    );
+  });
+
+  it("moves the cursor to the double-clicked cell", () => {
+    render(<Harness onBeginEdit={() => true} />);
+    fireEvent.mouseDown(cell("r1", "a"), { button: 0 });
+    fireEvent.doubleClick(cell("r3", "c"));
+    expect(focused()).toBe(cell("r3", "c"));
+    // Collapsed to the one cell, not extended from the old anchor.
+    expect(selected()).toBe(1);
+  });
+
+  it("does nothing when the hook is disabled", () => {
+    const onBeginEdit = vi.fn();
+    render(<Harness enabled={false} onBeginEdit={onBeginEdit} />);
+    fireEvent.doubleClick(cell("r1", "a"));
+    expect(onBeginEdit).not.toHaveBeenCalled();
+  });
+
+  it("is inert when the consumer supplies no edit handler", () => {
+    // A read-only grid binds the same handler; it must not throw or select.
+    render(<Harness />);
+    expect(() => fireEvent.doubleClick(cell("r1", "a"))).not.toThrow();
   });
 });
 

@@ -73,6 +73,7 @@ import GridWrapper from "../GridWrapper";
 import { SortableTableHead } from "../SortableTableHead";
 import { EmptyTableRow } from "../EmptyTableRow";
 import { GridStatusContent } from "../GridStatus";
+import { log } from "../../utils/logger";
 
 import { useTableState } from "../../hooks/useTableState";
 import { useAuth } from "../../hooks/useAuth";
@@ -85,6 +86,7 @@ import { useRowAccentResolver } from "./rowAccentRegistry";
 import { renderCell, renderMediaCell, unwrapCellPayload } from "./cellRenderers";
 import EditableCell from "./EditableCell";
 import { useCellSelection } from "./useCellSelection";
+import { cellPositionClasses } from "./cellPosition";
 import type {
   CellRange,
   CellRangeFill,
@@ -101,6 +103,7 @@ import {
   hasAggregates,
 } from "../../utils/gridUtils";
 import { getRankRowClass } from "../../utils/rankStyle";
+import { applyDraft, isDirty, type BulkDrafts } from "./bulkDraftStore";
 
 /**
  * Columns the engine prepends itself — chevron, rank, compare checkbox. Not
@@ -117,6 +120,28 @@ export interface CustomCellCtx<T> {
   /** Full column config — expose format_string, cell_type, colors, etc. */
   colConfig: GridColumnSetting;
   gradientStyle?: CSSProperties;
+  /**
+   * This row's key, or `null` when the grid config names no `rowKeyColumn`.
+   * A custom cell that writes a draft needs it; one that only renders does not.
+   */
+  rowKey: string | null;
+  /**
+   * The pending draft for this cell, or `undefined` when there is none.
+   *
+   * `value` above already reflects it, so a renderer that just displays the
+   * cell can ignore this. It is here for the cell that has to tell edited from
+   * unedited — a dirty marker, a revert affordance, a diff.
+   */
+  draftValue: unknown;
+  /**
+   * Write this cell's draft.
+   *
+   * A consumer that supplies its own editor for a column previously had no way
+   * into the store the platform already keeps, so it had to reimplement the
+   * buffer and the Save/Discard bar alongside it. Writing the same value back
+   * clears the entry, exactly as an inline edit does.
+   */
+  setDraft: (nextValue: unknown) => void;
 }
 
 /** Contract passed to a `customHeaders` override. */
@@ -293,6 +318,26 @@ export interface DataGridProps<T extends Record<string, any>> {
    */
   bulkDirtyOverride?: boolean;
   /**
+   * Bypass the engine-owned draft store and drive it from caller-owned state,
+   * mirroring `selectionOverride`.
+   *
+   * The store was module-private, so the three gestures that make a bulk grid
+   * worth having — fill-down, spreadsheet paste, apply-to-selected — write
+   * many cells at once from outside any cell and had nowhere to write. A
+   * consumer that needed them reimplemented the buffer, the dirty flag and the
+   * Save/Discard bar the engine already ships.
+   *
+   * `drafts` is the same `rowKey → columnId → nextValue` shape the engine
+   * keeps and `onChange` receives the whole next map, so the caller can merge,
+   * validate or refuse a write. Supplying it turns bulk mode on by itself: a
+   * caller that owns the buffer usually owns the save too, and `onBulkCommit`
+   * stays optional.
+   */
+  draftsOverride?: {
+    drafts: BulkDrafts;
+    onChange: (next: BulkDrafts) => void;
+  };
+  /**
    * Phase 10 B2: row-expansion primitive. When provided AND the grid's
    * admin config sets `allow_expansion=1`, the engine prepends a chevron
    * expander column and renders the return value beneath the expanded
@@ -389,6 +434,7 @@ export default function DataGrid<T extends Record<string, any>>({
   onCellCommit,
   onBulkCommit,
   bulkDirtyOverride = false,
+  draftsOverride,
   renderSubRow,
   cellSelection = false,
   onRangeCopy,
@@ -437,38 +483,41 @@ export default function DataGrid<T extends Record<string, any>>({
   // caller supplies `onBulkCommit`; flushed on Save (via onBulkCommit) or
   // Discard. Empty state === not dirty. Cells consult this map at render
   // time so the visible value tracks the draft, not the underlying row.
-  const bulkMode = !!onBulkCommit;
-  const [bulkDrafts, setBulkDrafts] = useState<
-    Record<string, Record<string, unknown>>
-  >({});
-  const [bulkSaving, setBulkSaving] = useState(false);
-  const setBulkDraft = useCallback(
-    (rowKey: string, columnId: string, nextValue: unknown, originalValue: unknown) => {
-      setBulkDrafts((prev) => {
-        // Same-value writes clear the entry (and the row if empty) so the
-        // dirty indicator only fires on real diffs.
-        const equal =
-          nextValue === originalValue ||
-          (nextValue == null && originalValue == null);
-        const rowDrafts = { ...(prev[rowKey] ?? {}) };
-        if (equal) {
-          delete rowDrafts[columnId];
-        } else {
-          rowDrafts[columnId] = nextValue;
-        }
-        const next = { ...prev };
-        if (Object.keys(rowDrafts).length === 0) {
-          delete next[rowKey];
-        } else {
-          next[rowKey] = rowDrafts;
-        }
-        return next;
-      });
+  //
+  // `draftsOverride` lifts the whole store to the caller (#15). The engine
+  // still owns every write path, so an overriding consumer inherits the
+  // same-value-clears rule and the dirty flag rather than reimplementing them.
+  const bulkMode = !!onBulkCommit || !!draftsOverride;
+  const [internalDrafts, setInternalDrafts] = useState<BulkDrafts>({});
+  const bulkDrafts = draftsOverride ? draftsOverride.drafts : internalDrafts;
+  // Both reads go through refs so `setBulkDrafts` can stay identity-stable.
+  // A consumer writes `draftsOverride={{ drafts, onChange }}` inline — a fresh
+  // object every render — and a dependency on it would churn every callback
+  // downstream of it, which is the shape of bug #11 was.
+  const draftsRef = useRef(bulkDrafts);
+  draftsRef.current = bulkDrafts;
+  const draftsOverrideRef = useRef(draftsOverride);
+  draftsOverrideRef.current = draftsOverride;
+  const setBulkDrafts = useCallback(
+    (updater: BulkDrafts | ((prev: BulkDrafts) => BulkDrafts)) => {
+      const next = typeof updater === "function" ? updater(draftsRef.current) : updater;
+      const override = draftsOverrideRef.current;
+      if (override) override.onChange(next);
+      else setInternalDrafts(next);
     },
     [],
   );
-  const discardBulkDrafts = useCallback(() => setBulkDrafts({}), []);
-  const bulkDirtyEngine = Object.keys(bulkDrafts).length > 0;
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const setBulkDraft = useCallback(
+    (rowKey: string, columnId: string, nextValue: unknown, originalValue: unknown) => {
+      setBulkDrafts((prev) =>
+        applyDraft(prev, { rowKey, columnId, nextValue, originalValue }),
+      );
+    },
+    [setBulkDrafts],
+  );
+  const discardBulkDrafts = useCallback(() => setBulkDrafts({}), [setBulkDrafts]);
+  const bulkDirtyEngine = isDirty(bulkDrafts);
   const bulkDirty = bulkDirtyEngine || bulkDirtyOverride;
   const saveBulkDrafts = useCallback(async () => {
     if (!onBulkCommit) return;
@@ -483,7 +532,7 @@ export default function DataGrid<T extends Record<string, any>>({
     } finally {
       setBulkSaving(false);
     }
-  }, [onBulkCommit, bulkDrafts]);
+  }, [onBulkCommit, bulkDrafts, setBulkDrafts]);
 
   // Phase 3 §S9: row accent tinting. The engine owns the mechanism (an inline
   // style plus a left-border class); the host app supplies the row → color
@@ -617,10 +666,13 @@ export default function DataGrid<T extends Record<string, any>>({
     const ids = new Set<string>();
     if (config.readOnly || (!onCellCommit && !bulkMode)) return ids;
     for (const col of Object.values(config.columns)) {
-      if (col.editable) ids.add(col.column_id);
+      // A column with its own renderer is excluded for the same reason
+      // `canEdit` excludes it: the engine must not claim a keystroke for an
+      // editor it is not the one opening.
+      if (col.editable && !customCells?.[col.column_id]) ids.add(col.column_id);
     }
     return ids;
-  }, [config.columns, config.readOnly, onCellCommit, bulkMode]);
+  }, [config.columns, config.readOnly, onCellCommit, bulkMode, customCells]);
 
   const columns: ColumnDef<T, any>[] = useMemo(() => {
     if (!isLoaded) return [];
@@ -727,6 +779,12 @@ export default function DataGrid<T extends Record<string, any>>({
                 column_id: columnId,
                 colConfig: col,
                 gradientStyle,
+                rowKey: cellRowKey != null ? String(cellRowKey) : null,
+                draftValue: draftForCell,
+                setDraft: (nextValue) => {
+                  if (cellRowKey == null) return;
+                  setBulkDraft(String(cellRowKey), columnId, nextValue, rawUnwrapped);
+                },
               });
             } else {
               // 2. Config-driven media cell_types (Phase 4d Q2) — 100 %
@@ -766,9 +824,15 @@ export default function DataGrid<T extends Record<string, any>>({
             //    The wrap sits at the end so customCells / media / renderCell
             //    stay in charge of what the cell *looks like* — editability
             //    is a decoration on top.
+            //    A supplied `customCells` renderer is exempt: the consumer has
+            //    already said what the editor for that column is, and wrapping
+            //    it turned CollectIt's 29,000-value eBay aspect typeahead into
+            //    a plain text box on exactly the columns that need the
+            //    vocabulary. Such a cell writes drafts through `ctx.setDraft`.
             const rowKeyValue = cellRowKey;
             const canEdit =
               !!col.editable &&
+              !override &&
               (!!onCellCommit || bulkMode) &&
               !config.readOnly &&
               rowKeyValue != null;
@@ -1128,6 +1192,23 @@ export default function DataGrid<T extends Record<string, any>>({
     return <GridStatusContent type="loading" message={loadingMessage} />;
   }
 
+  // A grid id nothing seeds used to render as a blank area: no error, no
+  // warning, no empty state, and no signal pointing at the missing row in
+  // `app_grid_settings`. Consumers were writing their own audits to catch what
+  // the platform would not tell them. Say it where it happens instead.
+  if (config.isUnseeded) {
+    log.error(
+      { gridId, action: "grid_unseeded" },
+      "DataGrid: no app_grid_settings row exists for this grid id",
+    );
+    return (
+      <GridStatusContent
+        type="error"
+        message={`Grid "${gridId}" is not configured — no row exists for it in app_grid_settings.`}
+      />
+    );
+  }
+
   const renderTableSurface = (paginatedRows: T[]) => (
     <DndColumnWrapper
       columnOrder={columnOrder}
@@ -1374,18 +1455,30 @@ export default function DataGrid<T extends Record<string, any>>({
                             ? () => cells.onCellMouseEnter(row.id, cell.column.id)
                             : undefined
                         }
+                        // Bound on the cell rather than left to the renderer:
+                        // `<EditableCell>` binds its own double-click, but a
+                        // custom cell does not, so bulk-edit columns had no
+                        // double-click path at all. The hook declines for a
+                        // column nothing can edit, so this is inert elsewhere.
+                        onDoubleClick={
+                          isCellSelectable
+                            ? () => cells.onCellDoubleClick(row.id, cell.column.id)
+                            : undefined
+                        }
                         className={cn(
                           `${cellPad} text-${align}`,
                           "overflow-hidden text-ellipsis",
-                          pinnedSide === "left" && "sticky z-10 bg-card",
-                          pinnedSide === "right" && "sticky z-10 bg-card",
-                          isNameCol && pinnedSide !== "left" &&
-                            "sticky left-0 z-10 bg-card",
+                          // One decision, one class — see cellPosition.ts for
+                          // why `sticky` and `relative` cannot both be listed.
+                          cellPositionClasses(
+                            pinnedSide,
+                            isNameCol,
+                            isCellSelectable,
+                          ),
                           isFlashing && "animate-live-pulse",
                           // `primary` rather than a token of its own: the ring
                           // and the wash are the same affordance the rest of the
                           // shell uses for "this is what you are acting on".
-                          isCellSelectable && "relative",
                           isCellSelected && "bg-primary/10",
                           isCellFillPreview && "bg-primary/5",
                           isCellFocused &&
