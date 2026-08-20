@@ -11,6 +11,10 @@
 // ── Grid engine ──────────────────────────────────────────────────────────────
 export { default as DataGrid } from "./components/grids/DataGrid";
 export type { CustomCellCtx, CustomHeaderCtx, DataGridProps } from "./components/grids/DataGrid";
+// The bulk-draft reducer, for a consumer driving the store via
+// `draftsOverride` — fill-down, paste and apply-to-selected all write many
+// cells at once and should not each invent their own dirty rules.
+export * from "./components/grids/bulkDraftStore";
 export { default as GridHeader } from "./components/grids/GridHeader";
 export { default as EditableCell } from "./components/grids/EditableCell";
 export type { EditableCellProps } from "./components/grids/EditableCell";
