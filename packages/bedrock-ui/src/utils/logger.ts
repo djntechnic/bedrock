@@ -20,9 +20,13 @@ export const log = pino({
   },
   
   browser: {
-    // CRITICAL: When running locally, set asObject to false.
-    // This tells Pino to output clean plain text strings to the console window.
-    asObject: !isProduction, 
+    // Objects are what a log *shipper* consumes; formatted text is what a human
+    // at a dev server reads. This condition was the other way round — inverted
+    // relative to the comment that documented it — so every development log line
+    // arrived as `{level: 30, time: 1755…, msg: "…"}` and the message was the
+    // one part you could not read at a glance. Consumers' real warnings drowned
+    // in it, which is how it was found.
+    asObject: isProduction,
     disabled: isProduction && appSettings.logging.disableConsoleInProd,
   },
   

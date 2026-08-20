@@ -54,6 +54,29 @@ export interface CellRangePaste {
   anchor: CellRef;
   /** Rows of columns, as parsed from the clipboard. */
   matrix: string[][];
+  /**
+   * The rows the matrix lands on, top-to-bottom **in the grid's visible order**,
+   * starting at `anchor`.
+   *
+   * Reporting only the anchor made the consumer answer "and which row is next?"
+   * on its own, and the only order visible from out there is the DOM's — so
+   * consumers walked `[data-row-key]` attributes to rebuild what this hook
+   * already knew. That reads the rendered rows, not the model's, so it silently
+   * pastes into the wrong records the moment rows virtualise, and it costs a
+   * layout read on every paste. The order is authoritative here; it ships on the
+   * payload.
+   *
+   * Clamped to the rows that exist: a matrix taller than the remaining rows
+   * yields fewer keys than `matrix.length`, and pasting past the last row drops
+   * the overflow rather than inventing rows.
+   */
+  rowKeys: string[];
+  /**
+   * The columns the matrix lands on, left-to-right in the current column order,
+   * starting at `anchor`. Clamped to the columns that exist, and sized to the
+   * widest row of a ragged matrix.
+   */
+  columnIds: string[];
 }
 
 /** A fill-handle drag, reported to the consumer for it to apply. */
@@ -508,9 +531,25 @@ export function useCellSelection({
       // Top-left of the selection, not the focus cell: dragging a range
       // bottom-up and pasting fills downwards from the top, as it does in a
       // spreadsheet.
+      const anchorCell = {
+        rowKey: current.rowKeys[0],
+        columnId: current.columnIds[0],
+      };
+      const matrix = parseTsv(text);
+      const { rowKeys: keys, columnIds: cols } = stateRef.current;
+      const rowStart = keys.indexOf(anchorCell.rowKey);
+      const colStart = cols.indexOf(anchorCell.columnId);
+      // `slice` clamps for us at the far end; a negative index would not, and
+      // an anchor missing from the model means the row was filtered away
+      // between the selection and the Ctrl+V.
+      if (rowStart < 0 || colStart < 0) return;
+      const width = matrix.reduce((widest, row) => Math.max(widest, row.length), 0);
+
       handler({
-        anchor: { rowKey: current.rowKeys[0], columnId: current.columnIds[0] },
-        matrix: parseTsv(text),
+        anchor: anchorCell,
+        matrix,
+        rowKeys: keys.slice(rowStart, rowStart + matrix.length),
+        columnIds: cols.slice(colStart, colStart + width),
       });
     };
 
