@@ -5,6 +5,8 @@
  */
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
+import { Toaster } from "../components/ui/sonner";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface ThemePalette {
@@ -430,9 +432,21 @@ interface ThemeProviderProps {
   systemLight?: string;
   /** The palette `"system"` resolves to when the OS asks for dark. */
   systemDark?: string;
+  /**
+   * Mount the platform's toast surface. On by default, because `toast()` is
+   * called from four platform components and used to do nothing at all — a
+   * host had to know to render a `<Toaster>` that the platform never told it
+   * about. Set `false` only if the host owns its own notification surface.
+   */
+  toaster?: boolean;
 }
 
-export function ThemeProvider({ children, systemLight, systemDark }: ThemeProviderProps) {
+export function ThemeProvider({
+  children,
+  systemLight,
+  systemDark,
+  toaster = true,
+}: ThemeProviderProps) {
   const [activeThemeId, setActiveThemeId] = useState<string>(
     () => localStorage.getItem(ACTIVE_KEY) ?? "mlb-classic"
   );
@@ -513,6 +527,9 @@ export function ThemeProvider({ children, systemLight, systemDark }: ThemeProvid
       }}
     >
       {children}
+      {/* Inside the provider so it repaints with the palette, and after the
+          children so it layers over them without needing a z-index of its own. */}
+      {toaster && <Toaster isDark={resolved.isDark} />}
     </ThemeContext.Provider>
   );
 }

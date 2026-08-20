@@ -73,6 +73,7 @@ import GridWrapper from "../GridWrapper";
 import { SortableTableHead } from "../SortableTableHead";
 import { EmptyTableRow } from "../EmptyTableRow";
 import { GridStatusContent } from "../GridStatus";
+import { log } from "../../utils/logger";
 
 import { useTableState } from "../../hooks/useTableState";
 import { useAuth } from "../../hooks/useAuth";
@@ -1127,6 +1128,23 @@ export default function DataGrid<T extends Record<string, any>>({
 
   if (isLoading || !isLoaded) {
     return <GridStatusContent type="loading" message={loadingMessage} />;
+  }
+
+  // A grid id nothing seeds used to render as a blank area: no error, no
+  // warning, no empty state, and no signal pointing at the missing row in
+  // `app_grid_settings`. Consumers were writing their own audits to catch what
+  // the platform would not tell them. Say it where it happens instead.
+  if (config.isUnseeded) {
+    log.error(
+      { gridId, action: "grid_unseeded" },
+      "DataGrid: no app_grid_settings row exists for this grid id",
+    );
+    return (
+      <GridStatusContent
+        type="error"
+        message={`Grid "${gridId}" is not configured — no row exists for it in app_grid_settings.`}
+      />
+    );
   }
 
   const renderTableSurface = (paginatedRows: T[]) => (

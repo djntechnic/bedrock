@@ -56,6 +56,12 @@ export { default as Breadcrumb } from "./components/Breadcrumb";
 export type { BreadcrumbItem } from "./components/Breadcrumb";
 export { default as AppFooter } from "./components/AppFooter";
 export * from "./components/EmptyState";
+// `ThemeProvider` mounts this already; exported for a host that opts out with
+// `toaster={false}` and places its own, and re-exported `toast` so a consumer
+// does not have to depend on `sonner` directly to raise one.
+export { Toaster } from "./components/ui/sonner";
+export type { PlatformToasterProps } from "./components/ui/sonner";
+export { toast } from "sonner";
 export * from "./components/navRegistry";
 export * from "./components/searchSourceRegistry";
 export * from "./lib/commandRoutes";

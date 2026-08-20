@@ -94,10 +94,12 @@ def build_app() -> FastAPI:
     from slowapi.errors import RateLimitExceeded
     from slowapi.middleware import SlowAPIMiddleware
 
+    from bedrock.core.error_handlers import register_error_handlers
     from bedrock.core.rate_limit import limiter, rate_limit_handler
 
     application = FastAPI()
     application.state.limiter = limiter
+    register_error_handlers(application)
     # bedrock's own handler, not slowapi's default: it records the trip in the
     # auth activity log and returns the platform's error envelope. Wiring the
     # default here would quietly give the package a different 429 body than

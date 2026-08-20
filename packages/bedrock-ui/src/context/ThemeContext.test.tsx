@@ -13,6 +13,12 @@ import {
   type ThemePalette,
 } from "./ThemeContext";
 
+// Sonner's own markup is its business; what this file has to prove is that
+// something renders it at all, and hands it the polarity actually painted.
+vi.mock("sonner", () => ({
+  Toaster: ({ theme }: { theme?: string }) => <div data-testid="toaster" data-theme={theme} />,
+}));
+
 const light = (id: string): ThemePalette => ({
   id,
   name: id,
@@ -174,5 +180,60 @@ describe("ThemeProvider system mode", () => {
       </ThemeProvider>,
     );
     expect(probe()).toBe(`${SYSTEM_THEME_ID}|${lightPalette.id}`);
+  });
+});
+
+describe("ThemeProvider toast surface", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    document.documentElement.classList.remove("dark");
+    vi.unstubAllGlobals();
+  });
+
+  it("mounts a toaster without the host asking for one", () => {
+    // The regression: `sonner` was a dependency, four platform components
+    // called `toast()`, and nothing rendered a surface — so every one of them
+    // succeeded silently, including the cell commit that rejects an edit.
+    stubMatchMedia(false);
+    render(
+      <ThemeProvider>
+        <Probe />
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId("toaster")).toBeTruthy();
+  });
+
+  it("matches the toaster to the palette that is painted", () => {
+    stubMatchMedia(true);
+    localStorage.setItem("mlbtracker-theme", SYSTEM_THEME_ID);
+    render(
+      <ThemeProvider>
+        <Probe />
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId("toaster").getAttribute("data-theme")).toBe("dark");
+  });
+
+  it("follows the OS flip rather than the polarity it started on", () => {
+    const mq = stubMatchMedia(false);
+    localStorage.setItem("mlbtracker-theme", SYSTEM_THEME_ID);
+    render(
+      <ThemeProvider>
+        <Probe />
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId("toaster").getAttribute("data-theme")).toBe("light");
+    mq.set(true);
+    expect(screen.getByTestId("toaster").getAttribute("data-theme")).toBe("dark");
+  });
+
+  it("stands down for a host that owns its own notification surface", () => {
+    stubMatchMedia(false);
+    render(
+      <ThemeProvider toaster={false}>
+        <Probe />
+      </ThemeProvider>,
+    );
+    expect(screen.queryByTestId("toaster")).toBeNull();
   });
 });
