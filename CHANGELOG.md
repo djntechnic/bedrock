@@ -1,5 +1,54 @@
 # Changelog
 
+## v0.4.0
+
+### Fixed — the grid cursor and the cell editor stop fighting over the keyboard
+
+v0.3.0 gave `<DataGrid>` a cell cursor and `<EditableCell>` an inline editor, and
+the two could not be used together. The cursor binds a **window** keydown, and
+`isEditingActiveElement()` — its "leave the keys alone" guard — is a DOM-focus
+test. An idle editable cell holds no DOM focus, so the cursor swallowed `Enter`
+and moved down instead of opening the editor underneath it. Double-click was the
+only gesture that ever worked, and only for the cell the mouse was over.
+
+Three pieces, each opt-in:
+
+- **`<EditableCell>` types like a spreadsheet.** A printable character opens the
+  editor seeded with *that character*, replacing the value; `Backspace`/`Delete`
+  open it empty; `Enter`, `Space`, `F2` and double-click open it preserving the
+  value and select it. Escape still cancels.
+- **`useCellSelection` gains `onBeginEdit(cellRef, seed)`.** When the consumer
+  supplies it, a keystroke on the focus cell is offered to it before navigation
+  claims it; returning `true` claims the key, and anything else falls through to
+  the behaviour that shipped before — so `Enter` on a read-only cell still moves
+  down. Arrows, `Tab`, `Ctrl+A` and `Escape` are never offered. A grid that
+  passes no handler is byte-for-byte unchanged. The keyboard table itself is
+  exported as `seedForKey`, so the hook and the cell cannot drift apart.
+- **`<EditableCell openWith={{ seed, nonce }}>`** opens a cell nothing clicked.
+  It is an edge-triggered request keyed by `nonce`, not a controlled value:
+  editing state stays inside the cell, so no existing consumer has to start
+  owning state it never had. `<DataGrid>` wires the two together and declines a
+  column that is not editable.
+
+### Changed — the selection column stopped being a player-comparison widget
+
+`prependSelectionColumn` carried a hardcoded `selectedIds.length >= 3` cap, a
+`"Cmp"` header and a "Max 3 players for comparison" tooltip — baseball-era
+defaults that silently made a bulk operation over a real selection impossible on
+every other grid. The cap is now an opt-in `maxSelected` option, and the header
+and tooltip copy are options too (defaults: `"Sel"` / "Select rows" / "Select
+row"). A row key of `0` now gets a checkbox: the guard was `!id`, and is `id == null`.
+
+### Added — `selection_position`, so the checkbox can sit on the left
+
+New `app_grid_settings` column (migration `003`, default `'end'`, so no shipped
+grid moves), threaded through the admin schema, `useGridConfig`, the Grid Editor
+settings panel and its preview. `<DataGrid>` no longer hardcodes `"end"`.
+
+`GridConfig.columnOrder` also gained a doc comment naming its trap: it lists
+**visible** columns, so a hidden-but-`editable` column is absent from it and
+anything deriving a working set must iterate `GridConfig.columns` instead.
+
 ## v0.3.0
 
 ### Added — a cell cursor and clipboard for `<DataGrid>`, opt-in

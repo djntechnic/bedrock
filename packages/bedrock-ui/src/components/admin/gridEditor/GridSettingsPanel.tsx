@@ -81,6 +81,9 @@ export default function GridSettingsPanel({
           onChange={(v) => setGridField("show_medal_toggles", v)} />
         <SwitchRow label="Selection checkbox column" checked={bool(g.allow_selection)}
           onChange={(v) => setGridField("allow_selection", v)} />
+        <SelectRow label="Selection column position" value={g.selection_position ?? "end"}
+          options={[{ value: "end", label: "Right (last column)" }, { value: "start", label: "Left (first column)" }]}
+          onChange={(v) => setGridField("selection_position", v)} />
         <SwitchRow label="Inline search" checked={bool(g.show_search)}
           onChange={(v) => setGridField("show_search", v)} />
         <SwitchRow label="Density toggle" checked={bool(g.show_density_toggle)}

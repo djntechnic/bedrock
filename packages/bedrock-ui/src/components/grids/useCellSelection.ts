@@ -76,6 +76,23 @@ export interface UseCellSelectionOptions {
   onCopy?: (tsv: string, range: CellRange) => void;
   onPaste?: (paste: CellRangePaste) => void;
   onFill?: (fill: CellRangeFill) => void;
+  /**
+   * Typing on the focus cell, when the consumer can turn that into an edit.
+   *
+   * The cursor is not DOM focus, so `isEditingActiveElement()` cannot tell an
+   * idle editable cell from a read-only one — every keystroke aimed at a cell
+   * arrives here first. Without this hook the window listener eats them:
+   * `Enter` moves down, and a printable character does nothing at all.
+   *
+   * @param cell - The focus cell.
+   * @param seed - The text to open with: a printable character, `""` for
+   *   Backspace/Delete, or `null` to open preserving the current value
+   *   (Enter, Space, F2).
+   * @returns True when an edit actually began. False (or nothing) declines,
+   *   and the keystroke falls through to navigation — so `Enter` on a cell
+   *   that cannot be edited still moves down, exactly as before.
+   */
+  onBeginEdit?: (cell: CellRef, seed: string | null) => boolean | void;
 }
 
 /** What `useCellSelection` hands back for the cell renderer to consume. */
@@ -179,6 +196,34 @@ export function parseTsv(text: string): string[][] {
 }
 
 /**
+ * The one keyboard table for "does this key open an editor, and with what?".
+ *
+ * Lives here rather than in `EditableCell` because both ends need it and this
+ * module has no component dependencies: the cell answers the question for a
+ * span that holds DOM focus, the hook answers it for the grid cursor, and a
+ * single table is what stops the two from disagreeing about which keystrokes
+ * are typing and which are navigation.
+ *
+ * @param key - `KeyboardEvent.key`.
+ * @param modified - True when Ctrl/Meta/Alt is held; those are shortcuts,
+ *   never text.
+ * @returns The seed text to open with, `null` to open preserving the current
+ *   value, or `undefined` when the key is not an open gesture at all.
+ */
+export function seedForKey(
+  key: string,
+  modified: boolean,
+): string | null | undefined {
+  if (modified) return undefined;
+  // Space keeps the value rather than replacing it with a space: it has been
+  // the "open this cell" gesture since the primitive shipped, and an operator
+  // who wants a leading space can type it in the editor.
+  if (key === "Enter" || key === " " || key === "F2") return null;
+  if (key === "Backspace" || key === "Delete") return "";
+  return key.length === 1 ? key : undefined;
+}
+
+/**
  * @returns True when the keystroke belongs to something the operator is typing
  *   into, so grid navigation must keep its hands off. An open `<EditableCell>`
  *   is exactly this case: its input is focused, and Ctrl+C there means "copy the
@@ -225,6 +270,7 @@ export function useCellSelection({
   onCopy,
   onPaste,
   onFill,
+  onBeginEdit,
 }: UseCellSelectionOptions): CellSelection {
   const [anchor, setAnchor] = useState<CellRef | null>(null);
   const [focus, setFocus] = useState<CellRef | null>(null);
@@ -237,8 +283,8 @@ export function useCellSelection({
   // listener on every cursor move is how a drag ends up dropping a mouseup.
   const stateRef = useRef({ anchor, focus, rowKeys, columnIds, getCellText });
   stateRef.current = { anchor, focus, rowKeys, columnIds, getCellText };
-  const handlersRef = useRef({ onCopy, onPaste, onFill });
-  handlersRef.current = { onCopy, onPaste, onFill };
+  const handlersRef = useRef({ onCopy, onPaste, onFill, onBeginEdit });
+  handlersRef.current = { onCopy, onPaste, onFill, onBeginEdit };
 
   const range = useMemo(
     () => (anchor && focus ? rectangle(rowKeys, columnIds, anchor, focus) : null),
@@ -411,6 +457,21 @@ export function useCellSelection({
         event.preventDefault();
         move(step[0], step[1], event.shiftKey, mod);
         return;
+      }
+
+      // Typing beats navigating. Tab is excluded on purpose: it is the one
+      // key here that means "leave this cell" in every editor as well.
+      const focusCell = stateRef.current.focus;
+      const beginEdit = handlersRef.current.onBeginEdit;
+      if (focusCell && beginEdit && event.key !== "Tab") {
+        const seed = seedForKey(event.key, mod || event.altKey);
+        // Declining falls through, so Enter on a read-only cell still moves
+        // down and a printable character still does nothing — the behaviour
+        // every grid had before this option existed.
+        if (seed !== undefined && beginEdit(focusCell, seed) === true) {
+          event.preventDefault();
+          return;
+        }
       }
 
       if ((event.key === "Tab" || event.key === "Enter") && stateRef.current.focus) {

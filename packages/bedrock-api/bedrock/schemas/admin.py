@@ -69,6 +69,10 @@ class GridSettingSchema(BaseModel):
     sort_desc_color: Optional[str] = None
     hover_color: Optional[str] = None
     allow_selection: bool = False
+    # Which side of the grid the selection checkbox column sits on
+    # ('start' | 'end'). Defaults to 'end' so every grid seeded before the
+    # setting existed keeps the layout it already had.
+    selection_position: str = "end"
     allow_print: bool = False
     # Screen/page a grid renders on (drives the admin Screen dropdown)
     page: Optional[str] = None

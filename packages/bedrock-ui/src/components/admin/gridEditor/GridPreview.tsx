@@ -348,9 +348,9 @@ export default function GridPreview({ config, onEnterFocus: _onEnterFocus, onCol
       selectedIds,
       setSelectedIds,
       "mlb_id",
-      "end",
+      config.selectionPosition,
     );
-  }, [config.columns, config.showRanking, config.allowSelection, config.minColumnWidth, config.numeralStyle, selectedIds, stagedData]);
+  }, [config.columns, config.showRanking, config.allowSelection, config.selectionPosition, config.minColumnWidth, config.numeralStyle, selectedIds, stagedData]);
 
   const initialVisibility = useMemo(() => {
     const vis: Record<string, boolean> = {};

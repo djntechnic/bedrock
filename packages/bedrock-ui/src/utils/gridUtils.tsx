@@ -150,11 +150,39 @@ export function prependRankColumn<T>(
 
 // ─── Selection column ───────────────────────────────────────────────────────────
 
+/** Cosmetics and limits for {@link prependSelectionColumn}. */
+export interface SelectionColumnOptions {
+  /**
+   * Cap on how many rows may be checked at once. Undefined means no cap.
+   *
+   * This used to be a hardcoded 3 — a player-comparison rule that had no
+   * business applying to every grid on the platform, and that silently made
+   * a bulk operation over a real selection impossible. Grids that want the
+   * cap now ask for it.
+   */
+  maxSelected?: number;
+  /** Header text. */
+  headerLabel?: string;
+  /** Header tooltip. */
+  headerTitle?: string;
+  /** Checkbox tooltip while it is still selectable. */
+  cellTitle?: string;
+  /** Checkbox tooltip once `maxSelected` is reached. */
+  cellTitleAtLimit?: string;
+}
+
 /**
- * Adds a compare-selection checkbox column when allowSelection is true.
- * Disables checkboxes when selectedIds.length >= 3 (max comparison limit).
- * idField specifies which row property holds the player ID (default: "mlb_id").
- * Position defaults to "end" (appended after data columns).
+ * Adds a selection checkbox column when allowSelection is true.
+ *
+ * @param cols - The data columns.
+ * @param allowSelection - False returns `cols` untouched.
+ * @param selectedIds - Currently checked row ids.
+ * @param onSelectionChange - Receives the next id list.
+ * @param idField - Which row property holds the id (default: "mlb_id").
+ * @param position - "start" puts the checkbox before the data columns,
+ *   "end" (the default) after them.
+ * @param options - See {@link SelectionColumnOptions}.
+ * @returns The column list with the checkbox column inserted.
  */
 export function prependSelectionColumn<T extends Record<string, unknown>>(
   cols: ColumnDef<T>[],
@@ -163,20 +191,32 @@ export function prependSelectionColumn<T extends Record<string, unknown>>(
   onSelectionChange: (ids: number[]) => void,
   idField: keyof T = "mlb_id" as keyof T,
   position: "start" | "end" = "end",
+  options: SelectionColumnOptions = {},
 ): ColumnDef<T>[] {
   if (!allowSelection) return cols;
 
+  const {
+    maxSelected,
+    headerLabel = "Sel",
+    headerTitle = "Select rows",
+    cellTitle = "Select row",
+    cellTitleAtLimit = "Selection limit reached",
+  } = options;
+
   const checkCell = ({ row }: any) => {
     const id = row.original[idField] as number | undefined;
-    if (!id) return null;
+    // `id == null`, not `!id`: 0 is a legitimate row key, and dropping the
+    // checkbox for it makes exactly one row unselectable for no reason.
+    if (id == null) return null;
     const checked = selectedIds.includes(id);
-    const disabled = !checked && selectedIds.length >= 3;
+    const disabled =
+      !checked && maxSelected !== undefined && selectedIds.length >= maxSelected;
     return (
       <input
         type="checkbox"
         checked={checked}
         disabled={disabled}
-        title={disabled ? "Max 3 players for comparison" : "Select for comparison"}
+        title={disabled ? cellTitleAtLimit : cellTitle}
         onClick={(e) => e.stopPropagation()}
         onChange={(e) => {
           e.stopPropagation();
@@ -209,9 +249,9 @@ export function prependSelectionColumn<T extends Record<string, unknown>>(
     header: () => (
       <span
         className="text-xs font-medium text-muted-foreground"
-        title="Select players to compare side-by-side"
+        title={headerTitle}
       >
-        Cmp
+        {headerLabel}
       </span>
     ),
     size: 36,

@@ -13,7 +13,9 @@ import { describe, expect, it, vi } from "vitest";
 import {
   useCellSelection,
   parseTsv,
+  seedForKey,
   toTsv,
+  type CellRef,
   type CellRangeFill,
   type CellRangePaste,
 } from "./useCellSelection";
@@ -28,6 +30,7 @@ function Harness({
   onPaste,
   onFill,
   onCopy,
+  onBeginEdit,
   withInput = false,
 }: {
   rowKeys?: string[];
@@ -36,6 +39,7 @@ function Harness({
   onPaste?: (paste: CellRangePaste) => void;
   onFill?: (fill: CellRangeFill) => void;
   onCopy?: (tsv: string, range: unknown) => void;
+  onBeginEdit?: (cell: CellRef, seed: string | null) => boolean | void;
   withInput?: boolean;
 }) {
   const sel = useCellSelection({
@@ -46,6 +50,7 @@ function Harness({
     onPaste,
     onFill,
     onCopy,
+    onBeginEdit,
   });
   return (
     <>
@@ -228,6 +233,95 @@ describe("keyboard", () => {
     fireEvent.mouseDown(cell("r1", "a"), { button: 0 });
     fireEvent.keyDown(window, { key: "ArrowDown" });
     expect(selected()).toBe(0);
+  });
+});
+
+// ── Type to edit ─────────────────────────────────────────────────────────────
+
+describe("seedForKey", () => {
+  it("opens preserving the value for Enter, Space and F2", () => {
+    for (const key of ["Enter", " ", "F2"]) {
+      expect(seedForKey(key, false)).toBeNull();
+    }
+  });
+
+  it("opens empty for Backspace and Delete", () => {
+    expect(seedForKey("Backspace", false)).toBe("");
+    expect(seedForKey("Delete", false)).toBe("");
+  });
+
+  it("seeds a printable character with itself", () => {
+    expect(seedForKey("7", false)).toBe("7");
+    expect(seedForKey("é", false)).toBe("é");
+  });
+
+  it("declines a modified key or a named key it does not own", () => {
+    expect(seedForKey("a", true)).toBeUndefined();
+    expect(seedForKey("Enter", true)).toBeUndefined();
+    expect(seedForKey("ArrowDown", false)).toBeUndefined();
+    expect(seedForKey("Tab", false)).toBeUndefined();
+  });
+});
+
+describe("onBeginEdit", () => {
+  it("begins an edit instead of navigating, seeded with the character typed", () => {
+    const onBeginEdit = vi.fn(() => true);
+    render(<Harness onBeginEdit={onBeginEdit} />);
+    fireEvent.mouseDown(cell("r1", "a"), { button: 0 });
+
+    fireEvent.keyDown(window, { key: "9" });
+    expect(onBeginEdit).toHaveBeenCalledWith({ rowKey: "r1", columnId: "a" }, "9");
+
+    fireEvent.keyDown(window, { key: "Enter" });
+    expect(onBeginEdit).toHaveBeenLastCalledWith(
+      { rowKey: "r1", columnId: "a" },
+      null,
+    );
+    // Enter was claimed, so the cursor stayed put rather than moving down.
+    expect(focused()).toBe(cell("r1", "a"));
+  });
+
+  it("falls through when the consumer declines, so Enter still moves down", () => {
+    const onBeginEdit = vi.fn(() => false);
+    render(<Harness onBeginEdit={onBeginEdit} />);
+    fireEvent.mouseDown(cell("r1", "a"), { button: 0 });
+    fireEvent.keyDown(window, { key: "Enter" });
+    expect(onBeginEdit).toHaveBeenCalled();
+    expect(focused()).toBe(cell("r2", "a"));
+  });
+
+  it("leaves navigation, Ctrl+A, Escape and Tab alone", () => {
+    const onBeginEdit = vi.fn(() => true);
+    render(<Harness onBeginEdit={onBeginEdit} />);
+    fireEvent.mouseDown(cell("r1", "a"), { button: 0 });
+
+    fireEvent.keyDown(window, { key: "ArrowDown" });
+    expect(focused()).toBe(cell("r2", "a"));
+    fireEvent.keyDown(window, { key: "Tab" });
+    expect(focused()).toBe(cell("r2", "b"));
+    fireEvent.keyDown(window, { key: "a", ctrlKey: true });
+    expect(selected()).toBe(12);
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(selected()).toBe(0);
+    expect(onBeginEdit).not.toHaveBeenCalled();
+  });
+
+  it("changes nothing when the consumer supplies no handler", () => {
+    render(<Harness />);
+    fireEvent.mouseDown(cell("r1", "a"), { button: 0 });
+    fireEvent.keyDown(window, { key: "9" });
+    expect(focused()).toBe(cell("r1", "a"));
+    fireEvent.keyDown(window, { key: "Enter" });
+    expect(focused()).toBe(cell("r2", "a"));
+  });
+
+  it("stays out of the way while a cell editor has focus", () => {
+    const onBeginEdit = vi.fn(() => true);
+    render(<Harness withInput onBeginEdit={onBeginEdit} />);
+    fireEvent.mouseDown(cell("r1", "a"), { button: 0 });
+    screen.getByLabelText("editor").focus();
+    fireEvent.keyDown(window, { key: "9" });
+    expect(onBeginEdit).not.toHaveBeenCalled();
   });
 });
 

@@ -598,6 +598,30 @@ export default function DataGrid<T extends Record<string, any>>({
 
   const colHelper = useMemo(() => createColumnHelper<T>(), []);
 
+  // Type-to-edit bridge. The cell cursor from `useCellSelection` is not DOM
+  // focus, so a keystroke aimed at the focused cell lands on a window listener
+  // rather than inside the cell. That listener turns it into an edit *request*
+  // here, and the matching <EditableCell> opens itself via `openWith`. The
+  // `nonce` makes it edge-triggered: re-requesting the same cell with the same
+  // seed still opens the editor, and no editing state leaves the cell.
+  const [editRequest, setEditRequest] = useState<{
+    rowKey: string;
+    columnId: string;
+    seed: string | null;
+    nonce: number;
+  } | null>(null);
+
+  // Which columns `onBeginEdit` may claim a keystroke for — the same predicate
+  // as `canEdit` below, minus the per-row key check the hook cannot do.
+  const editableColumnIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (config.readOnly || (!onCellCommit && !bulkMode)) return ids;
+    for (const col of Object.values(config.columns)) {
+      if (col.editable) ids.add(col.column_id);
+    }
+    return ids;
+  }, [config.columns, config.readOnly, onCellCommit, bulkMode]);
+
   const columns: ColumnDef<T, any>[] = useMemo(() => {
     if (!isLoaded) return [];
 
@@ -753,6 +777,13 @@ export default function DataGrid<T extends Record<string, any>>({
                 <EditableCell
                   rawValue={value}
                   cellType={col.cell_type}
+                  openWith={
+                    editRequest &&
+                    editRequest.rowKey === String(rowKeyValue) &&
+                    editRequest.columnId === columnId
+                      ? { seed: editRequest.seed, nonce: editRequest.nonce }
+                      : null
+                  }
                   onCommit={(next) => {
                     if (bulkMode) {
                       // Draft path: no server round-trip; the shared draft
@@ -851,13 +882,14 @@ export default function DataGrid<T extends Record<string, any>>({
       selectedIds as number[],
       onSelectionChange as (ids: number[]) => void,
       resolvedRowKey,
-      "end",
+      config.selectionPosition,
     );
   }, [
     isLoaded,
     config.columns,
     config.showRanking,
     config.allowSelection,
+    config.selectionPosition,
     config.rowKeyColumn,
     config.minColumnWidth,
     config.tooltipDelayDuration,
@@ -874,6 +906,7 @@ export default function DataGrid<T extends Record<string, any>>({
     accessorFor,
     prependColumns,
     onCellCommit,
+    editRequest,
     config.readOnly,
     config.allowExpansion,
     renderSubRow,
@@ -1027,6 +1060,18 @@ export default function DataGrid<T extends Record<string, any>>({
     onCopy: onRangeCopy,
     onPaste: onRangePaste,
     onFill: onRangeFill,
+    // Decline for a column nothing can edit, so Enter still moves the cursor
+    // down and a printable character still does nothing — exactly as before.
+    onBeginEdit: (cell, seed) => {
+      if (!editableColumnIds.has(cell.columnId)) return false;
+      setEditRequest((prev) => ({
+        rowKey: cell.rowKey,
+        columnId: cell.columnId,
+        seed,
+        nonce: (prev?.nonce ?? 0) + 1,
+      }));
+      return true;
+    },
   });
 
   // Phase 8 H1: virtualization. The scroll container ref + `useVirtualizer`
