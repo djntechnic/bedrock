@@ -11,6 +11,7 @@ build/
 
 # Editor / IDE / OS Files
 *.code-workspace
+*_FileTree.*
 
 # Virtual Environments / Dependencies
 node_modules/
