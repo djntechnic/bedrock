@@ -8,6 +8,7 @@ jobs:
   file-adoption-issues:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         consumer: [djntechnic/CollectIt, djntechnic/MLBTracker]
     steps:
