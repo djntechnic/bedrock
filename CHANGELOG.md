@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.6.0 (unreleased)
+
+### Fixed
+
+- **A fresh consumer database booted clean and then 500'd** (#20). Nothing
+  applied `baseline.sql` at runtime — only the `migrations/` chain replayed —
+  so a genuinely empty database had none of the platform's tables. No existing
+  test caught it because the session fixture builds its database by running
+  `baseline.sql` itself, making the empty-database path structurally
+  unreachable from every test that used it. `apply_migrations()` now bootstraps
+  the baseline first, guarded by the ledger (not table introspection, since a
+  consumer may have dropped a platform table by hand) so a second boot is a
+  no-op. Fixing this also surfaced a latent bug in `_split_sql_statements`: a
+  trailing `--` comment containing an apostrophe (e.g. "provider's") desynced
+  the quote-parity tracker for the rest of the file, silently merging any
+  number of subsequent statements into one. Comments are now stripped in the
+  same quote-aware pass instead of a whole-line pre-filter.
+
 ## v0.5.0
 
 ### Fixed — four defects that no test could see

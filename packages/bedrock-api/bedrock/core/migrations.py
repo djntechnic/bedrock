@@ -239,7 +239,7 @@ def _execute_statement(stmt: str, conn) -> None:
 
 
 def _split_sql_statements(sql: str) -> list[str]:
-    """Split a SQL script into individual non-empty statements on ';', stripping -- comments.
+    """Split a SQL script into individual non-empty statements on ';', stripping comments.
 
     The split is single-quote aware: a ';' inside a string literal does not
     terminate a statement, so descriptions or values containing semicolons
@@ -247,27 +247,52 @@ def _split_sql_statements(sql: str) -> list[str]:
     intact. SQL escapes an embedded quote by doubling it (``''``); the simple
     toggle handles this correctly because the two adjacent quotes flip the
     in-string flag off then back on.
-    """
-    stripped_lines = [
-        line for line in sql.splitlines()
-        if not line.strip().startswith("--")
-    ]
-    stripped = "\n".join(stripped_lines)
 
+    Both comment styles — `-- line` and `/* block */` — are recognized in the
+    same quote-aware pass, not with a whole-line pre-filter: a trailing
+    comment after real SQL on the same line (e.g. an inline column note) is
+    common in these schema files, and a pre-filter that only recognizes a
+    comment starting at column zero leaves it in the stream. Worse, a stray
+    apostrophe inside *any* comment (a contraction like "provider's", or one
+    side of a quoted example inside a block comment) flips the in-string flag
+    for everything that follows, silently merging any number of subsequent
+    statements into one until another stray quote happens to flip it back.
+    Both comment forms are recognized — and their contents skipped whole,
+    quotes included — before the string-toggle branch ever sees them, which
+    is what keeps a comment's punctuation from corrupting the parse.
+
+    Assumptions this parser does NOT handle: it tracks single-quoted string
+    literals only. A double-quoted identifier containing a `'`, `;`, `--` or
+    `/*` (legal but unusual SQL) will confuse it, as will any dialect's
+    dollar-quoting (`$$ ... $$`). Every file this parser has ever run against
+    is bedrock's own SQLite schema and migration content, which uses neither.
+    """
     statements: list[str] = []
     current: list[str] = []
     in_string = False
-    for ch in stripped:
+    i = 0
+    n = len(sql)
+    while i < n:
+        ch = sql[i]
         if ch == "'":
             in_string = not in_string
             current.append(ch)
+            i += 1
+        elif not in_string and ch == "-" and i + 1 < n and sql[i + 1] == "-":
+            newline_at = sql.find("\n", i)
+            i = n if newline_at == -1 else newline_at
+        elif not in_string and ch == "/" and i + 1 < n and sql[i + 1] == "*":
+            end_at = sql.find("*/", i + 2)
+            i = n if end_at == -1 else end_at + 2
         elif ch == ";" and not in_string:
             stmt = "".join(current).strip()
             if stmt:
                 statements.append(stmt)
             current = []
+            i += 1
         else:
             current.append(ch)
+            i += 1
 
     tail = "".join(current).strip()
     if tail:
@@ -305,9 +330,42 @@ def _run_sql_file(path: str, conn) -> None:
         _execute_statement(statement, conn)
 
 
+def _bootstrap_baseline() -> None:
+    """Apply `baseline.sql` to a database that has never had it.
+
+    Guarded by the ledger, not by table introspection: a consumer may have
+    dropped a platform table by hand, and re-running the baseline over a
+    live database would be worse than the 500 it is meant to prevent.
+
+    The ledger guard only protects a database this function has already run
+    against once — it does not protect one that predates this bootstrap
+    entirely, i.e. an existing database with tables but no `bedrock_baseline`
+    ledger row. On that database the baseline *is* re-run, over live data.
+    That is safe today only because `baseline.sql` is exclusively
+    `CREATE TABLE IF NOT EXISTS` / `CREATE INDEX IF NOT EXISTS` statements —
+    no `INSERT`, no `DROP`, nothing that touches a row that already exists.
+    That is a property of the file's current contents, not a guarantee this
+    function makes; a future `baseline.sql` that stops being pure-idempotent
+    DDL would need its own guard.
+    """
+    migration_id = PLATFORM_MIGRATION_PREFIX + "baseline"
+    if _is_applied(migration_id):
+        return
+
+    baseline = os.path.join(
+        os.path.dirname(PLATFORM_MIGRATIONS_DIR), "baseline.sql")
+    if not os.path.exists(baseline):
+        logger.warning("No baseline.sql at %s; skipping bootstrap", baseline)
+        return
+
+    logger.info("Applying baseline schema (first boot)")
+    _apply_one(migration_id, lambda conn: _run_sql_file(baseline, conn))
+
+
 def apply_migrations() -> None:
     """Run all pending migrations through the versioned ledger. Idempotent."""
     _ensure_ledger_table()
+    _bootstrap_baseline()
 
     # 0. Platform migrations, before anything the application owns.
     for path in _discover_platform_sql_files():
