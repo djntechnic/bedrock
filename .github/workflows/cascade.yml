@@ -15,10 +15,11 @@ jobs:
         id: extract
         env:
           BODY: ${{ github.event.release.body }}
+          TAG: ${{ github.event.release.tag_name }}
         run: |
           section=$(printf '%s' "$BODY" | awk '/^## For consumers/{flag=1} /^## /{if(flag && !/^## For consumers/) exit} flag')
           if [ -z "$section" ]; then
-            echo "Release ${{ github.event.release.tag_name }} has no '## For consumers' section." >&2
+            echo "Release $TAG has no '## For consumers' section." >&2
             exit 1
           fi
           {

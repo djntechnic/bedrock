@@ -5,9 +5,16 @@ what to delete. The cascade workflow copies that section verbatim into an
 issue in each consumer repo, so the adoption obligation travels with the tag
 rather than waiting to be noticed here.
 
+This changelog nests that section at `###`, matching this file's convention
+of subsections under a version heading. The release body the cascade
+workflow actually parses is not this file — it keeps `## For consumers` at
+the top level, which is what `.github/workflows/cascade.yml`'s awk extractor
+matches on. The two are intentionally not the same heading level; treat the
+release body, not this file, as authoritative for what the workflow expects.
+
 ## v0.6.0 (unreleased)
 
-## For consumers
+### For consumers
 
 **Adopt**
 - Nothing required. `apply_migrations()` now bootstraps `baseline.sql` on a
