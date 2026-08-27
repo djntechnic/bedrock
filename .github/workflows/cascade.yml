@@ -1,0 +1,50 @@
+name: Cascade adoption issues
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  file-adoption-issues:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        consumer: [djntechnic/CollectIt, djntechnic/MLBTracker]
+    steps:
+      - name: Extract the "For consumers" section
+        id: extract
+        env:
+          BODY: ${{ github.event.release.body }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          section=$(printf '%s' "$BODY" | awk '/^## For consumers/{flag=1} /^## /{if(flag && !/^## For consumers/) exit} flag')
+          if [ -z "$section" ]; then
+            echo "Release $TAG has no '## For consumers' section." >&2
+            exit 1
+          fi
+          {
+            echo 'section<<CASCADE_EOF'
+            printf '%s\n' "$section"
+            echo 'CASCADE_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: File the adoption issue
+        env:
+          GH_TOKEN: ${{ secrets.CASCADE_TOKEN }}
+          TAG: ${{ github.event.release.tag_name }}
+          SECTION: ${{ steps.extract.outputs.section }}
+        run: |
+          gh issue create --repo "${{ matrix.consumer }}" \
+            --title "Adopt bedrock $TAG" \
+            --label cascade:pending \
+            --body "$SECTION
+
+---
+Filed automatically on the publication of [bedrock $TAG](https://github.com/djntechnic/bedrock/releases/tag/$TAG).
+
+Close this issue one of two ways:
+- **Boarded** — both pins moved to \`$TAG\`, adoptions applied, deletions done.
+- **Declined** — close with a comment recording *why* this release is being skipped.
+
+Do not close it silently. A release nobody decided about is how a consumer ends up three releases behind."

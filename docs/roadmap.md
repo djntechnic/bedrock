@@ -31,6 +31,19 @@ consumer's repo, tracked with `cascade:pending`, and closed one of two ways —
 tracks which releases are boarded or declined; that state lives on the
 adoption issues themselves.
 
+As of M1 this contract is enforced by `.github/workflows/cascade.yml`, not
+left to a human to remember. On every published release, it lifts the
+`## For consumers` section out of the release body verbatim and files it as
+an issue — labelled `cascade:pending` — in both `djntechnic/CollectIt` and
+`djntechnic/MLBTracker`. A release published without that section fails the
+workflow loudly rather than filing an empty issue. It runs on a
+`CASCADE_TOKEN` repository secret — a fine-grained PAT with `Issues: write`
+on both consumer repos — stored by hand, deliberately outside CI's reach.
+Should that token be missing or expire, the job fails at the
+`gh issue create` step for lack of credentials, and that failure surfaces
+only when someone happens to check the release's Actions run, since nothing
+currently watches this workflow's status.
+
 ## Inputs
 
 This roadmap is written from two ledgers, one per consumer, that record each

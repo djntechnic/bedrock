@@ -1,6 +1,47 @@
 # Changelog
 
+Every release carries a `## For consumers` section listing what to adopt and
+what to delete. The cascade workflow copies that section verbatim into an
+issue in each consumer repo, so the adoption obligation travels with the tag
+rather than waiting to be noticed here.
+
+This changelog nests that section at `###`, matching this file's convention
+of subsections under a version heading. The release body the cascade
+workflow actually parses is not this file — it keeps `## For consumers` at
+the top level, which is what `.github/workflows/cascade.yml`'s awk extractor
+matches on. The two are intentionally not the same heading level; treat the
+release body, not this file, as authoritative for what the workflow expects.
+When drafting a release body, write the section as `## For consumers`, not
+`### For consumers`, even though you are copying it out of this file's
+nested form — the cascade workflow's extractor matches `^## For consumers`
+literally and fails the release's cascade job on a mismatch.
+
 ## v0.6.0 (unreleased)
+
+### For consumers
+
+**Adopt**
+- Nothing required. `apply_migrations()` now bootstraps `baseline.sql` on a
+  database that has never had it, which is automatic on next boot.
+
+**Delete**
+- Both `optimizeDeps.exclude` and `optimizeDeps.include` entries for
+  `@djntechnic/bedrock-ui` in your `vite.config.ts` — remove them together,
+  not one at a time. This is safe only from `v0.6.0` onward: that is the
+  release that makes the package ship built ESM instead of raw TypeScript
+  (#41), which is what lets its transitive CommonJS dependencies go
+  uncrawled by Vite's dependency optimizer. Apply this deletion against an
+  earlier pin and nothing has changed what the package ships, so dropping
+  only `include` while `exclude` still lists the package leaves it uncrawled
+  regardless, and you'll hit
+  `use-sync-external-store/shim/with-selector.js` failing to resolve — which
+  looks like a regression in this release, not the half-finished cleanup it
+  actually is. Removing neither is safe (if stale); removing only one is
+  worse than removing neither.
+
+**Verify**
+- Start your dev server in a browser after bumping. This is the only place
+  the packaging defect was ever visible.
 
 ### Fixed
 
