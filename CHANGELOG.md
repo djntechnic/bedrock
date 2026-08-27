@@ -21,8 +21,14 @@ literally and fails the release's cascade job on a mismatch.
 ### For consumers
 
 **Adopt**
-- Re-point both pins at `v0.6.2`. Nothing else changes: no API moved, no
-  export was added or removed.
+- Re-point both pins at `v0.6.2`.
+- If a grid's checkbox column needs its own header label or a selection cap,
+  pass `selectionOptions` to `<DataGrid>` — it reaches
+  `prependSelectionColumn` unchanged. Defaults are what they were ("Sel", no
+  cap), so a grid that says nothing behaves as before.
+- `<EditableCell>`'s idle affordance is labelled `Double-click or type to
+  edit` (it has been since type-to-edit landed). A test selecting on the older
+  `Double-click to edit` needs updating.
 
 **Delete**
 - Nothing.
@@ -41,6 +47,14 @@ kept declaring them: a consumer's type check passed and the import threw
   load-bearing rather than reachable-from-the-barrel. `packaging.test.ts`
   gained a check that diffs each emitted module's runtime exports against its
   `.d.ts`, so the two can no longer drift apart unnoticed.
+
+### Added
+
+- **`<DataGrid selectionOptions>`.** `prependSelectionColumn` has accepted a
+  header label, tooltips and a selection cap since it was written, but the
+  engine only ever called it with defaults — so a grid whose selection means
+  something specific had no way to say so. MLBTracker's Trends page compares
+  at most three players under a "Cmp" header and could not express either.
 
 ## v0.6.1
 
