@@ -40,6 +40,15 @@ literally and fails the release's cascade job on a mismatch.
   `S3_REGION` and `S3_PUBLIC_BASE_URL`.
   [`docs/object_storage.md`](docs/object_storage.md).
 
+- `<DataGrid gridRef={…}>` — the grid's sorted, filtered row order, pulled on
+  demand through a `DataGridHandle` (`getSortedRowKeys(): string[]`). A plain
+  prop rather than a real `ref`, because `DataGrid` is generic in its row type
+  and `forwardRef` would erase it; it accepts a `useRef` object or a callback
+  ref exactly as `ref` would. The keys are `getRowId`'s, so they are the same
+  ones `CellRangePaste.rowKeys` reports and the same ones the row
+  `data-row-key` attributes carry — one computation feeds all three. Sorted
+  and filtered but *not* paginated: on a paginated grid it spans every page.
+
 - **The reference deployment now runs SQLite, and the docs now say SQLite is
   the only supported engine (#25).** If you copied `deploy/docker-compose.yml`,
   re-copy it: it started a `postgres:16-alpine` service and hard-set
@@ -54,6 +63,10 @@ literally and fails the release's cascade job on a mismatch.
   handler, and the lifespan that re-implements the boot sequence.
 - Your own boto3 wrapper, if you have one. CollectIt's
   `api/services/storage/r2.py` is what this was built from.
+- Any helper that reads a grid's row order out of the DOM. CollectIt's
+  `renderedRowKeys()` — `querySelectorAll("[data-row-key]")`, deduped — is
+  what this replaces; it sees only the rendered window under virtualisation,
+  and `gridRef` does not.
 - Any plan that had bedrock on Postgres. `DATABASE_URL` stays unset. The
   connection layer's Postgres branch is plumbing, not a path: three boot-time
   checks issue `PRAGMA` / `sqlite_master` unconditionally, and no CI job

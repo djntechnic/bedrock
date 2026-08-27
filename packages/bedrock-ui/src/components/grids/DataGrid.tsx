@@ -13,6 +13,7 @@
  *   - `headerTooltips`                  → static tooltip map by label or column_id
  *   - `filtersSlot`                     → inline filter chips in the header
  *   - `onRowClick` / `onExport`         → domain callbacks
+ *   - `gridRef`                         → the sorted row order, pulled on demand
  *
  * The engine owns state (sorting, columnVisibility, globalFilter, density,
  * selection), column building, the cell pipeline (`customCells →
@@ -25,11 +26,13 @@ import {
   Fragment,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
   type ReactNode,
   type CSSProperties,
+  type Ref,
 } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -153,9 +156,41 @@ export interface CustomHeaderCtx {
   delayDuration: number;
 }
 
+/**
+ * The imperative surface a host can pull from, via the `gridRef` prop.
+ *
+ * Deliberately a pull rather than a push: the questions it answers are
+ * "what is on screen *right now*?", asked at the moment a dialog opens, and a
+ * callback prop would re-render every consumer on every sort to answer a
+ * question almost nobody is asking.
+ */
+export interface DataGridHandle {
+  /**
+   * The row keys of the sorted, filtered row model, top to bottom —
+   * `getRowId` applied, so these are the same keys `CellRangePaste.rowKeys`
+   * reports and the same ones the row `data-row-key` attributes carry.
+   *
+   * Sorted and filtered, but *not* paginated: this is the same model
+   * `<GridWrapper>` slices a page out of, so on a paginated grid it spans
+   * every page. A caller that wants the page needs the page's own bounds.
+   *
+   * This is the model's order, not the DOM's, so it stays complete and correct
+   * under virtualisation — where reading `[data-row-key]` out of the document
+   * sees only the rendered window.
+   */
+  getSortedRowKeys(): string[];
+}
+
 export interface DataGridProps<T extends Record<string, any>> {
   /** grid_id from `app_grid_settings`; drives the config lookup. */
   gridId: string;
+  /**
+   * Receives the grid's {@link DataGridHandle}. A plain prop rather than a
+   * real `ref`, because `DataGrid` is generic in `T` and `forwardRef` erases
+   * that type parameter — a host would have to cast to get it back. Works with
+   * `useRef` and with a callback ref exactly as a `ref` would.
+   */
+  gridRef?: Ref<DataGridHandle>;
   /** Row data (page owns filtering — pass the already-filtered set). */
   rows: T[];
   /** Blocks rendering with a loading skeleton when true. */
@@ -420,6 +455,7 @@ function DefaultColHeader({
 
 export default function DataGrid<T extends Record<string, any>>({
   gridId,
+  gridRef,
   rows,
   isLoading = false,
   filtersSlot,
@@ -1099,9 +1135,24 @@ export default function DataGrid<T extends Record<string, any>>({
   // cell you can copy, and including it would put a blank column in the middle
   // of every paste.
   const selectionRowModel = table.getSortedRowModel().rows;
+  // One computation, two consumers — `cellRowKeys` below and the `gridRef`
+  // handle. Deriving both from this is the point: a host that pulls the order
+  // and a host that reads it off a `CellRangePaste` event must never be told
+  // two different things about the same grid.
+  const sortedRowKeys = useMemo(
+    () => selectionRowModel.map((r) => r.id),
+    [selectionRowModel],
+  );
+  // Cell selection wants an empty set when it is off; the handle does not —
+  // the cursorless paste dialog is exactly the caller that has no cursor.
   const cellRowKeys = useMemo(
-    () => (cellSelection ? selectionRowModel.map((r) => r.id) : []),
-    [cellSelection, selectionRowModel],
+    () => (cellSelection ? sortedRowKeys : []),
+    [cellSelection, sortedRowKeys],
+  );
+  useImperativeHandle(
+    gridRef,
+    () => ({ getSortedRowKeys: () => sortedRowKeys }),
+    [sortedRowKeys],
   );
   const visibleLeafColumns = table.getVisibleLeafColumns();
   const cellColumnIds = useMemo(
