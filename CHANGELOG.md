@@ -18,6 +18,18 @@
   number of subsequent statements into one. Comments are now stripped in the
   same quote-aware pass instead of a whole-line pre-filter.
 
+### Changed
+
+- **`@djntechnic/bedrock-ui` now ships built ESM from `packages/bedrock-ui/dist`
+  instead of raw TypeScript** (#41). `exports["."]` resolves to
+  `dist/index.js` and `dist/index.d.ts`, produced by a Vite library build, so
+  consumers no longer transpile the package's `.ts`/`.tsx` sources themselves.
+  This is what makes the consumer-side `optimizeDeps.exclude` /
+  `optimizeDeps.include` workarounds for this package removable — the
+  package's transitive CommonJS dependencies no longer need crawling by
+  Vite's dependency optimizer once the package itself is prebuilt. That
+  removal is not safe against any pin before this release.
+
 ## v0.5.0
 
 ### Fixed — four defects that no test could see
