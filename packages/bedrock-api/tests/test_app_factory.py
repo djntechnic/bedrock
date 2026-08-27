@@ -27,10 +27,20 @@ from bedrock.core.app_factory import (
     create_app,
 )
 from bedrock.core.database import DatabaseQueryError
+from bedrock.core.stats import iter_route_specs
 
 
 def _paths(app) -> set[str]:
-    return {route.path for route in app.routes if hasattr(route, "path")}
+    """Every mounted path, fully qualified.
+
+    Through `iter_route_specs` rather than by reading `app.routes` directly:
+    since FastAPI 0.139 / Starlette 1.3 an `include_router` call leaves an
+    `_IncludedRouter` wrapper in the table whose children carry paths relative
+    to their include prefix, so a naive walk of `app.routes` sees the four
+    docs routes and nothing else. It reports that as an empty mount map with
+    no error — which is exactly the silence these tests exist to break.
+    """
+    return {path for path, _methods, _name in iter_route_specs(app.routes)}
 
 
 @pytest.fixture
