@@ -16,6 +16,100 @@ When drafting a release body, write the section as `## For consumers`, not
 nested form — the cascade workflow's extractor matches `^## For consumers`
 literally and fails the release's cascade job on a mismatch.
 
+## Unreleased
+
+### For consumers
+
+**Adopt**
+- `bedrock.core.app_factory.create_app()` — build the application with one
+  call instead of copying `tests/conftest.py::build_app()`. It mounts every
+  platform router, registers the error handlers and the rate limiter, mounts
+  `bedrock.routes.seo` unprefixed (`mount_seo=False` to opt out), and runs the
+  boot sequence in lifespan with `before_migrations` / `after_bootstrap` /
+  `on_shutdown` hooks. `PLATFORM_ROUTER_MOUNTS` is exported alongside it.
+  [`docs/app_assembly.md`](docs/app_assembly.md).
+
+- `bedrock.storage.ObjectStore` — the storage capability widened for
+  applications that own their own key space: `put(key, ...)` with the caller's
+  key honoured verbatim, exhaustive `list_prefix()`, batched `delete_many()`,
+  and `verify_public()`. Reach it with `active_object_store()`, which raises
+  `ObjectStoreUnsupported` naming the backend rather than failing later.
+- `bedrock.storage.s3.S3StorageProvider`, registered as `s3` — one adapter for
+  Cloudflare R2, MinIO and S3. `pip install 'bedrock-api[s3]'`; configured from
+  `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_ENDPOINT_URL`,
+  `S3_REGION` and `S3_PUBLIC_BASE_URL`.
+  [`docs/object_storage.md`](docs/object_storage.md).
+
+- `<DataGrid gridRef={…}>` — the grid's sorted, filtered row order, pulled on
+  demand through a `DataGridHandle` (`getSortedRowKeys(): string[]`). A plain
+  prop rather than a real `ref`, because `DataGrid` is generic in its row type
+  and `forwardRef` would erase it; it accepts a `useRef` object or a callback
+  ref exactly as `ref` would. The keys are `getRowId`'s, so they are the same
+  ones `CellRangePaste.rowKeys` reports and the same ones the row
+  `data-row-key` attributes carry — one computation feeds all three. Sorted
+  and filtered but *not* paginated: on a paginated grid it spans every page.
+
+- **The reference deployment now runs SQLite, and the docs now say SQLite is
+  the only supported engine (#25).** If you copied `deploy/docker-compose.yml`,
+  re-copy it: it started a `postgres:16-alpine` service and hard-set
+  `DATABASE_URL: postgresql://…@db:5432/…`, while `baseline.sql` is SQLite
+  dialect — so that stack failed at the first `CREATE TABLE` and had never
+  booted. The `db` service is kept behind a `postgres` profile, off by default.
+  `POSTGRES_PASSWORD` is no longer required to start the stack.
+  [`docs/deployment.md`](docs/deployment.md).
+
+**Delete**
+- Your hand-copied router mount map, your hand-written `DatabaseQueryError`
+  handler, and the lifespan that re-implements the boot sequence.
+- Your own boto3 wrapper, if you have one. CollectIt's
+  `api/services/storage/r2.py` is what this was built from.
+- Any helper that reads a grid's row order out of the DOM. CollectIt's
+  `renderedRowKeys()` — `querySelectorAll("[data-row-key]")`, deduped — is
+  what this replaces; it sees only the rendered window under virtualisation,
+  and `gridRef` does not.
+- Any plan that had bedrock on Postgres. `DATABASE_URL` stays unset. The
+  connection layer's Postgres branch is plumbing, not a path: three boot-time
+  checks issue `PRAGMA` / `sqlite_master` unconditionally, and no CI job
+  exercises it. The `%s` parameter convention is correct and stays — it is not
+  evidence to the contrary.
+
+**One thing breaks, and it was already broken.** The compose file's `db`
+service and its `DATABASE_URL` override are gone from the default path. Anyone
+actually running that stack would have noticed, because it could not start; the
+change is visible mainly to a diff of a copied `deploy/`.
+
+**Two more things break, on a name only.** The role ladder is now
+`anon | viewer | member | admin` — the `collector` slug is gone. Any code that
+checks `hasRole("collector")`, seeds a `collector` row of its own, or matches
+on that slug in a query or a UI string needs to say `member` instead. The two
+`app_grid_settings` flags with baseball-specific names are renamed the same
+way: `show_medal_toggles` / `showMedalToggles` is now `show_rank_highlight` /
+`showRankHighlight`, and `team_accent_reactive` / `teamAccentReactive` is now
+`row_accent_reactive` / `rowAccentReactive`. Behavior is unchanged in both
+cases — this is a rename, not a redesign. A new platform migration
+(`004_member_role_and_rank_highlight_rename.sql`) updates any existing
+database's `collector` role row and renames both columns automatically; a
+consumer only has to update the code that names the old identifiers.
+
+The frontend's `appName` fallback is now `bedrock` rather than `MLBTracker`.
+It only shows when `VITE_APP_NAME` is unset — where the platform's own name
+reads as the obvious misconfiguration it is, instead of as somebody else's
+product.
+
+**Nothing else breaks.** `StorageProvider` is untouched and still three methods.
+`ObjectStore` is a second protocol that extends it, so `media_service` and
+every existing caller are unaware it exists, and `CloudflareImagesProvider` —
+which mints its own image ids and cannot accept a caller's key — needed no
+change. The `local` backend now resolves to `LocalObjectStore`, a subclass of
+`LocalStorageProvider` that implements both.
+
+**Why you want it:** the app-assembly contract lived in a *test fixture*. It
+could be reordered or narrowed by a change that stayed green in this repo's
+CI, and each consumer's copy drifted on its own — one of them was missing the
+seo mount, and both re-implemented an error handler the platform already
+exports. A consumer that skips `register_error_handlers()` turns a failed grid
+query into an empty grid rather than an error state, and nothing tells it.
+
 ## v0.6.2
 
 ### For consumers

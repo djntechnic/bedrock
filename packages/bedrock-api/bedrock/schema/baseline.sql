@@ -131,14 +131,14 @@ CREATE TABLE IF NOT EXISTS app_grid_settings (
     tooltip_delay_duration INTEGER,                    -- tooltip open latency (ms); null = appSettings default
     show_search           INTEGER NOT NULL DEFAULT 1,  -- GridHeader inline search input
     show_density_toggle   INTEGER NOT NULL DEFAULT 1,  -- GridHeader density toggle
-    show_medal_toggles    INTEGER NOT NULL DEFAULT 0,  -- GridHeader medal / podium ranking toggles
+    show_rank_highlight   INTEGER NOT NULL DEFAULT 0,  -- GridHeader rank highlight toggle
     row_key_column        TEXT,                        -- row-object field carrying the row's stable ID (drives selection column)
     caption               TEXT,                        -- semantic <caption> element rendered inside the <Table>
     allow_column_reorder  INTEGER NOT NULL DEFAULT 1,   -- drag-and-drop column reordering (session-local for end users, persisted in the admin editor)
     allow_expansion       INTEGER NOT NULL DEFAULT 0,   -- Phase 10 B2: expander column + renderSubRow slot on <DataGrid>
     numeral_style          TEXT    NOT NULL DEFAULT 'default',  -- 'default' | 'tabular' condensed numerals for cell_type='number'
     live_update_highlight  INTEGER NOT NULL DEFAULT 0,  -- flash changed cells with --live-pulse
-    team_accent_reactive   INTEGER NOT NULL DEFAULT 0,  -- tint rows with the row's team --team-accent color
+    row_accent_reactive    INTEGER NOT NULL DEFAULT 0,  -- tint rows with the row's --row-accent color
     created_at        TEXT    NOT NULL DEFAULT (datetime('now')),
     created_by        TEXT    NOT NULL DEFAULT 'Admin',
     modified_at       TEXT    NOT NULL DEFAULT (datetime('now')),
@@ -240,7 +240,7 @@ CREATE TABLE IF NOT EXISTS "auth_users" (
 
 CREATE TABLE IF NOT EXISTS "auth_roles" (
     role_id     INTEGER PRIMARY KEY AUTOINCREMENT,
-    slug        TEXT    NOT NULL UNIQUE,                         -- anon | viewer | collector | admin
+    slug        TEXT    NOT NULL UNIQUE,                         -- anon | viewer | member | admin
     label       TEXT    NOT NULL,
     created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
 );

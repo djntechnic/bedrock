@@ -2,20 +2,20 @@
  * @file CustomColumnsPanel.tsx
  * @module frontend/src/components/admin/gridEditor
  * @description "Custom Columns" tab — surfaces the grid-injected meta columns
- *              (Selection, Ranking, Medals/Podium) that are **not** rows in
+ *              (Selection, Ranking, Rank highlight) that are **not** rows in
  *              app_grid_column_settings but are still governed by
  *              app_grid_settings flags. Each toggle writes the draft, so the
  *              live preview updates immediately.
  *
  *              Field mapping (already-existing GridSetting fields, no schema
  *              changes):
- *                • Selection column         → allow_selection
- *                • Ranking column           → show_ranking
- *                • Medals / podium ranking  → show_medal_toggles
- *              Related header affordance (visibility of the medal toolbar toggle
- *              on the live grid header) is not a separate flag today — the same
- *              show_medal_toggles field drives both. Kept explicit in the copy so
- *              admins understand the paired behavior.
+ *                • Selection column   → allow_selection
+ *                • Ranking column     → show_ranking
+ *                • Rank highlight     → show_rank_highlight
+ *              Related header affordance (visibility of the rank-highlight
+ *              toolbar toggle on the live grid header) is not a separate flag
+ *              today — the same show_rank_highlight field drives both. Kept
+ *              explicit in the copy so admins understand the paired behavior.
  */
 
 import { Badge } from "../../ui/badge";
@@ -85,28 +85,28 @@ export default function CustomColumnsPanel({
         />
         <p className="text-[11px] text-muted-foreground">
           Wired via <code>prependRankColumn()</code> in{" "}
-          <code>utils/gridUtils</code>. Shows numeric row rank. Enable Medals / podium below to add medal icons for top 3 positions.
+          <code>utils/gridUtils</code>. Shows numeric row rank. Enable Rank highlight below to add rank icons for top 3 positions.
         </p>
       </CollapsibleSection>
 
       <CollapsibleSection
-        storageKey="custom.medals"
-        title="Medals / podium"
+        storageKey="custom.rankHighlight"
+        title="Rank highlight"
         subtitle="Highlights the top three rows with gold / silver / bronze accents."
         badge={
-          <Badge variant={bool(g.show_medal_toggles) ? "default" : "outline"} className="text-[10px]">
-            {bool(g.show_medal_toggles) ? "On" : "Off"}
+          <Badge variant={bool(g.show_rank_highlight) ? "default" : "outline"} className="text-[10px]">
+            {bool(g.show_rank_highlight) ? "On" : "Off"}
           </Badge>
         }
       >
         <SwitchRow
-          label="Show medal / podium ranking"
-          checked={bool(g.show_medal_toggles)}
-          onChange={(v) => setGridField("show_medal_toggles", v)}
+          label="Show rank highlight"
+          checked={bool(g.show_rank_highlight)}
+          onChange={(v) => setGridField("show_rank_highlight", v)}
         />
         <p className="text-[11px] text-muted-foreground">
           Drives both the row-styling via <code>getRankRowClass()</code> and the
-          medal toggle in <code>GridHeader</code>.
+          rank-highlight toggle in <code>GridHeader</code>.
         </p>
       </CollapsibleSection>
     </div>

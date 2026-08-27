@@ -54,6 +54,22 @@ class Config:
     CLOUDFLARE_API_TOKEN = os.environ.get("CLOUDFLARE_API_TOKEN", "")
     CLOUDFLARE_IMAGES_HASH = os.environ.get("CLOUDFLARE_IMAGES_HASH", "")
 
+    # S3-compatible object storage — read by bedrock.storage.s3 when
+    # `storage_provider` is "s3". One set of settings covers R2, MinIO and S3
+    # itself; the endpoint is what distinguishes them, and it is empty for AWS.
+    #
+    # Credentials, so environment rather than `app_config_settings`, for the
+    # reason stated above the Cloudflare token.
+    S3_ENDPOINT_URL = os.environ.get("S3_ENDPOINT_URL", "")
+    S3_BUCKET = os.environ.get("S3_BUCKET", "")
+    S3_ACCESS_KEY_ID = os.environ.get("S3_ACCESS_KEY_ID", "")
+    S3_SECRET_ACCESS_KEY = os.environ.get("S3_SECRET_ACCESS_KEY", "")
+    S3_REGION = os.environ.get("S3_REGION", "auto")
+    #: Public hostname objects are served from, when the bucket has one. This
+    #: is not the endpoint: uploads go to the API endpoint, readers come in
+    #: through the CDN, and only the second one is what `verify_public` tests.
+    S3_PUBLIC_BASE_URL = os.environ.get("S3_PUBLIC_BASE_URL", "")
+
     # SMTP relay — read by bedrock.mail.smtp when `mail_provider` is "smtp".
     #
     # These are environment settings rather than `app_config_settings` rows,

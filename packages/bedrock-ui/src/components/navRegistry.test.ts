@@ -47,7 +47,7 @@ describe("isNavItemVisible", () => {
   it("shows a role-gated entry to an admin who lacks the role explicitly", () => {
     // Mirrors <ProtectedRoute>: `isAdmin` short-circuits `hasRole`, so a
     // superuser never loses a link to a route they can in fact open.
-    expect(isNavItemVisible(item({ role: "collector" }), ADMIN)).toBe(true);
+    expect(isNavItemVisible(item({ role: "member" }), ADMIN)).toBe(true);
   });
 
   it("still honours the legacy admin module gate", () => {

@@ -31,8 +31,8 @@ export interface GridHeaderConfig {
   showColumnToggle: boolean;
   /** Whether the CSV export button is exposed. */
   showExportCsv: boolean;
-  /** Whether medal / podium ranking toggles are exposed (leaderboard-style views). */
-  showMedalToggles: boolean;
+  /** Whether the rank-highlight toggle is exposed (leaderboard-style views). */
+  showRankHighlight: boolean;
 }
 
 /**
@@ -45,7 +45,7 @@ export const DEFAULT_GRID_HEADER_CONFIG: GridHeaderConfig = {
   showDensityToggle: true,
   showColumnToggle: true,
   showExportCsv: true,
-  showMedalToggles: false,
+  showRankHighlight: false,
 };
 
 /**

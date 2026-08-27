@@ -166,7 +166,7 @@ def link_or_create_user(
     tokens: dict[str, Any],
     *,
     oauth_name: str = "google",
-    default_role: str = "collector",
+    default_role: str = "member",
     database: DatabaseManager | None = None,
 ) -> OAuthLinkResult:
     """Resolve a Google login to a local UserRecord.

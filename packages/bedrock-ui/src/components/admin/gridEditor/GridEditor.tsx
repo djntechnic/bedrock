@@ -5,7 +5,7 @@
  *              • Header — Screen + Grid selects, dirty indicator, Save/Cancel,
  *                Focus-mode toggle.
  *              • Left panel — collapsible (w-[360px] ↔ w-12), three shadcn Tabs:
- *                Grid Settings, Custom Columns (rank/selection/medals),
+ *                Grid Settings, Custom Columns (rank/selection/rank highlight),
  *                Column Settings.
  *              • Preview canvas — the live GridPreview.
  *

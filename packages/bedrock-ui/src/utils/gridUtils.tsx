@@ -101,21 +101,21 @@ export function applyColumnSizing(
 /**
  * Adds a rank display column to a column list when showRanking is true.
  * The rank column shows the row's 1-based position in the current sorted model.
- * Displays medals (ranks 1-3) only when showMedals is true.
+ * Displays rank icons (ranks 1-3) only when showRankIcon is true.
  * Position defaults to "end" (appended after data columns).
  */
 export function prependRankColumn<T>(
   cols: ColumnDef<T>[],
   showRanking: boolean,
   colHelper: { display: (def: any) => ColumnDef<T> },
-  showMedals: boolean = false,
+  showRankIcon: boolean = false,
   position: "start" | "end" = "end",
 ): ColumnDef<T>[] {
   if (!showRanking) return cols;
 
   const rankCell = (info: any) => {
     const rank = info.table.getRowModel().rows.findIndex((r: any) => r.id === info.row.id) + 1;
-    const icon = showMedals ? getRankIcon(rank) : null;
+    const icon = showRankIcon ? getRankIcon(rank) : null;
     return (
       <span className="flex items-center gap-1 text-muted-foreground tabular-nums">
         {icon}

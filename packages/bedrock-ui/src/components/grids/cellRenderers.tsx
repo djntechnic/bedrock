@@ -125,7 +125,7 @@ export function resolveLinkPath(
 
 // ─── Rank cell ─────────────────────────────────────────────────────────────────
 
-/** Renders the rank column cell: medal icon (ranks 1–3) + numeric position. */
+/** Renders the rank column cell: rank icon (ranks 1–3) + numeric position. */
 export function renderRankCell(rank: number): ReactNode {
   const icon = getRankIcon(rank);
   return (

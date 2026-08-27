@@ -35,7 +35,7 @@ def client():
 def _mint(role: str) -> tuple[us.UserRecord, str]:
     email = f"admusr-{role}-{uuid.uuid4().hex[:8]}@test.example.com"
     user = us.create_user(email=email, password="pw-strong-123", default_role=role)
-    for other in ("collector", "viewer", "admin"):
+    for other in ("member", "viewer", "admin"):
         if other != role:
             us.revoke_role(user.user_id, other)
     return user, us.create_access_token(user.user_id)
@@ -59,7 +59,7 @@ def test_list_users_returns_rows_for_admin(client):
 
 def test_patch_toggle_active(client):
     _admin, admin_tok = _mint("admin")
-    target, _ = _mint("collector")
+    target, _ = _mint("member")
     # deactivate
     r = client.patch(
         f"/api/v1/admin/users/{target.user_id}",
@@ -92,7 +92,7 @@ def test_admin_cannot_remove_own_admin_role(client):
     admin, tok = _mint("admin")
     r = client.patch(
         f"/api/v1/admin/users/{admin.user_id}",
-        json={"roles": ["collector"]},
+        json={"roles": ["member"]},
         headers={"Authorization": f"Bearer {tok}"},
     )
     assert r.status_code == 409
@@ -100,7 +100,7 @@ def test_admin_cannot_remove_own_admin_role(client):
 
 def test_patch_replaces_role_set(client):
     _admin, admin_tok = _mint("admin")
-    target, _ = _mint("collector")
+    target, _ = _mint("member")
     r = client.patch(
         f"/api/v1/admin/users/{target.user_id}",
         json={"roles": ["viewer"]},
@@ -115,22 +115,22 @@ def test_invite_new_user(client):
     email = f"invited-{uuid.uuid4().hex[:8]}@test.example.com"
     r = client.post(
         "/api/v1/admin/users/invite",
-        json={"email": email, "display_name": "Invited", "role": "collector",
+        json={"email": email, "display_name": "Invited", "role": "member",
               "password": "invited-strong-123"},
         headers={"Authorization": f"Bearer {admin_tok}"},
     )
     assert r.status_code == 201, r.text
     body = r.json()["data"]
     assert body["email"] == email
-    assert "collector" in body["roles"]
+    assert "member" in body["roles"]
 
 
 def test_invite_duplicate_email_409(client):
     _admin, admin_tok = _mint("admin")
-    existing, _ = _mint("collector")
+    existing, _ = _mint("member")
     r = client.post(
         "/api/v1/admin/users/invite",
-        json={"email": existing.email, "role": "collector",
+        json={"email": existing.email, "role": "member",
               "password": "another-strong-1"},
         headers={"Authorization": f"Bearer {admin_tok}"},
     )
@@ -148,7 +148,7 @@ def test_get_user_404(client):
 
 def test_sessions_list_and_revoke(client):
     _admin, admin_tok = _mint("admin")
-    victim, victim_tok = _mint("collector")
+    victim, victim_tok = _mint("member")
     # victim's login above already created a session; grab it.
     r = client.get("/api/v1/admin/sessions",
                    headers={"Authorization": f"Bearer {admin_tok}"})

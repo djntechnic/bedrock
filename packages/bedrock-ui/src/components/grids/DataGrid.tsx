@@ -4,7 +4,7 @@
  * @description Centralized, config-driven grid engine. Given a `gridId` and
  * `rows`, resolves the admin `GridConfig` and renders the full stack —
  * `<GridWrapper>` pagination shell, `<GridHeader>` toolbar, `<Table>` with
- * sticky/striping/dense/wrap/hover/sort/medal wiring, aggregate footer, empty
+ * sticky/striping/dense/wrap/hover/sort/rank-highlight wiring, aggregate footer, empty
  * and loading states — with zero per-page boilerplate.
  *
  * Extension slots let the caller specialize a grid without dropping back into
@@ -13,11 +13,12 @@
  *   - `headerTooltips`                  → static tooltip map by label or column_id
  *   - `filtersSlot`                     → inline filter chips in the header
  *   - `onRowClick` / `onExport`         → domain callbacks
+ *   - `gridRef`                         → the sorted row order, pulled on demand
  *
  * The engine owns state (sorting, columnVisibility, globalFilter, density,
  * selection), column building, the cell pipeline (`customCells →
  * renderMediaCell → renderCell` with gradient handling), rank + selection column prepend,
- * medal row gating, and every GridConfig property from CLAUDE.md §S2. Pages
+ * rank-highlight row gating, and every GridConfig property from CLAUDE.md §S2. Pages
  * become dumb shells that fetch data and hand it off.
  */
 
@@ -25,11 +26,13 @@ import {
   Fragment,
   useCallback,
   useEffect,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
   type ReactNode,
   type CSSProperties,
+  type Ref,
 } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -153,9 +156,41 @@ export interface CustomHeaderCtx {
   delayDuration: number;
 }
 
+/**
+ * The imperative surface a host can pull from, via the `gridRef` prop.
+ *
+ * Deliberately a pull rather than a push: the questions it answers are
+ * "what is on screen *right now*?", asked at the moment a dialog opens, and a
+ * callback prop would re-render every consumer on every sort to answer a
+ * question almost nobody is asking.
+ */
+export interface DataGridHandle {
+  /**
+   * The row keys of the sorted, filtered row model, top to bottom —
+   * `getRowId` applied, so these are the same keys `CellRangePaste.rowKeys`
+   * reports and the same ones the row `data-row-key` attributes carry.
+   *
+   * Sorted and filtered, but *not* paginated: this is the same model
+   * `<GridWrapper>` slices a page out of, so on a paginated grid it spans
+   * every page. A caller that wants the page needs the page's own bounds.
+   *
+   * This is the model's order, not the DOM's, so it stays complete and correct
+   * under virtualisation — where reading `[data-row-key]` out of the document
+   * sees only the rendered window.
+   */
+  getSortedRowKeys(): string[];
+}
+
 export interface DataGridProps<T extends Record<string, any>> {
   /** grid_id from `app_grid_settings`; drives the config lookup. */
   gridId: string;
+  /**
+   * Receives the grid's {@link DataGridHandle}. A plain prop rather than a
+   * real `ref`, because `DataGrid` is generic in `T` and `forwardRef` erases
+   * that type parameter — a host would have to cast to get it back. Works with
+   * `useRef` and with a callback ref exactly as a `ref` would.
+   */
+  gridRef?: Ref<DataGridHandle>;
   /** Row data (page owns filtering — pass the already-filtered set). */
   rows: T[];
   /** Blocks rendering with a loading skeleton when true. */
@@ -420,6 +455,7 @@ function DefaultColHeader({
 
 export default function DataGrid<T extends Record<string, any>>({
   gridId,
+  gridRef,
   rows,
   isLoading = false,
   filtersSlot,
@@ -549,7 +585,7 @@ export default function DataGrid<T extends Record<string, any>>({
   // Phase 3 §S9: row accent tinting. The engine owns the mechanism (an inline
   // style plus a left-border class); the host app supplies the row → color
   // policy via registerRowAccentResolver(). See ./rowAccentRegistry.
-  const resolveRowAccent = useRowAccentResolver(config.teamAccentReactive);
+  const resolveRowAccent = useRowAccentResolver(config.rowAccentReactive);
 
   // Phase 3 §S9: changed-cell "live pulse" detection. Snapshots the
   // previous `rows` (keyed by config.rowKeyColumn) and diffs on every
@@ -896,7 +932,7 @@ export default function DataGrid<T extends Record<string, any>>({
       baseWithPrepend,
       config.showRanking,
       colHelper as any,
-      config.showMedalToggles,
+      config.showRankHighlight,
       "end",
     );
     // Phase 10 B2: expander column sits leftmost when active (before rank
@@ -1099,9 +1135,24 @@ export default function DataGrid<T extends Record<string, any>>({
   // cell you can copy, and including it would put a blank column in the middle
   // of every paste.
   const selectionRowModel = table.getSortedRowModel().rows;
+  // One computation, two consumers — `cellRowKeys` below and the `gridRef`
+  // handle. Deriving both from this is the point: a host that pulls the order
+  // and a host that reads it off a `CellRangePaste` event must never be told
+  // two different things about the same grid.
+  const sortedRowKeys = useMemo(
+    () => selectionRowModel.map((r) => r.id),
+    [selectionRowModel],
+  );
+  // Cell selection wants an empty set when it is off; the handle does not —
+  // the cursorless paste dialog is exactly the caller that has no cursor.
   const cellRowKeys = useMemo(
-    () => (cellSelection ? selectionRowModel.map((r) => r.id) : []),
-    [cellSelection, selectionRowModel],
+    () => (cellSelection ? sortedRowKeys : []),
+    [cellSelection, sortedRowKeys],
+  );
+  useImperativeHandle(
+    gridRef,
+    () => ({ getSortedRowKeys: () => sortedRowKeys }),
+    [sortedRowKeys],
   );
   const visibleLeafColumns = table.getVisibleLeafColumns();
   const cellColumnIds = useMemo(
@@ -1306,7 +1357,7 @@ export default function DataGrid<T extends Record<string, any>>({
               // Phase 3 §S9: row accent tint. Grouped rows are never tinted.
               // `resolveRowAccent` is a pure mapper, so this is one call per
               // row with no hook involved (rules-of-hooks safe).
-              const teamAccentStyle = !isGroupedRow
+              const rowAccentStyle = !isGroupedRow
                 ? resolveRowAccent(dataRecord)
                 : undefined;
               // Phase 10 B2: resolve sub-row detail once per render pass so the
@@ -1326,17 +1377,17 @@ export default function DataGrid<T extends Record<string, any>>({
                     onRowClick && !isGroupedRow && "cursor-pointer",
                     !config.hoverColor && !isGroupedRow && "hover:bg-muted/30",
                     !isGroupedRow && rowClassName,
-                    config.showMedalToggles && !isGroupedRow && getRankRowClass(rank),
+                    config.showRankHighlight && !isGroupedRow && getRankRowClass(rank),
                     wrapClass,
                     isGroupedRow && "bg-muted/40 font-medium",
                     // Phase 8 H2: per-row data-driven class overlay for
                     // embedded consumers (e.g. career-total vs stint-child
                     // vs season-header row styling).
                     !isGroupedRow && rowClassNameFor?.(data, renderIndex),
-                    // Phase 3 §S9: team-accent left-border tint.
-                    teamAccentStyle && "border-l-2 border-l-[color:var(--team-accent)]",
+                    // Phase 3 §S9: row-accent left-border tint.
+                    rowAccentStyle && "border-l-2 border-l-[color:var(--team-accent)]",
                   )}
-                  style={teamAccentStyle}
+                  style={rowAccentStyle}
                   onMouseEnter={
                     config.hoverColor && !isGroupedRow
                       ? (e) => {

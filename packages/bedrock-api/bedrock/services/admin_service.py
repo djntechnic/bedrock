@@ -246,12 +246,12 @@ _GRID_SETTINGS_BOOL_COLS: tuple[str, ...] = (
     "pagination_enabled", "sticky_header", "sticky_first_column",
     "row_striping", "dense_mode", "show_row_count", "wrap_text",
     "allow_selection", "allow_print",
-    "show_search", "show_density_toggle", "show_medal_toggles",
+    "show_search", "show_density_toggle", "show_rank_highlight",
     "allow_column_reorder",
     # Phase 10 B2
     "allow_expansion",
     # Phase 3 §S9
-    "live_update_highlight", "team_accent_reactive",
+    "live_update_highlight", "row_accent_reactive",
 )
 
 _GRID_COLUMN_BOOL_COLS: tuple[str, ...] = (
@@ -275,14 +275,14 @@ _GRID_SETTING_UPDATE_ALLOWED = frozenset({
     "sort_asc_color", "sort_desc_color", "hover_color",
     "allow_selection", "selection_position", "allow_print",
     "page", "tooltip_delay_duration", "show_search",
-    "show_density_toggle", "show_medal_toggles",
+    "show_density_toggle", "show_rank_highlight",
     "row_key_column",
     "caption",
     "allow_column_reorder",
     # Phase 10 B2
     "allow_expansion",
     # Phase 3 §S9
-    "numeral_style", "live_update_highlight", "team_accent_reactive",
+    "numeral_style", "live_update_highlight", "row_accent_reactive",
     "modified_by",
 })
 

@@ -14,6 +14,20 @@ of it.
 | `packages/bedrock-api` | v0.2.0 — 56 modules, 63 endpoints, mail + storage providers, imports and mounts standalone |
 | `packages/bedrock-ui` | v0.2.0 — grid engine, Grid Editor, auth flows, shell, ships TS source |
 
+## Assembling an application
+
+```python
+from bedrock.core.app_factory import RouterMount, create_app
+
+app = create_app(title="My App", routers=[RouterMount(r, prefix="/api/v1/app") for r in ROUTERS])
+```
+
+`create_app()` mounts every platform router at its documented prefix, registers
+the platform's error handlers and rate limiter, and runs the database boot
+sequence in lifespan — with hooks for what a host has to do before migrations,
+after the database is healthy, and on the way down.
+[`docs/app_assembly.md`](docs/app_assembly.md).
+
 ## The contract
 
 bedrock holds no business domain. Where it needs application knowledge it
@@ -41,7 +55,12 @@ Providers are declared with `core.providers.ProviderRegistry`.
 | Provider | Config key | Ships with |
 | --- | --- | --- |
 | `mail.provider.mail` | `mail_provider` | `smtp`, `console`, `null` |
-| `storage.provider.storage` | `storage_provider` | `local`, `cloudflare_images` |
+| `storage.provider.storage` | `storage_provider` | `local`, `s3`, `cloudflare_images` |
+
+An application that owns its own object keys wants the wider `ObjectStore`
+protocol — caller-chosen keys, exhaustive prefix listing, batch deletes and
+public-URL verification — which `local` and `s3` implement and Cloudflare
+Images cannot. [`docs/object_storage.md`](docs/object_storage.md).
 
 Error reporting is next. Mail is documented in
 [`docs/mail.md`](docs/mail.md): invitation, password reset and email

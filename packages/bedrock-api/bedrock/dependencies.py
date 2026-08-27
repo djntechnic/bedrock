@@ -75,7 +75,7 @@ def get_optional_user(
     Never raises. Used by the cross-feature surfaces that stay open to
     anonymous readers — the player profile and the dashboard summary — but must
     omit their collection-derived section/field entirely for callers without
-    the `collector` role (decision-v6 §1, RBAC design note §5). Those routes
+    the `member` role (decision-v6 §1, RBAC design note §5). Those routes
     cannot use `get_current_user` (401s anonymous callers) or `require_role`
     (403s viewers), because the page itself must still render.
     """
@@ -122,7 +122,7 @@ def get_current_admin(
 # ── Role hierarchy (Phase 5.4) ───────────────────────────────────────────────
 # Higher index → more privileged. require_role(slug) admits any role at or
 # above the requested level.
-_ROLE_HIERARCHY: tuple[str, ...] = ("anon", "viewer", "collector", "admin")
+_ROLE_HIERARCHY: tuple[str, ...] = ("anon", "viewer", "member", "admin")
 
 
 def _max_level(user_slugs: list[str]) -> int:

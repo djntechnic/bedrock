@@ -23,6 +23,12 @@ Desc:    The storage capability (plan F4). Where an uploaded file's bytes go.
          wider surface forces every backend to implement what nothing calls,
          and an S3 adapter that has to invent a `list_prefix` is an adapter
          nobody will write.
+
+         An application that owns its own key space needs more than three, and
+         that is a *second* protocol rather than a wider first one — see
+         `object_store.py`. Cloudflare Images implements only this one and is
+         unchanged by its existence, which is the property that made the split
+         worth having.
 """
 from __future__ import annotations
 
@@ -170,6 +176,22 @@ def content_digest(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def _local_object_store() -> StorageProvider:
+    # Lazy for the same reason as the adapters below: `object_store` imports
+    # from this module, so a top-level import here would be circular.
+    from bedrock.storage.object_store import LocalObjectStore
+
+    return LocalObjectStore()
+
+
+def _s3_provider() -> StorageProvider:
+    # boto3 is an optional dependency; nothing imports it until an operator
+    # selects this backend.
+    from bedrock.storage.s3 import S3StorageProvider
+
+    return S3StorageProvider()
+
+
 def _cloudflare_provider() -> StorageProvider:
     # Imported lazily so the httpx-backed adapter is only constructed when the
     # backend is actually selected.
@@ -178,11 +200,16 @@ def _cloudflare_provider() -> StorageProvider:
     return CloudflareImagesProvider()
 
 
+#: The fallback is `LocalObjectStore`, not the bare `LocalStorageProvider` it
+#: subclasses: an application built on caller-chosen keys then runs on a
+#: developer's laptop with nothing configured. Every narrow caller sees the
+#: same three methods it always did.
 storage: ProviderRegistry[StorageProvider] = ProviderRegistry(
     capability="storage",
     config_key=STORAGE_PROVIDER_KEY,
-    fallback=LocalStorageProvider,
+    fallback=_local_object_store,
 )
 
-storage.register(LOCAL_PROVIDER, LocalStorageProvider)
+storage.register(LOCAL_PROVIDER, _local_object_store)
+storage.register("s3", _s3_provider)
 storage.register("cloudflare_images", _cloudflare_provider)

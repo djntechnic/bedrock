@@ -70,7 +70,7 @@ class UserUpdatePayload(BaseModel):
 class UserInvitePayload(BaseModel):
     email: EmailStr
     display_name: str | None = Field(default=None, max_length=120)
-    role: str = Field(default="collector")
+    role: str = Field(default="member")
     #: Set a password directly instead of letting the invitee choose one. This
     #: predates the invitation email and is kept for the case where an admin is
     #: provisioning an account out of band; the normal path is to omit it.
