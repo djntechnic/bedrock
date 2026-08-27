@@ -34,10 +34,12 @@ adoption issues themselves.
 ## Inputs
 
 This roadmap is written from two ledgers, one per consumer, that record each
-repo's outstanding asks of the platform:
+repo's outstanding asks of the platform — both at the same path, `docs/reference/bedrock_issues_to_file.md`:
 
-- CollectIt's ledger, in the `djntechnic/CollectIt` repository.
-- MLBTracker's ledger, in the `djntechnic/MLBTracker` repository.
+- CollectIt's ledger: `docs/reference/bedrock_issues_to_file.md` in
+  `djntechnic/CollectIt`.
+- MLBTracker's ledger: `docs/reference/bedrock_issues_to_file.md` in
+  `djntechnic/MLBTracker`.
 
 When either ledger changes, the milestone contents above may need to change
 with it — but the ledgers themselves, not this document, are the record of
