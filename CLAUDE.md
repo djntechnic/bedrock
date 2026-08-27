@@ -85,7 +85,7 @@ than a missing matcher type on a test file. CI does this deliberately.
 
 | Module | Holds |
 | ------ | ----- |
-| `core/database.py` | DB abstraction (SQLite + PostgreSQL). The consumer's `db.get_config` / `set_config` / `get_current_season` live here. |
+| `core/database.py` | DB abstraction. SQLite is the supported engine; the Postgres branch is incomplete plumbing, not a deployment (#25) — leave `DATABASE_URL` unset. The consumer's `db.get_config` / `set_config` / `get_current_season` live here. |
 | `core/config.py`, `app_config_sections.py`, `config_constants.py` | App config surface — the provider-selection substrate. |
 | `core/schema_catalog.py`, `schema_drift.py`, `migrations.py` | Schema catalog generation, drift detection, migration runner. |
 | `core/providers.py`, `diagnostics_registry.py`, `health_metrics.py`, `diagnostic_checks.py` | The extension-point machinery itself. |

@@ -1,4 +1,4 @@
-# Local stack: Postgres, the API, the SPA behind nginx.
+# Local stack: the API and the SPA behind nginx, on SQLite.
 #
 # This is the development and single-host production shape. It is not a
 # clustering story — see docs/deployment.md for what changes when you run more
@@ -9,13 +9,45 @@
 #
 # Copy deploy/.env.example to .env at the repository root first. Compose reads
 # it, and so does bedrock itself inside the container.
+#
+# SQLite by default, because that is the engine bedrock actually supports
+# (issue #25). This file used to start Postgres and hand the API a
+# `postgresql://` URL, which meant the reference stack could never boot: the
+# baseline schema is SQLite dialect, so the first CREATE TABLE fails and takes
+# the container with it. The `db` service is kept, behind a profile, so that
+# finishing the Postgres path is a matter of making the schema dialect-aware
+# rather than rebuilding the deployment — but it is opt-in and it does not
+# work yet. Read the profile comment before you reach for it.
 
 services:
   db:
+    # Opt-in only: `docker compose --profile postgres up`. WITHOUT the profile
+    # this service does not start, which is deliberate.
+    #
+    # The profile does not currently produce a working stack. bedrock's
+    # baseline.sql and seed.sql are SQLite dialect and the integrity and
+    # diagnostic checks issue PRAGMA / sqlite_master unconditionally, so an API
+    # pointed at Postgres fails while applying migrations at boot. Everything
+    # below is correct Postgres plumbing waiting on that work; it is kept so
+    # the container, healthcheck and credential handling do not have to be
+    # rediscovered. See issue #25.
+    #
+    # Restoring it is two edits, not one: this profile line comes off, and
+    # `api` regains both the DATABASE_URL override and a
+    # `depends_on: db: condition: service_healthy`. The depends_on cannot stay
+    # while the profile does — Compose pulls a depended-on service in
+    # regardless of its profile, which would start Postgres for everybody and
+    # undo the gate.
+    profiles: ["postgres"]
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-bedrock}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      # No default, but deliberately not the `${VAR:?message}` required form:
+      # Compose interpolates the whole file before it filters by profile, so
+      # `:?` would abort `docker compose up` for everyone, profile or not —
+      # the very breakage this file was fixed for. Unset, Postgres itself
+      # refuses to initialise and says so.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB:-bedrock}
     volumes:
       - db_data:/var/lib/postgresql/data
@@ -41,17 +73,14 @@ services:
     env_file:
       - ../.env
     environment:
-      # Overrides whatever .env says: inside the network the host is `db`, not
-      # localhost, and getting this wrong is the first thing that breaks when
-      # a working local .env is reused for compose.
-      DATABASE_URL: postgresql://${POSTGRES_USER:-bedrock}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-bedrock}
+      # No DATABASE_URL: unset means SQLite in the data volume below, which is
+      # the engine the baseline schema is written for. This line used to
+      # override .env with `postgresql://…@db:5432/…`, which is why the stack
+      # could not boot. When the Postgres path is finished, the override
+      # belongs back here — inside the network the host is `db`, not localhost,
+      # and getting that wrong is the first thing that breaks when a working
+      # local .env is reused for compose.
       PORT: "8000"
-    depends_on:
-      db:
-        # Not just `started`. The API applies migrations at boot, and against a
-        # Postgres that is still initialising that fails and takes the
-        # container with it.
-        condition: service_healthy
     volumes:
       # Uploads and any SQLite file. Named rather than bind-mounted so it
       # survives `docker compose down` and does not inherit host ownership.

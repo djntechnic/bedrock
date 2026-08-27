@@ -10,7 +10,7 @@ deploy/
   Dockerfile.api        multi-stage API image
   Dockerfile.web        Vite build → nginx
   nginx.conf            SPA history fallback + /api proxy
-  docker-compose.yml    Postgres + API + web
+  docker-compose.yml    API + web on SQLite
   .env.example          the environment contract
 ```
 
@@ -22,7 +22,7 @@ project.
 
 ```bash
 cp deploy/.env.example .env
-# set JWT_SECRET and POSTGRES_PASSWORD — nothing else is required
+# set JWT_SECRET — nothing else is required
 python -c "import secrets; print(secrets.token_urlsafe(48))"
 
 docker compose -f deploy/docker-compose.yml up --build
@@ -33,6 +33,28 @@ The API is not published to the host. The browser talks to nginx, which
 proxies `/api` to the API container — one origin, so there is no CORS to
 configure and the SPA bundle can carry an empty `VITE_API_BASE_URL` and work
 in any environment.
+
+## The database engine
+
+**SQLite, and only SQLite.** The compose stack runs the API against a SQLite
+file in its data volume, because that is the engine bedrock's schema is written
+for: `baseline.sql` and `seed.sql` use `AUTOINCREMENT` and `datetime('now')`,
+and the boot-time integrity and diagnostic checks issue `PRAGMA` and
+`sqlite_master` queries unconditionally. Setting `DATABASE_URL` to a
+`postgresql://` URL connects and then fails while applying migrations.
+
+The connection layer has real Postgres plumbing — `psycopg2`, a dialect
+branch, `%s` parameters that `DatabaseManager` rewrites for SQLite — which is
+why this reads as more finished than it is. It is not a supported deployment,
+and no CI job exercises it. Issue #25 tracks either completing the path or
+removing the plumbing.
+
+Until then the compose file's `db` service sits behind the `postgres` profile
+and does not start. Do not plan a deployment around it.
+
+What SQLite costs you is one writer at a time: concurrent writes serialise and
+surface as `database is locked` under load. That is a real ceiling on a
+write-heavy or multi-container deployment, and the reason #25 matters.
 
 ## The three health endpoints
 
@@ -51,14 +73,15 @@ orchestrator: a healthcheck on it marks a container healthy while every request
 500s, so nothing restarts and a rolling deploy promotes the broken container
 over the working one.
 
-Readiness checks a database **read and write**. A Postgres replica promoted to
-read-only answers `SELECT 1` happily and fails every login, which is exactly
-the state the probe exists to catch. It deliberately does *not* check mail or
+Readiness checks a database **read and write**. A database that has gone
+read-only — a full disk, a read-only mount, a replica promoted the wrong way —
+answers `SELECT 1` happily and fails every login, which is exactly the state
+the probe exists to catch. It deliberately does *not* check mail or
 storage: both degrade to a logged no-op by design, and failing readiness
 because SMTP is down would pull a serviceable site out of rotation.
 
 Liveness touches nothing. A liveness probe that queries the database conflates
-"the app is wedged" with "Postgres is restarting", and killing the app in the
+"the app is wedged" with "the database is restarting", and killing the app in the
 second case makes the outage longer.
 
 ### `bedrock-healthcheck`
@@ -82,7 +105,7 @@ unhealthy when the load balancer is what broke.
 
 ## The environment contract
 
-`deploy/.env.example` is the full list, annotated. Two variables have no safe
+`deploy/.env.example` is the full list, annotated. One variable has no safe
 default:
 
 - **`JWT_SECRET`** — unset, bedrock generates one and persists it to
@@ -90,10 +113,10 @@ default:
   development convenience and wrong in production two ways: the secret lives in
   the database it protects, and two containers generate two different secrets,
   so a token minted by one is rejected by the other.
-- **`POSTGRES_PASSWORD`** — the compose file uses `${POSTGRES_PASSWORD:?}`, so
-  it refuses to start rather than booting a database with a blank password.
-
-Everything else has a working default. A test
+Everything else has a working default. `POSTGRES_USER` / `POSTGRES_PASSWORD` /
+`POSTGRES_DB` are still listed, but they configure the profile-gated `db`
+service only, and nothing reads them unless you opt into a profile that does
+not work yet. A test
 (`test_env_example_documents_every_variable_config_reads`) asserts that every
 variable `bedrock.core.config` reads appears in the example, so the contract
 cannot drift out of the file that documents it.
@@ -128,14 +151,16 @@ rollout when you get there.
   Caddy, Traefik, or nginx with certbot. The image speaks plain HTTP on purpose:
   baking certificate handling into an application container makes renewal a
   redeploy.
-- **Backups.** `db_data` is a named volume; back it up like any Postgres
-  volume. bedrock ships `backup_database` / `restore_from_backup` for the
-  SQLite case.
+- **Backups.** The database lives in the `api_data` volume along with uploads;
+  back that volume up. bedrock ships `backup_database` / `restore_from_backup`,
+  which take a consistent copy of a SQLite file that is being written to —
+  copying the `.db` out from under a running process does not.
 - **Kubernetes.** The probes are the part that transfers directly:
   `/health/live` as `livenessProbe`, `/health/ready` as `readinessProbe` and
   `startupProbe`. The rest of the manifests are yours.
 - **Building the images in CI.** Deliberately not in the per-PR pipeline — it
   needs a daemon and a registry, and the per-PR gate is the deterministic
   suite. `test_deployment.py` covers the settings whose failure mode is silent
-  (healthcheck target, `depends_on` condition, published ports, non-root user,
+  (healthcheck target, the engine matching the schema, published ports,
+  profile gating, non-root user,
   the forwarded client IP), which is the part that rots between builds.

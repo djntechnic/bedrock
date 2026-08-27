@@ -40,13 +40,32 @@ literally and fails the release's cascade job on a mismatch.
   `S3_REGION` and `S3_PUBLIC_BASE_URL`.
   [`docs/object_storage.md`](docs/object_storage.md).
 
+- **The reference deployment now runs SQLite, and the docs now say SQLite is
+  the only supported engine (#25).** If you copied `deploy/docker-compose.yml`,
+  re-copy it: it started a `postgres:16-alpine` service and hard-set
+  `DATABASE_URL: postgresql://…@db:5432/…`, while `baseline.sql` is SQLite
+  dialect — so that stack failed at the first `CREATE TABLE` and had never
+  booted. The `db` service is kept behind a `postgres` profile, off by default.
+  `POSTGRES_PASSWORD` is no longer required to start the stack.
+  [`docs/deployment.md`](docs/deployment.md).
+
 **Delete**
 - Your hand-copied router mount map, your hand-written `DatabaseQueryError`
   handler, and the lifespan that re-implements the boot sequence.
 - Your own boto3 wrapper, if you have one. CollectIt's
   `api/services/storage/r2.py` is what this was built from.
+- Any plan that had bedrock on Postgres. `DATABASE_URL` stays unset. The
+  connection layer's Postgres branch is plumbing, not a path: three boot-time
+  checks issue `PRAGMA` / `sqlite_master` unconditionally, and no CI job
+  exercises it. The `%s` parameter convention is correct and stays — it is not
+  evidence to the contrary.
 
-**Nothing breaks.** `StorageProvider` is untouched and still three methods.
+**One thing breaks, and it was already broken.** The compose file's `db`
+service and its `DATABASE_URL` override are gone from the default path. Anyone
+actually running that stack would have noticed, because it could not start; the
+change is visible mainly to a diff of a copied `deploy/`.
+
+**Nothing else breaks.** `StorageProvider` is untouched and still three methods.
 `ObjectStore` is a second protocol that extends it, so `media_service` and
 every existing caller are unaware it exists, and `CloudflareImagesProvider` —
 which mints its own image ids and cannot accept a caller's key — needed no

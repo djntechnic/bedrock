@@ -46,6 +46,50 @@ def test_compose_declares_the_three_services(compose):
     assert set(compose["services"]) == {"db", "api", "web"}
 
 
+# ── The reference stack runs the engine the schema is written for (#25) ──────
+#
+# These three are one invariant seen from three sides. The stack shipped a
+# Postgres service and hard-set a `postgresql://` DATABASE_URL while
+# baseline.sql was SQLite dialect, so it failed at the first CREATE TABLE and
+# had never booted. Nothing caught it because every test above passes on a
+# stack that cannot start.
+
+BASELINE = REPO_ROOT / "packages" / "bedrock-api" / "bedrock" / "schema" / "baseline.sql"
+
+
+def test_the_api_is_not_pointed_at_postgres_while_the_baseline_is_sqlite():
+    """The paired assertion is the point: either may change, but they may not
+    disagree. Finish the Postgres path and this test tells you to update the
+    compose file with it; point compose at Postgres alone and it fails."""
+    sqlite_only = "AUTOINCREMENT" in BASELINE.read_text(encoding="utf-8").upper()
+    env = yaml.safe_load(COMPOSE.read_text(encoding="utf-8"))["services"]["api"].get(
+        "environment", {}
+    )
+    url = str(env.get("DATABASE_URL", ""))
+    assert not (sqlite_only and url.startswith("postgres")), (
+        "compose hands the API a Postgres URL, but baseline.sql is SQLite "
+        "dialect — the stack fails at the first CREATE TABLE. See issue #25."
+    )
+
+
+def test_the_db_service_does_not_start_by_default(compose):
+    """Kept for whoever finishes #25, gated so it cannot break `up` meanwhile."""
+    assert compose["services"]["db"].get("profiles"), (
+        "the Postgres service must stay behind a profile until it works"
+    )
+
+
+def test_nothing_outside_the_profile_depends_on_the_db(compose):
+    """Compose starts a depended-on service regardless of its profile, so a
+    stray depends_on silently un-gates Postgres for everybody."""
+    for name, service in compose["services"].items():
+        if service.get("profiles"):
+            continue
+        assert "db" not in (service.get("depends_on") or {}), (
+            f"{name} depends on the profile-gated db service"
+        )
+
+
 # ── Healthchecks ─────────────────────────────────────────────────────────────
 
 def test_api_healthcheck_uses_the_readiness_endpoint():
@@ -77,10 +121,10 @@ def test_db_healthcheck_names_the_user_and_database(compose):
     assert "-U" in test and "-d" in test
 
 
-def test_api_waits_for_the_database_to_be_healthy_not_merely_started(compose):
-    """The API applies migrations at boot. Against a Postgres still
-    initialising, that fails and takes the container with it."""
-    assert compose["services"]["api"]["depends_on"]["db"]["condition"] == "service_healthy"
+def test_the_web_service_waits_for_the_api(compose):
+    """nginx proxies /api, so starting it first serves 502s to anyone quick
+    enough to load the page during a deploy."""
+    assert "api" in compose["services"]["web"]["depends_on"]
 
 
 # ── Security posture ─────────────────────────────────────────────────────────
@@ -94,10 +138,12 @@ def test_postgres_is_not_published_to_the_host(compose):
 
 
 def test_postgres_password_has_no_default(compose):
-    """`:?` makes compose refuse to start rather than silently booting the
-    database with a blank or guessable password."""
+    """No `:-fallback`, so the database is never booted with a blank or
+    guessable password. Not the `:?` required form either: compose interpolates
+    before it filters profiles, so `:?` would abort `up` for everyone. Unset,
+    Postgres refuses to initialise on its own."""
     env = compose["services"]["db"]["environment"]
-    assert str(env["POSTGRES_PASSWORD"]).startswith("${POSTGRES_PASSWORD:?")
+    assert str(env["POSTGRES_PASSWORD"]) == "${POSTGRES_PASSWORD}"
 
 
 def test_the_api_image_does_not_run_as_root():
