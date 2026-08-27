@@ -77,8 +77,14 @@ def _entry_sections(text: str) -> dict[int, str]:
     return {number: "\n".join(body) for number, body in sections.items()}
 
 
-def audit(path: str, open_issues: set[int]) -> list[str]:
+def audit(path: str, open_issues: set[int] | None) -> list[str]:
     """Check one ledger against the set of currently-open bedrock issue numbers.
+
+    `open_issues=None` means *unknown* — `gh` could not be reached — and is not
+    the same as an empty set. An empty set asserts that every issue is closed,
+    which would fail every live entry in the ledger; `None` withholds that
+    judgement and reports only the entries that are wrong regardless of issue
+    state, i.e. the unfiled ones.
 
     An entry passes when either:
       - its issue number is still open, so the row correctly points at live
@@ -107,7 +113,8 @@ def audit(path: str, open_issues: set[int]) -> list[str]:
         row = _ROW_RE.match(line)
         if not row:
             continue
-        first_cell, _entry_cell, issue_cell = row.groups()
+        # The middle cell is the entry's prose title; only the two ends matter.
+        first_cell, _title_cell, issue_cell = row.groups()
         if not first_cell.isdigit():
             # Skips the header row ("# | Entry | Issue") and the separator
             # row ("--- | --- | ---"), neither of which is a real entry.
@@ -120,6 +127,11 @@ def audit(path: str, open_issues: set[int]) -> list[str]:
                 f"entry {entry_number}: unfiled - no bedrock issue reference "
                 f"(issue cell was {issue_cell!r})"
             )
+            continue
+
+        if open_issues is None:
+            # Issue state unknown; the row names an issue, which is all that
+            # can be checked without it.
             continue
 
         issue_number = int(issue_match.group(1))
@@ -139,14 +151,16 @@ def audit(path: str, open_issues: set[int]) -> list[str]:
     return failures
 
 
-def _fetch_open_issue_numbers() -> set[int]:
+def _fetch_open_issue_numbers() -> set[int] | None:
     """Ask `gh` for the bedrock repo's open issue numbers.
 
-    Falls back to an empty set — rather than raising — when `gh` is absent or
-    the call fails (no auth, no network, rate limit). That degrades the gate
-    to "unfiled entries only" instead of failing CI on a missing CLI, which is
-    the right trade: a false negative here is a stale ledger row that lingers
-    one more run, not a broken build.
+    Returns `None` — rather than raising, and rather than an empty set — when
+    `gh` is absent or the call fails (no auth, no network, rate limit). `None`
+    degrades the gate to "unfiled entries only"; an empty set would instead
+    assert that every bedrock issue is closed and fail every live entry in the
+    ledger, turning a missing CLI into a wall of false findings. A false
+    negative here is a stale row that lingers one more run, which is the
+    cheaper mistake.
     """
     try:
         result = subprocess.run(
@@ -160,19 +174,19 @@ def _fetch_open_issue_numbers() -> set[int]:
     except (OSError, subprocess.SubprocessError) as exc:
         logger.warning(
             "could not fetch open bedrock issues via gh ({}); falling back "
-            "to an empty open-issue set", exc,
+            "back to checking unfiled entries only", exc,
         )
-        return set()
+        return None
 
     try:
         payload = json.loads(result.stdout)
         return {int(item["number"]) for item in payload}
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         logger.warning(
-            "could not parse gh issue list output ({}); falling back to an "
-            "empty open-issue set", exc,
+            "could not parse gh issue list output ({}); falling back to "
+            "checking unfiled entries only", exc,
         )
-        return set()
+        return None
 
 
 def main(argv: list[str] | None = None) -> int:
