@@ -1,6 +1,6 @@
 {
   "name": "@djntechnic/bedrock-ui",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Reusable React application platform: config-driven grid engine, admin Grid Editor, auth shell, design tokens",
   "type": "module",
   "license": "UNLICENSED",
@@ -10,7 +10,10 @@
       "import": "./packages/bedrock-ui/dist/index.js"
     },
     "./styles/tokens.css": "./packages/bedrock-ui/src/styles/tokens.css",
-    "./*": "./packages/bedrock-ui/dist/*"
+    "./*": {
+      "types": "./packages/bedrock-ui/dist/*.d.ts",
+      "import": "./packages/bedrock-ui/dist/*.js"
+    }
   },
   "files": [
     "packages/bedrock-ui/dist",
@@ -28,6 +31,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "@testing-library/user-event": "^14.5.2",
+    "@types/node": "^22.20.1",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "jsdom": "^25.0.1",

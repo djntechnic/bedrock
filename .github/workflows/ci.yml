@@ -73,6 +73,12 @@ jobs:
         # install entirely, and both the type check and the tests then pass on
         # modules that are not there.
         run: npm install --no-audit --no-fund
+      - name: Build
+        # `prepare` already runs this on install, but only when scripts are
+        # enabled. Doing it explicitly means `packaging.test.ts` always has a
+        # dist to check, which is the only place the published layout is
+        # verified against the `exports` map.
+        run: npm run build && npm run build:types
       - name: Test
         run: npm test
       - name: Type check
