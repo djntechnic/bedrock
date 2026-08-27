@@ -85,6 +85,43 @@ describe("published package layout", () => {
     expect(existsSync(join(dist, `${subpath}.d.ts`))).toBe(true);
   });
 
+  /**
+   * v0.6.1 emitted every module but kept only `src/index.ts` as an entry, so
+   * Rollup dropped exports the barrel's graph never reached — `renderRankCell`
+   * and `useRowClickHandler` among them. `tsc` shakes nothing, so the `.d.ts`
+   * still declared both: a consumer's type check passed and the import threw.
+   * Comparing the two is the only way to catch that class of skew.
+   */
+  it("exports at runtime everything its declarations promise", () => {
+    const skew: string[] = [];
+    for (const file of js) {
+      const declPath = join(dist, file.replace(/\.js$/, ".d.ts"));
+      if (!existsSync(declPath)) continue;
+      const decl = readFileSync(declPath, "utf-8");
+      const names = new Set<string>();
+      for (const m of decl.matchAll(
+        /export declare (?:function|const|class|abstract class) (\w+)/g,
+      )) {
+        names.add(m[1]);
+      }
+      for (const m of decl.matchAll(/^export \{([^}]*)\}/gm)) {
+        for (const raw of m[1].split(",")) {
+          const name = raw.trim().split(/\s+as\s+/).pop();
+          // `export { type Foo }` is erased at runtime by construction.
+          if (name && !raw.trim().startsWith("type ")) names.add(name);
+        }
+      }
+      if (names.size === 0) continue;
+      const code = readFileSync(join(dist, file), "utf-8");
+      // Rollup emits one trailing `export { … }` statement per module.
+      const tail = code.slice(code.lastIndexOf("export {"));
+      for (const name of names) {
+        if (!new RegExp(`\\b${name}\\b`).test(tail)) skew.push(`${file}: ${name}`);
+      }
+    }
+    expect(skew).toEqual([]);
+  });
+
   it("advertises subpaths with the extensions the build emits", () => {
     const pkg = JSON.parse(
       readFileSync(join(repoRoot, "package.json"), "utf-8"),

@@ -102,6 +102,7 @@ import {
   formatAggValue,
   hasAggregates,
 } from "../../utils/gridUtils";
+import type { SelectionColumnOptions } from "../../utils/gridUtils";
 import { getRankRowClass } from "../../utils/rankStyle";
 import { applyDraft, isDirty, type BulkDrafts } from "./bulkDraftStore";
 
@@ -203,6 +204,16 @@ export interface DataGridProps<T extends Record<string, any>> {
     selectedIds: (number | string)[];
     onChange: (ids: (number | string)[]) => void;
   };
+  /**
+   * Header label, tooltips and selection cap for the checkbox column.
+   *
+   * `prependSelectionColumn` has taken these since it was written, but the
+   * engine called it with defaults only, so a grid whose selection means
+   * something specific — MLBTracker's Trends page compares at most three
+   * players under a "Cmp" header — could not say so. Defaults are unchanged:
+   * "Sel", no cap.
+   */
+  selectionOptions?: SelectionColumnOptions;
   /**
    * Phase 5: notify the caller when the user drags to reorder columns.
    * When set, the admin Grid Editor persists the new order by renumbering
@@ -422,6 +433,7 @@ export default function DataGrid<T extends Record<string, any>>({
   loadingMessage,
   accessorFor,
   selectionOverride,
+  selectionOptions,
   onReorderColumns,
   isEmbedded = false,
   customToolbar,
@@ -947,6 +959,7 @@ export default function DataGrid<T extends Record<string, any>>({
       onSelectionChange as (ids: number[]) => void,
       resolvedRowKey,
       config.selectionPosition,
+      selectionOptions,
     );
   }, [
     isLoaded,
@@ -954,6 +967,7 @@ export default function DataGrid<T extends Record<string, any>>({
     config.showRanking,
     config.allowSelection,
     config.selectionPosition,
+    selectionOptions,
     config.rowKeyColumn,
     config.minColumnWidth,
     config.tooltipDelayDuration,

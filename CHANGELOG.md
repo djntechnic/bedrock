@@ -16,6 +16,46 @@ When drafting a release body, write the section as `## For consumers`, not
 nested form — the cascade workflow's extractor matches `^## For consumers`
 literally and fails the release's cascade job on a mismatch.
 
+## v0.6.2
+
+### For consumers
+
+**Adopt**
+- Re-point both pins at `v0.6.2`.
+- If a grid's checkbox column needs its own header label or a selection cap,
+  pass `selectionOptions` to `<DataGrid>` — it reaches
+  `prependSelectionColumn` unchanged. Defaults are what they were ("Sel", no
+  cap), so a grid that says nothing behaves as before.
+- `<EditableCell>`'s idle affordance is labelled `Double-click or type to
+  edit` (it has been since type-to-edit landed). A test selecting on the older
+  `Double-click to edit` needs updating.
+
+**Delete**
+- Nothing.
+
+**Why you want it:** `v0.6.1` restored the per-module layout but not every
+module's exports. Only `src/index.ts` was a build entry, so Rollup dropped any
+export the barrel's graph never reached — `renderRankCell` and
+`useRowClickHandler` were both erased. `tsc` shakes nothing, so the `.d.ts`
+kept declaring them: a consumer's type check passed and the import threw
+`… is not a function` at runtime.
+
+### Fixed
+
+- **`v0.6.1` tree-shook exports its declarations still promised.** Every
+  source module is now its own build entry, which makes its public surface
+  load-bearing rather than reachable-from-the-barrel. `packaging.test.ts`
+  gained a check that diffs each emitted module's runtime exports against its
+  `.d.ts`, so the two can no longer drift apart unnoticed.
+
+### Added
+
+- **`<DataGrid selectionOptions>`.** `prependSelectionColumn` has accepted a
+  header label, tooltips and a selection cap since it was written, but the
+  engine only ever called it with defaults — so a grid whose selection means
+  something specific had no way to say so. MLBTracker's Trends page compares
+  at most three players under a "Cmp" header and could not express either.
+
 ## v0.6.1
 
 ### For consumers
