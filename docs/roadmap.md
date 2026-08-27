@@ -12,7 +12,7 @@ the milestone on GitHub to see where it stands.
 | --- | --- | --- | --- | --- | --- |
 | M1 | `v0.6.0` | #20 baseline bootstrap, #14 ESM build output, cascade machinery | CollectIt (both defects); MLBTracker (both blockers) | A dev server that needs no hand-derived `optimizeDeps.include` | A fresh database that boots, and a viable pin jump |
 | M2 | — | MLBTracker boards `v0.6.0` | — | Nothing directly; a second consumer to judge platform changes against | Three releases of platform work, and its local twins deleted |
-| M3 | `v0.7.0` | #22, #23, #25, #26, #35, #36, unkeyed `<SelectContent>` | CollectIt (all but #26) | `create_app()`, a wider StorageProvider, visible row order, an honest dashboard pin | The same, plus its residue removed from the platform |
+| M3 | `v0.7.0` | #22, #23, #25, #26, #35, #36, #40, unkeyed `<SelectContent>` | CollectIt (#22, #23, #25, #35, #36, unkeyed `<SelectContent>`); MLBTracker (#26, #40) | `create_app()`, a wider StorageProvider, visible row order, an honest dashboard pin | Its residue removed from the platform, plus a canonical viewer for `useSecurityEvents` |
 | M4 | `v0.8.0` | Ledger-freshness gate; promotion of the platform-universal audit gates | Both | One fewer locally-maintained gate | Gates it never had |
 
 The "what each consumer gets" columns are the point of this table: they make
