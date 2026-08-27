@@ -6,6 +6,35 @@ on:
   pull_request:
 
 jobs:
+  workflows:
+    name: workflow files parse
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # A workflow file that does not parse fails as a 0s run with no jobs and
+      # no check attached to any PR — v0.6.0 shipped a cascade.yml that had
+      # been broken since it was written because nothing here ever read it.
+      # safe_load rejects the specific defect that caused it: a bare `---` at
+      # column 1 inside a `run: |` block, which ends the YAML document.
+      - name: Parse every workflow as a single YAML document
+        run: |
+          python - <<'PY'
+          import pathlib, sys, yaml
+          failed = False
+          for path in sorted(pathlib.Path(".github/workflows").glob("*.yml")):
+              try:
+                  yaml.safe_load(path.read_text(encoding="utf-8"))
+              except yaml.YAMLError as exc:
+                  print(f"{path}: {exc}", file=sys.stderr)
+                  failed = True
+              else:
+                  print(f"{path}: ok")
+          sys.exit(1 if failed else 0)
+          PY
+
   backend:
     name: bedrock-api (pytest)
     runs-on: ubuntu-latest
