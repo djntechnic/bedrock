@@ -210,3 +210,153 @@ class TestEmptyDatabaseBootstrap:
             db.close_pool()
 
         assert "bedrock_baseline" in applied
+
+
+class TestSplitSqlStatements:
+    """Direct unit tests for the parser every platform and app migration flows
+    through — `_run_sql_file` hands it whatever a .sql file contains, and
+    `TestEmptyDatabaseBootstrap` above only pins its behaviour incidentally,
+    through the present wording of comments inside the real `baseline.sql`.
+    Reword one of those comments and that coverage would silently stop
+    meaning anything; these tests assert the parser's contract directly, one
+    hazard at a time, against the returned statement list rather than a count.
+    """
+
+    def test_semicolon_inside_line_comment_does_not_split(self):
+        sql = "SELECT 1; -- has a ; in it\nSELECT 2;"
+        assert migrations._split_sql_statements(sql) == ["SELECT 1", "SELECT 2"]
+
+    def test_apostrophe_inside_line_comment_does_not_desync(self):
+        """The exact case that broke bootstrapping `baseline.sql`: a
+        contraction in a trailing comment flips a naive quote tracker and
+        silently merges everything after it into one statement."""
+        sql = "SELECT 1; -- it's fine\nSELECT 2;"
+        assert migrations._split_sql_statements(sql) == ["SELECT 1", "SELECT 2"]
+
+    def test_semicolon_inside_string_literal_does_not_split(self):
+        sql = "INSERT INTO t (msg) VALUES ('hello; world');"
+        assert migrations._split_sql_statements(sql) == [
+            "INSERT INTO t (msg) VALUES ('hello; world')"
+        ]
+
+    def test_escaped_quote_inside_string_literal(self):
+        sql = "INSERT INTO t (msg) VALUES ('it''s fine');"
+        assert migrations._split_sql_statements(sql) == [
+            "INSERT INTO t (msg) VALUES ('it''s fine')"
+        ]
+
+    def test_trailing_statement_with_no_terminating_semicolon(self):
+        sql = "SELECT 1;\nSELECT 2"
+        assert migrations._split_sql_statements(sql) == ["SELECT 1", "SELECT 2"]
+
+    def test_empty_input_returns_no_statements(self):
+        assert migrations._split_sql_statements("") == []
+
+    def test_input_that_is_only_a_comment_returns_no_statements(self):
+        assert migrations._split_sql_statements(
+            "-- just a comment, nothing else\n"
+        ) == []
+
+    def test_semicolon_inside_block_comment_does_not_split(self):
+        sql = "SELECT 1; /* a comment; with a semicolon */\nSELECT 2;"
+        assert migrations._split_sql_statements(sql) == ["SELECT 1", "SELECT 2"]
+
+    def test_apostrophe_inside_block_comment_does_not_desync(self):
+        """Same hazard as the line-comment case, in the other comment form."""
+        sql = "SELECT 1; /* it's a block comment */\nSELECT 2;"
+        assert migrations._split_sql_statements(sql) == ["SELECT 1", "SELECT 2"]
+
+
+class TestBootstrapMissingBaseline:
+    """§S5 requires the error leg: `_bootstrap_baseline` warns and skips
+    rather than raising when `baseline.sql` is not where it expects — an
+    installation that dropped the package data, per its own docstring."""
+
+    def test_missing_baseline_sql_warns_and_skips(self, tmp_path, monkeypatch, caplog):
+        db_path = tmp_path / "nobaseline.db"
+        sqlite3.connect(str(db_path)).close()
+
+        # A migrations directory with no baseline.sql sibling — the shape a
+        # broken or partial package install would have.
+        fake_migrations_dir = tmp_path / "schema" / "migrations"
+        fake_migrations_dir.mkdir(parents=True)
+        monkeypatch.setattr(
+            migrations, "PLATFORM_MIGRATIONS_DIR", str(fake_migrations_dir)
+        )
+
+        original = (db.sqlite_path, db.is_postgres, db.db_url)
+        db.sqlite_path, db.is_postgres, db.db_url = str(db_path), False, None
+        db.close_pool()
+        try:
+            migrations._ensure_ledger_table()
+            with caplog.at_level("WARNING", logger="bedrock.core.migrations"):
+                migrations._bootstrap_baseline()  # must not raise
+
+            applied = db.query(
+                f"SELECT migration_id FROM {T.SYS_SCHEMA_MIGRATIONS}"
+            )["migration_id"].tolist()
+        finally:
+            db.sqlite_path, db.is_postgres, db.db_url = original
+            db.close_pool()
+
+        assert "bedrock_baseline" not in applied
+        assert any(
+            "baseline.sql" in record.getMessage() for record in caplog.records
+        )
+
+
+class TestBootstrapAgainstAPreExistingDatabase:
+    """The ledger guard protects a database this bootstrap has already run
+    against once. It does NOT protect a database that predates the bootstrap
+    entirely — one with tables already, but no `bedrock_baseline` row — and on
+    that database the baseline genuinely is re-run over live data. That is
+    only safe because `baseline.sql` is exclusively `CREATE TABLE IF NOT
+    EXISTS` / `CREATE INDEX IF NOT EXISTS`, with no INSERT and no DROP; this
+    asserts that stays true in the way that matters, not by reading the file.
+    """
+
+    def test_rerunning_the_baseline_over_existing_data_does_not_lose_it(
+        self, tmp_path
+    ):
+        db_path = tmp_path / "existing.db"
+        baseline = os.path.join(
+            os.path.dirname(migrations.PLATFORM_MIGRATIONS_DIR), "baseline.sql"
+        )
+        with open(baseline, encoding="utf-8") as fh:
+            baseline_sql = fh.read()
+
+        conn = sqlite3.connect(str(db_path))
+        try:
+            conn.executescript(baseline_sql)
+            conn.execute(
+                "INSERT INTO auth_users (email) VALUES (?)",
+                ("existing@example.com",),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+        original = (db.sqlite_path, db.is_postgres, db.db_url)
+        db.sqlite_path, db.is_postgres, db.db_url = str(db_path), False, None
+        db.close_pool()
+        try:
+            migrations.apply_migrations()  # must not raise, must not lose data
+
+            conn = sqlite3.connect(str(db_path))
+            try:
+                emails = [
+                    row[0] for row in conn.execute("SELECT email FROM auth_users")
+                ]
+                applied = {
+                    row[0] for row in conn.execute(
+                        "SELECT migration_id FROM sys_schema_migrations"
+                    )
+                }
+            finally:
+                conn.close()
+        finally:
+            db.sqlite_path, db.is_postgres, db.db_url = original
+            db.close_pool()
+
+        assert emails == ["existing@example.com"]
+        assert "bedrock_baseline" in applied

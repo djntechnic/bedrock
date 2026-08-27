@@ -239,7 +239,7 @@ def _execute_statement(stmt: str, conn) -> None:
 
 
 def _split_sql_statements(sql: str) -> list[str]:
-    """Split a SQL script into individual non-empty statements on ';', stripping -- comments.
+    """Split a SQL script into individual non-empty statements on ';', stripping comments.
 
     The split is single-quote aware: a ';' inside a string literal does not
     terminate a statement, so descriptions or values containing semicolons
@@ -248,15 +248,24 @@ def _split_sql_statements(sql: str) -> list[str]:
     toggle handles this correctly because the two adjacent quotes flip the
     in-string flag off then back on.
 
-    Comments are stripped in the same quote-aware pass, not with a whole-line
-    pre-filter: a trailing comment after real SQL on the same line (e.g. an
-    inline column note) is common in these schema files, and a pre-filter that
-    only recognizes a comment starting at column zero leaves it in the stream.
-    Worse, an apostrophe inside such a comment (a contraction like "provider's")
-    flips the in-string flag for everything that follows, silently merging any
-    number of subsequent statements into one until another stray quote happens
-    to flip it back. Recognizing `--` unless already inside a string avoids
-    that entirely, because it is checked before the string-toggle branch runs.
+    Both comment styles — `-- line` and `/* block */` — are recognized in the
+    same quote-aware pass, not with a whole-line pre-filter: a trailing
+    comment after real SQL on the same line (e.g. an inline column note) is
+    common in these schema files, and a pre-filter that only recognizes a
+    comment starting at column zero leaves it in the stream. Worse, a stray
+    apostrophe inside *any* comment (a contraction like "provider's", or one
+    side of a quoted example inside a block comment) flips the in-string flag
+    for everything that follows, silently merging any number of subsequent
+    statements into one until another stray quote happens to flip it back.
+    Both comment forms are recognized — and their contents skipped whole,
+    quotes included — before the string-toggle branch ever sees them, which
+    is what keeps a comment's punctuation from corrupting the parse.
+
+    Assumptions this parser does NOT handle: it tracks single-quoted string
+    literals only. A double-quoted identifier containing a `'`, `;`, `--` or
+    `/*` (legal but unusual SQL) will confuse it, as will any dialect's
+    dollar-quoting (`$$ ... $$`). Every file this parser has ever run against
+    is bedrock's own SQLite schema and migration content, which uses neither.
     """
     statements: list[str] = []
     current: list[str] = []
@@ -269,9 +278,12 @@ def _split_sql_statements(sql: str) -> list[str]:
             in_string = not in_string
             current.append(ch)
             i += 1
-        elif ch == "-" and not in_string and i + 1 < n and sql[i + 1] == "-":
+        elif not in_string and ch == "-" and i + 1 < n and sql[i + 1] == "-":
             newline_at = sql.find("\n", i)
             i = n if newline_at == -1 else newline_at
+        elif not in_string and ch == "/" and i + 1 < n and sql[i + 1] == "*":
+            end_at = sql.find("*/", i + 2)
+            i = n if end_at == -1 else end_at + 2
         elif ch == ";" and not in_string:
             stmt = "".join(current).strip()
             if stmt:
@@ -324,6 +336,17 @@ def _bootstrap_baseline() -> None:
     Guarded by the ledger, not by table introspection: a consumer may have
     dropped a platform table by hand, and re-running the baseline over a
     live database would be worse than the 500 it is meant to prevent.
+
+    The ledger guard only protects a database this function has already run
+    against once — it does not protect one that predates this bootstrap
+    entirely, i.e. an existing database with tables but no `bedrock_baseline`
+    ledger row. On that database the baseline *is* re-run, over live data.
+    That is safe today only because `baseline.sql` is exclusively
+    `CREATE TABLE IF NOT EXISTS` / `CREATE INDEX IF NOT EXISTS` statements —
+    no `INSERT`, no `DROP`, nothing that touches a row that already exists.
+    That is a property of the file's current contents, not a guarantee this
+    function makes; a future `baseline.sql` that stops being pure-idempotent
+    DDL would need its own guard.
     """
     migration_id = PLATFORM_MIGRATION_PREFIX + "baseline"
     if _is_applied(migration_id):
