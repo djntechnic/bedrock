@@ -17,6 +17,16 @@
  * `peerDependencies` are external by construction — the consumer owns those
  * copies, and bundling React or `@tanstack/react-query` in here would give the
  * app two of them. Everything else the source imports is inlined.
+ *
+ * The build emits one `.js` per source module rather than a single bundle
+ * (`preserveModules`). The package's `exports` map advertises `"./*"`, so a
+ * consumer may import any module by its source-relative path —
+ * `@djntechnic/bedrock-ui/hooks/useAdminPlatform`, and 85 more of them in
+ * MLBTracker alone. A single-file bundle satisfies the barrel entry and nothing
+ * else: every one of those subpaths resolves to a file that was never written.
+ * Per-module output makes the runtime layout match the `.d.ts` layout
+ * `build:types` already emits, so a subpath's types and its code sit side by
+ * side.
  */
 import { defineConfig } from "vite";
 import { dirname, resolve } from "node:path";
@@ -54,6 +64,15 @@ export default defineConfig({
     rollupOptions: {
       external,
       output: {
+        // One `.js` per source module, at the same relative path the `.d.ts`
+        // for it lands on. `lib.fileName` still names the barrel: `src/index.ts`
+        // is the entry, so it emits as `dist/index.js`.
+        preserveModules: true,
+        preserveModulesRoot: resolve(here, "src"),
+        entryFileNames: "[name].js",
+        // A bundled (non-peer) dependency has no path under `src`; give it a
+        // stable home instead of letting it collide with a source module name.
+        chunkFileNames: "_vendor/[name].js",
         // Keep CSS (if any is ever added) at a predictable name rather than a
         // hashed one, so the `exports` map can address it.
         assetFileNames: "[name][extname]",

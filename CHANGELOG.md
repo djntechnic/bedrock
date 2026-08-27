@@ -16,9 +16,36 @@ When drafting a release body, write the section as `## For consumers`, not
 nested form — the cascade workflow's extractor matches `^## For consumers`
 literally and fails the release's cascade job on a mismatch.
 
-## Unreleased
+## v0.6.1
+
+### For consumers
+
+**Adopt**
+- Re-point both pins at `v0.6.1`. Nothing else changes: no API moved, no
+  export was added or removed.
+
+**Delete**
+- Nothing.
+
+**Why you want it:** `v0.6.0` is unusable for any consumer that imports a
+module by subpath. Its build emitted a single `index.js`, so
+`@djntechnic/bedrock-ui/hooks/useAuth` — and every other `"./*"` import the
+package advertises — resolved to a file that was never written. MLBTracker has
+86 such imports and cannot type-check against `v0.6.0`; CollectIt has one.
 
 ### Fixed
+
+- **`v0.6.0` shipped a bundle where its `exports` map promised modules.** The
+  library build wrote one `index.js`; the root `package.json` advertised
+  `"./*" → dist/*`. Every deep import therefore resolved to a missing file,
+  and the wildcard target carried no extension for the extensionless specifier
+  consumers actually write. The build now emits one `.js` per source module
+  (`preserveModules`), landing beside the `.d.ts` that `build:types` already
+  wrote, and the wildcard target supplies `.js`/`.d.ts` explicitly. Nothing
+  here caught it before: bedrock's own tests import from `src`, and its type
+  check never resolves the package by name — so `packaging.test.ts` now reads
+  the built `dist` and asserts the layout the `exports` map claims, and CI
+  builds the package before running the suite.
 
 - **The cascade workflow was invalid YAML from its first commit and never
   ran.** Its issue body was inlined into a `run: |` block scalar with a
