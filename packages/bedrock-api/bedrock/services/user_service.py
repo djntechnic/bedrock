@@ -148,7 +148,7 @@ def create_user(
     is_active: bool = True,
     is_verified: bool = False,
     is_superuser: bool = False,
-    default_role: str | None = "collector",
+    default_role: str | None = "member",
     database: DatabaseManager | None = None,
 ) -> UserRecord:
     """Create a user row and (optionally) assign a default role slug.

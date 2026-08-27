@@ -65,6 +65,24 @@ service and its `DATABASE_URL` override are gone from the default path. Anyone
 actually running that stack would have noticed, because it could not start; the
 change is visible mainly to a diff of a copied `deploy/`.
 
+**Two more things break, on a name only.** The role ladder is now
+`anon | viewer | member | admin` — the `collector` slug is gone. Any code that
+checks `hasRole("collector")`, seeds a `collector` row of its own, or matches
+on that slug in a query or a UI string needs to say `member` instead. The two
+`app_grid_settings` flags with baseball-specific names are renamed the same
+way: `show_medal_toggles` / `showMedalToggles` is now `show_rank_highlight` /
+`showRankHighlight`, and `team_accent_reactive` / `teamAccentReactive` is now
+`row_accent_reactive` / `rowAccentReactive`. Behavior is unchanged in both
+cases — this is a rename, not a redesign. A new platform migration
+(`004_member_role_and_rank_highlight_rename.sql`) updates any existing
+database's `collector` role row and renames both columns automatically; a
+consumer only has to update the code that names the old identifiers.
+
+The frontend's `appName` fallback is now `bedrock` rather than `MLBTracker`.
+It only shows when `VITE_APP_NAME` is unset — where the platform's own name
+reads as the obvious misconfiguration it is, instead of as somebody else's
+product.
+
 **Nothing else breaks.** `StorageProvider` is untouched and still three methods.
 `ObjectStore` is a second protocol that extends it, so `media_service` and
 every existing caller are unaware it exists, and `CloudflareImagesProvider` —

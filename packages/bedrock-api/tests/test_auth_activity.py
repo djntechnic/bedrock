@@ -46,7 +46,7 @@ def _mk_admin() -> tuple[us.UserRecord, str]:
         password="pw-strong-123",
         default_role="admin",
     )
-    for other in ("collector", "viewer"):
+    for other in ("member", "viewer"):
         us.revoke_role(u.user_id, other)
     return u, us.create_access_token(u.user_id)
 
@@ -132,7 +132,7 @@ def test_admin_security_events_requires_admin(client):
         password="pw-strong-123",
         default_role="viewer",
     )
-    us.revoke_role(viewer.user_id, "collector")
+    us.revoke_role(viewer.user_id, "member")
     tok = us.create_access_token(viewer.user_id)
     r = client.get(
         "/api/v1/admin/security/events",

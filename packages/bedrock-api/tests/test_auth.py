@@ -53,7 +53,7 @@ def test_register_creates_user_with_hashed_password(client):
     assert payload["token_type"] == "bearer"
     assert payload["access_token"]
     assert payload["user"]["email"] == email
-    assert payload["user"]["roles"] == ["collector"]
+    assert payload["user"]["roles"] == ["member"]
 
     # Password must be hashed (never stored raw); bcrypt hashes start with $2
     user = us.get_user_by_email(email)
@@ -113,7 +113,7 @@ def test_me_returns_profile_with_valid_token(client):
     body = r.json()
     assert body["email"] == email
     assert body["is_active"] is True
-    assert "collector" in body["roles"]
+    assert "member" in body["roles"]
 
 
 def test_logout_revokes_current_session(client):

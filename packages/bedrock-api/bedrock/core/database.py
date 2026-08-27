@@ -118,7 +118,7 @@ logger = logging.getLogger(__name__)
 
 class DatabaseManager:
     """
-    Centralized database manager for MLBTracker.
+    Centralized database manager.
     Handles connection management, dialect translation (SQLite vs Postgres),
     and common configuration/logging tasks.
     """

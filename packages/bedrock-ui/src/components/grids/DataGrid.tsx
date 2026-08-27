@@ -4,7 +4,7 @@
  * @description Centralized, config-driven grid engine. Given a `gridId` and
  * `rows`, resolves the admin `GridConfig` and renders the full stack —
  * `<GridWrapper>` pagination shell, `<GridHeader>` toolbar, `<Table>` with
- * sticky/striping/dense/wrap/hover/sort/medal wiring, aggregate footer, empty
+ * sticky/striping/dense/wrap/hover/sort/rank-highlight wiring, aggregate footer, empty
  * and loading states — with zero per-page boilerplate.
  *
  * Extension slots let the caller specialize a grid without dropping back into
@@ -17,7 +17,7 @@
  * The engine owns state (sorting, columnVisibility, globalFilter, density,
  * selection), column building, the cell pipeline (`customCells →
  * renderMediaCell → renderCell` with gradient handling), rank + selection column prepend,
- * medal row gating, and every GridConfig property from CLAUDE.md §S2. Pages
+ * rank-highlight row gating, and every GridConfig property from CLAUDE.md §S2. Pages
  * become dumb shells that fetch data and hand it off.
  */
 
@@ -549,7 +549,7 @@ export default function DataGrid<T extends Record<string, any>>({
   // Phase 3 §S9: row accent tinting. The engine owns the mechanism (an inline
   // style plus a left-border class); the host app supplies the row → color
   // policy via registerRowAccentResolver(). See ./rowAccentRegistry.
-  const resolveRowAccent = useRowAccentResolver(config.teamAccentReactive);
+  const resolveRowAccent = useRowAccentResolver(config.rowAccentReactive);
 
   // Phase 3 §S9: changed-cell "live pulse" detection. Snapshots the
   // previous `rows` (keyed by config.rowKeyColumn) and diffs on every
@@ -896,7 +896,7 @@ export default function DataGrid<T extends Record<string, any>>({
       baseWithPrepend,
       config.showRanking,
       colHelper as any,
-      config.showMedalToggles,
+      config.showRankHighlight,
       "end",
     );
     // Phase 10 B2: expander column sits leftmost when active (before rank
@@ -1306,7 +1306,7 @@ export default function DataGrid<T extends Record<string, any>>({
               // Phase 3 §S9: row accent tint. Grouped rows are never tinted.
               // `resolveRowAccent` is a pure mapper, so this is one call per
               // row with no hook involved (rules-of-hooks safe).
-              const teamAccentStyle = !isGroupedRow
+              const rowAccentStyle = !isGroupedRow
                 ? resolveRowAccent(dataRecord)
                 : undefined;
               // Phase 10 B2: resolve sub-row detail once per render pass so the
@@ -1326,17 +1326,17 @@ export default function DataGrid<T extends Record<string, any>>({
                     onRowClick && !isGroupedRow && "cursor-pointer",
                     !config.hoverColor && !isGroupedRow && "hover:bg-muted/30",
                     !isGroupedRow && rowClassName,
-                    config.showMedalToggles && !isGroupedRow && getRankRowClass(rank),
+                    config.showRankHighlight && !isGroupedRow && getRankRowClass(rank),
                     wrapClass,
                     isGroupedRow && "bg-muted/40 font-medium",
                     // Phase 8 H2: per-row data-driven class overlay for
                     // embedded consumers (e.g. career-total vs stint-child
                     // vs season-header row styling).
                     !isGroupedRow && rowClassNameFor?.(data, renderIndex),
-                    // Phase 3 §S9: team-accent left-border tint.
-                    teamAccentStyle && "border-l-2 border-l-[color:var(--team-accent)]",
+                    // Phase 3 §S9: row-accent left-border tint.
+                    rowAccentStyle && "border-l-2 border-l-[color:var(--team-accent)]",
                   )}
-                  style={teamAccentStyle}
+                  style={rowAccentStyle}
                   onMouseEnter={
                     config.hoverColor && !isGroupedRow
                       ? (e) => {

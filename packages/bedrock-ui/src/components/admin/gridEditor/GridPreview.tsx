@@ -245,7 +245,7 @@ export default function GridPreview({ config, onEnterFocus: _onEnterFocus, onCol
   // Phase 3 §S9: row accent tinting — resolved through the same registry
   // <DataGrid> uses, so the preview stays honest about what saving yields
   // (I-GP parity, scripts/maintenance/audit_grids.py).
-  const resolveRowAccent = useRowAccentResolver(config.teamAccentReactive);
+  const resolveRowAccent = useRowAccentResolver(config.rowAccentReactive);
 
   // Phase 3 §S9: changed-cell "live pulse" — mirrors <DataGrid>'s detection,
   // diffed against stagedData so editing preview rows via "Manage data" (or
@@ -339,7 +339,7 @@ export default function GridPreview({ config, onEnterFocus: _onEnterFocus, onCol
       baseCols,
       config.showRanking,
       colHelper,
-      config.showMedalToggles,
+      config.showRankHighlight,
       "end",
     );
     return prependSelectionColumn(
@@ -583,7 +583,7 @@ export default function GridPreview({ config, onEnterFocus: _onEnterFocus, onCol
                     const rowKeyForRow = config.rowKeyColumn
                       ? previewRow[config.rowKeyColumn]
                       : undefined;
-                    const teamAccentStyle = !isGroupedRow
+                    const rowAccentStyle = !isGroupedRow
                       ? resolveRowAccent(previewRow)
                       : undefined;
                     return (
@@ -594,11 +594,11 @@ export default function GridPreview({ config, onEnterFocus: _onEnterFocus, onCol
                           "border-b border-border/50 transition-colors",
                           !config.hoverColor && "hover:bg-muted/30",
                           rowWrapClass,
-                          config.showMedalToggles && !isGroupedRow && getRankRowClass(rank),
+                          config.showRankHighlight && !isGroupedRow && getRankRowClass(rank),
                           isGroupedRow && "bg-muted/40 font-medium",
-                          teamAccentStyle && "border-l-2 border-l-[color:var(--team-accent)]",
+                          rowAccentStyle && "border-l-2 border-l-[color:var(--team-accent)]",
                         )}
-                        style={teamAccentStyle}
+                        style={rowAccentStyle}
                         onMouseEnter={
                           config.hoverColor
                             ? (e) => { (e.currentTarget as HTMLElement).style.backgroundColor = config.hoverColor!; }

@@ -56,7 +56,7 @@ def test_link_or_create_new_user_creates_and_links():
     assert result.linked is True
     assert result.user.email == email
     assert result.user.is_verified is True
-    assert "collector" in us.get_user_roles(result.user.user_id)
+    assert "member" in us.get_user_roles(result.user.user_id)
 
 
 def test_link_or_create_existing_email_links_only():

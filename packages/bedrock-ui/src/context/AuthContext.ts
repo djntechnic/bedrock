@@ -31,7 +31,7 @@ export interface AuthContextValue {
    * Role predicate. Every role except `admin` is checked through here —
    * `isCollector` used to sit alongside `isAdmin` and was a baseball-shaped
    * role hardcoded into a platform interface, which is one app's vocabulary
-   * every other consumer would inherit. `hasRole("collector")` reads the same
+   * every other consumer would inherit. `hasRole("member")` reads the same
    * and generalises.
    *
    * `isAdmin` stays as a field because the platform itself branches on it —

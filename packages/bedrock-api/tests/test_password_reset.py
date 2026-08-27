@@ -99,7 +99,7 @@ def user(platform_db):
         email=f"reset-{uuid.uuid4().hex[:12]}@example.com",
         password=PASSWORD,
         display_name="Dana",
-        default_role="collector",
+        default_role="member",
     )
 
 

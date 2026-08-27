@@ -11,7 +11,7 @@
 --
 -- The split is drawn where ownership actually lies:
 --
---   Roles are the platform's. The four-tier anon/viewer/collector/admin model
+--   Roles are the platform's. The four-tier anon/viewer/member/admin model
 --   is baked into dependencies.py and the admin console, so every bedrock app
 --   inherits it.
 --
@@ -24,7 +24,7 @@
 INSERT OR IGNORE INTO auth_roles (slug, label) VALUES
   ('anon',      'Anonymous'),
   ('viewer',    'Viewer'),
-  ('collector', 'Collector'),
+  ('member',    'Member'),
   ('admin',     'Administrator');
 
 -- ── Platform modules ────────────────────────────────────────────────────────
@@ -50,5 +50,5 @@ SELECT r.role_id, m.module_id
 INSERT OR IGNORE INTO auth_role_modules (role_id, module_id)
 SELECT r.role_id, m.module_id
   FROM auth_roles r, auth_modules m
- WHERE r.slug IN ('viewer', 'collector')
+ WHERE r.slug IN ('viewer', 'member')
    AND m.slug = 'health';

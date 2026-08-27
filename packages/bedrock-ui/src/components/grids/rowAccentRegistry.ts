@@ -3,7 +3,7 @@
  * @module frontend/src/components/grids
  * @description Extension point for per-row accent tinting (§S9 Phase 3).
  *
- * The grid engine owns the *mechanism*: when `config.teamAccentReactive` is
+ * The grid engine owns the *mechanism*: when `config.rowAccentReactive` is
  * on, each non-grouped data row may carry an inline style plus a
  * `border-l-2 border-l-[color:var(--team-accent)]` class. It does not own the
  * *policy* — deciding a row's color requires domain knowledge (MLBTracker maps

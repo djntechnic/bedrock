@@ -111,8 +111,8 @@ export interface GridConfig {
   showSearch: boolean;
   /** Whether the unified GridHeader renders the density toggle. */
   showDensityToggle: boolean;
-  /** Whether the unified GridHeader renders medal / podium ranking toggles. */
-  showMedalToggles: boolean;
+  /** Whether the unified GridHeader renders the rank-highlight toggle. */
+  showRankHighlight: boolean;
   /**
    * Row-object field carrying each row's stable ID. Drives the config-driven
    * selection column on `<DataGrid>` and TanStack row keying. Required as of
@@ -152,11 +152,11 @@ export interface GridConfig {
    */
   liveUpdateHighlight: boolean;
   /**
-   * Phase 3 §S9: tints each data row with its player's contrast-clamped
-   * `--team-accent` color (via `teamColors.ts`) when the row carries a
-   * resolvable `mlb_team_id`.
+   * Phase 3 §S9: tints each data row with an accent color the row supplies,
+   * resolved through the host application's `registerRowAccentResolver()`
+   * (see `rowAccentRegistry.ts`).
    */
-  teamAccentReactive: boolean;
+  rowAccentReactive: boolean;
 }
 
 /**
@@ -303,10 +303,10 @@ export function buildGridConfig(
       gridSetting?.show_density_toggle !== undefined
         ? asBool(gridSetting.show_density_toggle, true)
         : DEFAULT_GRID_HEADER_CONFIG.showDensityToggle,
-    showMedalToggles:
-      gridSetting?.show_medal_toggles !== undefined
-        ? asBool(gridSetting.show_medal_toggles, false)
-        : DEFAULT_GRID_HEADER_CONFIG.showMedalToggles,
+    showRankHighlight:
+      gridSetting?.show_rank_highlight !== undefined
+        ? asBool(gridSetting.show_rank_highlight, false)
+        : DEFAULT_GRID_HEADER_CONFIG.showRankHighlight,
     rowKeyColumn: gridSetting?.row_key_column ?? null,
     caption: gridSetting?.caption ?? null,
     stickyFirstColumn: asBool(gridSetting?.sticky_first_column, false),
@@ -314,7 +314,7 @@ export function buildGridConfig(
     allowExpansion: asBool(gridSetting?.allow_expansion, false),
     numeralStyle: gridSetting?.numeral_style === "tabular" ? "tabular" : "default",
     liveUpdateHighlight: asBool(gridSetting?.live_update_highlight, false),
-    teamAccentReactive: asBool(gridSetting?.team_accent_reactive, false),
+    rowAccentReactive: asBool(gridSetting?.row_accent_reactive, false),
   };
 }
 

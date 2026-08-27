@@ -5,7 +5,7 @@ Desc:    Pydantic models for per-user grid/dashboard customization
          (app_grid_settings_user / app_grid_column_settings_user). Layered on
          top of the admin-global GridSettingSchema/GridColumnSettingSchema in
          admin.py — never persists numeral_style/live_update_highlight/
-         team_accent_reactive, which stay admin-only.
+         row_accent_reactive, which stay admin-only.
 """
 from pydantic import BaseModel
 from typing import List, Optional

@@ -105,14 +105,14 @@ def _user_payload(user: us.UserRecord) -> dict:
 def register(payload: RegisterIn, request: Request) -> TokenOut:
     """Create a new password-based user and immediately return an access token.
 
-    Newly registered users are assigned the `collector` role by default.
+    Newly registered users are assigned the `member` role by default.
     """
     try:
         user = us.create_user(
             email=payload.email,
             password=payload.password,
             display_name=payload.display_name,
-            default_role="collector",
+            default_role="member",
         )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc

@@ -19,7 +19,7 @@ export const appSettings = {
     // is delivered via useAppSettings(); this literal is only the boot-time
     // fallback before the first admin/config fetch resolves. Env var
     // VITE_APP_NAME overrides for boot-critical rendering.
-    appName: (import.meta.env.VITE_APP_NAME as string) || 'MLBTracker',
+    appName: (import.meta.env.VITE_APP_NAME as string) || 'bedrock',
   },
   logging: {
     // Falls back to safe parameters to guarantee layout efficiency

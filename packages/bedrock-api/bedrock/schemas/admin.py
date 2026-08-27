@@ -80,7 +80,7 @@ class GridSettingSchema(BaseModel):
     tooltip_delay_duration: Optional[int] = None
     show_search: bool = True
     show_density_toggle: bool = True
-    show_medal_toggles: bool = False
+    show_rank_highlight: bool = False
     # Phase 4d Q1: name of the row-object field that carries each row's
     # stable ID (e.g. "player_id", "mlb_id", "card_id"). Drives the
     # config-driven selection column on <DataGrid>. Null → engine falls
@@ -101,8 +101,8 @@ class GridSettingSchema(BaseModel):
     numeral_style: str = "default"
     # Phase 3 §S9: flash changed cells with the --live-pulse token cue.
     live_update_highlight: bool = False
-    # Phase 3 §S9: tint each row with its player's --team-accent color.
-    team_accent_reactive: bool = False
+    # Phase 3 §S9: tint each row with an accent color the row supplies.
+    row_accent_reactive: bool = False
     model_config = {"from_attributes": True}
 
 

@@ -22,7 +22,7 @@ _USER_GRID_SETTING_BOOL_COLS: tuple[str, ...] = ("dashboard_pin",)
 _USER_GRID_COLUMN_BOOL_COLS: tuple[str, ...] = ("visible",)
 
 # Whitelisted grid-level fields a PATCH body may set. Deliberately excludes
-# numeral_style / live_update_highlight / team_accent_reactive — those stay
+# numeral_style / live_update_highlight / row_accent_reactive — those stay
 # admin-only (app_grid_settings), never mirrored here.
 _GRID_FIELDS: tuple[str, ...] = (
     "sort_column", "sort_direction", "pinned_filter_set", "dashboard_pin",

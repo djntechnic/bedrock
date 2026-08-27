@@ -191,8 +191,8 @@ export interface GridSetting {
   show_search?: boolean;
   /** Whether the unified GridHeader exposes the density toggle. */
   show_density_toggle?: boolean;
-  /** Whether the unified GridHeader exposes medal / podium ranking toggles. */
-  show_medal_toggles?: boolean;
+  /** Whether the unified GridHeader exposes the rank-highlight toggle. */
+  show_rank_highlight?: boolean;
   /**
    * Row-object field carrying the row's stable ID (drives the config-driven
    * selection column and TanStack row keying). Typically `"player_id"`,
@@ -214,8 +214,8 @@ export interface GridSetting {
   numeral_style?: "default" | "tabular" | string;
   /** Phase 3 §S9: flash changed cells with the `--live-pulse` token cue. */
   live_update_highlight?: boolean;
-  /** Phase 3 §S9: tint each row with its player's `--team-accent` color. */
-  team_accent_reactive?: boolean;
+  /** Phase 3 §S9: tint each row with an accent color the row supplies. */
+  row_accent_reactive?: boolean;
 }
 
 /** Metadata for a specific column within a grid. */

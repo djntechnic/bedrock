@@ -78,8 +78,8 @@ export default function GridSettingsPanel({
           onChange={(v) => setGridField("show_row_count", v)} />
         <SwitchRow label="Ranking column" checked={bool(g.show_ranking)}
           onChange={(v) => setGridField("show_ranking", v)} />
-        <SwitchRow label="Medal / podium toggles" checked={bool(g.show_medal_toggles)}
-          onChange={(v) => setGridField("show_medal_toggles", v)} />
+        <SwitchRow label="Rank highlight" checked={bool(g.show_rank_highlight)}
+          onChange={(v) => setGridField("show_rank_highlight", v)} />
         <SwitchRow label="Selection checkbox column" checked={bool(g.allow_selection)}
           onChange={(v) => setGridField("allow_selection", v)} />
         <SelectRow label="Selection column position" value={g.selection_position ?? "end"}
@@ -104,14 +104,14 @@ export default function GridSettingsPanel({
       </CollapsibleSection>
 
       <CollapsibleSection storageKey="grid.liveStyle" title="Live data & styling"
-        subtitle="§S9 scoreboard tokens — condensed numerals, changed-cell flash, team-accent rows.">
+        subtitle="§S9 scoreboard tokens — condensed numerals, changed-cell flash, row-accent rows.">
         <SelectRow label="Numeral style" value={g.numeral_style ?? "default"}
           options={[{ value: "default", label: "Default" }, { value: "tabular", label: "Tabular (condensed)" }]}
           onChange={(v) => setGridField("numeral_style", v)} />
         <SwitchRow label="Live update highlight" checked={bool(g.live_update_highlight ?? false)}
           onChange={(v) => setGridField("live_update_highlight", v)} />
-        <SwitchRow label="Team accent reactive" checked={bool(g.team_accent_reactive ?? false)}
-          onChange={(v) => setGridField("team_accent_reactive", v)} />
+        <SwitchRow label="Row accent reactive" checked={bool(g.row_accent_reactive ?? false)}
+          onChange={(v) => setGridField("row_accent_reactive", v)} />
       </CollapsibleSection>
 
       <CollapsibleSection storageKey="grid.assignment" title="Screen assignment"

@@ -30,7 +30,7 @@ def user(platform_db):
     return us.create_user(
         email=f"token-{uuid.uuid4().hex[:12]}@example.com",
         password="correct horse battery staple",
-        default_role="collector",
+        default_role="member",
     )
 
 
@@ -41,7 +41,7 @@ def other_user(platform_db):
     return us.create_user(
         email=f"other-{uuid.uuid4().hex[:12]}@example.com",
         password="correct horse battery staple",
-        default_role="collector",
+        default_role="member",
     )
 
 

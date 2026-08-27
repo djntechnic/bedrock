@@ -1,7 +1,7 @@
 /**
  * @file rankStyle.tsx
  * @module frontend/src/utils
- * @description Helpers for medal/podium rank styling and inline rank icons.
+ * @description Helpers for rank-highlight styling and inline rank icons.
  */
 import { Medal } from "lucide-react";
 import type { ReactNode } from "react";
