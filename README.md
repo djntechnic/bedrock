@@ -14,6 +14,20 @@ of it.
 | `packages/bedrock-api` | v0.2.0 — 56 modules, 63 endpoints, mail + storage providers, imports and mounts standalone |
 | `packages/bedrock-ui` | v0.2.0 — grid engine, Grid Editor, auth flows, shell, ships TS source |
 
+## Assembling an application
+
+```python
+from bedrock.core.app_factory import RouterMount, create_app
+
+app = create_app(title="My App", routers=[RouterMount(r, prefix="/api/v1/app") for r in ROUTERS])
+```
+
+`create_app()` mounts every platform router at its documented prefix, registers
+the platform's error handlers and rate limiter, and runs the database boot
+sequence in lifespan — with hooks for what a host has to do before migrations,
+after the database is healthy, and on the way down.
+[`docs/app_assembly.md`](docs/app_assembly.md).
+
 ## The contract
 
 bedrock holds no business domain. Where it needs application knowledge it

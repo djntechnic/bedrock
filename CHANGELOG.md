@@ -16,6 +16,30 @@ When drafting a release body, write the section as `## For consumers`, not
 nested form — the cascade workflow's extractor matches `^## For consumers`
 literally and fails the release's cascade job on a mismatch.
 
+## Unreleased
+
+### For consumers
+
+**Adopt**
+- `bedrock.core.app_factory.create_app()` — build the application with one
+  call instead of copying `tests/conftest.py::build_app()`. It mounts every
+  platform router, registers the error handlers and the rate limiter, mounts
+  `bedrock.routes.seo` unprefixed (`mount_seo=False` to opt out), and runs the
+  boot sequence in lifespan with `before_migrations` / `after_bootstrap` /
+  `on_shutdown` hooks. `PLATFORM_ROUTER_MOUNTS` is exported alongside it.
+  [`docs/app_assembly.md`](docs/app_assembly.md).
+
+**Delete**
+- Your hand-copied router mount map, your hand-written `DatabaseQueryError`
+  handler, and the lifespan that re-implements the boot sequence.
+
+**Why you want it:** the app-assembly contract lived in a *test fixture*. It
+could be reordered or narrowed by a change that stayed green in this repo's
+CI, and each consumer's copy drifted on its own — one of them was missing the
+seo mount, and both re-implemented an error handler the platform already
+exports. A consumer that skips `register_error_handlers()` turns a failed grid
+query into an empty grid rather than an error state, and nothing tells it.
+
 ## v0.6.2
 
 ### For consumers

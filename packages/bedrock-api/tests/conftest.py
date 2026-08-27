@@ -28,20 +28,15 @@ from fastapi.testclient import TestClient
 PACKAGE_ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PACKAGE_ROOT))
 
+from bedrock.core.app_factory import PLATFORM_ROUTER_MOUNTS, create_app  # noqa: E402
+
 BASELINE = PACKAGE_ROOT / "bedrock" / "schema" / "baseline.sql"
 SEED = PACKAGE_ROOT / "bedrock" / "schema" / "seed.sql"
 
 #: Routers the platform mounts, with the prefixes an application is expected
-#: to use. Kept here rather than in a fixture so a test can import it.
-ROUTER_MOUNTS = {
-    "health": "/api/v1",
-    "config": "/api/v1/config",
-    "auth": "/api/v1/auth",
-    "modules": "/api/v1/modules",
-    "user_preferences": "/api/v1/user-preferences",
-    "admin_platform": "/api/v1/admin",
-    "diagnostics": "/api/v1/diagnostics",
-}
+#: to use. Now owned by `bedrock.core.app_factory` — where a consumer can
+#: import it — and re-exported here so the ported suites read unchanged.
+ROUTER_MOUNTS = PLATFORM_ROUTER_MOUNTS
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -88,28 +83,13 @@ def build_app() -> FastAPI:
     Exposed as a plain function, not only a fixture, because the ported
     endpoint tests build their client at module scope. Constructing the app
     touches no database, so import order does not matter.
+
+    This is `create_app()` with the boot sequence off — deliberately, so that
+    the suite exercises the same assembly a consumer gets rather than a
+    hand-built lookalike. When this file assembled its own app, every drift
+    between it and a real application was invisible to this repo's CI.
     """
-    import importlib
-
-    from slowapi.errors import RateLimitExceeded
-    from slowapi.middleware import SlowAPIMiddleware
-
-    from bedrock.core.error_handlers import register_error_handlers
-    from bedrock.core.rate_limit import limiter, rate_limit_handler
-
-    application = FastAPI()
-    application.state.limiter = limiter
-    register_error_handlers(application)
-    # bedrock's own handler, not slowapi's default: it records the trip in the
-    # auth activity log and returns the platform's error envelope. Wiring the
-    # default here would quietly give the package a different 429 body than
-    # every app that follows the documented setup.
-    application.add_exception_handler(RateLimitExceeded, rate_limit_handler)
-    application.add_middleware(SlowAPIMiddleware)
-    for name, prefix in ROUTER_MOUNTS.items():
-        module = importlib.import_module(f"bedrock.routes.{name}")
-        application.include_router(module.router, prefix=prefix, tags=[name])
-    return application
+    return create_app(title="bedrock", version="0.0.0-test", bootstrap=False)
 
 
 @pytest.fixture(scope="session")
