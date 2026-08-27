@@ -247,27 +247,40 @@ def _split_sql_statements(sql: str) -> list[str]:
     intact. SQL escapes an embedded quote by doubling it (``''``); the simple
     toggle handles this correctly because the two adjacent quotes flip the
     in-string flag off then back on.
-    """
-    stripped_lines = [
-        line for line in sql.splitlines()
-        if not line.strip().startswith("--")
-    ]
-    stripped = "\n".join(stripped_lines)
 
+    Comments are stripped in the same quote-aware pass, not with a whole-line
+    pre-filter: a trailing comment after real SQL on the same line (e.g. an
+    inline column note) is common in these schema files, and a pre-filter that
+    only recognizes a comment starting at column zero leaves it in the stream.
+    Worse, an apostrophe inside such a comment (a contraction like "provider's")
+    flips the in-string flag for everything that follows, silently merging any
+    number of subsequent statements into one until another stray quote happens
+    to flip it back. Recognizing `--` unless already inside a string avoids
+    that entirely, because it is checked before the string-toggle branch runs.
+    """
     statements: list[str] = []
     current: list[str] = []
     in_string = False
-    for ch in stripped:
+    i = 0
+    n = len(sql)
+    while i < n:
+        ch = sql[i]
         if ch == "'":
             in_string = not in_string
             current.append(ch)
+            i += 1
+        elif ch == "-" and not in_string and i + 1 < n and sql[i + 1] == "-":
+            newline_at = sql.find("\n", i)
+            i = n if newline_at == -1 else newline_at
         elif ch == ";" and not in_string:
             stmt = "".join(current).strip()
             if stmt:
                 statements.append(stmt)
             current = []
+            i += 1
         else:
             current.append(ch)
+            i += 1
 
     tail = "".join(current).strip()
     if tail:
@@ -305,9 +318,31 @@ def _run_sql_file(path: str, conn) -> None:
         _execute_statement(statement, conn)
 
 
+def _bootstrap_baseline() -> None:
+    """Apply `baseline.sql` to a database that has never had it.
+
+    Guarded by the ledger, not by table introspection: a consumer may have
+    dropped a platform table by hand, and re-running the baseline over a
+    live database would be worse than the 500 it is meant to prevent.
+    """
+    migration_id = PLATFORM_MIGRATION_PREFIX + "baseline"
+    if _is_applied(migration_id):
+        return
+
+    baseline = os.path.join(
+        os.path.dirname(PLATFORM_MIGRATIONS_DIR), "baseline.sql")
+    if not os.path.exists(baseline):
+        logger.warning("No baseline.sql at %s; skipping bootstrap", baseline)
+        return
+
+    logger.info("Applying baseline schema (first boot)")
+    _apply_one(migration_id, lambda conn: _run_sql_file(baseline, conn))
+
+
 def apply_migrations() -> None:
     """Run all pending migrations through the versioned ledger. Idempotent."""
     _ensure_ledger_table()
+    _bootstrap_baseline()
 
     # 0. Platform migrations, before anything the application owns.
     for path in _discover_platform_sql_files():

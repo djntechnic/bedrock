@@ -148,3 +148,65 @@ class TestBaselineAndMigrationAgree:
     def test_a_baseline_database_needs_no_migration(self, platform_db):
         """The session database is built from the baseline alone."""
         assert T.AUTH_EMAIL_TOKENS in _tables(platform_db)
+
+
+class TestEmptyDatabaseBootstrap:
+    """A database with no tables at all — the path a fresh install takes.
+
+    The session `platform_db` fixture applies baseline.sql itself, so no
+    existing test reaches this state. That is why #20 shipped.
+    """
+
+    def test_apply_migrations_creates_the_platform_tables(self, tmp_path):
+        db_path = tmp_path / "empty.db"
+        sqlite3.connect(str(db_path)).close()  # exists, and is empty
+
+        from bedrock.core.database import db
+        original = (db.sqlite_path, db.is_postgres, db.db_url)
+        db.sqlite_path = str(db_path)
+        db.is_postgres = False
+        db.db_url = None
+        db.close_pool()
+        try:
+            migrations.apply_migrations()
+
+            conn = sqlite3.connect(str(db_path))
+            names = {
+                row[0] for row in conn.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table'"
+                )
+            }
+            conn.close()
+        finally:
+            db.sqlite_path, db.is_postgres, db.db_url = original
+            db.close_pool()
+
+        assert "app_grid_settings" in names
+        assert "auth_users" in names
+
+    def test_the_bootstrap_is_recorded_so_a_second_boot_is_a_noop(self, tmp_path):
+        db_path = tmp_path / "empty2.db"
+        sqlite3.connect(str(db_path)).close()
+
+        from bedrock.core.database import db
+        original = (db.sqlite_path, db.is_postgres, db.db_url)
+        db.sqlite_path = str(db_path)
+        db.is_postgres = False
+        db.db_url = None
+        db.close_pool()
+        try:
+            migrations.apply_migrations()
+            migrations.apply_migrations()  # must not raise
+
+            conn = sqlite3.connect(str(db_path))
+            applied = {
+                row[0] for row in conn.execute(
+                    "SELECT migration_id FROM sys_schema_migrations"
+                )
+            }
+            conn.close()
+        finally:
+            db.sqlite_path, db.is_postgres, db.db_url = original
+            db.close_pool()
+
+        assert "bedrock_baseline" in applied
