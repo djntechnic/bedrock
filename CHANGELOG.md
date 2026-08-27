@@ -1,5 +1,34 @@
 # Changelog
 
+Every release carries a `## For consumers` section listing what to adopt and
+what to delete. The cascade workflow copies that section verbatim into an
+issue in each consumer repo, so the adoption obligation travels with the tag
+rather than waiting to be noticed here.
+
+## v0.6.0 (unreleased)
+
+## For consumers
+
+**Adopt**
+- Nothing required. `apply_migrations()` now bootstraps `baseline.sql` on a
+  database that has never had it, which is automatic on next boot.
+
+**Delete**
+- Both `optimizeDeps.exclude` and `optimizeDeps.include` entries for
+  `@djntechnic/bedrock-ui` in your `vite.config.ts` — remove them together,
+  not one at a time. The package now ships built ESM, so its transitive
+  CommonJS dependencies no longer need crawling by Vite's dependency
+  optimizer. But dropping only `include` while `exclude` still lists the
+  package leaves it uncrawled regardless of what it ships, and you'll hit
+  `use-sync-external-store/shim/with-selector.js` failing to resolve — which
+  looks like a regression in this release, not the half-finished cleanup it
+  actually is. Removing neither is safe (if stale); removing only one is
+  worse than removing neither.
+
+**Verify**
+- Start your dev server in a browser after bumping. This is the only place
+  the packaging defect was ever visible.
+
 ## v0.5.0
 
 ### Fixed — four defects that no test could see
