@@ -6,6 +6,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import DashboardPinRow from "./DashboardPinRow";
+import {
+  __clearDashboardPinHost,
+  registerDashboardPinHost,
+} from "../../grids/dashboardPinRegistry";
 
 const setDashboardPin = vi.fn();
 let pinState = { dashboardPin: false, isReady: true };
@@ -23,9 +27,29 @@ beforeEach(() => {
   setDashboardPin.mockClear();
   pinState = { dashboardPin: false, isReady: true };
   seenGridId = "";
+  // The control is host-gated (#36); every test below is about how it behaves
+  // for a host that does render pinned grids. The one that isn't clears it.
+  registerDashboardPinHost();
 });
 
 describe("DashboardPinRow", () => {
+  it("renders nothing for a host with no dashboard", () => {
+    // The point of the gate: no switch at all, rather than a preference an
+    // operator can set and never see honoured anywhere.
+    __clearDashboardPinHost();
+    const { container } = render(<DashboardPinRow gridId="g1" />);
+    expect(container).toBeEmptyDOMElement();
+    expect(screen.queryByRole("switch")).toBeNull();
+  });
+
+  it("hides the whole section, not just the switch", () => {
+    // "My Preferences" with nothing under it reads as a panel that failed to
+    // load, so the CollapsibleSection goes with it.
+    __clearDashboardPinHost();
+    render(<DashboardPinRow gridId="g1" />);
+    expect(screen.queryByText("My Preferences")).toBeNull();
+  });
+
   it("reads the pin for the grid being edited", () => {
     render(<DashboardPinRow gridId="leaderboard_batting" />);
     expect(seenGridId).toBe("leaderboard_batting");

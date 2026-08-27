@@ -37,6 +37,8 @@ export * from "./components/EmptyTableRow";
 export { default as ColumnToggle } from "./components/ColumnToggle";
 export * from "./components/grids/cellRegistry";
 export * from "./components/grids/rowAccentRegistry";
+// Both pin affordances hide until a host declares it renders the pinned set.
+export * from "./components/grids/dashboardPinRegistry";
 export * from "./components/GridStatus";
 
 // ── Admin screens ────────────────────────────────────────────────────────────

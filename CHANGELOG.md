@@ -58,6 +58,20 @@ literally and fails the release's cascade job on a mismatch.
   `POSTGRES_PASSWORD` is no longer required to start the stack.
   [`docs/deployment.md`](docs/deployment.md).
 
+- **`registerDashboardPinHost()` — the pin controls are now hidden by default,
+  and this is how an app turns them back on (#36).** *Behaviour change:* the
+  Grid Editor's "Pin to Dashboard" switch and the grid header's pin button
+  both render only for an app that calls it at boot, from the same module that
+  calls `registerNavItems`. The platform has never shipped anything that reads
+  `dashboard_pin` back — rendering a dashboard means knowing which component
+  and which query stand behind a grid id, which is host knowledge — so until
+  now every consumer offered operators a toggle that changed nothing they
+  could see. If your app renders the pinned set, call it and nothing changes;
+  if it does not, do nothing and the controls disappear. The preference itself
+  is untouched: `user_grid_preferences.dashboard_pin`, its API and its
+  persistence all stay, so an app that builds a dashboard later finds every
+  pin its operators already set exactly where they left it.
+
 **Delete**
 - Your hand-copied router mount map, your hand-written `DatabaseQueryError`
   handler, and the lifespan that re-implements the boot sequence.

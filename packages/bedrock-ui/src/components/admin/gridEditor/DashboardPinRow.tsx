@@ -10,11 +10,15 @@
  * `GridSettingsPanel`'s `setGridField` flow would have written it to
  * `app_grid_settings`, where nothing reads it, and the pin would have appeared
  * to work until the admin reloaded.
+ *
+ * It renders at all only for a host that has called
+ * `registerDashboardPinHost()` — see `components/grids/dashboardPinRegistry`.
  */
 
 import { SwitchRow } from "./editorFields";
 import CollapsibleSection from "./CollapsibleSection";
 import { useUserGridConfig } from "../../../hooks/useUserGridConfig";
+import { hasDashboardPinHost } from "../../grids/dashboardPinRegistry";
 
 interface DashboardPinRowProps {
   /** The grid being edited. */
@@ -23,6 +27,12 @@ interface DashboardPinRowProps {
 
 export default function DashboardPinRow({ gridId }: DashboardPinRowProps) {
   const { dashboardPin, setDashboardPin, isReady } = useUserGridConfig(gridId);
+
+  // #36 — the whole section goes, not just the switch: "My Preferences" with
+  // nothing in it reads as a panel that failed to load. The preference itself
+  // is untouched, so an app that registers a host later finds its operators'
+  // pins exactly as they left them.
+  if (!hasDashboardPinHost()) return null;
 
   return (
     <CollapsibleSection storageKey="grid.personal" title="My Preferences">
