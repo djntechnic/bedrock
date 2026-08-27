@@ -27,11 +27,21 @@
  * Per-module output makes the runtime layout match the `.d.ts` layout
  * `build:types` already emits, so a subpath's types and its code sit side by
  * side.
+ *
+ * Every source module is its own entry, not just the barrel. `preserveModules`
+ * decides where a module's code *lands*; it does not decide what that module
+ * still exports. With `src/index.ts` as the sole entry, Rollup is free to drop
+ * any export the barrel's graph never reaches — and it did, silently, for
+ * `renderRankCell` and `useRowClickHandler`. The `.d.ts` kept declaring them,
+ * because `tsc` shakes nothing, so a consumer's type check passed and the
+ * import threw at runtime. Treating each module as an entry makes its public
+ * surface load-bearing, which is what the `"./*"` export map already claims.
  */
 import { defineConfig } from "vite";
-import { dirname, resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
+import { readdirSync } from "node:fs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
@@ -49,6 +59,33 @@ const peers = Object.keys(pkg.peerDependencies ?? {});
 const external = (id: string) =>
   peers.some((peer) => id === peer || id.startsWith(`${peer}/`));
 
+const src = resolve(here, "src");
+
+/**
+ * Every module a consumer may import — which, given `"./*"`, is every module
+ * under `src`. Tests and test-only helpers are excluded: they are not part of
+ * the published surface and pull `vitest` into the graph.
+ */
+function entries(dir: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const item of readdirSync(dir, { withFileTypes: true })) {
+    const full = resolve(dir, item.name);
+    if (item.isDirectory()) {
+      if (item.name === "test" || item.name === "__tests__") continue;
+      Object.assign(out, entries(full));
+      continue;
+    }
+    if (!/\.tsx?$/.test(item.name)) continue;
+    if (/\.(test|spec)\.tsx?$/.test(item.name)) continue;
+    if (item.name.endsWith(".d.ts")) continue;
+    // Keyed by the path the `.d.ts` for it lands on, so `entryFileNames`
+    // reproduces the source tree exactly.
+    const name = relative(src, full).replace(/\\/g, "/").replace(/\.tsx?$/, "");
+    out[name] = full;
+  }
+  return out;
+}
+
 export default defineConfig({
   build: {
     outDir: resolve(here, "dist"),
@@ -57,16 +94,19 @@ export default defineConfig({
     target: "es2022",
     minify: false,
     lib: {
-      entry: resolve(here, "src/index.ts"),
+      entry: entries(src),
       formats: ["es"],
-      fileName: () => "index.js",
+      // `entryFileNames` below is what actually names the files; this keeps
+      // Vite's own validation happy for a multi-entry lib build.
+      fileName: (_format, name) => `${name}.js`,
     },
     rollupOptions: {
       external,
       output: {
         // One `.js` per source module, at the same relative path the `.d.ts`
-        // for it lands on. `lib.fileName` still names the barrel: `src/index.ts`
-        // is the entry, so it emits as `dist/index.js`.
+        // for it lands on. Entry names are already source-relative, so
+        // `[name].js` reproduces the tree — `src/index.ts` emits as
+        // `dist/index.js`.
         preserveModules: true,
         preserveModulesRoot: resolve(here, "src"),
         entryFileNames: "[name].js",

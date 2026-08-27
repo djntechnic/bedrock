@@ -16,6 +16,32 @@ When drafting a release body, write the section as `## For consumers`, not
 nested form — the cascade workflow's extractor matches `^## For consumers`
 literally and fails the release's cascade job on a mismatch.
 
+## v0.6.2
+
+### For consumers
+
+**Adopt**
+- Re-point both pins at `v0.6.2`. Nothing else changes: no API moved, no
+  export was added or removed.
+
+**Delete**
+- Nothing.
+
+**Why you want it:** `v0.6.1` restored the per-module layout but not every
+module's exports. Only `src/index.ts` was a build entry, so Rollup dropped any
+export the barrel's graph never reached — `renderRankCell` and
+`useRowClickHandler` were both erased. `tsc` shakes nothing, so the `.d.ts`
+kept declaring them: a consumer's type check passed and the import threw
+`… is not a function` at runtime.
+
+### Fixed
+
+- **`v0.6.1` tree-shook exports its declarations still promised.** Every
+  source module is now its own build entry, which makes its public surface
+  load-bearing rather than reachable-from-the-barrel. `packaging.test.ts`
+  gained a check that diffs each emitted module's runtime exports against its
+  `.d.ts`, so the two can no longer drift apart unnoticed.
+
 ## v0.6.1
 
 ### For consumers
