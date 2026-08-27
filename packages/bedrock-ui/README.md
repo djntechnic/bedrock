@@ -4,20 +4,51 @@ The reusable React half of the bedrock platform: a config-driven grid engine,
 the admin Grid Editor, the app shell, auth wiring, and the design-token
 contract. Extracted from MLBTracker; MLBTracker is its first consumer.
 
-## Ships TypeScript source, not build output
+## Ships built ESM, not TypeScript source
 
-Deliberate. The components are Tailwind-based and token-driven, so a consumer
-compiles them with their own `tsconfig` and their own Tailwind build. That
-sidesteps CSS bundling, token baking, and maintaining a dual build entirely.
+`exports["."]` resolves to `dist/index.js` (plus `dist/index.d.ts` for types) —
+a Vite library build, not the `.ts`/`.tsx` sources. Consumers no longer
+transpile this package themselves, and it no longer needs
+`optimizeDeps.exclude`.
 
-Two consequences:
+Two things this still leaves you to do:
 
-- Tailwind must scan the package. In your `index.css`:
+- Tailwind must scan the package's *source* for class names, since styling is
+  token-driven and the Tailwind build itself still happens downstream. In your
+  `index.css`:
   ```css
   @source "../node_modules/@djntechnic/bedrock-ui/src";
   ```
-- Your bundler must transpile it. Vite does by default for linked/workspace
-  packages; for a git dependency you may need `optimizeDeps.exclude`.
+- `dist/index.d.ts` is the only in-repo type surface; deep `.tsx` imports for
+  application code were never supported (see Public API below), and are even
+  less useful now that `./*` resolves into `dist`, where only declarations
+  exist per-file.
+
+### `prepare` builds on every install
+
+The `prepare` script runs `build` and `build:types`, which need `vite` and
+`typescript` from `devDependencies`. That means `npm ci --omit=dev` against
+this repository fails — there's nothing that runs the build. This is
+deliberate, not an oversight: consumers install over `github:`/`git+https`,
+where there is no publish step and no prebuilt artifact to fetch. Without
+`prepare` running the build on install, a `git` dependency would ship an empty
+`dist` and nothing would work. If you need a `--omit=dev`-safe install of this
+package specifically, build it out-of-band first and vendor the result — don't
+try to make the install itself dev-dependency-free.
+
+### Removing `optimizeDeps.exclude` — drop `include` in the same change
+
+If your app's Vite config still has `@djntechnic/bedrock-ui` in
+`optimizeDeps.exclude` (left over from when this package shipped source),
+remove it. But remove any `optimizeDeps.include` entries that were added
+*because of* that exclude — `pino`, `use-sync-external-store/shim/with-selector.js`,
+and similar — in the **same** change. An excluded dependency is one Vite never
+crawls, so none of its transitive CommonJS dependencies get pre-bundled either;
+that's what the `include` entries were compensating for. Drop only `exclude`
+and keep `include` and the app looks like it regressed — it throws on the
+first uncrawled CJS peer just as before, because `exclude` alone is what causes
+that, independent of anything this package ships. The two lists come out
+together or not at all.
 
 ## Install
 
