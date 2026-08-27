@@ -32,6 +32,9 @@ dependencies = [
 
 [project.optional-dependencies]
 postgres = ["psycopg2-binary"]
+# boto3 backs bedrock.storage.s3 (R2, MinIO, S3). Optional because an app that
+# never selects that backend never talks to one, and boto3 is a large install.
+s3 = ["boto3"]
 # pyyaml parses deploy/docker-compose.yml in test_deployment.py — the
 # manifests are checked for the invariants that break a deploy silently.
 dev = ["pytest", "pytest-asyncio", "httpx", "pyyaml"]

@@ -47,7 +47,8 @@ def local_root(tmp_path):
     yield tmp_path
     db.set_config(storage_provider.STORAGE_PROVIDER_KEY, "")
     storage.reset_for_tests()
-    storage.register(storage_provider.LOCAL_PROVIDER, LocalStorageProvider)
+    storage.register(storage_provider.LOCAL_PROVIDER, storage_provider._local_object_store)
+    storage.register("s3", storage_provider._s3_provider)
     storage.register("cloudflare_images", storage_provider._cloudflare_provider)
 
 
@@ -107,8 +108,10 @@ def test_the_fallback_is_local_disk_not_a_no_op(platform_db):
         assert isinstance(storage.active(), LocalStorageProvider)
     finally:
         storage.reset_for_tests()
-        storage.register(storage_provider.LOCAL_PROVIDER, LocalStorageProvider)
-        storage.register("cloudflare_images", storage_provider._cloudflare_provider)
+        storage.register(storage_provider.LOCAL_PROVIDER, storage_provider._local_object_store)
+        storage.register("s3", storage_provider._s3_provider)
+        storage.register("s3", storage_provider._s3_provider)
+    storage.register("cloudflare_images", storage_provider._cloudflare_provider)
 
 
 # ── attach_media ─────────────────────────────────────────────────────────────

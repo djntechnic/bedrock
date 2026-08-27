@@ -29,9 +29,29 @@ literally and fails the release's cascade job on a mismatch.
   `on_shutdown` hooks. `PLATFORM_ROUTER_MOUNTS` is exported alongside it.
   [`docs/app_assembly.md`](docs/app_assembly.md).
 
+- `bedrock.storage.ObjectStore` — the storage capability widened for
+  applications that own their own key space: `put(key, ...)` with the caller's
+  key honoured verbatim, exhaustive `list_prefix()`, batched `delete_many()`,
+  and `verify_public()`. Reach it with `active_object_store()`, which raises
+  `ObjectStoreUnsupported` naming the backend rather than failing later.
+- `bedrock.storage.s3.S3StorageProvider`, registered as `s3` — one adapter for
+  Cloudflare R2, MinIO and S3. `pip install 'bedrock-api[s3]'`; configured from
+  `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_ENDPOINT_URL`,
+  `S3_REGION` and `S3_PUBLIC_BASE_URL`.
+  [`docs/object_storage.md`](docs/object_storage.md).
+
 **Delete**
 - Your hand-copied router mount map, your hand-written `DatabaseQueryError`
   handler, and the lifespan that re-implements the boot sequence.
+- Your own boto3 wrapper, if you have one. CollectIt's
+  `api/services/storage/r2.py` is what this was built from.
+
+**Nothing breaks.** `StorageProvider` is untouched and still three methods.
+`ObjectStore` is a second protocol that extends it, so `media_service` and
+every existing caller are unaware it exists, and `CloudflareImagesProvider` —
+which mints its own image ids and cannot accept a caller's key — needed no
+change. The `local` backend now resolves to `LocalObjectStore`, a subclass of
+`LocalStorageProvider` that implements both.
 
 **Why you want it:** the app-assembly contract lived in a *test fixture*. It
 could be reordered or narrowed by a change that stayed green in this repo's
