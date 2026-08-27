@@ -16,7 +16,7 @@ When drafting a release body, write the section as `## For consumers`, not
 nested form — the cascade workflow's extractor matches `^## For consumers`
 literally and fails the release's cascade job on a mismatch.
 
-## v0.6.0 (unreleased)
+## v0.6.0
 
 ### For consumers
 
