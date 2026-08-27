@@ -16,6 +16,19 @@ When drafting a release body, write the section as `## For consumers`, not
 nested form — the cascade workflow's extractor matches `^## For consumers`
 literally and fails the release's cascade job on a mismatch.
 
+## Unreleased
+
+### Fixed
+
+- **The cascade workflow was invalid YAML from its first commit and never
+  ran.** Its issue body was inlined into a `run: |` block scalar with a
+  horizontal rule at column 1, where a bare `---` is a document separator —
+  so GitHub refused the file and `v0.6.0` published without cascading to
+  either consumer. The body is now built with `printf` and passed as
+  `--body-file`, a `workflow_dispatch` input allows re-cascading an
+  already-published tag, and CI parses every workflow file so an unreadable
+  one fails a PR instead of a release.
+
 ## v0.6.0
 
 ### For consumers
