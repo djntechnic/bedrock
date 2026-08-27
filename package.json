@@ -5,18 +5,21 @@
   "type": "module",
   "license": "UNLICENSED",
   "exports": {
-    ".": "./packages/bedrock-ui/src/index.ts",
+    ".": {
+      "types": "./packages/bedrock-ui/dist/index.d.ts",
+      "import": "./packages/bedrock-ui/dist/index.js"
+    },
     "./styles/tokens.css": "./packages/bedrock-ui/src/styles/tokens.css",
-    "./*": [
-      "./packages/bedrock-ui/src/*.ts",
-      "./packages/bedrock-ui/src/*.tsx",
-      "./packages/bedrock-ui/src/*"
-    ]
+    "./*": "./packages/bedrock-ui/dist/*"
   },
   "files": [
+    "packages/bedrock-ui/dist",
     "packages/bedrock-ui/src"
   ],
   "scripts": {
+    "build": "vite build -c packages/bedrock-ui/vite.config.ts",
+    "build:types": "tsc -p packages/bedrock-ui/tsconfig.json --emitDeclarationOnly --declaration --outDir packages/bedrock-ui/dist",
+    "prepare": "npm run build && npm run build:types",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit -p packages/bedrock-ui/tsconfig.json"

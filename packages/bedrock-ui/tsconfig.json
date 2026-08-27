@@ -10,7 +10,11 @@
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "strict": true,
-    "noEmit": true,
+    // No `noEmit` here on purpose. `build:types` runs this project with
+    // `--emitDeclarationOnly`, and a config-level `noEmit: true` silently wins
+    // over that flag — tsc exits 0 and writes nothing. The `typecheck` script
+    // passes `--noEmit` on the command line instead, which is where it belongs.
+    // `allowImportingTsExtensions` stays legal under either of those two flags.
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "isolatedModules": true,
