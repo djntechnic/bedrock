@@ -47,6 +47,9 @@ export * from "./components/GridStatus";
 // rebuilt the same four panels over the same hooks. These are those screens,
 // on the `<GridEditor>` precedent: mount one in a route and supply nothing.
 export { default as LogViewer } from "./components/admin/LogViewer";
+export { default as SecurityLogViewer } from "./components/admin/SecurityLogViewer";
+export { PLATFORM_EVENT_TYPES } from "./components/admin/SecurityLogViewer";
+export type { SecurityLogViewerProps } from "./components/admin/SecurityLogViewer";
 export { default as ConfigEditor } from "./components/admin/ConfigEditor";
 export { groupByCategory, boolValue } from "./components/admin/ConfigEditor";
 export { default as UsersPanel } from "./components/admin/UsersPanel";
