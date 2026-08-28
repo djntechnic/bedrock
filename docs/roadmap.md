@@ -19,6 +19,14 @@ The "what each consumer gets" columns are the point of this table: they make
 a milestone that serves only one consumer visible as such, rather than
 leaving it to be inferred from the issue list.
 
+**M3 and M4 ship together as `v0.8.0`.** No `v0.7.0` tag exists. M3's last two
+items (#36, #40) and the whole of M4 landed in one branch, and both consumers
+adopt them in a single pin bump — cutting two tags off that branch would have
+sent each consumer two adoption issues for one piece of work. The `v0.7.0`
+column above is kept as written because this table records what a milestone
+was *for*, and that has not changed; where a tag is what you need, `v0.8.0` is
+the one that carries M3 and M4 both.
+
 ## M4 — which audit gates belong to the platform
 
 M4 promotes the consumers' audit gates that turn out to enforce properties of

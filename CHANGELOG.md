@@ -72,6 +72,18 @@ literally and fails the release's cascade job on a mismatch.
   persistence all stay, so an app that builds a dashboard later finds every
   pin its operators already set exactly where they left it.
 
+- **`<SecurityLogViewer>` — the admin screen for `useSecurityEvents` (#40).**
+  The hook and the `/security/events` route have shipped since `v0.2.1` with
+  no counterpart screen, so the one consumer that turned on auth auditing
+  built its own: 128 lines of paginated, filtered table over a platform hook,
+  in an app repo, shadowing no export and therefore invisible to any §S1
+  audit. This is the same gap `<LogViewer>` closed for `useLogs` in #19, and
+  it closes the same way — mount it in an admin route and supply nothing.
+  `PLATFORM_EVENT_TYPES` is exported beside it: the 23 event types bedrock's
+  own auth code writes. App-specific event types go in the `eventTypes` prop
+  rather than into that list, and a test fails if a name in it is not in
+  `auth_activity_service.EVENT_TYPES`.
+
 - **Four audit gates now ship with the platform, runnable as
   `python -m bedrock.tools.<name>`.** They enforce properties of *consuming
   bedrock*, so each consumer was maintaining — and drifting — its own copy of
@@ -103,6 +115,11 @@ literally and fails the release's cascade job on a mismatch.
   `python -m bedrock.tools.audit_<name>` plus whatever flags your layout needs.
   CollectIt's `audit_s1_duplicates.py` and `audit_design_tokens.py` and
   MLBTracker's `audit_api_docs.py` are what these were built from.
+- Any hand-built viewer over `useSecurityEvents`. MLBTracker's
+  `frontend/src/components/admin/SecurityLogTab.tsx` is what
+  `<SecurityLogViewer>` replaces; it collapses to an import. Its event-type
+  list included types the platform does not write — pass those as
+  `eventTypes` rather than losing them.
 - Your hand-copied router mount map, your hand-written `DatabaseQueryError`
   handler, and the lifespan that re-implements the boot sequence.
 - Your own boto3 wrapper, if you have one. CollectIt's
