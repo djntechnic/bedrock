@@ -99,4 +99,19 @@ export const API_ROUTES = {
     registry: () => "/api/v1/modules/registry",
     forUser: (userId: number | string) => `/api/v1/modules/users/${userId}`,
   },
+
+  // ── Security ─────────────────────────────────────────────────────────────
+  security: {
+    myPermissions: () => "/api/v1/security/my-permissions",
+    roles: () => "/api/v1/security/roles",
+    role: (roleId: number | string) => `/api/v1/security/roles/${roleId}`,
+    matrix: () => "/api/v1/security/matrix",
+    userProfile: (userId: number | string) => `/api/v1/security/users/${userId}/profile`,
+    userOverrides: (userId: number | string) => `/api/v1/security/users/${userId}/overrides`,
+  },
+
+  // ── Navigation ───────────────────────────────────────────────────────────
+  navigation: {
+    settings: () => "/api/v1/navigation/settings",
+  },
 } as const;

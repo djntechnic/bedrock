@@ -29,6 +29,8 @@ import {
 } from "./ui/tooltip";
 import { useAppSettings } from "../hooks/useAppSettings";
 import { useModules } from "../hooks/useModules";
+import { useSecurity } from "../hooks/useSecurity";
+import { useNavSettings } from "../hooks/useNavSettings";
 import { useAuth } from "../hooks/useAuth";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 import { useSidebarStore } from "../store/sidebarStore";
@@ -85,6 +87,8 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
   const { system } = useAppSettings();
   const { hasModule } = useModules();
+  const { navItems } = useNavSettings();
+  const security = useSecurity();
   const { user, isAdmin, hasRole, logout } = useAuth();
 
   const isMobile = useMediaQuery("(max-width: 1023px)");
@@ -137,7 +141,7 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
 
   // Auto-open the section when navigating to it
   useEffect(() => {
-    for (const item of getNavItems()) {
+    for (const item of navItems) {
       if ((item.children || item.groups) && isParentActive(item)) {
         setOpenSections((prev) => {
           if (prev.has(item.to)) return prev;
@@ -148,7 +152,7 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname]);
+  }, [location.pathname, navItems]);
 
   function toggleSection(path: string) {
     setOpenSections((prev) => {
@@ -211,11 +215,9 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-3 space-y-0.5 px-2">
-        {getNavItems().map((item) => {
-          // Role and legacy admin-module gating both hide the entry outright.
-          // Module gating below only *disables* it, which is the difference
-          // between "not for you" and "not switched on".
-          if (!isNavItemVisible(item, { user, isAdmin, hasRole })) {
+        {navItems.map((item) => {
+          // Dynamic security gating completely hides unauthorized items
+          if (!isNavItemVisible(item, { user, isAdmin, hasRole }, security)) {
             return null;
           }
           const active = isParentActive(item);

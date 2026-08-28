@@ -92,12 +92,15 @@ export * from "./components/navRegistry";
 export * from "./components/searchSourceRegistry";
 export * from "./lib/commandRoutes";
 
-// ── Auth ─────────────────────────────────────────────────────────────────────
+// ── Auth & Security ──────────────────────────────────────────────────────────
 export { default as ProtectedRoute } from "./components/ProtectedRoute";
+export type { ProtectedRouteProps } from "./components/ProtectedRoute";
 export { default as ModuleDisabled } from "./components/ModuleDisabled";
 export * from "./context/AuthContext";
 export * from "./hooks/useAuth";
 export * from "./hooks/useModules";
+export * from "./hooks/useSecurity";
+export * from "./hooks/useNavSettings";
 // Mail-driven flows (F1). The paths these mount at are fixed by the platform —
 // the backend builds the emailed links from the same constants — so an app
 // wires them to `AUTH_FLOW_PATHS` rather than choosing its own.

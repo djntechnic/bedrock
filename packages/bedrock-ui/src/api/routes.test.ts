@@ -42,6 +42,8 @@ describe("the map holds platform routes only", () => {
       "auth",
       "diagnostics",
       "modules",
+      "navigation",
+      "security",
       "userPreferences",
     ]);
   });
