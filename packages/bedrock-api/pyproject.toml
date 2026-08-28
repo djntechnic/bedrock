@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bedrock-api"
-version = "0.8.1"
+version = "0.8.2"
 description = "Reusable FastAPI application platform: grid config, auth, app config, schema catalog"
 requires-python = ">=3.11"
 dependencies = [

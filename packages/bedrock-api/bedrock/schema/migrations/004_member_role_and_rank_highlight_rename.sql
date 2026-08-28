@@ -16,6 +16,14 @@
 -- rather than the create/copy/drop/rename dance — no column type, default,
 -- or constraint changes, only names.
 
+-- Guarded because a consumer need not reach `auth_roles` by the platform's
+-- route. MLBTracker predates the extraction: its own baseline declares the
+-- role table as `roles` and its app migration 038 renames it. Platform
+-- migrations run first, so this file sees `roles` there and must no-op rather
+-- than abort the whole chain. That app renames its own slug after 038; the
+-- two ALTERs below need no directive — the runner already no-ops a RENAME
+-- COLUMN whose table is absent or whose rename is already in effect.
+-- @requires-table: auth_roles
 UPDATE auth_roles
    SET slug = 'member', label = 'Member'
  WHERE slug = 'collector';

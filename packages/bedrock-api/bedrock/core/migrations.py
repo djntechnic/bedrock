@@ -16,7 +16,12 @@ Desc:    Versioned schema migration runner. On startup it ensures a
 
          Platform migrations run first because an application's migration may
          reference a platform table and never the reverse — bedrock has no
-         knowledge of an application's schema to depend on.
+         knowledge of an application's schema to depend on. That ordering
+         assumes a consumer reaches a platform table by the platform's own
+         route, which not every consumer does; a `.sql` statement preceded by
+         a `-- @requires-table: <name>` line comment is skipped when the named
+         table is absent, so a platform migration can name a table an older
+         app produces later in its own chain.
 
          Each migration runs inside a single transaction that also writes its
          ledger row, so "applied" and "recorded" are one atomic fact: a
@@ -238,8 +243,56 @@ def _execute_statement(stmt: str, conn) -> None:
     db.execute_conn(conn, stmt)
 
 
+# The opt-in guard directive. `ALTER TABLE … ADD/RENAME COLUMN` carry their own
+# guards above, because their shape says what they target; every other
+# statement has to say so itself.
+#
+# A platform migration cannot assume a consumer reaches a platform table by the
+# platform's route. MLBTracker predates the extraction: its own baseline still
+# declares the platform block under pre-rename names and its app migration 038
+# renames them to `auth_*`. Platform migrations run first, on purpose, so a
+# platform migration naming `auth_roles` runs on that database while the table
+# is still called `roles` — and a bare `UPDATE auth_roles` aborts the file, the
+# transaction, and every migration after it.
+#
+# Guarding by shape alone was rejected: silently skipping any statement whose
+# table is absent would hide a genuine schema error in an app migration. The
+# directive is explicit, appears in the .sql file next to the statement it
+# protects, and does nothing unless an author asks for it.
+_REQUIRES_TABLE_RE = re.compile(r"@requires-table:\s*(\w+)", re.IGNORECASE)
+
+
+def _table_exists(table: str, conn) -> bool:
+    """Return True if `table` exists on this migration's own connection.
+
+    Probed with `PRAGMA table_info`, the same idiom `_execute_statement` uses,
+    and on `conn` for the same reason: DDL committed nowhere yet is invisible
+    to any other connection, so a table this file created three statements ago
+    would read as absent.
+    """
+    return not db.query_conn(conn, f"PRAGMA table_info({table})").empty
+
+
 def _split_sql_statements(sql: str) -> list[str]:
-    """Split a SQL script into individual non-empty statements on ';', stripping comments.
+    """Split a SQL script into statements, discarding any guard directives.
+
+    The parser proper is `_split_guarded_statements`; this is the view of it
+    for callers that only want the SQL.
+    """
+    return [stmt for _, stmt in _split_guarded_statements(sql)]
+
+
+def _split_guarded_statements(sql: str) -> list[tuple[tuple[str, ...], str]]:
+    """Split a SQL script into `(required_tables, statement)` pairs on ';'.
+
+    Comments are stripped, with one exception: a line comment containing
+    ``@requires-table: <name>`` records a guard for the next statement to be
+    emitted, and any number of them accumulate. `_run_sql_file` skips a
+    statement whose guards are not all satisfied. Put the directive on its own
+    line directly above the statement it protects — a *trailing* comment sits
+    before the next statement's terminator and would attach to that one.
+    Statements with no directive come back with an empty tuple, which is every
+    statement in every file that does not use the feature.
 
     The split is single-quote aware: a ';' inside a string literal does not
     terminate a statement, so descriptions or values containing semicolons
@@ -267,8 +320,9 @@ def _split_sql_statements(sql: str) -> list[str]:
     dollar-quoting (`$$ ... $$`). Every file this parser has ever run against
     is bedrock's own SQLite schema and migration content, which uses neither.
     """
-    statements: list[str] = []
+    statements: list[tuple[tuple[str, ...], str]] = []
     current: list[str] = []
+    pending: list[str] = []
     in_string = False
     i = 0
     n = len(sql)
@@ -280,14 +334,17 @@ def _split_sql_statements(sql: str) -> list[str]:
             i += 1
         elif not in_string and ch == "-" and i + 1 < n and sql[i + 1] == "-":
             newline_at = sql.find("\n", i)
-            i = n if newline_at == -1 else newline_at
+            end = n if newline_at == -1 else newline_at
+            pending.extend(_REQUIRES_TABLE_RE.findall(sql[i:end]))
+            i = end
         elif not in_string and ch == "/" and i + 1 < n and sql[i + 1] == "*":
             end_at = sql.find("*/", i + 2)
             i = n if end_at == -1 else end_at + 2
         elif ch == ";" and not in_string:
             stmt = "".join(current).strip()
             if stmt:
-                statements.append(stmt)
+                statements.append((tuple(pending), stmt))
+                pending = []
             current = []
             i += 1
         else:
@@ -296,7 +353,7 @@ def _split_sql_statements(sql: str) -> list[str]:
 
     tail = "".join(current).strip()
     if tail:
-        statements.append(tail)
+        statements.append((tuple(pending), tail))
     return statements
 
 
@@ -323,10 +380,23 @@ def _discover_platform_sql_files() -> list[str]:
 
 
 def _run_sql_file(path: str, conn) -> None:
-    """Apply every statement in one .sql migration file on one connection."""
+    """Apply every statement in one .sql migration file on one connection.
+
+    A statement carrying `@requires-table:` directives is skipped whole when
+    any named table is absent. The file still records as applied: the guard
+    says this database was never in scope for that statement, not that the
+    migration is still pending.
+    """
     with open(path, "r", encoding="utf-8") as fh:
         script = fh.read()
-    for statement in _split_sql_statements(script):
+    for requires, statement in _split_guarded_statements(script):
+        missing = [t for t in requires if not _table_exists(t, conn)]
+        if missing:
+            logger.info(
+                "Skipping guarded statement in %s; absent: %s",
+                os.path.basename(path), ", ".join(missing),
+            )
+            continue
         _execute_statement(statement, conn)
 
 
