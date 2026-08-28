@@ -107,7 +107,8 @@ class TestSqlitePath:
         _, config = _reload(monkeypatch, str(tmp_path),
                             SQLITE_DB_PATH="data/mlbtracker.db")
         assert config.config.SQLITE_DB_PATH == \
-            os.path.join(str(tmp_path), "data", "mlbtracker.db")
+            os.path.join(str(tmp_path), "data/mlbtracker.db")
+
 
     def test_data_dir_override_moves_the_default(self, monkeypatch, tmp_path):
         _, config = _reload(monkeypatch, str(tmp_path),
