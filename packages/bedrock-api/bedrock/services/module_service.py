@@ -83,7 +83,7 @@ def get_user_modules(user_id: int, *, database: DatabaseManager | None = None) -
         f"""
         SELECT DISTINCT m.slug
           FROM {T.AUTH_USER_ROLES} ur
-          JOIN {T.AUTH_ROLE_MODULES} rm ON rm.role_id = ur.role_id
+          JOIN {T.AUTH_ROLE_MODULES} rm ON rm.role_id = ur.role_id AND rm.can_view = 1
           JOIN {T.AUTH_MODULES} m       ON m.module_id = rm.module_id
          WHERE ur.user_id = %s
         """,
@@ -94,7 +94,7 @@ def get_user_modules(user_id: int, *, database: DatabaseManager | None = None) -
     # Overrides
     df_over = d.query(
         f"""
-        SELECT m.slug, umo.granted
+        SELECT m.slug, umo.can_view
           FROM {T.AUTH_USER_MODULE_OVERRIDES} umo
           JOIN {T.AUTH_MODULES} m ON m.module_id = umo.module_id
          WHERE umo.user_id = %s
@@ -103,9 +103,9 @@ def get_user_modules(user_id: int, *, database: DatabaseManager | None = None) -
     )
     if not df_over.empty:
         for row in df_over.itertuples(index=False):
-            if int(row.granted) == 1:
+            if row.can_view == 1:
                 slugs.add(row.slug)
-            else:
+            elif row.can_view == 0:
                 slugs.discard(row.slug)
     return slugs
 
@@ -117,7 +117,7 @@ def get_anon_modules(*, database: DatabaseManager | None = None) -> set[str]:
         f"""
         SELECT DISTINCT m.slug
           FROM {T.AUTH_ROLES} r
-          JOIN {T.AUTH_ROLE_MODULES} rm ON rm.role_id = r.role_id
+          JOIN {T.AUTH_ROLE_MODULES} rm ON rm.role_id = r.role_id AND rm.can_view = 1
           JOIN {T.AUTH_MODULES} m       ON m.module_id = rm.module_id
          WHERE r.slug = 'anon'
         """
@@ -135,8 +135,8 @@ def set_user_module_override(
 ) -> None:
     """Create, flip, or clear a per-user override for a module.
 
-    granted=True  → force enable  (INSERT/UPDATE granted=1)
-    granted=False → force disable (INSERT/UPDATE granted=0)
+    granted=True  → force enable  (INSERT/UPDATE can_view=1)
+    granted=False → force disable (INSERT/UPDATE can_view=0)
     granted=None  → clear override (DELETE row so role defaults apply again)
     """
     d = database or db
@@ -158,16 +158,18 @@ def set_user_module_override(
         )
         return
 
+    actor = str(actor_user_id) if actor_user_id is not None else "System"
     d.execute(
         f"""
-        INSERT INTO {T.AUTH_USER_MODULE_OVERRIDES} (user_id, module_id, granted, granted_by, granted_at)
-        VALUES (%s, %s, %s, %s, datetime('now'))
+        INSERT INTO {T.AUTH_USER_MODULE_OVERRIDES}
+            (user_id, module_id, can_view, created_at, created_by, modified_at, modified_by)
+        VALUES (%s, %s, %s, datetime('now'), %s, datetime('now'), %s)
         ON CONFLICT(user_id, module_id) DO UPDATE SET
-            granted    = excluded.granted,
-            granted_by = excluded.granted_by,
-            granted_at = excluded.granted_at
+            can_view    = excluded.can_view,
+            modified_at = excluded.modified_at,
+            modified_by = excluded.modified_by
         """,
-        (user_id, mid, 1 if granted else 0, actor_user_id),
+        (user_id, mid, 1 if granted else 0, actor, actor),
     )
     logger.info(
         "Module override set user={} module={} granted={} by={}",

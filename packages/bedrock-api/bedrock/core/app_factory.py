@@ -67,6 +67,8 @@ PLATFORM_ROUTER_MOUNTS: dict[str, str] = {
     "modules": "/api/v1/modules",
     "user_preferences": "/api/v1/user-preferences",
     "admin_platform": "/api/v1/admin",
+    "security": "/api/v1/security",
+    "navigation": "/api/v1/navigation",
     "diagnostics": "/api/v1/diagnostics",
 }
 
