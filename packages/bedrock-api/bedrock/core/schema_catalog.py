@@ -24,6 +24,7 @@ class Tables:
     APP_GRID_COLUMN_SETTINGS_USER: Final = "app_grid_column_settings_user"
     APP_GRID_SETTINGS: Final = "app_grid_settings"
     APP_GRID_SETTINGS_USER: Final = "app_grid_settings_user"
+    APP_NAV_ITEM_SETTINGS: Final = "app_nav_item_settings"
     APP_UI_QUERY_CONFIG: Final = "app_ui_query_config"
     AUTH_ACTIVITY_LOG: Final = "auth_activity_log"
     AUTH_EMAIL_TOKENS: Final = "auth_email_tokens"
