@@ -59,6 +59,18 @@ Do **not** add `--legacy-peer-deps` to the install. The package ships source and
 declares only peers; that flag makes npm skip the peer install entirely, and
 both the type check and the tests then pass against modules that are not there.
 
+Then check the two versions actually moved to the tag you are about to cut —
+this is what step 1 above is for, and CI enforces it on the tag push, but
+catching it here means a mismatch never gets as far as the tag at all:
+
+```bash
+python -m bedrock.tools.audit_release_version v0.6.0
+```
+
+A non-zero exit names which manifest (`package.json`,
+`packages/bedrock-api/pyproject.toml`) still disagrees, and with what value —
+go fix step 1, do not proceed to tagging.
+
 ## 4. Merge, then tag the merge commit
 
 The tag must point at a commit on `master`, after the release PR merges — never

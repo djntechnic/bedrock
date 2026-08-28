@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [master]
+    tags: ["v*"]
   pull_request:
 
 jobs:
@@ -85,3 +86,24 @@ jobs:
         # After the tests, so a genuine failure is reported rather than a
         # missing matcher type on a test file.
         run: npm run typecheck
+
+  release-version-parity:
+    name: release version parity
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        working-directory: packages/bedrock-api
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      # Blocks a tag whose package.json and pyproject.toml versions do not
+      # both equal the tag being cut - see bedrock#56. github.ref_name is the
+      # tag itself on a tag push (e.g. "v0.8.1"), which is exactly what the
+      # gate compares the manifests against.
+      - name: Check both manifests match the tag
+        run: python -m bedrock.tools.audit_release_version "${{ github.ref_name }}"
