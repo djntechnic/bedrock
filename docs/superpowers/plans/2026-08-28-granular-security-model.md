@@ -28,6 +28,7 @@ Database-driven role-module capability matrix with tri-state per-user overrides 
 
 | Subsystem / Task Phase | Recommended Model | Thinking Level | Rationale |
 | :--- | :--- | :--- | :--- |
+| **Phase 0: Module/Screen Catalog Deliverable** | Claude 3.7 Sonnet / Gemini 3.7 Flash | High | Detailed cross-repo functional mapping & taxonomy |
 | **Phase 1: Database & Migration 005** | Gemini 3.7 Flash | Medium | Precision SQL DDL, baseline updates, catalog synchronization |
 | **Phase 2: Backend Security Engine & APIs** | Claude 3.7 Sonnet / Opus 4.6 | High | Multi-role bitwise resolution, tri-state overrides, route dependencies |
 | **Phase 3: Frontend Primitives & Gating** | Claude 3.7 Sonnet / Gemini 3.7 Flash | High | TanStack caching, React tree pruning, route interception |
@@ -42,15 +43,46 @@ Database-driven role-module capability matrix with tri-state per-user overrides 
 
 ```mermaid
 graph TD
-    T1[Phase 1: Schema & Migration 005] --> T2[Phase 2: Backend Security & Nav API]
+    T0[Phase 0: Module & Screen Catalog Deliverable] --> Gate0{HARD CHECKPOINT 0: Catalog Sign-Off}
+    Gate0 --> T1[Phase 1: Schema & Migration 005]
+    T1 --> T2[Phase 2: Backend Security & Nav API]
     T2 --> T3[Phase 3: Frontend Hooks & Nav Gating]
     T3 --> T4[Phase 4: Role Matrix Panel UI]
-    T4 --> Gate{HARD CHECKPOINT: UI Review}
-    Gate --> T5[Phase 5: Admin UI Hub Panels]
+    T4 --> Gate1{HARD CHECKPOINT 1: First UI Page Review}
+    Gate1 --> T5[Phase 5: Admin UI Hub Panels]
     T5 --> T6[Phase 6: MLBTracker Rework]
     T6 --> T7[Phase 7: CollectIt Rework]
     T7 --> T8[Phase 8: Full Suite & Final PR]
 ```
+
+---
+
+### Phase 0: Module & Screen Catalog Specification Deliverable
+
+#### Task 0.1: Detailed Cross-Repository Module & Screen Catalog
+**Files:**
+- Create: `docs/superpowers/specs/module-screen-catalog.md`
+
+**Interfaces:**
+- Produces: Exhaustive mapping of all modules, screens, URL paths, action requirements (`view` | `update` | `delete` | `execute`), API endpoint paths, and default role grants across `Bedrock`, `MLBTracker`, and `CollectIt`.
+
+- [ ] **Step 1: Perform audit of all routes across Bedrock, MLBTracker, and CollectIt**
+Scan FastAPI routers and React route trees to ensure zero orphaned pages or endpoints.
+
+- [ ] **Step 2: Generate the detailed `module-screen-catalog.md` document**
+Document each module's slug, display name, description, exact route paths, action requirements, API endpoint bindings, and baseline role access.
+
+- [ ] **Step 3: Commit catalog document**
+```bash
+git add docs/superpowers/specs/module-screen-catalog.md
+git commit -m "docs(security): add comprehensive module and screen catalog deliverable"
+```
+
+---
+
+### 🛑 HARD CHECKPOINT 0: Human Partner Approval Gate of Module & Screen Catalog
+> [!IMPORTANT]
+> **Approval Gate**: Stop execution here. Present the comprehensive `module-screen-catalog.md` deliverable to the human partner for review. Implementation of database migrations (Phase 1) and downstream consumer rework (Phases 6 & 7) will only proceed upon explicit sign-off of this catalog.
 
 ---
 
@@ -65,7 +97,7 @@ graph TD
 - Test: `packages/bedrock-api/tests/test_platform_migrations.py`
 
 **Interfaces:**
-- Consumes: Existing SQLite baseline schema.
+- Consumes: Approved catalog from Phase 0.
 - Produces: `T.APP_NAV_ITEM_SETTINGS`, updated `T.AUTH_ROLE_MODULES`, updated `T.AUTH_USER_MODULE_OVERRIDES`, updated `T.AUTH_ROLES`, updated `T.AUTH_MODULES`, updated `T.AUTH_USER_ROLES` with full audit columns (`created_at`, `created_by`, `modified_at`, `modified_by`).
 
 - [ ] **Step 1: Write failing test for Migration 005 & Schema Catalog**
@@ -308,7 +340,7 @@ git commit -m "feat(ui): add RoleMatrixPanel and AddRoleModal in Admin UI"
 
 ---
 
-### 🛑 HARD CHECKPOINT: Human Partner Review Gate of First UI Page
+### 🛑 HARD CHECKPOINT 1: Human Partner Review Gate of First UI Page
 > [!IMPORTANT]
 > **Approval Gate**: Stop here and present the completed `RoleMatrixPanel.tsx` and its interactive capabilities to the user for direct review and feedback before proceeding to the remaining admin screens.
 
