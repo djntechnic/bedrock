@@ -19,18 +19,20 @@ This specification establishes a robust, granular authorization engine, dynamic 
    - Per-user overrides in `auth_user_module_overrides` supporting `NULL` (inherit from role), `1` (force grant), and `0` (force deny) per action flag.
 3. **Dynamic Role Support**:
    - System allows creation of arbitrary roles (e.g. `collector`, `analyst`, `seller`) purely through database configuration with zero Python code changes required.
-4. **Dynamic Navigation & Screen-Level Protection**:
+4. **Standardized Audit Columns**:
+   - All database tables in-scope for this task include standard audit tracking columns: `created_at`, `created_by`, `modified_at`, and `modified_by`.
+5. **Dynamic Navigation & Screen-Level Protection**:
    - Navigation tree supports dynamic administrative customization (custom ordering, label overrides, icon overrides, tooltip overrides) stored in `app_nav_item_settings`.
    - Security layers strictly on top: items for unauthorized pages are completely hidden from navigation menus and command palettes when a user lacks the required permission.
    - Unauthorized direct URL navigation renders an in-place `<PermissionDenied>` visual guard without leaking data.
-5. **Full Admin Security & Navigation Management Hub**:
+6. **Full Admin Security & Navigation Management Hub**:
    - Interactive Role $\times$ Module Permissions Matrix editor.
    - User account role assignments and granular user overrides drawer.
    - Dynamic Menu Navigation Editor panel.
    - Module registry manager.
    - Read-only **Compiled User Access Profile Inspector** showing the complete computed permission tree per user.
    - Security activity log with IP address tracking for both authenticated and anonymous attempts.
-6. **Module & Screen Catalog Deliverable Gate**:
+7. **Module & Screen Catalog Deliverable Gate**:
    - Includes a preliminary first-pass catalog of all modules, screens, and functions for Bedrock, MLBTracker, and CollectIt, requiring explicit human partner approval before downstream implementation.
 
 ---
@@ -52,7 +54,7 @@ erDiagram
 
     app_nav_item_settings {
         int nav_setting_id PK
-        string nav_key UK "unique route path or identifier"
+        string nav_key UK "unique route path e.g. /inventory"
         string parent_key "null for top-level"
         int sort_order
         string label_override
@@ -60,7 +62,9 @@ erDiagram
         string tooltip_override
         int is_hidden_override "1 = force hidden"
         string created_at
+        string created_by
         string modified_at
+        string modified_by
     }
 
     auth_roles {
@@ -69,6 +73,9 @@ erDiagram
         string label
         string description
         string created_at
+        string created_by
+        string modified_at
+        string modified_by
     }
 
     auth_modules {
@@ -79,6 +86,9 @@ erDiagram
         int sort_order
         int is_core "1 = platform protected"
         string created_at
+        string created_by
+        string modified_at
+        string modified_by
     }
 
     auth_role_modules {
@@ -89,6 +99,9 @@ erDiagram
         int can_delete "1 or 0 (default 0)"
         int can_execute "1 or 0 (default 0)"
         string created_at
+        string created_by
+        string modified_at
+        string modified_by
     }
 
     auth_user_module_overrides {
@@ -98,8 +111,19 @@ erDiagram
         int can_update "NULL=inherit, 1=grant, 0=deny"
         int can_delete "NULL=inherit, 1=grant, 0=deny"
         int can_execute "NULL=inherit, 1=grant, 0=deny"
-        int granted_by FK "admin user_id"
-        string granted_at
+        string created_at
+        string created_by
+        string modified_at
+        string modified_by
+    }
+
+    auth_user_roles {
+        int user_id PK, FK
+        int role_id PK, FK
+        string created_at
+        string created_by
+        string modified_at
+        string modified_by
     }
 ```
 
@@ -108,10 +132,18 @@ erDiagram
 ```sql
 -- Migration 005_granular_security_and_nav_model.sql
 
--- 1. Ensure auth_roles supports description column
+-- 1. Alter auth_roles with audit columns & description
 ALTER TABLE auth_roles ADD COLUMN description TEXT;
+ALTER TABLE auth_roles ADD COLUMN created_by TEXT NOT NULL DEFAULT 'System';
+ALTER TABLE auth_roles ADD COLUMN modified_at TEXT NOT NULL DEFAULT (datetime('now'));
+ALTER TABLE auth_roles ADD COLUMN modified_by TEXT NOT NULL DEFAULT 'System';
 
--- 2. Granular capability matrix for roles
+-- 2. Alter auth_modules with audit columns
+ALTER TABLE auth_modules ADD COLUMN created_by TEXT NOT NULL DEFAULT 'System';
+ALTER TABLE auth_modules ADD COLUMN modified_at TEXT NOT NULL DEFAULT (datetime('now'));
+ALTER TABLE auth_modules ADD COLUMN modified_by TEXT NOT NULL DEFAULT 'System';
+
+-- 3. Granular capability matrix for roles with audit columns
 CREATE TABLE IF NOT EXISTS auth_role_modules_new (
     role_id     INTEGER NOT NULL REFERENCES auth_roles(role_id) ON DELETE CASCADE,
     module_id   INTEGER NOT NULL REFERENCES auth_modules(module_id) ON DELETE CASCADE,
@@ -120,16 +152,19 @@ CREATE TABLE IF NOT EXISTS auth_role_modules_new (
     can_delete  INTEGER NOT NULL DEFAULT 0,
     can_execute INTEGER NOT NULL DEFAULT 0,
     created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+    created_by  TEXT    NOT NULL DEFAULT 'System',
+    modified_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    modified_by TEXT    NOT NULL DEFAULT 'System',
     PRIMARY KEY (role_id, module_id)
 );
 
-INSERT INTO auth_role_modules_new (role_id, module_id, can_view, can_update, can_delete, can_execute)
-SELECT role_id, module_id, 1, 0, 0, 0 FROM auth_role_modules;
+INSERT INTO auth_role_modules_new (role_id, module_id, can_view, can_update, can_delete, can_execute, created_at, created_by, modified_at, modified_by)
+SELECT role_id, module_id, 1, 0, 0, 0, datetime('now'), 'System', datetime('now'), 'System' FROM auth_role_modules;
 
 DROP TABLE auth_role_modules;
 ALTER TABLE auth_role_modules_new RENAME TO auth_role_modules;
 
--- 3. Granular tri-state user overrides
+-- 4. Granular tri-state user overrides with audit columns
 CREATE TABLE IF NOT EXISTS auth_user_module_overrides_new (
     user_id     INTEGER NOT NULL REFERENCES auth_users(user_id) ON DELETE CASCADE,
     module_id   INTEGER NOT NULL REFERENCES auth_modules(module_id) ON DELETE CASCADE,
@@ -137,18 +172,37 @@ CREATE TABLE IF NOT EXISTS auth_user_module_overrides_new (
     can_update  INTEGER,
     can_delete  INTEGER,
     can_execute INTEGER,
-    granted_by  INTEGER REFERENCES auth_users(user_id),
-    granted_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+    created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+    created_by  TEXT    NOT NULL DEFAULT 'System',
+    modified_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    modified_by TEXT    NOT NULL DEFAULT 'System',
     PRIMARY KEY (user_id, module_id)
 );
 
-INSERT INTO auth_user_module_overrides_new (user_id, module_id, can_view, granted_by, granted_at)
-SELECT user_id, module_id, granted, granted_by, granted_at FROM auth_user_module_overrides;
+INSERT INTO auth_user_module_overrides_new (user_id, module_id, can_view, created_at, created_by, modified_at, modified_by)
+SELECT user_id, module_id, granted, granted_at, COALESCE(CAST(granted_by AS TEXT), 'System'), granted_at, COALESCE(CAST(granted_by AS TEXT), 'System') FROM auth_user_module_overrides;
 
 DROP TABLE auth_user_module_overrides;
 ALTER TABLE auth_user_module_overrides_new RENAME TO auth_user_module_overrides;
 
--- 4. Dynamic Menu Navigation Customizations
+-- 5. User roles table with audit columns
+CREATE TABLE IF NOT EXISTS auth_user_roles_new (
+    user_id     INTEGER NOT NULL REFERENCES auth_users(user_id) ON DELETE CASCADE,
+    role_id     INTEGER NOT NULL REFERENCES auth_roles(role_id) ON DELETE CASCADE,
+    created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+    created_by  TEXT    NOT NULL DEFAULT 'System',
+    modified_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    modified_by TEXT    NOT NULL DEFAULT 'System',
+    PRIMARY KEY (user_id, role_id)
+);
+
+INSERT INTO auth_user_roles_new (user_id, role_id, created_at, created_by, modified_at, modified_by)
+SELECT user_id, role_id, granted_at, 'System', granted_at, 'System' FROM auth_user_roles;
+
+DROP TABLE auth_user_roles;
+ALTER TABLE auth_user_roles_new RENAME TO auth_user_roles;
+
+-- 6. Dynamic Menu Navigation Customizations with audit columns
 CREATE TABLE IF NOT EXISTS app_nav_item_settings (
     nav_setting_id      INTEGER PRIMARY KEY AUTOINCREMENT,
     nav_key             TEXT    NOT NULL UNIQUE,  -- route path e.g. '/inventory'
@@ -159,7 +213,9 @@ CREATE TABLE IF NOT EXISTS app_nav_item_settings (
     tooltip_override    TEXT,
     is_hidden_override  INTEGER NOT NULL DEFAULT 0,
     created_at          TEXT    NOT NULL DEFAULT (datetime('now')),
-    modified_at         TEXT    NOT NULL DEFAULT (datetime('now'))
+    created_by          TEXT    NOT NULL DEFAULT 'System',
+    modified_at         TEXT    NOT NULL DEFAULT (datetime('now')),
+    modified_by         TEXT    NOT NULL DEFAULT 'System'
 );
 ```
 
@@ -189,7 +245,7 @@ Merges code-registered navigation trees with database customizations:
 def get_effective_navigation_settings() -> dict[str, dict[str, Any]]:
     """Return dictionary of nav overrides keyed by nav_key (path)."""
 
-def update_nav_item_setting(nav_key: str, payload: dict) -> dict:
+def update_nav_item_setting(nav_key: str, payload: dict, actor: str = "Admin") -> dict:
     """Insert or update custom ordering, label, icon, or tooltip for a nav route."""
 ```
 
@@ -319,6 +375,7 @@ The Bedrock Admin Console provides 5 integrated panels:
 | `admin` | Admin Console | `/admin` (all tabs & sub-tabs) | `view` | `admin` | System admin console base |
 | `admin` | Admin Users | `/admin?tab=users` | `update` | `admin` | Edit roles, active state, invite users |
 | `admin` | Admin Security | `/admin?tab=security` | `view` | `admin` | View security log & audit stream |
+| `admin` | Admin Nav Editor | `/admin?tab=navigation` | `update` | `admin` | Dynamic menu reordering & overrides |
 | `admin` | Admin Config | `/admin?tab=settings` | `update` | `admin` | Edit system app configuration |
 | `admin` | Admin Grids | `/admin?tab=grids` | `update` | `admin` | Edit grid column configurations |
 | `health` | System Health | `/health`, `/admin?tab=health` | `view` | `anon`, `viewer`, `member`, `admin` | Backend diagnostics & counters |
