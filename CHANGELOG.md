@@ -72,7 +72,37 @@ literally and fails the release's cascade job on a mismatch.
   persistence all stay, so an app that builds a dashboard later finds every
   pin its operators already set exactly where they left it.
 
+- **Four audit gates now ship with the platform, runnable as
+  `python -m bedrock.tools.<name>`.** They enforce properties of *consuming
+  bedrock*, so each consumer was maintaining — and drifting — its own copy of
+  a check that says the same thing everywhere.
+  - `audit_ledger_freshness` — your `docs/reference/bedrock_issues_to_file.md`
+    entries must name an open bedrock issue or the tag that fixed them. New;
+    nothing to delete. A repo with no ledger passes.
+  - `audit_s1_duplicates` — no local twin of a `@djntechnic/bedrock-ui`
+    export, exactly one `queryKeys` and one `API_ROUTES`, no direct `axios`
+    import. It reads the *installed* package, so it tightens on every pin
+    bump. Paths are flags (`--repo-root`, `--source-root`, `--collision-root`,
+    `--package`); the `@shadows <Name>` exemption marker is unchanged. The
+    `--json` output of CollectIt's copy is gone — nothing consumed it.
+  - `audit_design_tokens` — your `.stitch/DESIGN.md` must match the
+    `ThemePalette`s bedrock's `ThemeProvider` writes onto `<html>`. Name your
+    palettes with `--dark-palette` / `--light-palette` if they are not called
+    `BENCH_DARK` / `BENCH_LIGHT`, or the gate finds no palettes and passes a
+    repo it never read. A consumer with no design doc, or no registered
+    palettes, passes.
+  - `audit_api_docs` — your shipped `/api/v1` surface must match your
+    reference doc, read through `iter_route_specs` so included sub-routers are
+    not silently missed. Point it with `--doc`, `--prefix` and `--app`
+    (`module:attribute`); `--repo-root` governs the app import too. A missing
+    doc is an environment error here, not a pass.
+
 **Delete**
+- Your local copies of the four gates above, and the CI steps that run them:
+  replace `python scripts/maintenance/audit_<name>.py` with
+  `python -m bedrock.tools.audit_<name>` plus whatever flags your layout needs.
+  CollectIt's `audit_s1_duplicates.py` and `audit_design_tokens.py` and
+  MLBTracker's `audit_api_docs.py` are what these were built from.
 - Your hand-copied router mount map, your hand-written `DatabaseQueryError`
   handler, and the lifespan that re-implements the boot sequence.
 - Your own boto3 wrapper, if you have one. CollectIt's
