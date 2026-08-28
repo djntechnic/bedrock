@@ -73,8 +73,13 @@ except ImportError:  # pragma: no cover - environment problem, not a violation
     yaml = None  # type: ignore[assignment]
 
 
-#: Which frontmatter colour map documents which palette.
-PALETTE_SOURCES = {
+#: Which frontmatter colour map documents which palette, keyed by the palette's
+#: exported name. These are defaults, not the contract: a consumer that names
+#: its palettes something else passes `--dark-palette`/`--light-palette`. The
+#: names must be overridable, because a gate that looked only for names it
+#: never found would report a clean pass for a repo it had not checked at all -
+#: the one failure mode worse than a false finding.
+DEFAULT_PALETTE_SOURCES = {
     "BENCH_DARK": "colors",
     "BENCH_LIGHT": "colorsLight",
 }
@@ -195,7 +200,9 @@ def read_frontmatter(path: pathlib.Path) -> dict:
         raise EnvironmentProblem(f"{path}: could not parse frontmatter YAML: {exc}") from exc
 
 
-def parse_palettes(path: pathlib.Path) -> dict[str, dict]:
+def parse_palettes(
+    path: pathlib.Path, palette_sources: dict[str, str] | None = None
+) -> dict[str, dict]:
     """Extract each exported palette from a palettes source file.
 
     A regex rather than a TypeScript parse. The alternative is shelling out to
@@ -203,10 +210,11 @@ def parse_palettes(path: pathlib.Path) -> dict[str, dict]:
     on an installed toolchain; the file's shape is fixed and machine-written,
     and rule 4 fails loudly if this ever silently under-reads it.
 
-    A palette named in `PALETTE_SOURCES` that the file does not declare is
+    A palette named in `palette_sources` that the file does not declare is
     simply absent from the returned dict - callers treat "not registered
     here" the same as "not registered at all".
     """
+    palette_sources = palette_sources or DEFAULT_PALETTE_SOURCES
     source = path.read_text(encoding="utf-8")
 
     aliases: dict[str, str] = {}
@@ -221,7 +229,7 @@ def parse_palettes(path: pathlib.Path) -> dict[str, dict]:
         pass  # no PLATFORM_ALIASES block - nothing to alias.
 
     palettes: dict[str, dict] = {}
-    for name in PALETTE_SOURCES:
+    for name in palette_sources:
         try:
             block = _slice_block(source, f"export const {name}: ThemePalette")
         except ValueError:
@@ -250,8 +258,16 @@ def _slice_block(source: str, marker: str) -> str:
     raise ValueError(f"unbalanced braces after {marker!r}")
 
 
-def audit(repo_root: pathlib.Path, design_doc: pathlib.Path, palettes_path: pathlib.Path) -> list[str]:
+def audit(
+    repo_root: pathlib.Path,
+    design_doc: pathlib.Path,
+    palettes_path: pathlib.Path,
+    palette_sources: dict[str, str] | None = None,
+) -> list[str]:
     """Run all five rules for one consumer's design-system pair.
+
+    `palette_sources` maps each palette's exported name to the frontmatter key
+    that documents it, dark first; it defaults to `DEFAULT_PALETTE_SOURCES`.
 
     `design_doc` and `palettes_path` are relative to `repo_root`. A consumer
     with no `.stitch/DESIGN.md`, or with the doc but no registered palettes,
@@ -263,6 +279,7 @@ def audit(repo_root: pathlib.Path, design_doc: pathlib.Path, palettes_path: path
     all (missing PyYAML, malformed frontmatter) - that is an environment
     error, not a finding.
     """
+    palette_sources = palette_sources or DEFAULT_PALETTE_SOURCES
     problems: list[str] = []
 
     design_path = repo_root / design_doc
@@ -274,14 +291,14 @@ def audit(repo_root: pathlib.Path, design_doc: pathlib.Path, palettes_path: path
         return []
 
     front = read_frontmatter(design_path)
-    palettes = parse_palettes(full_palettes_path)
+    palettes = parse_palettes(full_palettes_path, palette_sources)
 
     if not palettes:
         return []
 
     vocabularies: dict[str, set[str]] = {}
 
-    for palette_name, front_key in PALETTE_SOURCES.items():
+    for palette_name, front_key in palette_sources.items():
         if palette_name not in palettes:
             continue
 
@@ -358,7 +375,7 @@ def audit(repo_root: pathlib.Path, design_doc: pathlib.Path, palettes_path: path
                 )
 
     if len(vocabularies) == 2:
-        dark, light = (vocabularies[name] for name in PALETTE_SOURCES)
+        dark, light = (vocabularies[name] for name in palette_sources)
         for token in sorted(dark ^ light):
             problems.append(
                 f"{token} is defined in one palette and not the other. "
@@ -382,14 +399,30 @@ def main(argv: list[str] | None = None) -> int:
         default="frontend/src/theme/palettes.ts",
         help="the registered ThemePalette source file, relative to --repo-root",
     )
+    parser.add_argument(
+        "--dark-palette",
+        default="BENCH_DARK",
+        help="exported name of the dark ThemePalette, documented by `colors`",
+    )
+    parser.add_argument(
+        "--light-palette",
+        default="BENCH_LIGHT",
+        help="exported name of the light ThemePalette, documented by `colorsLight`",
+    )
     args = parser.parse_args(argv)
 
     repo_root = pathlib.Path(args.repo_root).resolve()
     design_doc = pathlib.Path(args.design_doc)
     palettes = pathlib.Path(args.palettes)
 
+    # Dark first: rule 3 unpacks this mapping in order to name the two halves.
+    palette_sources = {
+        args.dark_palette: "colors",
+        args.light_palette: "colorsLight",
+    }
+
     try:
-        problems = audit(repo_root, design_doc, palettes)
+        problems = audit(repo_root, design_doc, palettes, palette_sources)
     except EnvironmentProblem as exc:
         logger.error(str(exc))
         return 2

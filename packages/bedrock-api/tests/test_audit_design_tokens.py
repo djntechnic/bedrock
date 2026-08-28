@@ -91,6 +91,42 @@ def test_a_matching_doc_and_palettes_pair_produces_no_findings(tmp_path):
     assert _run(tmp_path) == []
 
 
+def test_a_consumer_that_names_its_palettes_differently_is_still_checked(tmp_path):
+    """The palette export names are a default, not the contract.
+
+    A consumer whose palettes are not called BENCH_DARK/BENCH_LIGHT must be
+    able to point the gate at its own names. Without the override the gate
+    would find neither palette, treat the repo as having registered none, and
+    report a clean pass on a file it never read - a false negative, which is
+    the one outcome worse than a false finding.
+    """
+    _write_design_doc(tmp_path)
+    _write_palettes(tmp_path, _DARK_HSL, _LIGHT_HSL)
+    path = tmp_path / PALETTES
+    renamed = (
+        path.read_text(encoding="utf-8")
+        .replace("BENCH_DARK", "NIGHT")
+        .replace("BENCH_LIGHT", "DAY")
+    )
+    # A token the document does not carry, so a gate that really read this
+    # file has something to report and a gate that skipped it does not.
+    renamed = renamed.replace(
+        '  cssVars: {', '  cssVars: {\n    "--undocumented": "0 0% 50%",', 1
+    )
+    path.write_text(renamed, encoding="utf-8")
+
+    default_names = gate.audit(tmp_path, DESIGN_DOC, PALETTES)
+    assert default_names == [], "the default names match nothing here"
+
+    findings = gate.audit(
+        tmp_path,
+        DESIGN_DOC,
+        PALETTES,
+        {"NIGHT": "colors", "DAY": "colorsLight"},
+    )
+    assert any("--undocumented" in finding for finding in findings)
+
+
 def test_rule1_a_token_defined_in_the_palette_but_undocumented_is_a_finding(tmp_path):
     """Rule 1: both halves must declare the same token names."""
     _write_design_doc(tmp_path)
