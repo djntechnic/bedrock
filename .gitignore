@@ -29,3 +29,5 @@ node_modules/
 
 # TreeFile
 *_FileTree.md
+
+.superpowers/
