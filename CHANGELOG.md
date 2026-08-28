@@ -16,6 +16,44 @@ When drafting a release body, write the section as `## For consumers`, not
 nested form — the cascade workflow's extractor matches `^## For consumers`
 literally and fails the release's cascade job on a mismatch.
 
+## v0.8.1
+
+### Fixed — package versions never moved, so a pin bump could be a silent no-op
+
+`v0.6.0` through `v0.8.0` all shipped declaring `0.6.2` in both
+`packages/bedrock-api/pyproject.toml` and the repo-root `package.json` (the
+npm manifest, since consumers install `@djntechnic/bedrock-ui` as
+`github:djntechnic/bedrock#<tag>`). Nothing tied the tag being cut to the
+version those two files carry, so four tags in a row were indistinguishable
+by version alone.
+
+That is not cosmetic. pip resolves an upgrade by version, not by git ref:
+re-pinning `requirements.txt` from one stale-matching tag to another and
+running `pip install --upgrade "bedrock-api @ git+...@vX.Y.Z#..."` exits 0
+and installs nothing, because the already-installed distribution declares
+the same version the new one does. A developer's or deploy host's pin could
+read the new tag while the interpreter kept running old code, reporting
+success throughout. CI never caught it, because a fresh runner has nothing
+installed yet and always resolves the right code regardless of version —
+only an environment with a prior install already in place goes stale.
+
+Both files now declare `0.8.1`, and a release-time gate,
+`python -m bedrock.tools.audit_release_version <tag>`, fails the moment
+either manifest disagrees with the tag being cut — naming both the expected
+and the found value for each — wired into `.github/workflows/ci.yml` on every
+tag push so this cannot recur silently.
+
+### For consumers
+
+**Adopt**
+- Re-pin both `bedrock-api` and `@djntechnic/bedrock-ui` to `v0.8.1`.
+- **This one time**, reinstall rather than upgrade:
+  `pip install --force-reinstall --no-deps --no-cache-dir "bedrock-api @ git+https://github.com/djntechnic/bedrock@v0.8.1#subdirectory=packages/bedrock-api"`.
+  The stale `0.6.2` metadata already on disk is what makes a plain
+  `--upgrade` a no-op against this tag; a force reinstall is the only way to
+  actually land the new code over it. From `v0.8.1` onward, package versions
+  move with every tag, so a normal upgrade resolves correctly again.
+
 ## v0.8.0
 
 Carries Milestone 3 and Milestone 4 both. No `v0.7.0` tag exists: M3's last two
