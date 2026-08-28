@@ -16,7 +16,12 @@ When drafting a release body, write the section as `## For consumers`, not
 nested form — the cascade workflow's extractor matches `^## For consumers`
 literally and fails the release's cascade job on a mismatch.
 
-## Unreleased
+## v0.8.0
+
+Carries Milestone 3 and Milestone 4 both. No `v0.7.0` tag exists: M3's last two
+items and all of M4 landed on one branch, and both consumers adopt them in a
+single pin bump, so cutting two tags would have filed two adoption issues for
+one piece of work. `docs/roadmap.md` records the deviation in place.
 
 ### For consumers
 
