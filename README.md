@@ -26,7 +26,7 @@ app = create_app(title="My App", routers=[RouterMount(r, prefix="/api/v1/app") f
 the platform's error handlers and rate limiter, and runs the database boot
 sequence in lifespan — with hooks for what a host has to do before migrations,
 after the database is healthy, and on the way down.
-[`docs/app_assembly.md`](docs/app_assembly.md).
+See [`docs/app_assembly.md`](docs/app_assembly.md) and [`docs/platform_guide.md`](docs/platform_guide.md).
 
 ## The contract
 
@@ -74,7 +74,9 @@ the package genuinely reusable rather than MLBTracker with the names filed off
 — and it is verified, not assumed.
 
 Full contract, including which kind to reach for and why the failure policy
-differs per registry: [`docs/extension_points.md`](docs/extension_points.md).
+differs per registry: [`docs/extension_points.md`](docs/extension_points.md). For
+the complete cross-repository platform handbook, lifecycle model, and consumer invariants,
+see [`docs/platform_guide.md`](docs/platform_guide.md).
 
 ## Schema
 
