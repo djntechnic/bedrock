@@ -37,6 +37,8 @@ export * from "./components/EmptyTableRow";
 export { default as ColumnToggle } from "./components/ColumnToggle";
 export * from "./components/grids/cellRegistry";
 export * from "./components/grids/rowAccentRegistry";
+// Both pin affordances hide until a host declares it renders the pinned set.
+export * from "./components/grids/dashboardPinRegistry";
 export * from "./components/GridStatus";
 
 // ── Admin screens ────────────────────────────────────────────────────────────
@@ -45,6 +47,9 @@ export * from "./components/GridStatus";
 // rebuilt the same four panels over the same hooks. These are those screens,
 // on the `<GridEditor>` precedent: mount one in a route and supply nothing.
 export { default as LogViewer } from "./components/admin/LogViewer";
+export { default as SecurityLogViewer } from "./components/admin/SecurityLogViewer";
+export { PLATFORM_EVENT_TYPES } from "./components/admin/SecurityLogViewer";
+export type { SecurityLogViewerProps } from "./components/admin/SecurityLogViewer";
 export { default as ConfigEditor } from "./components/admin/ConfigEditor";
 export { groupByCategory, boolValue } from "./components/admin/ConfigEditor";
 export { default as UsersPanel } from "./components/admin/UsersPanel";

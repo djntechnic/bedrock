@@ -85,6 +85,7 @@ import { useSelectionStore } from "../../store/selectionStore";
 import { useAdmin, type GridColumnSetting } from "../../hooks/useAdminPlatform";
 import { DndColumnWrapper } from "../../hooks/useDraggableColumns";
 import { useRowAccentResolver } from "./rowAccentRegistry";
+import { hasDashboardPinHost } from "./dashboardPinRegistry";
 
 import { renderCell, renderMediaCell, unwrapCellPayload } from "./cellRenderers";
 import EditableCell from "./EditableCell";
@@ -493,9 +494,14 @@ export default function DataGrid<T extends Record<string, any>>({
   const navigate = useNavigate();
   const { logExport } = useAdmin();
   const { isAuthenticated } = useAuth();
-  // The synthetic pin-registry grid_ids can't meaningfully pin themselves.
+  // Nothing in the platform renders a pinned grid, so the button appears only
+  // once a host has declared a surface that does (#36). The synthetic
+  // pin-registry grid_ids can't meaningfully pin themselves.
   const showDashboardPinButton =
-    isAuthenticated && gridId !== "dashboard" && gridId !== "player_pins";
+    isAuthenticated &&
+    hasDashboardPinHost() &&
+    gridId !== "dashboard" &&
+    gridId !== "player_pins";
 
   const {
     config,
