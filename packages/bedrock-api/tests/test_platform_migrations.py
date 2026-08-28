@@ -267,6 +267,111 @@ class TestSplitSqlStatements:
         assert migrations._split_sql_statements(sql) == ["SELECT 1", "SELECT 2"]
 
 
+class TestRequiresTableGuard:
+    """`@requires-table:` — the opt-in guard that lets a platform migration
+    name a table a consumer may not have reached yet.
+
+    The case that forced it: MLBTracker's own baseline declares the role table
+    as `roles` and its app migration 038 renames it to `auth_roles`. Platform
+    migrations run first, so migration 004's `UPDATE auth_roles` ran against a
+    database where that table did not exist yet, and — the runner being
+    fail-loud — took the entire remaining chain down with it.
+    """
+
+    def test_directive_attaches_to_the_next_statement(self):
+        sql = "SELECT 1;\n-- @requires-table: widgets\nSELECT 2;"
+        assert migrations._split_guarded_statements(sql) == [
+            ((), "SELECT 1"),
+            (("widgets",), "SELECT 2"),
+        ]
+
+    def test_multiple_directives_accumulate_onto_one_statement(self):
+        sql = "-- @requires-table: a\n-- @requires-table: b\nSELECT 1;"
+        assert migrations._split_guarded_statements(sql) == [(("a", "b"), "SELECT 1")]
+
+    def test_a_guard_does_not_leak_onto_later_statements(self):
+        sql = "-- @requires-table: a\nSELECT 1;\nSELECT 2;"
+        assert migrations._split_guarded_statements(sql) == [
+            (("a",), "SELECT 1"),
+            ((), "SELECT 2"),
+        ]
+
+    def test_directive_on_the_final_unterminated_statement(self):
+        sql = "-- @requires-table: a\nSELECT 1"
+        assert migrations._split_guarded_statements(sql) == [(("a",), "SELECT 1")]
+
+    def test_plain_splitter_view_discards_directives(self):
+        sql = "-- @requires-table: a\nSELECT 1;"
+        assert migrations._split_sql_statements(sql) == ["SELECT 1"]
+
+    def _run(self, tmp_path, setup_sql, file_sql):
+        """Apply one .sql file to a database shaped by `setup_sql`."""
+        db_path = tmp_path / "guard.db"
+        conn = sqlite3.connect(str(db_path))
+        try:
+            conn.executescript(setup_sql)
+            conn.commit()
+        finally:
+            conn.close()
+
+        sql_file = tmp_path / "guarded.sql"
+        sql_file.write_text(file_sql, encoding="utf-8")
+
+        original = (db.sqlite_path, db.is_postgres, db.db_url)
+        db.sqlite_path, db.is_postgres, db.db_url = str(db_path), False, None
+        db.close_pool()
+        try:
+            with db.transaction() as c:
+                migrations._run_sql_file(str(sql_file), c)
+            out = sqlite3.connect(str(db_path))
+            try:
+                return out.execute("SELECT label FROM kept").fetchall()
+            finally:
+                out.close()
+        finally:
+            db.sqlite_path, db.is_postgres, db.db_url = original
+            db.close_pool()
+
+    #: `kept` is the witness: the statement after the guarded one. If the guard
+    #: fails to fire, the file aborts and `kept` never gets its row, so the
+    #: assertion distinguishes "skipped cleanly" from "blew up".
+    _SETUP = "CREATE TABLE kept (label TEXT);"
+
+    def test_absent_table_skips_the_statement_and_the_file_continues(self, tmp_path):
+        rows = self._run(
+            tmp_path,
+            self._SETUP,
+            "-- @requires-table: auth_roles\n"
+            "UPDATE auth_roles SET slug = 'member' WHERE slug = 'collector';\n"
+            "INSERT INTO kept (label) VALUES ('after');\n",
+        )
+        assert rows == [("after",)]
+
+    def test_present_table_runs_the_statement(self, tmp_path):
+        rows = self._run(
+            tmp_path,
+            self._SETUP
+            + "CREATE TABLE auth_roles (slug TEXT);"
+            + "INSERT INTO auth_roles (slug) VALUES ('collector');",
+            "-- @requires-table: auth_roles\n"
+            "UPDATE auth_roles SET slug = 'member' WHERE slug = 'collector';\n"
+            "INSERT INTO kept (label) "
+            "SELECT slug FROM auth_roles;\n",
+        )
+        assert rows == [("member",)]
+
+    def test_an_unguarded_statement_still_fails_loudly(self, tmp_path):
+        """The guard is opt-in. Without the directive, a missing table is
+        still an error — silently swallowing one would hide a real defect in
+        an app migration."""
+        with pytest.raises(Exception):
+            self._run(
+                tmp_path,
+                self._SETUP,
+                "UPDATE auth_roles SET slug = 'member';\n",
+            )
+
+
 class TestBootstrapMissingBaseline:
     """§S5 requires the error leg: `_bootstrap_baseline` warns and skips
     rather than raising when `baseline.sql` is not where it expects — an

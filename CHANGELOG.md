@@ -16,6 +16,51 @@ When drafting a release body, write the section as `## For consumers`, not
 nested form — the cascade workflow's extractor matches `^## For consumers`
 literally and fails the release's cascade job on a mismatch.
 
+## v0.8.2
+
+### Fixed — platform migration 004 aborted the whole chain on MLBTracker
+
+`004_member_role_and_rank_highlight_rename.sql` opened with a bare
+`UPDATE auth_roles …`. Platform migrations run before an application's, on
+purpose — an app migration may reference a platform table and never the
+reverse — but that ordering assumes every consumer reaches a platform table
+by the platform's own route. MLBTracker does not: it predates the extraction,
+its baseline still declares the platform block under pre-rename names, and
+its app migration `038_rename_auth_domain.sql` is what produces `auth_roles`.
+Platform 004 therefore ran while the table was still called `roles`, raised
+`no such table: auth_roles`, and — the runner being fail-loud by design —
+rolled back and took every migration after it down too. A consumer on
+`v0.8.0` or `v0.8.1` in that shape cannot boot or run its test suite.
+
+The two `ALTER TABLE … RENAME COLUMN` statements in the same file were never
+affected: `_execute_statement` already no-ops a RENAME COLUMN whose table is
+absent or whose rename is already in effect.
+
+### Added — `@requires-table:` guard directive for `.sql` migrations
+
+A line comment reading `-- @requires-table: <name>` immediately above a
+statement makes the runner skip that statement when the named table does not
+exist on the migration's own connection. Directives accumulate, so a
+statement can require several tables; a statement with none behaves exactly
+as before. The file still records as applied — the guard says this database
+was never in scope for that statement, not that the migration is pending.
+
+Guarding by statement *shape* was rejected: silently skipping any statement
+whose table happened to be missing would hide a genuine defect in an app
+migration. The directive is opt-in, and lives in the `.sql` file beside the
+statement it protects.
+
+### For consumers
+
+Nothing to adopt beyond the pin. If your app reaches a platform table through
+your own migration chain rather than through `baseline.sql`, this is the
+release that stops a platform migration from assuming otherwise — bump to
+`v0.8.2` before adopting the `collector` → `member` rename.
+
+`v0.8.2` also means platform migration 004 no longer renames the role slug on
+such an app. Owning the rename is then the app's job, in a migration of its
+own that runs after the one producing `auth_roles`.
+
 ## v0.8.1
 
 ### Fixed — package versions never moved, so a pin bump could be a silent no-op
