@@ -53,6 +53,7 @@ export type { SecurityLogViewerProps } from "./components/admin/SecurityLogViewe
 export { default as ConfigEditor } from "./components/admin/ConfigEditor";
 export { groupByCategory, boolValue } from "./components/admin/ConfigEditor";
 export { default as UsersPanel } from "./components/admin/UsersPanel";
+export { default as ModulesPanel } from "./components/admin/ModulesPanel";
 export { shortUserAgent } from "./components/admin/UsersPanel";
 export { default as UserOverridesDrawer } from "./components/admin/UserOverridesDrawer";
 export * from "./hooks/useUserOverrides";

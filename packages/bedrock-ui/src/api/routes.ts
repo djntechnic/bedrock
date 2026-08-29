@@ -97,6 +97,7 @@ export const API_ROUTES = {
   modules: {
     me: () => "/api/v1/modules/me",
     registry: () => "/api/v1/modules/registry",
+    list: () => "/api/v1/modules",
     forUser: (userId: number | string) => `/api/v1/modules/users/${userId}`,
   },
 
@@ -113,5 +114,6 @@ export const API_ROUTES = {
   // ── Navigation ───────────────────────────────────────────────────────────
   navigation: {
     settings: () => "/api/v1/navigation/settings",
+    setting: (navKey: string) => `/api/v1/navigation/settings/${encodeURIComponent(navKey)}`,
   },
 } as const;
