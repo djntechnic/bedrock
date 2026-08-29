@@ -43,6 +43,9 @@ export interface MatrixCellUpdate {
   can_execute: boolean;
 }
 
+const EMPTY_MATRIX: MatrixCell[] = [];
+const EMPTY_ROLES: RoleRecord[] = [];
+
 export function useRoleMatrix() {
   const queryClient = useQueryClient();
 
@@ -105,8 +108,9 @@ export function useRoleMatrix() {
   });
 
   return {
-    matrix: matrixQuery.data ?? [],
-    roles: rolesQuery.data ?? [],
+    matrix: matrixQuery.data ?? EMPTY_MATRIX,
+    roles: rolesQuery.data ?? EMPTY_ROLES,
+    dataUpdatedAt: matrixQuery.dataUpdatedAt,
     isLoading: matrixQuery.isLoading || rolesQuery.isLoading,
     isError: matrixQuery.isError || rolesQuery.isError,
     refetch: async () => {

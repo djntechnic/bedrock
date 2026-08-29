@@ -48,6 +48,7 @@ export default function RoleMatrixPanel() {
   const {
     matrix,
     roles,
+    dataUpdatedAt,
     updateMatrix,
     createRole,
     isCreatingRole,
@@ -77,6 +78,7 @@ export default function RoleMatrixPanel() {
 
   // Sync draft from matrix whenever matrix updates from server
   useEffect(() => {
+    if (!dataUpdatedAt && matrix.length === 0) return;
     const initial: typeof drafts = {};
     for (const cell of matrix) {
       const key = `${cell.role_id}_${cell.module_id}`;
@@ -90,7 +92,7 @@ export default function RoleMatrixPanel() {
       };
     }
     setDrafts(initial);
-  }, [matrix]);
+  }, [dataUpdatedAt, matrix]);
 
   // Transform matrix into grouped rows per module
   const modulesList: ModuleRow[] = useMemo(() => {
