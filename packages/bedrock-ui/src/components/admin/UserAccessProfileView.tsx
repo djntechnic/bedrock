@@ -12,12 +12,12 @@ function ActionBadge({
   overrideState,
 }: {
   hasAccess: boolean;
-  overrideState: boolean | null;
+  overrideState: boolean | number | null;
 }) {
-  if (overrideState === true) {
+  if (overrideState === true || overrideState === 1) {
     return <Badge variant="default">Force Granted (Override)</Badge>;
   }
-  if (overrideState === false) {
+  if (overrideState === false || overrideState === 0) {
     return <Badge variant="destructive">Force Denied (Override)</Badge>;
   }
   return (

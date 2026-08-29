@@ -346,10 +346,14 @@ function TriStateActionControl({
   onChange,
 }: {
   label: string;
-  value: boolean | null;
+  value: boolean | number | null;
   disabled?: boolean;
   onChange: (val: boolean | null) => void;
 }) {
+  const isInherit = value === null;
+  const isGrant = value === true || value === 1;
+  const isDeny = value === false || value === 0;
+
   return (
     <div className="flex items-center justify-between px-2.5 py-1.5 bg-muted/20 rounded-md border border-border/60 text-xs gap-2">
       <span className="font-medium text-foreground/90 shrink-0">{label}</span>
@@ -359,7 +363,7 @@ function TriStateActionControl({
           disabled={disabled}
           onClick={() => onChange(null)}
           className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
-            value === null
+            isInherit
               ? "bg-background text-foreground shadow-2xs"
               : "text-muted-foreground hover:text-foreground"
           }`}
@@ -372,7 +376,7 @@ function TriStateActionControl({
           disabled={disabled}
           onClick={() => onChange(true)}
           className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
-            value === true
+            isGrant
               ? "bg-emerald-600 text-white shadow-2xs font-semibold"
               : "text-muted-foreground hover:text-emerald-600"
           }`}
@@ -385,7 +389,7 @@ function TriStateActionControl({
           disabled={disabled}
           onClick={() => onChange(false)}
           className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
-            value === false
+            isDeny
               ? "bg-rose-600 text-white shadow-2xs font-semibold"
               : "text-muted-foreground hover:text-rose-600"
           }`}

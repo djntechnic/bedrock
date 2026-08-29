@@ -155,3 +155,40 @@ def test_navigation_settings_routes(api_test_client):
     get_settings = get_res.json()
     assert len(get_settings) == 1
     assert get_settings[0]["icon_override"] == "Archive"
+
+
+def test_user_overrides_bulk_route(api_test_client):
+    admin_user = us.create_user(email="admin_overrides@example.com", password="Password123!", default_role="admin")
+    admin_token = us.create_access_token(admin_user.user_id)
+    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+
+    target_user = us.create_user(email="target_overrides@example.com", password="Password123!", default_role="viewer")
+    admin_mod_id = int(db.query(f"SELECT module_id FROM {T.AUTH_MODULES} WHERE slug = 'admin'").iloc[0]["module_id"])
+    
+    put_res = api_test_client.put(
+        f"/api/v1/security/users/{target_user.user_id}/overrides",
+        json={
+            "overrides": [
+                {
+                    "module_id": admin_mod_id,
+                    "can_view": True,
+                    "can_update": False,
+                    "can_delete": None,
+                    "can_execute": None,
+                }
+            ]
+        },
+        headers=admin_headers,
+    )
+    assert put_res.status_code == 200
+    
+    get_res = api_test_client.get(f"/api/v1/security/users/{target_user.user_id}/overrides", headers=admin_headers)
+    assert get_res.status_code == 200
+    data = get_res.json()
+    
+    override = next((item for item in data if item["module_id"] == admin_mod_id), None)
+    assert override is not None
+    # Depending on pydantic response, true might be serialized to true or 1.
+    assert override["can_view"] in (1, True)
+    assert override["can_update"] in (0, False)
+    assert override["can_delete"] is None
