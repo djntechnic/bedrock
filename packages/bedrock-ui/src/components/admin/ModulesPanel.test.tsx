@@ -13,24 +13,27 @@ vi.mock("../../api/client", () => ({
 
 const mockModules = [
   {
+    module_id: 1,
     slug: "admin",
-    display_label: "Admin Hub",
-    detailed_description: "System administration and configuration",
-    is_core: 1,
+    label: "Admin Hub",
+    description: "System administration and configuration",
+    is_core: true,
     sort_order: 10,
   },
   {
+    module_id: 2,
     slug: "inventory",
-    display_label: "Inventory",
-    detailed_description: "Manage product inventory and stock levels",
-    is_core: 0,
+    label: "Inventory",
+    description: "Manage product inventory and stock levels",
+    is_core: false,
     sort_order: 20,
   },
   {
+    module_id: 3,
     slug: "analytics",
-    display_label: "Analytics",
-    detailed_description: "Reporting and analytics extension",
-    is_core: 0,
+    label: "Analytics",
+    description: "Reporting and analytics extension",
+    is_core: false,
     sort_order: 30,
   }
 ];
@@ -66,10 +69,10 @@ describe("ModulesPanel", () => {
     });
 
     expect(screen.getByText("System administration and configuration")).toBeDefined();
-    expect(screen.getByText("Core Platform Module")).toBeDefined();
+    expect(screen.getByText("System Core")).toBeDefined();
 
     expect(screen.getByText("Inventory")).toBeDefined();
-    const badges = screen.getAllByText("Domain Extension");
+    const badges = screen.getAllByText("Custom Extension");
     expect(badges.length).toBe(2);
   });
 

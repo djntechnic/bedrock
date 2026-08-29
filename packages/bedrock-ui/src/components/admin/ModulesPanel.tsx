@@ -17,12 +17,13 @@ import { Badge } from "../ui/badge";
 import { Skeleton } from "../ui/skeleton";
 import { Search } from "lucide-react";
 
-export interface PlatformModule {
+export interface ModuleItem {
+  module_id: number;
   slug: string;
-  display_label: string;
-  detailed_description: string;
-  is_core: 1 | 0;
+  label: string;
+  description: string | null;
   sort_order: number;
+  is_core: boolean;
 }
 
 export default function ModulesPanel() {
@@ -31,7 +32,7 @@ export default function ModulesPanel() {
   const { data: modules = [], isLoading, isError } = useQuery({
     queryKey: queryKeys.modules.list(),
     queryFn: async () => {
-      const { data } = await apiClient.get<PlatformModule[]>(
+      const { data } = await apiClient.get<ModuleItem[]>(
         API_ROUTES.modules.list()
       );
       return data;
@@ -44,8 +45,8 @@ export default function ModulesPanel() {
         const q = search.toLowerCase();
         return (
           m.slug.toLowerCase().includes(q) ||
-          m.display_label.toLowerCase().includes(q) ||
-          m.detailed_description.toLowerCase().includes(q)
+          (m.label || m.slug).toLowerCase().includes(q) ||
+          (m.description?.toLowerCase().includes(q) ?? false)
         );
       })
       .sort((a, b) => a.sort_order - b.sort_order);
@@ -104,21 +105,21 @@ export default function ModulesPanel() {
                   </TableCell>
                   <TableCell className="font-medium">
                     <div className="flex flex-col">
-                      <span>{m.display_label}</span>
+                      <span>{m.label || m.slug}</span>
                       <span className="text-xs text-muted-foreground font-mono">
                         {m.slug}
                       </span>
                     </div>
                   </TableCell>
                   <TableCell>
-                    {m.is_core === 1 ? (
-                      <Badge variant="default">Core Platform Module</Badge>
+                    {m.is_core ? (
+                      <Badge variant="default">System Core</Badge>
                     ) : (
-                      <Badge variant="secondary">Domain Extension</Badge>
+                      <Badge variant="secondary">Custom Extension</Badge>
                     )}
                   </TableCell>
                   <TableCell className="text-sm">
-                    {m.detailed_description}
+                    {m.description}
                   </TableCell>
                 </TableRow>
               ))

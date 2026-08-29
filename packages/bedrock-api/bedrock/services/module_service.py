@@ -62,6 +62,11 @@ def list_modules(*, database: DatabaseManager | None = None) -> list[ModuleRecor
             for r in df.to_dict(orient="records")]
 
 
+def list_modules_public(*, database: DatabaseManager | None = None) -> list[dict[str, Any]]:
+    return [m.to_public() for m in list_modules(database=database)]
+
+
+
 def _module_id(slug: str, *, database: DatabaseManager | None = None) -> int | None:
     d = database or db
     df = d.query(f"SELECT module_id FROM {T.AUTH_MODULES} WHERE slug = %s", (slug,))
