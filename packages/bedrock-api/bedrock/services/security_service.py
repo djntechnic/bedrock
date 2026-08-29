@@ -345,21 +345,41 @@ def set_user_granular_override(
     val_d = 1 if cd is True else (0 if cd is False else None)
     val_e = 1 if ce is True else (0 if ce is False else None)
 
-    d.execute(
-        f"""
-        INSERT INTO {T.AUTH_USER_MODULE_OVERRIDES}
-            (user_id, module_id, can_view, can_update, can_delete, can_execute, created_at, created_by, modified_at, modified_by)
-        VALUES (%s, %s, %s, %s, %s, %s, datetime('now'), %s, datetime('now'), %s)
-        ON CONFLICT(user_id, module_id) DO UPDATE SET
-            can_view    = excluded.can_view,
-            can_update  = excluded.can_update,
-            can_delete  = excluded.can_delete,
-            can_execute = excluded.can_execute,
-            modified_at = excluded.modified_at,
-            modified_by = excluded.modified_by
-        """,
-        (user_id, module_id, val_v, val_u, val_d, val_e, actor, actor),
-    )
+    cols = {r["name"] for r in d.query(f"PRAGMA table_info({T.AUTH_USER_MODULE_OVERRIDES})").to_dict(orient="records")}
+    if "granted" in cols:
+        val_g = 1 if val_v == 1 else 0
+        d.execute(
+            f"""
+            INSERT INTO {T.AUTH_USER_MODULE_OVERRIDES}
+                (user_id, module_id, can_view, can_update, can_delete, can_execute, granted, created_at, created_by, modified_at, modified_by)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, datetime('now'), %s, datetime('now'), %s)
+            ON CONFLICT(user_id, module_id) DO UPDATE SET
+                can_view    = excluded.can_view,
+                can_update  = excluded.can_update,
+                can_delete  = excluded.can_delete,
+                can_execute = excluded.can_execute,
+                granted     = excluded.granted,
+                modified_at = excluded.modified_at,
+                modified_by = excluded.modified_by
+            """,
+            (user_id, module_id, val_v, val_u, val_d, val_e, val_g, actor, actor),
+        )
+    else:
+        d.execute(
+            f"""
+            INSERT INTO {T.AUTH_USER_MODULE_OVERRIDES}
+                (user_id, module_id, can_view, can_update, can_delete, can_execute, created_at, created_by, modified_at, modified_by)
+            VALUES (%s, %s, %s, %s, %s, %s, datetime('now'), %s, datetime('now'), %s)
+            ON CONFLICT(user_id, module_id) DO UPDATE SET
+                can_view    = excluded.can_view,
+                can_update  = excluded.can_update,
+                can_delete  = excluded.can_delete,
+                can_execute = excluded.can_execute,
+                modified_at = excluded.modified_at,
+                modified_by = excluded.modified_by
+            """,
+            (user_id, module_id, val_v, val_u, val_d, val_e, actor, actor),
+        )
     logger.info("Set user override: user={} module={} caps={} by={}", user_id, module_slug, capabilities, actor)
 
 
@@ -404,3 +424,75 @@ def get_user_security_profile(
         "overrides": overrides,
         "effective": effective,
     }
+
+
+def get_user_overrides_list(
+    user_id: int,
+    *,
+    database: DatabaseManager | None = None,
+) -> list[dict[str, Any]]:
+    """Retrieve all modules with any user override flags for user_id."""
+    d = _get_db(database)
+    df = d.query(
+        f"""
+        SELECT m.module_id, m.slug AS module_slug, m.label AS module_label, m.is_core,
+               umo.user_id,
+               umo.can_view, umo.can_update, umo.can_delete, umo.can_execute
+          FROM {T.AUTH_MODULES} m
+          LEFT JOIN {T.AUTH_USER_MODULE_OVERRIDES} umo
+            ON umo.module_id = m.module_id AND umo.user_id = %s
+         ORDER BY m.is_core DESC, m.label
+        """,
+        (user_id,),
+    )
+    if df.empty:
+        return []
+    return [dict(r) for r in df.to_dict(orient="records")]
+
+
+def update_user_overrides_bulk(
+    user_id: int,
+    overrides: list[dict[str, Any]],
+    actor: str = "System",
+    *,
+    database: DatabaseManager | None = None,
+) -> list[dict[str, Any]]:
+    """Bulk update user capability overrides across modules."""
+    d = _get_db(database)
+    with d.transaction() as conn:
+        for item in overrides:
+            module_id = int(item["module_id"])
+            can_v = item.get("can_view")
+            can_u = item.get("can_update")
+            can_d = item.get("can_delete")
+            can_e = item.get("can_execute")
+
+            val_v = 1 if can_v is True else (0 if can_v is False else None)
+            val_u = 1 if can_u is True else (0 if can_u is False else None)
+            val_d = 1 if can_d is True else (0 if can_d is False else None)
+            val_e = 1 if can_e is True else (0 if can_e is False else None)
+
+            if all(v is None for v in [val_v, val_u, val_d, val_e]):
+                d.execute_conn(
+                    conn,
+                    f"DELETE FROM {T.AUTH_USER_MODULE_OVERRIDES} WHERE user_id = %s AND module_id = %s",
+                    (user_id, module_id),
+                )
+            else:
+                d.execute_conn(
+                    conn,
+                    f"""
+                    INSERT INTO {T.AUTH_USER_MODULE_OVERRIDES}
+                        (user_id, module_id, can_view, can_update, can_delete, can_execute, created_at, created_by, modified_at, modified_by)
+                    VALUES (%s, %s, %s, %s, %s, %s, datetime('now'), %s, datetime('now'), %s)
+                    ON CONFLICT(user_id, module_id) DO UPDATE SET
+                        can_view    = excluded.can_view,
+                        can_update  = excluded.can_update,
+                        can_delete  = excluded.can_delete,
+                        can_execute = excluded.can_execute,
+                        modified_at = excluded.modified_at,
+                        modified_by = excluded.modified_by
+                    """,
+                    (user_id, module_id, val_v, val_u, val_d, val_e, actor, actor),
+                )
+    return get_user_overrides_list(user_id, database=d)

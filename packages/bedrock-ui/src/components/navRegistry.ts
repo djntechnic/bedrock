@@ -20,6 +20,7 @@ import type { ComponentType } from "react";
 export interface SubItem {
   to: string;
   label: string;
+  tooltip?: string;
 }
 
 /** A labelled cluster of {@link SubItem}s inside a top-level entry. */

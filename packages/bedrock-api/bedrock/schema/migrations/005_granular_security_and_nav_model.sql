@@ -12,12 +12,12 @@
 -- 1. Alter auth_roles
 ALTER TABLE auth_roles ADD COLUMN description TEXT;
 ALTER TABLE auth_roles ADD COLUMN created_by TEXT NOT NULL DEFAULT 'System';
-ALTER TABLE auth_roles ADD COLUMN modified_at TEXT NOT NULL DEFAULT (datetime('now'));
+ALTER TABLE auth_roles ADD COLUMN modified_at TEXT NOT NULL DEFAULT '1970-01-01 00:00:00';
 ALTER TABLE auth_roles ADD COLUMN modified_by TEXT NOT NULL DEFAULT 'System';
 
 -- 2. Alter auth_modules
 ALTER TABLE auth_modules ADD COLUMN created_by TEXT NOT NULL DEFAULT 'System';
-ALTER TABLE auth_modules ADD COLUMN modified_at TEXT NOT NULL DEFAULT (datetime('now'));
+ALTER TABLE auth_modules ADD COLUMN modified_at TEXT NOT NULL DEFAULT '1970-01-01 00:00:00';
 ALTER TABLE auth_modules ADD COLUMN modified_by TEXT NOT NULL DEFAULT 'System';
 
 -- 3. Alter auth_role_modules with granular capability flags and audit columns
@@ -25,9 +25,9 @@ ALTER TABLE auth_role_modules ADD COLUMN can_view INTEGER NOT NULL DEFAULT 1;
 ALTER TABLE auth_role_modules ADD COLUMN can_update INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE auth_role_modules ADD COLUMN can_delete INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE auth_role_modules ADD COLUMN can_execute INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE auth_role_modules ADD COLUMN created_at TEXT NOT NULL DEFAULT (datetime('now'));
+ALTER TABLE auth_role_modules ADD COLUMN created_at TEXT NOT NULL DEFAULT '1970-01-01 00:00:00';
 ALTER TABLE auth_role_modules ADD COLUMN created_by TEXT NOT NULL DEFAULT 'System';
-ALTER TABLE auth_role_modules ADD COLUMN modified_at TEXT NOT NULL DEFAULT (datetime('now'));
+ALTER TABLE auth_role_modules ADD COLUMN modified_at TEXT NOT NULL DEFAULT '1970-01-01 00:00:00';
 ALTER TABLE auth_role_modules ADD COLUMN modified_by TEXT NOT NULL DEFAULT 'System';
 
 -- 4. Alter auth_user_module_overrides with granular tri-state flags and audit columns
@@ -35,14 +35,15 @@ ALTER TABLE auth_user_module_overrides ADD COLUMN can_view INTEGER;
 ALTER TABLE auth_user_module_overrides ADD COLUMN can_update INTEGER;
 ALTER TABLE auth_user_module_overrides ADD COLUMN can_delete INTEGER;
 ALTER TABLE auth_user_module_overrides ADD COLUMN can_execute INTEGER;
+ALTER TABLE auth_user_module_overrides ADD COLUMN created_at TEXT NOT NULL DEFAULT '1970-01-01 00:00:00';
 ALTER TABLE auth_user_module_overrides ADD COLUMN created_by TEXT NOT NULL DEFAULT 'System';
-ALTER TABLE auth_user_module_overrides ADD COLUMN modified_at TEXT NOT NULL DEFAULT (datetime('now'));
+ALTER TABLE auth_user_module_overrides ADD COLUMN modified_at TEXT NOT NULL DEFAULT '1970-01-01 00:00:00';
 ALTER TABLE auth_user_module_overrides ADD COLUMN modified_by TEXT NOT NULL DEFAULT 'System';
 
 -- 5. Alter auth_user_roles with audit columns
-ALTER TABLE auth_user_roles ADD COLUMN created_at TEXT NOT NULL DEFAULT (datetime('now'));
+ALTER TABLE auth_user_roles ADD COLUMN created_at TEXT NOT NULL DEFAULT '1970-01-01 00:00:00';
 ALTER TABLE auth_user_roles ADD COLUMN created_by TEXT NOT NULL DEFAULT 'System';
-ALTER TABLE auth_user_roles ADD COLUMN modified_at TEXT NOT NULL DEFAULT (datetime('now'));
+ALTER TABLE auth_user_roles ADD COLUMN modified_at TEXT NOT NULL DEFAULT '1970-01-01 00:00:00';
 ALTER TABLE auth_user_roles ADD COLUMN modified_by TEXT NOT NULL DEFAULT 'System';
 
 -- 6. Create app_nav_item_settings table

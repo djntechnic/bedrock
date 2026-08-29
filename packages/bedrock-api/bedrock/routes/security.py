@@ -142,39 +142,63 @@ def update_matrix_endpoint(
     return {"ok": True}
 
 
+class UserOverrideItemPayload(BaseModel):
+    module_id: int
+    can_view: bool | None = None
+    can_update: bool | None = None
+    can_delete: bool | None = None
+    can_execute: bool | None = None
+
+
+class UserOverridesBulkRequest(BaseModel):
+    overrides: list[UserOverrideItemPayload]
+
+
 @router.get("/users/{user_id}/profile", dependencies=[require_permission("admin", "view")])
 def get_user_security_profile_endpoint(
     user_id: int,
 ) -> dict[str, Any]:
     """Return complete compiled security profile for user inspector."""
     try:
-        return ss.get_user_security_profile(user_id)
+        prof = ss.get_user_security_profile(user_id)
+        user_info = prof["user"]
+        roles = [r["slug"] for r in prof.get("roles", [])]
+        return {
+            "user_id": user_info["user_id"],
+            "email": user_info["email"],
+            "is_superuser": bool(user_info["is_superuser"]),
+            "roles": roles,
+            "overrides": prof.get("overrides", {}),
+            "effective": prof.get("effective", {}),
+            "capabilities": prof.get("effective", {}),
+        }
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
-@router.put("/users/{user_id}/overrides", dependencies=[require_permission("admin", "update")])
-def set_user_override_endpoint(
+@router.get("/users/{user_id}/overrides", dependencies=[require_permission("admin", "view")])
+def get_user_overrides_endpoint(
     user_id: int,
-    req: UserOverrideRequest,
+) -> list[dict[str, Any]]:
+    """Return all modules with granular override states for user."""
+    return ss.get_user_overrides_list(user_id)
+
+
+@router.put("/users/{user_id}/overrides", dependencies=[require_permission("admin", "update")])
+def set_user_overrides_bulk_endpoint(
+    user_id: int,
+    req: UserOverridesBulkRequest,
     current_user: Annotated[us.UserRecord, require_permission("admin", "update")],
     request: Request,
-) -> dict[str, bool]:
-    """Set or clear tri-state granular overrides for a user on a module."""
-    try:
-        ss.set_user_granular_override(
-            user_id=user_id,
-            module_slug=req.module_slug,
-            capabilities=req.capabilities,
-            actor=current_user.email,
-        )
-        audit.record(
-            "user_override_changed",
-            user_id=current_user.user_id,
-            target_user_id=user_id,
-            request=request,
-            detail={"module": req.module_slug, "capabilities": req.capabilities},
-        )
-        return {"ok": True}
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+) -> list[dict[str, Any]]:
+    """Bulk update user granular capability overrides."""
+    raw_overrides = [o.model_dump() for o in req.overrides]
+    res = ss.update_user_overrides_bulk(user_id, raw_overrides, actor=current_user.email)
+    audit.record(
+        "user_overrides_updated",
+        user_id=current_user.user_id,
+        target_user_id=user_id,
+        request=request,
+        detail={"count": len(req.overrides)},
+    )
+    return res

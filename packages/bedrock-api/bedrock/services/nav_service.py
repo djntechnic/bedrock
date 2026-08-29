@@ -2,8 +2,9 @@
 Module:  nav_service.py
 Layer:   bedrock-api/services
 Desc:    Dynamic navigation item settings service:
-         - Retrieves all navigation customization settings (sort_order, label_override, icon_override, tooltip_override, is_hidden_override)
+         - Retrieves all navigation customization settings
          - Updates navigation settings with audit columns
+         - Resets and deletes navigation settings/custom entries
 """
 from __future__ import annotations
 
@@ -76,4 +77,29 @@ def update_nav_settings(
                 (nav_key, parent_key, sort_order, label_ovr, icon_ovr, tooltip_ovr, is_hidden, actor, actor),
             )
     logger.info("Updated {} navigation item settings by={}", len(settings), actor)
+    return get_nav_settings(database=d)
+
+
+def reset_nav_settings(
+    actor: str = "System",
+    *,
+    database: DatabaseManager | None = None,
+) -> list[dict[str, Any]]:
+    """Clear all navigation item overrides and restore defaults."""
+    d = _get_db(database)
+    d.execute(f"DELETE FROM {T.APP_NAV_ITEM_SETTINGS}")
+    logger.info("Reset all navigation item settings to defaults by={}", actor)
+    return []
+
+
+def delete_nav_setting(
+    nav_key: str,
+    actor: str = "System",
+    *,
+    database: DatabaseManager | None = None,
+) -> list[dict[str, Any]]:
+    """Delete a single navigation setting or custom spacer."""
+    d = _get_db(database)
+    d.execute(f"DELETE FROM {T.APP_NAV_ITEM_SETTINGS} WHERE nav_key = %s", (nav_key,))
+    logger.info("Deleted navigation setting nav_key={} by={}", nav_key, actor)
     return get_nav_settings(database=d)

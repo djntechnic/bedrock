@@ -159,18 +159,34 @@ def set_user_module_override(
         return
 
     actor = str(actor_user_id) if actor_user_id is not None else "System"
-    d.execute(
-        f"""
-        INSERT INTO {T.AUTH_USER_MODULE_OVERRIDES}
-            (user_id, module_id, can_view, created_at, created_by, modified_at, modified_by)
-        VALUES (%s, %s, %s, datetime('now'), %s, datetime('now'), %s)
-        ON CONFLICT(user_id, module_id) DO UPDATE SET
-            can_view    = excluded.can_view,
-            modified_at = excluded.modified_at,
-            modified_by = excluded.modified_by
-        """,
-        (user_id, mid, 1 if granted else 0, actor, actor),
-    )
+    cols = {r["name"] for r in d.query(f"PRAGMA table_info({T.AUTH_USER_MODULE_OVERRIDES})").to_dict(orient="records")}
+    if "granted" in cols:
+        d.execute(
+            f"""
+            INSERT INTO {T.AUTH_USER_MODULE_OVERRIDES}
+                (user_id, module_id, can_view, granted, created_at, created_by, modified_at, modified_by)
+            VALUES (%s, %s, %s, %s, datetime('now'), %s, datetime('now'), %s)
+            ON CONFLICT(user_id, module_id) DO UPDATE SET
+                can_view    = excluded.can_view,
+                granted     = excluded.granted,
+                modified_at = excluded.modified_at,
+                modified_by = excluded.modified_by
+            """,
+            (user_id, mid, 1 if granted else 0, 1 if granted else 0, actor, actor),
+        )
+    else:
+        d.execute(
+            f"""
+            INSERT INTO {T.AUTH_USER_MODULE_OVERRIDES}
+                (user_id, module_id, can_view, created_at, created_by, modified_at, modified_by)
+            VALUES (%s, %s, %s, datetime('now'), %s, datetime('now'), %s)
+            ON CONFLICT(user_id, module_id) DO UPDATE SET
+                can_view    = excluded.can_view,
+                modified_at = excluded.modified_at,
+                modified_by = excluded.modified_by
+            """,
+            (user_id, mid, 1 if granted else 0, actor, actor),
+        )
     logger.info(
         "Module override set user={} module={} granted={} by={}",
         user_id, slug, granted, actor_user_id,

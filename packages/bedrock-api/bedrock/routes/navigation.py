@@ -1,7 +1,7 @@
 """
 Module:  navigation.py
 Layer:   bedrock-api/routes
-Desc:    Dynamic navigation settings and customization endpoints.
+Desc:    Dynamic navigation settings, spacers, and customization endpoints.
 """
 from __future__ import annotations
 
@@ -51,5 +51,38 @@ def update_navigation_settings(
         user_id=current_user.user_id,
         request=request,
         detail={"count": len(req.settings)},
+    )
+    return result
+
+
+@router.delete("/settings", dependencies=[require_permission("admin", "update")])
+def reset_navigation_settings(
+    current_user: Annotated[us.UserRecord, require_permission("admin", "update")],
+    request: Request,
+) -> list[dict[str, Any]]:
+    """Reset all dynamic navigation settings back to application code defaults."""
+    result = ns.reset_nav_settings(actor=current_user.email)
+    audit.record(
+        "nav_settings_reset",
+        user_id=current_user.user_id,
+        request=request,
+        detail={"action": "reset_all"},
+    )
+    return result
+
+
+@router.delete("/settings/{nav_key:path}", dependencies=[require_permission("admin", "update")])
+def delete_navigation_setting(
+    nav_key: str,
+    current_user: Annotated[us.UserRecord, require_permission("admin", "update")],
+    request: Request,
+) -> list[dict[str, Any]]:
+    """Delete a specific navigation setting or custom spacer."""
+    result = ns.delete_nav_setting(nav_key, actor=current_user.email)
+    audit.record(
+        "nav_setting_deleted",
+        user_id=current_user.user_id,
+        request=request,
+        detail={"nav_key": nav_key},
     )
     return result
