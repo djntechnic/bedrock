@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "../claude-kit",
+      "../CollectIt",
+      "../MLBTracker"
+    ],
+    "allow": [
+      "Read(//c/Dev/**)",
+      "Edit(//c/Dev/**)",
+      "Bash(npm run *)",
+      "Bash(git *)"
+    ]
+  }
+}
