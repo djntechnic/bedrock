@@ -125,7 +125,7 @@ class DatabaseManager:
 
     def __init__(self):
         self.db_url = config.DATABASE_URL
-        self.sqlite_path = config.SQLITE_DB_PATH
+        self._sqlite_path = config.SQLITE_DB_PATH
         self.is_postgres = bool(self.db_url)
 
         # Thread-local store for persistent per-thread SQLite connections.
@@ -134,6 +134,15 @@ class DatabaseManager:
         # Lazily-initialised Postgres connection pool (guarded by _pool_lock).
         self._pg_pool = None
         self._pool_lock = threading.Lock()
+
+    @property
+    def sqlite_path(self):
+        return self._sqlite_path
+
+    @sqlite_path.setter
+    def sqlite_path(self, value):
+        self._sqlite_path = value
+        self.invalidate_config()
 
     def validate_connection(self) -> str:
         """Validate database name and connection upon startup.

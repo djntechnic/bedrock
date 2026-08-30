@@ -21,11 +21,11 @@
 --   another app registers its own.
 
 -- ── Roles ───────────────────────────────────────────────────────────────────
-INSERT OR IGNORE INTO auth_roles (slug, label) VALUES
-  ('anon',      'Anonymous'),
-  ('viewer',    'Viewer'),
-  ('member',    'Member'),
-  ('admin',     'Administrator');
+INSERT OR IGNORE INTO auth_roles (slug, label, description) VALUES
+  ('anon',      'Anonymous',     'Unauthenticated public visitor'),
+  ('viewer',    'Viewer',        'Read-only access to licensed modules'),
+  ('member',    'Member',        'Full member access with creation/update capabilities'),
+  ('admin',     'Administrator', 'Full system administrative access across all modules');
 
 -- ── Platform modules ────────────────────────────────────────────────────────
 -- sort_order leaves room below: an application's own modules are expected to
@@ -35,20 +35,16 @@ INSERT OR IGNORE INTO auth_modules (slug, label, sort_order, is_core, descriptio
   ('health', 'Health', 99, 0, 'Backend health diagnostics');
 
 -- ── Role grants ─────────────────────────────────────────────────────────────
--- Administrators get every module that exists at seed time.
---
--- Note for applications: this is a snapshot, not a rule. A migration that adds
--- a module must also grant it to admin, or the console will not show it. The
--- same statement re-run after the insert does the job, since it is an
--- INSERT OR IGNORE cross join.
-INSERT OR IGNORE INTO auth_role_modules (role_id, module_id)
-SELECT r.role_id, m.module_id
+-- Administrators get every capability on every module that exists at seed time.
+INSERT OR IGNORE INTO auth_role_modules (role_id, module_id, can_view, can_update, can_delete, can_execute)
+SELECT r.role_id, m.module_id, 1, 1, 1, 1
   FROM auth_roles r, auth_modules m
  WHERE r.slug = 'admin';
 
--- Everyone else can reach health; nobody but admin gets the console.
-INSERT OR IGNORE INTO auth_role_modules (role_id, module_id)
-SELECT r.role_id, m.module_id
+-- Everyone else can view health; nobody but admin gets the admin console.
+INSERT OR IGNORE INTO auth_role_modules (role_id, module_id, can_view, can_update, can_delete, can_execute)
+SELECT r.role_id, m.module_id, 1, 0, 0, 0
   FROM auth_roles r, auth_modules m
- WHERE r.slug IN ('viewer', 'member')
+ WHERE r.slug IN ('anon', 'viewer', 'member')
    AND m.slug = 'health';
+

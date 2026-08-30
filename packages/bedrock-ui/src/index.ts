@@ -53,11 +53,18 @@ export type { SecurityLogViewerProps } from "./components/admin/SecurityLogViewe
 export { default as ConfigEditor } from "./components/admin/ConfigEditor";
 export { groupByCategory, boolValue } from "./components/admin/ConfigEditor";
 export { default as UsersPanel } from "./components/admin/UsersPanel";
+export { default as ModulesPanel } from "./components/admin/ModulesPanel";
 export { shortUserAgent } from "./components/admin/UsersPanel";
+export { default as UserOverridesDrawer } from "./components/admin/UserOverridesDrawer";
+export * from "./hooks/useUserOverrides";
+export { default as RoleMatrixPanel } from "./components/admin/RoleMatrixPanel";
+export * from "./hooks/useRoleMatrix";
+export { default as MenuNavEditorPanel } from "./components/admin/MenuNavEditorPanel";
 export { default as PlatformHealthPanel } from "./components/admin/PlatformHealthPanel";
 export { formatBytes } from "./components/admin/PlatformHealthPanel";
 // `<AppSidebar>` links to `/profile`; this is what belongs behind that link.
 export { default as ProfilePage } from "./components/admin/ProfilePage";
+export { default as UserAccessProfileView } from "./components/admin/UserAccessProfileView";
 export * from "./hooks/useProfile";
 
 // ── Admin Grid Editor ────────────────────────────────────────────────────────
@@ -92,12 +99,15 @@ export * from "./components/navRegistry";
 export * from "./components/searchSourceRegistry";
 export * from "./lib/commandRoutes";
 
-// ── Auth ─────────────────────────────────────────────────────────────────────
+// ── Auth & Security ──────────────────────────────────────────────────────────
 export { default as ProtectedRoute } from "./components/ProtectedRoute";
+export type { ProtectedRouteProps } from "./components/ProtectedRoute";
 export { default as ModuleDisabled } from "./components/ModuleDisabled";
 export * from "./context/AuthContext";
 export * from "./hooks/useAuth";
 export * from "./hooks/useModules";
+export * from "./hooks/useSecurity";
+export * from "./hooks/useNavSettings";
 // Mail-driven flows (F1). The paths these mount at are fixed by the platform —
 // the backend builds the emailed links from the same constants — so an app
 // wires them to `AUTH_FLOW_PATHS` rather than choosing its own.

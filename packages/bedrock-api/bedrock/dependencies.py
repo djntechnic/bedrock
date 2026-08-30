@@ -18,6 +18,7 @@ from bedrock.core.config import config
 from bedrock.services import auth_activity_service as audit
 from bedrock.services import user_service as us
 from bedrock.services import module_service as ms
+from bedrock.services import security_service as ss
 
 
 def get_db():
@@ -26,6 +27,18 @@ def get_db():
 
 def get_app_config():
     return config
+
+
+# ── Client IP extraction helper ──────────────────────────────────────────────
+def get_client_ip(request: Request) -> str | None:
+    """Extract client IP from proxy headers or direct client socket."""
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    real_ip = request.headers.get("x-real-ip")
+    if real_ip:
+        return real_ip.strip()
+    return request.client.host if request.client else None
 
 
 # ── Auth dependencies (Phase 5.2) ────────────────────────────────────────────
@@ -222,3 +235,77 @@ def require_module(slug: str, *, allow_anon: bool = False):
         return user
 
     return Depends(_check)
+
+
+# ── Granular Capability Gating ───────────────────────────────────────────────
+def require_permission(
+    module: str,
+    action: ss.ActionType = "view",
+    *,
+    allow_anon: bool = False,
+):
+    """FastAPI dependency factory: enforce that the caller has the specific
+    action capability ('view' | 'update' | 'delete' | 'execute') enabled for
+    the named module.
+
+    - When allow_anon=True, unauthenticated callers pass iff the anon role
+      grants that specific capability on the module.
+    - Superusers and Admin role holders pass automatically.
+    - Logs permission denials to auth_activity_log with actor IP and path context.
+    """
+    def _check(
+        request: Request,
+        token: Annotated[str | None, Depends(oauth2_scheme)] = None,
+    ) -> us.UserRecord | None:
+        client_ip = get_client_ip(request)
+
+        # Anonymous branch
+        if not token:
+            if allow_anon:
+                anon_perms = ss.resolve_user_permissions(None)
+                if anon_perms.get(module, {}).get(action, False):
+                    return None
+            audit.record(
+                "permission_denied",
+                user_id=None,
+                request=request,
+                detail={"module": module, "action": action, "path": request.url.path, "reason": "unauthenticated"},
+            )
+            raise _unauth()
+
+        payload = us.decode_token(token)
+        if payload is None or "sub" not in payload or "jti" not in payload:
+            raise _unauth("Invalid or expired token")
+        if us.is_session_revoked(payload["jti"]):
+            raise _unauth("Session has been revoked")
+        try:
+            user_id = int(payload["sub"])
+        except (TypeError, ValueError):
+            raise _unauth("Invalid token subject")
+        user = us.get_user_by_id(user_id)
+        if user is None or not user.is_active:
+            raise _unauth("User inactive or missing")
+        request.state.jwt_payload = payload
+
+        # Check granular permissions
+        perms = ss.resolve_user_permissions(user.user_id, is_superuser=user.is_superuser)
+        if not perms.get(module, {}).get(action, False):
+            audit.record(
+                "permission_denied",
+                user_id=user.user_id,
+                request=request,
+                detail={"module": module, "action": action, "path": request.url.path},
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "code": "permission_denied",
+                    "module": module,
+                    "action": action,
+                    "message": f"{action.capitalize()} permission required for module '{module}'",
+                },
+            )
+        return user
+
+    return Depends(_check)
+

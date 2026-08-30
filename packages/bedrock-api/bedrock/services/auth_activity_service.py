@@ -58,6 +58,11 @@ EVENT_TYPES: frozenset[str] = frozenset({
     "alias_updated",
     "alias_deleted",
     "admin_inventory_write",
+    # ── Granular security & nav audit events ────────────────────────────────
+    "permission_denied",
+    "role_matrix_updated",
+    "user_override_changed",
+    "nav_settings_updated",
 })
 
 

@@ -86,6 +86,23 @@ export const queryKeys = {
     /** Token-scoped cache so login/logout invalidates the anon set cleanly. */
     me: (token: string | null) => ["modules", "me", token ?? "anon"] as const,
     registry: () => ["modules", "registry"] as const,
+    list: () => ["modules", "list"] as const,
     forUser: (userId: number | string) => ["modules", "user", userId] as const,
+  },
+
+  // ── Security ─────────────────────────────────────────────────────────────
+  security: {
+    all: ["security"] as const,
+    myPermissions: (token: string | null) => ["security", "my-permissions", token ?? "anon"] as const,
+    roles: () => ["security", "roles"] as const,
+    matrix: () => ["security", "matrix"] as const,
+    userProfile: (userId: number | string) => ["security", "user-profile", userId] as const,
+    userOverrides: (userId: number | string) => ["security", "user-overrides", userId] as const,
+  },
+
+  // ── Navigation ───────────────────────────────────────────────────────────
+  navigation: {
+    all: ["navigation"] as const,
+    settings: () => ["navigation", "settings"] as const,
   },
 } as const;

@@ -15,7 +15,7 @@ Desc:    Phase 5.9 — module registry endpoints.
 """
 from __future__ import annotations
 
-from typing import Annotated, Literal
+from typing import Annotated, Literal, Any
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
 from pydantic import BaseModel
@@ -24,6 +24,7 @@ from bedrock.dependencies import (
     get_current_active_user,
     oauth2_scheme,
     require_role,
+    require_permission,
 )
 from bedrock.services import module_service as ms
 from bedrock.services import user_service as us
@@ -31,6 +32,11 @@ from bedrock.services import user_service as us
 
 router = APIRouter()
 
+
+@router.get("", dependencies=[require_permission("admin", "view")])
+def list_all_modules() -> list[dict[str, Any]]:
+    """Return all registered functional modules with boolean is_core."""
+    return ms.list_modules_public()
 
 # ── Public: caller's own module set ─────────────────────────────────────────
 class MeModulesOut(BaseModel):

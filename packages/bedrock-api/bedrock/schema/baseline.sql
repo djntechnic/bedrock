@@ -242,13 +242,20 @@ CREATE TABLE IF NOT EXISTS "auth_roles" (
     role_id     INTEGER PRIMARY KEY AUTOINCREMENT,
     slug        TEXT    NOT NULL UNIQUE,                         -- anon | viewer | member | admin
     label       TEXT    NOT NULL,
-    created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+    description TEXT,
+    created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+    created_by  TEXT    NOT NULL DEFAULT 'System',
+    modified_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    modified_by TEXT    NOT NULL DEFAULT 'System'
 );
 
 CREATE TABLE IF NOT EXISTS "auth_user_roles" (
-    user_id    INTEGER NOT NULL REFERENCES "auth_users"(user_id) ON DELETE CASCADE,
-    role_id    INTEGER NOT NULL REFERENCES "auth_roles"(role_id) ON DELETE CASCADE,
-    granted_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    user_id     INTEGER NOT NULL REFERENCES "auth_users"(user_id) ON DELETE CASCADE,
+    role_id     INTEGER NOT NULL REFERENCES "auth_roles"(role_id) ON DELETE CASCADE,
+    created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+    created_by  TEXT    NOT NULL DEFAULT 'System',
+    modified_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    modified_by TEXT    NOT NULL DEFAULT 'System',
     PRIMARY KEY (user_id, role_id)
 );
 
@@ -334,22 +341,53 @@ CREATE TABLE IF NOT EXISTS "auth_modules" (
     description TEXT,
     sort_order  INTEGER NOT NULL DEFAULT 0,
     is_core     INTEGER NOT NULL DEFAULT 0,                      -- 1 = always-on for admin, cannot be revoked
-    created_at  TEXT    NOT NULL DEFAULT (datetime('now'))
+    created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+    created_by  TEXT    NOT NULL DEFAULT 'System',
+    modified_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    modified_by TEXT    NOT NULL DEFAULT 'System'
 );
 
 CREATE TABLE IF NOT EXISTS "auth_role_modules" (
-    role_id   INTEGER NOT NULL REFERENCES "auth_roles"(role_id) ON DELETE CASCADE,
-    module_id INTEGER NOT NULL REFERENCES "auth_modules"(module_id) ON DELETE CASCADE,
+    role_id     INTEGER NOT NULL REFERENCES "auth_roles"(role_id) ON DELETE CASCADE,
+    module_id   INTEGER NOT NULL REFERENCES "auth_modules"(module_id) ON DELETE CASCADE,
+    can_view    INTEGER NOT NULL DEFAULT 1,
+    can_update  INTEGER NOT NULL DEFAULT 0,
+    can_delete  INTEGER NOT NULL DEFAULT 0,
+    can_execute INTEGER NOT NULL DEFAULT 0,
+    created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+    created_by  TEXT    NOT NULL DEFAULT 'System',
+    modified_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    modified_by TEXT    NOT NULL DEFAULT 'System',
     PRIMARY KEY (role_id, module_id)
 );
 
 CREATE TABLE IF NOT EXISTS "auth_user_module_overrides" (
-    user_id    INTEGER NOT NULL REFERENCES "auth_users"(user_id) ON DELETE CASCADE,
-    module_id  INTEGER NOT NULL REFERENCES "auth_modules"(module_id) ON DELETE CASCADE,
-    granted    INTEGER NOT NULL,
-    granted_by INTEGER REFERENCES "auth_users"(user_id),
-    granted_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    user_id     INTEGER NOT NULL REFERENCES "auth_users"(user_id) ON DELETE CASCADE,
+    module_id   INTEGER NOT NULL REFERENCES "auth_modules"(module_id) ON DELETE CASCADE,
+    can_view    INTEGER,  -- NULL=inherit, 1=grant, 0=deny
+    can_update  INTEGER,
+    can_delete  INTEGER,
+    can_execute INTEGER,
+    created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+    created_by  TEXT    NOT NULL DEFAULT 'System',
+    modified_at TEXT    NOT NULL DEFAULT (datetime('now')),
+    modified_by TEXT    NOT NULL DEFAULT 'System',
     PRIMARY KEY (user_id, module_id)
+);
+
+CREATE TABLE IF NOT EXISTS "app_nav_item_settings" (
+    nav_setting_id      INTEGER PRIMARY KEY AUTOINCREMENT,
+    nav_key             TEXT    NOT NULL UNIQUE,  -- route path e.g. '/inventory'
+    parent_key          TEXT,                     -- parent route path if child
+    sort_order          INTEGER NOT NULL DEFAULT 0,
+    label_override      TEXT,
+    icon_override       TEXT,                     -- Lucide icon name string
+    tooltip_override    TEXT,
+    is_hidden_override  INTEGER NOT NULL DEFAULT 0,
+    created_at          TEXT    NOT NULL DEFAULT (datetime('now')),
+    created_by          TEXT    NOT NULL DEFAULT 'System',
+    modified_at         TEXT    NOT NULL DEFAULT (datetime('now')),
+    modified_by         TEXT    NOT NULL DEFAULT 'System'
 );
 
 CREATE TABLE IF NOT EXISTS auth_activity_log (

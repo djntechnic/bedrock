@@ -26,6 +26,7 @@ import { Label } from "../ui/label";
 import PageHeader from "../PageHeader";
 import { useAuth } from "../../hooks/useAuth";
 import { useChangePassword } from "../../hooks/useProfile";
+import UserAccessProfileView from "./UserAccessProfileView";
 
 /** Mirrors `ChangePasswordIn.new_password`'s `min_length`. */
 const MIN_PASSWORD_LENGTH = 8;
@@ -203,6 +204,10 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
       </div>
+
+      {user?.user_id && (
+        <UserAccessProfileView userId={user.user_id} />
+      )}
     </div>
   );
 }

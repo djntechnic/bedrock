@@ -11,13 +11,13 @@ import { useState, useEffect, forwardRef, type ReactNode } from "react";
 import { useLocation, Link } from "react-router-dom";
 import {
   ChevronDown,
+  CircleDot,
   Pin,
   PinOff,
   LogOut,
   User,
 } from "lucide-react";
 import {
-  getNavItems,
   isNavItemVisible,
   type NavItem,
   type SubItem,
@@ -29,6 +29,8 @@ import {
 } from "./ui/tooltip";
 import { useAppSettings } from "../hooks/useAppSettings";
 import { useModules } from "../hooks/useModules";
+import { useSecurity } from "../hooks/useSecurity";
+import { useNavSettings } from "../hooks/useNavSettings";
 import { useAuth } from "../hooks/useAuth";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 import { useSidebarStore } from "../store/sidebarStore";
@@ -85,6 +87,8 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
   const { system } = useAppSettings();
   const { hasModule } = useModules();
+  const { navItems } = useNavSettings();
+  const security = useSecurity();
   const { user, isAdmin, hasRole, logout } = useAuth();
 
   const isMobile = useMediaQuery("(max-width: 1023px)");
@@ -137,7 +141,7 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
 
   // Auto-open the section when navigating to it
   useEffect(() => {
-    for (const item of getNavItems()) {
+    for (const item of navItems) {
       if ((item.children || item.groups) && isParentActive(item)) {
         setOpenSections((prev) => {
           if (prev.has(item.to)) return prev;
@@ -148,7 +152,7 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname]);
+  }, [location.pathname, navItems]);
 
   function toggleSection(path: string) {
     setOpenSections((prev) => {
@@ -211,16 +215,38 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-3 space-y-0.5 px-2">
-        {getNavItems().map((item) => {
-          // Role and legacy admin-module gating both hide the entry outright.
-          // Module gating below only *disables* it, which is the difference
-          // between "not for you" and "not switched on".
-          if (!isNavItemVisible(item, { user, isAdmin, hasRole })) {
+        {navItems.map((rawItem) => {
+          // Dynamic security gating completely hides unauthorized items
+          if (!isNavItemVisible(rawItem, { user, isAdmin, hasRole }, security)) {
             return null;
           }
-          const active = isParentActive(item);
-          const Icon = item.icon;
+
+          const filteredChildren = rawItem.children?.filter((child) => 
+            isNavItemVisible(child as unknown as NavItem, { user, isAdmin, hasRole }, security)
+          );
+
+          const filteredGroups = rawItem.groups?.map(g => ({
+            ...g,
+            items: g.items.filter(child => 
+              isNavItemVisible(child as unknown as NavItem, { user, isAdmin, hasRole }, security)
+            )
+          })).filter(g => g.items.length > 0);
+
+          const item = {
+            ...rawItem,
+            children: filteredChildren?.length ? filteredChildren : undefined,
+            groups: filteredGroups?.length ? filteredGroups : undefined,
+          };
+
+          const originallyHadChildren = !!(rawItem.children?.length || rawItem.groups?.length);
           const hasChildren = !!(item.children?.length || item.groups?.length);
+
+          if (originallyHadChildren && !hasChildren && !item.exact) {
+            return null;
+          }
+
+          const active = isParentActive(item);
+          const Icon = item.icon || CircleDot;
           const open = hasChildren && isSectionOpen(item);
           const disabled = !!item.module && !hasModule(item.module);
 
@@ -237,6 +263,7 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
             ) : (
               <Link
                 to={item.to}
+                title={item.tooltip || undefined}
                 className={[
                   "flex items-center justify-center px-2.5 py-2 rounded-md",
                   "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -253,13 +280,25 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
               <Tooltip key={item.to} delayDuration={0}>
                 <TooltipTrigger asChild>{iconLink}</TooltipTrigger>
                 <TooltipContent side="right" className="text-xs">
-                  {disabled ? `${item.label} — not enabled for your account` : item.label}
+                  {disabled ? (
+                    `${item.label} — not enabled for your account`
+                  ) : (
+                    <div>
+                      <div className="font-semibold">{item.label}</div>
+                      {item.tooltip && (
+                        <div className="text-[11px] text-muted-foreground mt-0.5 max-w-[200px]">
+                          {item.tooltip}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {hasChildren && (
-                    <div className="mt-1 space-y-0.5">
+                    <div className="mt-1.5 pt-1.5 border-t border-border/50 space-y-0.5">
                       {allSubItems(item).map((child) => (
                         <div key={child.to}>
                           <Link
                             to={child.to}
+                            title={child.tooltip || undefined}
                             className={[
                               "block px-2 py-0.5 rounded text-xs",
                               "outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -268,7 +307,12 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
                                 : "text-muted-foreground hover:text-foreground",
                             ].join(" ")}
                           >
-                            {child.label}
+                            <span>{child.label}</span>
+                            {child.tooltip && (
+                              <span className="block text-[10px] text-muted-foreground font-normal">
+                                {child.tooltip}
+                              </span>
+                            )}
                           </Link>
                         </div>
                       ))}
@@ -300,20 +344,42 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
                       Not enabled for your account
                     </TooltipContent>
                   </Tooltip>
+                ) : item.tooltip ? (
+                  <Tooltip delayDuration={0}>
+                    <TooltipTrigger asChild>
+                      <Link
+                        to={item.to}
+                        title={item.tooltip || undefined}
+                        className={[
+                          "flex-1 flex items-center gap-3 px-2.5 py-2 rounded-md text-sm font-medium",
+                          "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          active
+                            ? "bg-primary/10 text-primary font-semibold ring-1 ring-primary/20"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                        ].join(" ")}
+                      >
+                        <Icon className="shrink-0 h-[18px] w-[18px]" />
+                        <span className="truncate">{item.label}</span>
+                      </Link>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="text-xs">
+                      {item.tooltip}
+                    </TooltipContent>
+                  </Tooltip>
                 ) : (
-                <Link
-                  to={item.to}
-                  className={[
-                    "flex-1 flex items-center gap-3 px-2.5 py-2 rounded-md text-sm font-medium",
-                    "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                    active
-                      ? "bg-primary/10 text-primary font-semibold ring-1 ring-primary/20"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground",
-                  ].join(" ")}
-                >
-                  <Icon className="shrink-0 h-[18px] w-[18px]" />
-                  <span className="truncate">{item.label}</span>
-                </Link>
+                  <Link
+                    to={item.to}
+                    className={[
+                      "flex-1 flex items-center gap-3 px-2.5 py-2 rounded-md text-sm font-medium",
+                      "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                      active
+                        ? "bg-primary/10 text-primary font-semibold ring-1 ring-primary/20"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                    ].join(" ")}
+                  >
+                    <Icon className="shrink-0 h-[18px] w-[18px]" />
+                    <span className="truncate">{item.label}</span>
+                  </Link>
                 )}
                 {hasChildren && (
                   <button
@@ -341,10 +407,11 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
                 <div className="mt-0.5 ml-4 pl-3 border-l border-border space-y-0.5">
                   {item.children && item.children.map((child) => {
                     const childActive = isChildActive(child);
-                    return (
+                    const childLink = (
                       <Link
                         key={child.to}
                         to={child.to}
+                        title={child.tooltip || undefined}
                         className={[
                           "flex items-center px-2 py-1.5 rounded-md text-xs font-medium",
                           "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -356,6 +423,19 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
                         {child.label}
                       </Link>
                     );
+
+                    if (child.tooltip) {
+                      return (
+                        <Tooltip key={child.to} delayDuration={0}>
+                          <TooltipTrigger asChild>{childLink}</TooltipTrigger>
+                          <TooltipContent side="right" className="text-xs">
+                            {child.tooltip}
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    }
+
+                    return childLink;
                   })}
                   {item.groups && item.groups.map((group) => (
                     <div key={group.label} className="pt-1.5">
@@ -364,10 +444,11 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
                       </p>
                       {group.items.map((child) => {
                         const childActive = isChildActive(child);
-                        return (
+                        const groupChildLink = (
                           <Link
                             key={child.to}
                             to={child.to}
+                            title={child.tooltip || undefined}
                             className={[
                               "flex items-center px-2 py-1.5 rounded-md text-xs font-medium",
                               "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -379,6 +460,19 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
                             {child.label}
                           </Link>
                         );
+
+                        if (child.tooltip) {
+                          return (
+                            <Tooltip key={child.to} delayDuration={0}>
+                              <TooltipTrigger asChild>{groupChildLink}</TooltipTrigger>
+                              <TooltipContent side="right" className="text-xs">
+                                {child.tooltip}
+                              </TooltipContent>
+                            </Tooltip>
+                          );
+                        }
+
+                        return groupChildLink;
                       })}
                     </div>
                   ))}

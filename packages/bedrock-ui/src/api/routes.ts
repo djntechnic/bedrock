@@ -97,6 +97,23 @@ export const API_ROUTES = {
   modules: {
     me: () => "/api/v1/modules/me",
     registry: () => "/api/v1/modules/registry",
+    list: () => "/api/v1/modules",
     forUser: (userId: number | string) => `/api/v1/modules/users/${userId}`,
+  },
+
+  // ── Security ─────────────────────────────────────────────────────────────
+  security: {
+    myPermissions: () => "/api/v1/security/my-permissions",
+    roles: () => "/api/v1/security/roles",
+    role: (roleId: number | string) => `/api/v1/security/roles/${roleId}`,
+    matrix: () => "/api/v1/security/matrix",
+    userProfile: (userId: number | string) => `/api/v1/security/users/${userId}/profile`,
+    userOverrides: (userId: number | string) => `/api/v1/security/users/${userId}/overrides`,
+  },
+
+  // ── Navigation ───────────────────────────────────────────────────────────
+  navigation: {
+    settings: () => "/api/v1/navigation/settings",
+    setting: (navKey: string) => `/api/v1/navigation/settings/${encodeURIComponent(navKey)}`,
   },
 } as const;
