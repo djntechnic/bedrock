@@ -63,6 +63,8 @@ EVENT_TYPES: frozenset[str] = frozenset({
     "role_matrix_updated",
     "user_override_changed",
     "nav_settings_updated",
+    "nav_setting_deleted",
+    "nav_settings_reset",
 })
 
 
