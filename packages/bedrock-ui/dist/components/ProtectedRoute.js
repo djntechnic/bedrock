@@ -30,12 +30,15 @@ function ProtectedRoute({
     return /* @__PURE__ */ jsx(ModuleDisabled, { reason: "role", required: requiredRole });
   }
   if (requiredModule && !isAdmin) {
-    if (modulesLoading || securityLoading) return null;
+    if (modulesLoading) return null;
     if (!hasModule(requiredModule)) {
       return /* @__PURE__ */ jsx(ModuleDisabled, { reason: "module", required: requiredModule });
     }
-    if (action && !can(requiredModule, action)) {
-      return /* @__PURE__ */ jsx(ModuleDisabled, { reason: "role", required: `${requiredModule}:${action}` });
+    if (action) {
+      if (securityLoading) return null;
+      if (!can(requiredModule, action)) {
+        return /* @__PURE__ */ jsx(ModuleDisabled, { reason: "role", required: `${requiredModule}:${action}` });
+      }
     }
   }
   return /* @__PURE__ */ jsx(Fragment, { children });
