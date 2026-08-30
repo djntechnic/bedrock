@@ -78,11 +78,11 @@ export declare const queryKeys: {
     };
     readonly security: {
         readonly all: readonly ["security"];
-        readonly matrix: () => readonly ["security", "matrix"];
+        readonly myPermissions: (token: string | null) => readonly ["security", "myPermissions", string];
         readonly roles: () => readonly ["security", "roles"];
         readonly role: (roleId: number | string) => readonly ["security", "role", string | number];
-        readonly myPermissions: (token: string | null) => readonly ["security", "myPermissions", string];
-        readonly userOverrides: (userId: number | string) => readonly ["security", "userOverrides", string | number];
-        readonly userProfile: (userId: number | string) => readonly ["security", "userProfile", string | number];
+        readonly matrix: () => readonly ["security", "matrix"];
+        readonly userProfile: (userId: number | string) => readonly ["security", "user-profile", string | number];
+        readonly userOverrides: (userId: number | string) => readonly ["security", "user-overrides", string | number];
     };
 };

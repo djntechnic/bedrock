@@ -72,12 +72,12 @@ const queryKeys = {
   // ── Security ─────────────────────────────────────────────────────────────
   security: {
     all: ["security"],
-    matrix: () => ["security", "matrix"],
+    myPermissions: (token) => ["security", "myPermissions", token ?? "anon"],
     roles: () => ["security", "roles"],
     role: (roleId) => ["security", "role", roleId],
-    myPermissions: (token) => ["security", "myPermissions", token ?? "anon"],
-    userOverrides: (userId) => ["security", "userOverrides", userId],
-    userProfile: (userId) => ["security", "userProfile", userId]
+    matrix: () => ["security", "matrix"],
+    userProfile: (userId) => ["security", "user-profile", userId],
+    userOverrides: (userId) => ["security", "user-overrides", userId]
   }
 };
 export {

@@ -78,7 +78,7 @@ export declare const API_ROUTES: {
     };
     readonly navigation: {
         readonly settings: () => string;
-        readonly setting: (key: string) => string;
+        readonly setting: (navKey: string) => string;
     };
     readonly security: {
         readonly matrix: () => string;

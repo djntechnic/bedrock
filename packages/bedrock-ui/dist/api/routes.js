@@ -73,7 +73,7 @@ const API_ROUTES = {
   // ── Navigation ────────────────────────────────────────────────────────────
   navigation: {
     settings: () => "/api/v1/navigation/settings",
-    setting: (key) => `/api/v1/navigation/settings/${key}`
+    setting: (navKey) => `/api/v1/navigation/settings/${encodeURIComponent(navKey)}`
   },
   // ── Security ─────────────────────────────────────────────────────────────
   security: {

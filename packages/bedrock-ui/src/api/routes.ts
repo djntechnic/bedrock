@@ -32,11 +32,16 @@ export const API_ROUTES = {
     sessions: () => "/api/v1/admin/sessions",
     session: (sessionId: string) => `/api/v1/admin/sessions/${sessionId}`,
     securityEvents: (qs?: string) =>
-      qs ? `/api/v1/admin/security/events?${qs}` : "/api/v1/admin/security/events",
+      qs
+        ? `/api/v1/admin/security/events?${qs}`
+        : "/api/v1/admin/security/events",
     databaseSummary: () => "/api/v1/admin/database/summary",
     config: (category?: string) =>
-      category ? `/api/v1/admin/config?category=${category}` : "/api/v1/admin/config",
-    configItem: (key: string) => `/api/v1/admin/config/${encodeURIComponent(key)}`,
+      category
+        ? `/api/v1/admin/config?category=${category}`
+        : "/api/v1/admin/config",
+    configItem: (key: string) =>
+      `/api/v1/admin/config/${encodeURIComponent(key)}`,
     grids: () => "/api/v1/admin/grids",
     gridPages: () => "/api/v1/admin/grids/pages",
     gridColumns: (gridId: string) => `/api/v1/admin/grids/${gridId}/columns`,
@@ -48,8 +53,10 @@ export const API_ROUTES = {
     lookupUiQueryConfig: () => "/api/v1/admin/lookup/ui-query-config",
     apiHealth: () => "/api/v1/admin/api-health",
     audit: () => "/api/v1/admin/audit",
-    auditHistory: (limit: number) => `/api/v1/admin/audit/history?limit=${limit}`,
-    auditRun: (runId: string | number) => `/api/v1/admin/audit/history/${runId}`,
+    auditHistory: (limit: number) =>
+      `/api/v1/admin/audit/history?limit=${limit}`,
+    auditRun: (runId: string | number) =>
+      `/api/v1/admin/audit/history/${runId}`,
   },
 
   // ── User preferences (per-user grid customization) ───────────────────────
@@ -104,7 +111,8 @@ export const API_ROUTES = {
   // ── Navigation ────────────────────────────────────────────────────────────
   navigation: {
     settings: () => "/api/v1/navigation/settings",
-    setting: (key: string) => `/api/v1/navigation/settings/${key}`,
+    setting: (navKey: string) =>
+      `/api/v1/navigation/settings/${encodeURIComponent(navKey)}`,
   },
 
   // ── Security ─────────────────────────────────────────────────────────────
@@ -113,7 +121,9 @@ export const API_ROUTES = {
     roles: () => "/api/v1/security/roles",
     role: (roleId: number | string) => `/api/v1/security/roles/${roleId}`,
     myPermissions: () => "/api/v1/security/me/permissions",
-    userOverrides: (userId: number | string) => `/api/v1/security/users/${userId}/overrides`,
-    userProfile: (userId: number | string) => `/api/v1/security/users/${userId}/profile`,
+    userOverrides: (userId: number | string) =>
+      `/api/v1/security/users/${userId}/overrides`,
+    userProfile: (userId: number | string) =>
+      `/api/v1/security/users/${userId}/profile`,
   },
 } as const;
