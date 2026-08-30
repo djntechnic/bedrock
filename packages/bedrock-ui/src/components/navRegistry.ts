@@ -74,7 +74,7 @@ export function isNavItemVisible(
     hasRole: (slug: string) => boolean;
   },
   security?: {
-    can: (module: string, action?: any) => boolean;
+    can: (module: string, action?: "view" | "update" | "delete" | "execute") => boolean;
   },
 ): boolean {
   if (item.is_hidden) return false;

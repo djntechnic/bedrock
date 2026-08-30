@@ -159,13 +159,14 @@ export default function RoleMatrixPanel() {
     // 2. Auto-save immediately to server
     try {
       await updateMatrix([updatedCell]);
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Revert on failure
       setDrafts((prev) => ({
         ...prev,
         [key]: previous,
       }));
-      toast.error(err?.response?.data?.detail || "Failed to update permission");
+      const error = err as { response?: { data?: { detail?: string } } };
+      toast.error(error?.response?.data?.detail || "Failed to update permission");
     }
   };
 
@@ -186,18 +187,20 @@ export default function RoleMatrixPanel() {
       setNewRoleSlug("");
       setNewRoleLabel("");
       setNewRoleDesc("");
-    } catch (err: any) {
-      toast.error(err?.response?.data?.detail || "Failed to create role");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { detail?: string } } };
+      toast.error(error?.response?.data?.detail || "Failed to create role");
     }
   };
 
-  const handleDeleteRole = async (role: any) => {
+  const handleDeleteRole = async (role: { role_id: number; label: string }) => {
     if (confirm(`Are you sure you want to delete role '${role.label}'?`)) {
       try {
         await deleteRole(role.role_id);
         toast.success(`Role '${role.label}' deleted`);
-      } catch (err: any) {
-        toast.error(err?.response?.data?.detail || "Failed to delete role");
+      } catch (err: unknown) {
+        const error = err as { response?: { data?: { detail?: string } } };
+        toast.error(error?.response?.data?.detail || "Failed to delete role");
       }
     }
   };

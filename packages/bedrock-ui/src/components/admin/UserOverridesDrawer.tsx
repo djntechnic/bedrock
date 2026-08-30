@@ -113,13 +113,14 @@ export default function UserOverridesDrawer({
         },
       ]);
       toast.success("Override saved");
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Revert on error
       setDraftOverrides((prev) => ({
         ...prev,
         [moduleId]: current,
       }));
-      const detail = err?.response?.data?.detail;
+      const error = err as { response?: { data?: { detail?: string | { message?: string } } } };
+      const detail = error?.response?.data?.detail;
       const msg = typeof detail === "string" ? detail : (detail?.message || "Failed to update override");
       toast.error(msg);
     }
@@ -138,8 +139,9 @@ export default function UserOverridesDrawer({
         }));
         await updateOverrides(resets);
         toast.success(`Overrides reset for ${user.email}`);
-      } catch (err: any) {
-        const detail = err?.response?.data?.detail;
+      } catch (err: unknown) {
+        const error = err as { response?: { data?: { detail?: string | { message?: string } } } };
+        const detail = error?.response?.data?.detail;
         const msg = typeof detail === "string" ? detail : (detail?.message || "Failed to reset overrides");
         toast.error(msg);
       }
@@ -188,7 +190,7 @@ export default function UserOverridesDrawer({
         </SheetHeader>
 
         {/* Tab Navigation */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="w-full">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overrides" | "compiled")} className="w-full">
           <div className="flex items-center justify-between mb-4">
             <TabsList className="grid grid-cols-2 w-full max-w-[340px]">
               <TabsTrigger value="overrides" className="text-xs">

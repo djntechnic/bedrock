@@ -47,7 +47,7 @@ export interface FlatNavItem {
   parent_key: string | null;
   label: string;
   group_label: string | null;
-  icon?: any;
+  icon?: import('react').ComponentType<{ className?: string }>;
   default_sort_order: number;
   is_sub_item: boolean;
   is_spacer: boolean;
@@ -228,7 +228,7 @@ export default function MenuNavEditorPanel() {
   const handleLocalDraftChange = (
     navKey: string,
     field: keyof NavItemSetting,
-    value: any
+    value: string | boolean | number | null
   ) => {
     setDrafts((prev) => ({
       ...prev,
@@ -255,15 +255,15 @@ export default function MenuNavEditorPanel() {
           is_hidden_override: current.is_hidden_override ? 1 : 0,
         },
       ]);
-    } catch (err: any) {
-      toast.error(err?.response?.data?.detail || "Failed to update navigation setting");
+    } catch (err: unknown) {
+      toast.error((err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || "Failed to update navigation setting");
     }
   };
 
   const handleDirectUpdate = async (
     navKey: string,
     field: keyof NavItemSetting,
-    value: any
+    value: string | boolean | number | null
   ) => {
     const current = drafts[navKey];
     if (!current) return;
@@ -290,12 +290,12 @@ export default function MenuNavEditorPanel() {
           is_hidden_override: updated.is_hidden_override ? 1 : 0,
         },
       ]);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setDrafts((prev) => ({
         ...prev,
         [navKey]: current,
       }));
-      toast.error(err?.response?.data?.detail || "Failed to update navigation setting");
+      toast.error((err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || "Failed to update navigation setting");
     }
   };
 
@@ -334,7 +334,7 @@ export default function MenuNavEditorPanel() {
 
     try {
       await updateSettings(batchUpdates);
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.error("Failed to update navigation order");
     }
   };
@@ -348,8 +348,8 @@ export default function MenuNavEditorPanel() {
       try {
         await resetSettings();
         toast.success("Navigation settings restored to defaults");
-      } catch (err: any) {
-        toast.error(err?.response?.data?.detail || "Failed to restore defaults");
+      } catch (err: unknown) {
+        toast.error((err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || "Failed to restore defaults");
       }
     }
   };
@@ -358,7 +358,7 @@ export default function MenuNavEditorPanel() {
     if (confirm(`Delete custom navigation item / spacer '${label}'?`)) {
       try {
         await deleteSetting(navKey);
-      } catch (err: any) {
+      } catch (err: unknown) {
         toast.error("Failed to delete navigation item");
       }
     }
@@ -401,8 +401,8 @@ export default function MenuNavEditorPanel() {
       setAddIcon("");
       setAddTooltip("");
       setAddParentKey("root");
-    } catch (err: any) {
-      toast.error(err?.response?.data?.detail || "Failed to create item");
+    } catch (err: unknown) {
+      toast.error((err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || "Failed to create item");
     }
   };
 
@@ -468,7 +468,7 @@ export default function MenuNavEditorPanel() {
             {itemsList.map(({ base, draft }, idx) => {
               let PreviewIcon = base.icon;
               if (draft.icon_override && draft.icon_override in LucideIcons) {
-                PreviewIcon = (LucideIcons as Record<string, any>)[draft.icon_override];
+                PreviewIcon = (LucideIcons as unknown as Record<string, import('react').ComponentType<{ className?: string }>>)[draft.icon_override];
               }
 
               const isSpacer = base.is_spacer;

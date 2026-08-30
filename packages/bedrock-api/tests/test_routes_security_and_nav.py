@@ -192,3 +192,24 @@ def test_user_overrides_bulk_route(api_test_client):
     assert override["can_view"] in (1, True)
     assert override["can_update"] in (0, False)
     assert override["can_delete"] is None
+
+def test_user_security_profile_access(api_test_client):
+    admin_user = us.create_user(email="admin_prof@example.com", password="Password123!", default_role="admin")
+    admin_token = us.create_access_token(admin_user.user_id)
+    admin_headers = {"Authorization": f"Bearer {admin_token}"}
+
+    member_user = us.create_user(email="member_prof@example.com", password="Password123!", default_role="viewer")
+    member_token = us.create_access_token(member_user.user_id)
+    member_headers = {"Authorization": f"Bearer {member_token}"}
+
+    # Admin viewing member profile (allowed)
+    admin_view_res = api_test_client.get(f"/api/v1/security/users/{member_user.user_id}/profile", headers=admin_headers)
+    assert admin_view_res.status_code == 200
+
+    # Member viewing their own profile (allowed)
+    member_self_res = api_test_client.get(f"/api/v1/security/users/{member_user.user_id}/profile", headers=member_headers)
+    assert member_self_res.status_code == 200
+
+    # Member viewing admin profile (forbidden)
+    member_other_res = api_test_client.get(f"/api/v1/security/users/{admin_user.user_id}/profile", headers=member_headers)
+    assert member_other_res.status_code == 403

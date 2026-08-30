@@ -9,7 +9,7 @@ from typing import Annotated, Any
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
-from bedrock.dependencies import get_optional_user, require_permission
+from bedrock.dependencies import get_optional_user, require_permission, get_current_active_user
 from bedrock.services import auth_activity_service as audit
 from bedrock.services import security_service as ss
 from bedrock.services import user_service as us
@@ -154,11 +154,19 @@ class UserOverridesBulkRequest(BaseModel):
     overrides: list[UserOverrideItemPayload]
 
 
-@router.get("/users/{user_id}/profile", dependencies=[require_permission("admin", "view")])
+@router.get("/users/{user_id}/profile")
 def get_user_security_profile_endpoint(
     user_id: int,
+    current_user: Annotated[us.UserRecord, Depends(get_current_active_user)],
 ) -> dict[str, Any]:
     """Return complete compiled security profile for user inspector."""
+    if current_user.user_id != user_id:
+        roles = us.get_user_roles(current_user.user_id)
+        if "admin" not in roles and not current_user.is_superuser:
+            raise HTTPException(
+                status_code=403,
+                detail="Admin permission required to view another user's security profile",
+            )
     try:
         prof = ss.get_user_security_profile(user_id)
         user_info = prof["user"]

@@ -6,7 +6,7 @@
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as LucideIcons from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, type ComponentType } from "react";
 import { apiClient } from "../api/client";
 import { API_ROUTES } from "../api/routes";
 import { getNavItems, type NavItem, type SubItem } from "../components/navRegistry";
@@ -53,7 +53,7 @@ export function useNavSettings(): {
     interface FlatItemCandidate {
       nav_key: string;
       label: string;
-      icon?: any;
+      icon?: ComponentType<{ className?: string }>;
       tooltip?: string;
       exact?: boolean;
       module?: string;
@@ -143,7 +143,7 @@ export function useNavSettings(): {
       nav_key: string;
       to: string;
       label: string;
-      icon: any;
+      icon: ComponentType<{ className?: string }>;
       tooltip?: string;
       exact?: boolean;
       module?: string;
@@ -164,7 +164,7 @@ export function useNavSettings(): {
 
       let IconComp = cand.icon;
       if (s?.icon_override && s.icon_override in LucideIcons) {
-        IconComp = (LucideIcons as Record<string, any>)[s.icon_override];
+        IconComp = (LucideIcons as unknown as Record<string, ComponentType<{ className?: string }>>)[s.icon_override];
       }
       if (!IconComp) {
         IconComp = LucideIcons.CircleDot || LucideIcons.FileText;
