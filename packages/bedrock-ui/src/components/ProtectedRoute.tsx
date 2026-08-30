@@ -57,12 +57,15 @@ export default function ProtectedRoute({
   }
 
   if (requiredModule && !isAdmin) {
-    if (modulesLoading || securityLoading) return null;
+    if (modulesLoading) return null;
     if (!hasModule(requiredModule)) {
       return <ModuleDisabled reason="module" required={requiredModule} />;
     }
-    if (action && !can(requiredModule, action)) {
-      return <ModuleDisabled reason="role" required={`${requiredModule}:${action}`} />;
+    if (action) {
+      if (securityLoading) return null;
+      if (!can(requiredModule, action)) {
+        return <ModuleDisabled reason="role" required={`${requiredModule}:${action}`} />;
+      }
     }
   }
 
