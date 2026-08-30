@@ -10,6 +10,7 @@
  *              entry here to stay reachable.
  */
 import type { LucideIcon } from "lucide-react";
+import type { ActionType } from "../hooks/useSecurity";
 
 /** A single jump-to-destination entry surfaced in the command palette. */
 export interface CommandRouteItem {
@@ -26,6 +27,8 @@ export interface CommandRouteItem {
   icon: LucideIcon;
   /** Module slug gating visibility, matching `useModules().hasModule()`. Omit for always-visible items. */
   module?: string;
+  /** Capability action required on module (defaults to 'view') */
+  action?: ActionType;
   /** Extra terms the fuzzy matcher should consider besides the label. */
   keywords?: string[];
 }

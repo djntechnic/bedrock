@@ -437,6 +437,8 @@ def apply_migrations() -> None:
     _ensure_ledger_table()
     _bootstrap_baseline()
 
+    add_col_migrations, raw_migrations = _load_inline_migrations()
+
     # 0. Platform migrations, before anything the application owns.
     for path in _discover_platform_sql_files():
         stem = os.path.splitext(os.path.basename(path))[0]
@@ -446,7 +448,7 @@ def apply_migrations() -> None:
         )
 
     # 1. Raw inline migrations.
-    for migration_id, sql in _RAW_MIGRATIONS:
+    for migration_id, sql in raw_migrations:
         def _runner(conn, s=sql):
             for statement in _split_sql_statements(s):
                 _execute_statement(statement, conn)
@@ -454,7 +456,7 @@ def apply_migrations() -> None:
         _apply_one(migration_id, _runner)
 
     # 2. ADD COLUMN migrations — stable id per (table, column).
-    for table, column, col_type in _ADD_COLUMN_MIGRATIONS:
+    for table, column, col_type in add_col_migrations:
         migration_id = f"alter_{table}_{column}"
 
         def _runner(conn, t=table, c=column, ct=col_type):

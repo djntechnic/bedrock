@@ -15,22 +15,27 @@
  */
 
 import type { ComponentType } from "react";
+import type { ActionType } from "../hooks/useSecurity";
 
 /** A leaf destination nested under a top-level nav entry. */
 export interface SubItem {
   to: string;
   label: string;
-  icon?: string;
   tooltip?: string;
   module?: string;
-  action?: "view" | "update" | "delete" | "execute";
+  action?: ActionType;
   role?: string;
+  exact?: boolean;
+  sort_order?: number;
 }
 
 /** A labelled cluster of {@link SubItem}s inside a top-level entry. */
 export interface SubGroup {
   label: string;
   items: SubItem[];
+  module?: string;
+  action?: ActionType;
+  role?: string;
 }
 
 /** A top-level entry in the primary navigation rail. */
@@ -38,32 +43,37 @@ export interface NavItem {
   to: string;
   icon: ComponentType<{ className?: string }>;
   label: string;
+  tooltip?: string;
   /** Match the route exactly rather than by prefix (used for "/"). */
   exact?: boolean;
   children?: SubItem[];
   groups?: SubGroup[];
-  /** Module slug this nav entry requires. */
+  /** Phase 5.9 — module slug this nav entry requires. */
   module?: string;
-  /** Action capability required ('view' | 'update' | 'delete' | 'execute'). Defaults to 'view'. */
-  action?: "view" | "update" | "delete" | "execute";
-  /** Role slug this nav entry requires. */
-  role?: string;
-  /** Custom sort order index */
+  action?: ActionType;
   sort_order?: number;
-  /** Custom tooltip string */
-  tooltip?: string;
-  /** Force hide toggle */
-  is_hidden?: boolean;
+  /**
+   * Role slug this nav entry requires. Below it, the entry is not rendered at
+   * all — an admin-only destination should not advertise itself.
+   *
+   * Deliberately separate from {@link NavItem.module}: `module` also drives the
+   * *disabled* rendering via `hasModule()`, so an app that gates by role but
+   * seeds no module registry would otherwise get a permanently greyed-out
+   * entry. Set both only when both are true.
+   *
+   * Mirror the guard `<ProtectedRoute requiredRole>` applies to the route
+   * itself. This hides the link; it is not the access control.
+   */
+  role?: string;
 }
 
 /**
- * The role/security half of nav gating, factored out of `<AppSidebar>` so it can be
+ * The role/auth half of nav gating, factored out of `<AppSidebar>` so it can be
  * reasoned about — and tested — without a router, a query client and an auth
  * provider.
  *
  * @param item - The entry being considered.
- * @param auth - The facts `useAuth()` exposes about the caller.
- * @param security - Optional security context with `can(module, action)`.
+ * @param auth - The three facts `useAuth()` exposes about the caller.
  * @returns False when the entry must not be rendered at all.
  */
 export function isNavItemVisible(
@@ -74,24 +84,21 @@ export function isNavItemVisible(
     hasRole: (slug: string) => boolean;
   },
   security?: {
-    can: (module: string, action?: "view" | "update" | "delete" | "execute") => boolean;
+    can: (module: string, action?: ActionType) => boolean;
   },
 ): boolean {
-  if (item.is_hidden) return false;
-
-  // Granular security check: if module is specified and security provider is passed,
-  // hide completely if caller lacks the required capability.
-  if (item.module && security) {
-    if (!security.can(item.module, item.action ?? "view")) {
-      return false;
-    }
-  }
-
-  // Admin module fallback check
+  // Predates `role` and stays for the apps that rely on it: `module: "admin"`
+  // has always meant "admins only" as well as "the admin module".
   if (item.module === "admin" && (!auth.user || !auth.isAdmin)) return false;
+
+  if (item.module && security && !auth.isAdmin) {
+    if (!security.can(item.module, item.action ?? "view")) return false;
+  }
 
   if (item.role) {
     if (!auth.user) return false;
+    // `isAdmin` short-circuits exactly as it does in `<ProtectedRoute>`, so a
+    // superuser never loses a link to a role they were not explicitly granted.
     if (!auth.isAdmin && !auth.hasRole(item.role)) return false;
   }
 

@@ -67,24 +67,4 @@ describe("isNavItemVisible", () => {
     expect(isNavItemVisible(gated, VIEWER)).toBe(false);
     expect(isNavItemVisible(gated, ADMIN)).toBe(true);
   });
-
-  it("hides completely when is_hidden is true", () => {
-    expect(isNavItemVisible(item({ is_hidden: true }), ADMIN)).toBe(false);
-    expect(isNavItemVisible(item({ is_hidden: true }), VIEWER)).toBe(false);
-  });
-
-  it("hides entry when security.can(module, action) returns false", () => {
-    const mockSecurity = {
-      can: (mod: string, act: string = "view") => mod === "inventory" && act === "view",
-    };
-
-    // User can view inventory -> visible
-    expect(isNavItemVisible(item({ module: "inventory" }), VIEWER, mockSecurity)).toBe(true);
-
-    // User cannot update inventory -> hidden
-    expect(isNavItemVisible(item({ module: "inventory", action: "update" }), VIEWER, mockSecurity)).toBe(false);
-
-    // User cannot view reports -> hidden
-    expect(isNavItemVisible(item({ module: "reports" }), VIEWER, mockSecurity)).toBe(false);
-  });
 });

@@ -102,28 +102,28 @@ export const API_ROUTES = {
 
   // ── Modules ──────────────────────────────────────────────────────────────
   modules: {
+    list: () => "/api/v1/modules",
     me: () => "/api/v1/modules/me",
     registry: () => "/api/v1/modules/registry",
-    list: () => "/api/v1/modules",
     forUser: (userId: number | string) => `/api/v1/modules/users/${userId}`,
   },
 
-  // ── Security ─────────────────────────────────────────────────────────────
-  security: {
-    myPermissions: () => "/api/v1/security/me/permissions",
-    roles: () => "/api/v1/security/roles",
-    role: (roleId: number | string) => `/api/v1/security/roles/${roleId}`,
-    matrix: () => "/api/v1/security/matrix",
-    userProfile: (userId: number | string) =>
-      `/api/v1/security/users/${userId}/profile`,
-    userOverrides: (userId: number | string) =>
-      `/api/v1/security/users/${userId}/overrides`,
-  },
-
-  // ── Navigation ───────────────────────────────────────────────────────────
+  // ── Navigation ────────────────────────────────────────────────────────────
   navigation: {
     settings: () => "/api/v1/navigation/settings",
     setting: (navKey: string) =>
       `/api/v1/navigation/settings/${encodeURIComponent(navKey)}`,
+  },
+
+  // ── Security ─────────────────────────────────────────────────────────────
+  security: {
+    matrix: () => "/api/v1/security/matrix",
+    roles: () => "/api/v1/security/roles",
+    role: (roleId: number | string) => `/api/v1/security/roles/${roleId}`,
+    myPermissions: () => "/api/v1/security/me/permissions",
+    userOverrides: (userId: number | string) =>
+      `/api/v1/security/users/${userId}/overrides`,
+    userProfile: (userId: number | string) =>
+      `/api/v1/security/users/${userId}/profile`,
   },
 } as const;

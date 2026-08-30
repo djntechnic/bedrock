@@ -1,15 +1,17 @@
 /**
  * @file ProtectedRoute.tsx
  * @module frontend/src/components
- * @description Route guard that:
- *  (a) redirects unauthenticated users to `/login` preserving intended destination,
- *  (b) enforces an optional `requiredRole`,
- *  (c) enforces an optional `requiredModule` and `action` ('view' | 'update' | 'delete' | 'execute') via `useSecurity()`.
- *  When access is denied, renders `<ModuleDisabled>` in place instead of navigating away.
+ * @description Phase 5.6 + 5.9 — route guard that (a) redirects unauthenticated
+ *              users to `/login` preserving intended destination, (b) enforces
+ *              an optional `requiredRole`, and (c) enforces an optional
+ *              `requiredModule` via the P5.9 module registry. When the module
+ *              is disabled the shared `<ModuleDisabled>` page renders in place
+ *              instead of navigating away.
  */
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { useModules } from "../hooks/useModules";
 import { useSecurity, type ActionType } from "../hooks/useSecurity";
 import ModuleDisabled from "./ModuleDisabled";
 
@@ -20,7 +22,8 @@ export interface ProtectedRouteProps {
   action?: ActionType;
   /**
    * When true, unauthenticated users are allowed if the anon role has the
-   * required capability on the module.
+   * required module. Used for otherwise-public pages that still respect
+   * module toggles (players, leaderboards, etc.).
    */
   allowAnon?: boolean;
 }
@@ -29,14 +32,15 @@ export default function ProtectedRoute({
   children,
   requiredRole,
   requiredModule,
-  action = "view",
+  action,
   allowAnon = false,
 }: ProtectedRouteProps) {
   const { user, isAdmin, hasRole, isLoading: authLoading } = useAuth();
+  const { hasModule, isLoading: modulesLoading } = useModules();
   const { can, isLoading: securityLoading } = useSecurity();
   const location = useLocation();
 
-  if (authLoading || securityLoading) return null;
+  if (authLoading) return null;
 
   if (!user && !allowAnon) {
     return (
@@ -53,8 +57,15 @@ export default function ProtectedRoute({
   }
 
   if (requiredModule && !isAdmin) {
-    if (!can(requiredModule, action)) {
+    if (modulesLoading) return null;
+    if (!hasModule(requiredModule)) {
       return <ModuleDisabled reason="module" required={requiredModule} />;
+    }
+    if (action) {
+      if (securityLoading) return null;
+      if (!can(requiredModule, action)) {
+        return <ModuleDisabled reason="role" required={`${requiredModule}:${action}`} />;
+      }
     }
   }
 
