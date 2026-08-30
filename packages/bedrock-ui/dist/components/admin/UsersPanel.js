@@ -1,9 +1,11 @@
 import { jsxs, jsx } from "react/jsx-runtime";
-import { RefreshCw, ShieldOff } from "lucide-react";
+import { useState } from "react";
+import { RefreshCw, Shield, ShieldOff } from "lucide-react";
 import { Badge } from "../ui/badge.js";
 import { Button } from "../ui/button.js";
 import { Switch } from "../ui/switch.js";
 import { useAdminUsers, useAdminSessions, useUpdateAdminUser, useRevokeAdminSession } from "../../hooks/useAdminPlatform.js";
+import UserOverridesDrawer from "./UserOverridesDrawer.js";
 function shortUserAgent(agent) {
   if (!agent) return "—";
   return agent.length > 48 ? `${agent.slice(0, 48)}…` : agent;
@@ -13,6 +15,8 @@ function UsersPanel() {
   const sessions = useAdminSessions();
   const updateUser = useUpdateAdminUser();
   const revoke = useRevokeAdminSession();
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [overridesOpen, setOverridesOpen] = useState(false);
   const userRows = users.data?.data ?? [];
   const sessionRows = (sessions.data?.data ?? []).filter((s) => !s.revoked_at);
   return /* @__PURE__ */ jsxs("div", { className: "flex flex-col gap-6", children: [
@@ -39,9 +43,10 @@ function UsersPanel() {
           /* @__PURE__ */ jsx("th", { className: "px-3 py-2 text-left", children: "Name" }),
           /* @__PURE__ */ jsx("th", { className: "px-3 py-2 text-left", children: "Roles" }),
           /* @__PURE__ */ jsx("th", { className: "px-3 py-2 text-left", children: "Last sign-in" }),
-          /* @__PURE__ */ jsx("th", { className: "px-3 py-2 text-left", children: "Active" })
+          /* @__PURE__ */ jsx("th", { className: "px-3 py-2 text-left", children: "Active" }),
+          /* @__PURE__ */ jsx("th", { className: "px-3 py-2 text-center", children: "Overrides" })
         ] }) }),
-        /* @__PURE__ */ jsx("tbody", { children: userRows.map((user) => /* @__PURE__ */ jsxs("tr", { className: "border-b border-border last:border-0", children: [
+        /* @__PURE__ */ jsx("tbody", { children: userRows.map((user) => /* @__PURE__ */ jsxs("tr", { className: "border-b border-border last:border-0 hover:bg-muted/10", children: [
           /* @__PURE__ */ jsx("td", { className: "px-3 py-1.5", children: user.email }),
           /* @__PURE__ */ jsx("td", { className: "px-3 py-1.5 text-muted-foreground", children: user.display_name || "—" }),
           /* @__PURE__ */ jsx("td", { className: "px-3 py-1.5", children: /* @__PURE__ */ jsx("div", { className: "flex flex-wrap gap-1", children: user.roles.map((role) => /* @__PURE__ */ jsx(Badge, { variant: "secondary", children: role }, role)) }) }),
@@ -57,10 +62,34 @@ function UsersPanel() {
                 payload: { is_active: checked }
               })
             }
+          ) }),
+          /* @__PURE__ */ jsx("td", { className: "px-3 py-1.5 text-center", children: /* @__PURE__ */ jsxs(
+            Button,
+            {
+              size: "sm",
+              variant: "outline",
+              className: "h-7 px-2.5 text-xs gap-1.5 hover:border-primary/50",
+              onClick: () => {
+                setSelectedUser(user);
+                setOverridesOpen(true);
+              },
+              children: [
+                /* @__PURE__ */ jsx(Shield, { className: "h-3 w-3 text-primary" }),
+                "Overrides"
+              ]
+            }
           ) })
         ] }, user.user_id)) })
       ] }) })
     ] }),
+    /* @__PURE__ */ jsx(
+      UserOverridesDrawer,
+      {
+        user: selectedUser,
+        open: overridesOpen,
+        onOpenChange: setOverridesOpen
+      }
+    ),
     /* @__PURE__ */ jsxs("section", { className: "flex flex-col gap-3", children: [
       /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3", children: [
         /* @__PURE__ */ jsx("h3", { className: "text-base font-medium", children: "Active sessions" }),

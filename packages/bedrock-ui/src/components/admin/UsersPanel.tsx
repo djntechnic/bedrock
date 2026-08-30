@@ -10,7 +10,8 @@
  * without the role catalogue in front of it invites typing a slug that grants
  * nothing, and inviting a user belongs to whichever screen owns the mail flow.
  */
-import { RefreshCw, ShieldOff } from "lucide-react";
+import { useState } from "react";
+import { RefreshCw, Shield, ShieldOff } from "lucide-react";
 
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -20,7 +21,9 @@ import {
   useAdminUsers,
   useRevokeAdminSession,
   useUpdateAdminUser,
+  type UserRecord,
 } from "../../hooks/useAdminPlatform";
+import UserOverridesDrawer from "./UserOverridesDrawer";
 
 /** Never render a raw UA string in a table cell; it is 200 characters wide. */
 export function shortUserAgent(agent: string | null) {
@@ -33,6 +36,9 @@ export default function UsersPanel() {
   const sessions = useAdminSessions();
   const updateUser = useUpdateAdminUser();
   const revoke = useRevokeAdminSession();
+
+  const [selectedUser, setSelectedUser] = useState<UserRecord | null>(null);
+  const [overridesOpen, setOverridesOpen] = useState(false);
 
   const userRows = users.data?.data ?? [];
   // Revoked sessions stay in the payload as history; the panel is about who is
@@ -64,11 +70,12 @@ export default function UsersPanel() {
                 <th className="px-3 py-2 text-left">Roles</th>
                 <th className="px-3 py-2 text-left">Last sign-in</th>
                 <th className="px-3 py-2 text-left">Active</th>
+                <th className="px-3 py-2 text-center">Overrides</th>
               </tr>
             </thead>
             <tbody>
               {userRows.map((user) => (
-                <tr key={user.user_id} className="border-b border-border last:border-0">
+                <tr key={user.user_id} className="border-b border-border last:border-0 hover:bg-muted/10">
                   <td className="px-3 py-1.5">{user.email}</td>
                   <td className="px-3 py-1.5 text-muted-foreground">
                     {user.display_name || "—"}
@@ -100,12 +107,32 @@ export default function UsersPanel() {
                       }
                     />
                   </td>
+                  <td className="px-3 py-1.5 text-center">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2.5 text-xs gap-1.5 hover:border-primary/50"
+                      onClick={() => {
+                        setSelectedUser(user);
+                        setOverridesOpen(true);
+                      }}
+                    >
+                      <Shield className="h-3 w-3 text-primary" />
+                      Overrides
+                    </Button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </section>
+
+      <UserOverridesDrawer
+        user={selectedUser}
+        open={overridesOpen}
+        onOpenChange={setOverridesOpen}
+      />
 
       <section className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
