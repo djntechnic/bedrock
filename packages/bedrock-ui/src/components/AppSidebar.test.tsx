@@ -10,7 +10,7 @@ import AppSidebar from "./AppSidebar";
 import * as useAuthModule from "../hooks/useAuth";
 import * as useModulesModule from "../hooks/useModules";
 import * as useSecurityModule from "../hooks/useSecurity";
-import { __clearNavItems, registerNavItems } from "./navRegistry";
+import { __clearNavItems, getNavItems, registerNavItems } from "./navRegistry";
 
 // Mock zustand stores
 vi.mock("../store/sidebarStore", () => ({
@@ -37,6 +37,14 @@ vi.mock("../hooks/useAppSettings", () => ({
 
 vi.mock("../hooks/useMediaQuery", () => ({
   useMediaQuery: () => false
+}));
+
+vi.mock("../hooks/useNavSettings", () => ({
+  useNavSettings: () => ({
+    navItems: getNavItems(),
+    settings: [],
+    isLoading: false,
+  }),
 }));
 
 describe("AppSidebar", () => {

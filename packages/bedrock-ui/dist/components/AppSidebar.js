@@ -2,11 +2,12 @@ import { jsx, jsxs, Fragment } from "react/jsx-runtime";
 import { forwardRef, useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ChevronDown, User, LogOut, PinOff, Pin } from "lucide-react";
-import { getNavItems, isNavItemVisible } from "./navRegistry.js";
+import { isNavItemVisible } from "./navRegistry.js";
 import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip.js";
 import { useAppSettings } from "../hooks/useAppSettings.js";
 import { useModules } from "../hooks/useModules.js";
 import { useSecurity } from "../hooks/useSecurity.js";
+import { useNavSettings } from "../hooks/useNavSettings.js";
 import { useAuth } from "../hooks/useAuth.js";
 import { useMediaQuery } from "../hooks/useMediaQuery.js";
 import { useSidebarStore } from "../store/sidebarStore.js";
@@ -31,6 +32,7 @@ function AppSidebar({ profilePath = "/profile" } = {}) {
   const { system } = useAppSettings();
   const { hasModule } = useModules();
   const { can } = useSecurity();
+  const { navItems } = useNavSettings();
   const { user, isAdmin, hasRole, logout } = useAuth();
   const isMobile = useMediaQuery("(max-width: 1023px)");
   const pinned = useSidebarStore((s) => s.pinned);
@@ -96,7 +98,7 @@ function AppSidebar({ profilePath = "/profile" } = {}) {
     return true;
   }
   useEffect(() => {
-    for (const item of getNavItems()) {
+    for (const item of navItems) {
       if ((item.children || item.groups) && isParentActive(item)) {
         setOpenSections((prev) => {
           if (prev.has(item.to)) return prev;
@@ -106,7 +108,7 @@ function AppSidebar({ profilePath = "/profile" } = {}) {
         });
       }
     }
-  }, [location.pathname]);
+  }, [location.pathname, navItems]);
   function toggleSection(path) {
     setOpenSections((prev) => {
       const next = new Set(prev);
@@ -152,7 +154,14 @@ function AppSidebar({ profilePath = "/profile" } = {}) {
               /* @__PURE__ */ jsx("p", { className: "text-[10px] text-muted-foreground leading-tight font-medium tracking-wide uppercase", children: "Analytics" })
             ] })
           ] }) }),
-          /* @__PURE__ */ jsx("nav", { className: "flex-1 overflow-y-auto py-3 space-y-0.5 px-2", children: getNavItems().map((item) => {
+          /* @__PURE__ */ jsx("nav", { className: "flex-1 overflow-y-auto py-3 space-y-0.5 px-2", children: navItems.map((item) => {
+            const isSpacer = item.to.startsWith("spacer:");
+            if (isSpacer) {
+              if (collapsed) {
+                return /* @__PURE__ */ jsx("div", { className: "my-2 border-t border-border/40" }, item.to);
+              }
+              return /* @__PURE__ */ jsx("div", { className: "pt-3 pb-1 px-2.5", children: /* @__PURE__ */ jsx("p", { className: "text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider", children: item.label }) }, item.to);
+            }
             if (!isParentVisible(item)) {
               return null;
             }
