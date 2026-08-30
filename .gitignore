@@ -6,6 +6,7 @@ __pycache__/
 
 # Build / Distribution
 dist/
+!packages/bedrock-ui/dist/
 build/
 *.zip
 
