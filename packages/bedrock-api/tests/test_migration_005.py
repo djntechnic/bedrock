@@ -26,6 +26,36 @@ def clean_migration_db():
     
     # Initialize empty db
     conn = sqlite3.connect(path)
+    # Create the pre-005 tables so baseline.sql skips creating them,
+    # forcing migration 005 to ALTER them instead.
+    conn.execute('''CREATE TABLE "auth_roles" (
+        role_id     INTEGER PRIMARY KEY AUTOINCREMENT,
+        slug        TEXT    NOT NULL UNIQUE,
+        label       TEXT    NOT NULL
+    );''')
+    conn.execute('''CREATE TABLE "auth_modules" (
+        module_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+        slug        TEXT    NOT NULL UNIQUE,
+        label       TEXT    NOT NULL,
+        description TEXT,
+        sort_order  INTEGER NOT NULL DEFAULT 0,
+        is_core     INTEGER NOT NULL DEFAULT 0
+    );''')
+    conn.execute('''CREATE TABLE "auth_role_modules" (
+        role_id     INTEGER NOT NULL,
+        module_id   INTEGER NOT NULL,
+        PRIMARY KEY (role_id, module_id)
+    );''')
+    conn.execute('''CREATE TABLE "auth_user_module_overrides" (
+        user_id     INTEGER NOT NULL,
+        module_id   INTEGER NOT NULL,
+        PRIMARY KEY (user_id, module_id)
+    );''')
+    conn.execute('''CREATE TABLE "auth_user_roles" (
+        user_id     INTEGER NOT NULL,
+        role_id     INTEGER NOT NULL,
+        PRIMARY KEY (user_id, role_id)
+    );''')
     conn.close()
 
     original = (db.sqlite_path, db.is_postgres, db.db_url)
