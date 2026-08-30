@@ -208,7 +208,7 @@ def resolve_user_permissions(
     """
     d = _get_db(database)
     modules = list_modules(database=d)
-    all_slugs = [m["slug"] for m in modules]
+    all_slugs = [m.slug if hasattr(m, "slug") else m["slug"] for m in modules]
 
     # Full bypass for superuser
     if is_superuser:
