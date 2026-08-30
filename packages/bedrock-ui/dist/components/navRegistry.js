@@ -1,5 +1,8 @@
-function isNavItemVisible(item, auth) {
+function isNavItemVisible(item, auth, security) {
   if (item.module === "admin" && (!auth.user || !auth.isAdmin)) return false;
+  if (item.module && security && !auth.isAdmin) {
+    if (!security.can(item.module, item.action ?? "view")) return false;
+  }
   if (item.role) {
     if (!auth.user) return false;
     if (!auth.isAdmin && !auth.hasRole(item.role)) return false;

@@ -83,10 +83,17 @@ export function isNavItemVisible(
     isAdmin: boolean;
     hasRole: (slug: string) => boolean;
   },
+  security?: {
+    can: (module: string, action?: ActionType) => boolean;
+  },
 ): boolean {
   // Predates `role` and stays for the apps that rely on it: `module: "admin"`
   // has always meant "admins only" as well as "the admin module".
   if (item.module === "admin" && (!auth.user || !auth.isAdmin)) return false;
+
+  if (item.module && security && !auth.isAdmin) {
+    if (!security.can(item.module, item.action ?? "view")) return false;
+  }
 
   if (item.role) {
     if (!auth.user) return false;

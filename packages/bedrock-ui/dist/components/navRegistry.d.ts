@@ -77,6 +77,8 @@ export declare function isNavItemVisible(item: NavItem, auth: {
     user: unknown;
     isAdmin: boolean;
     hasRole: (slug: string) => boolean;
+}, security?: {
+    can: (module: string, action?: ActionType) => boolean;
 }): boolean;
 /**
  * Registers the application's navigation tree, replacing any previous
