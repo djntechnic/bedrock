@@ -25,7 +25,8 @@ export const queryKeys = {
     users: () => ["admin", "users"] as const,
     user: (userId: number | string) => ["admin", "user", userId] as const,
     sessions: () => ["admin", "sessions"] as const,
-    securityEvents: (params: unknown) => ["admin", "security_events", params] as const,
+    securityEvents: (params: unknown) =>
+      ["admin", "security_events", params] as const,
     dbSummary: () => ["admin", "db_summary"] as const,
     config: (category?: string) =>
       category === undefined
@@ -93,11 +94,14 @@ export const queryKeys = {
   // ── Security ─────────────────────────────────────────────────────────────
   security: {
     all: ["security"] as const,
-    myPermissions: (token: string | null) => ["security", "my-permissions", token ?? "anon"] as const,
+    myPermissions: (token: string | null) =>
+      ["security", "myPermissions", token ?? "anon"] as const,
     roles: () => ["security", "roles"] as const,
     matrix: () => ["security", "matrix"] as const,
-    userProfile: (userId: number | string) => ["security", "user-profile", userId] as const,
-    userOverrides: (userId: number | string) => ["security", "user-overrides", userId] as const,
+    userProfile: (userId: number | string) =>
+      ["security", "user-profile", userId] as const,
+    userOverrides: (userId: number | string) =>
+      ["security", "user-overrides", userId] as const,
   },
 
   // ── Navigation ───────────────────────────────────────────────────────────

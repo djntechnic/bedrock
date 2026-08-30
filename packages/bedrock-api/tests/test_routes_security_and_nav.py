@@ -54,7 +54,7 @@ def api_test_client():
 
 def test_my_permissions_route_anonymous_and_authenticated(api_test_client):
     # Anonymous call
-    res_anon = api_test_client.get("/api/v1/security/my-permissions")
+    res_anon = api_test_client.get("/api/v1/security/me/permissions")
     assert res_anon.status_code == 200
     anon_data = res_anon.json()
     assert "health" in anon_data
@@ -66,7 +66,7 @@ def test_my_permissions_route_anonymous_and_authenticated(api_test_client):
     admin_token = us.create_access_token(admin_user.user_id)
     admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
-    res_admin = api_test_client.get("/api/v1/security/my-permissions", headers=admin_headers)
+    res_admin = api_test_client.get("/api/v1/security/me/permissions", headers=admin_headers)
     assert res_admin.status_code == 200
     admin_data = res_admin.json()
     assert admin_data["admin"]["view"] is True

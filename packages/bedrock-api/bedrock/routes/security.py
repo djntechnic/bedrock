@@ -46,7 +46,7 @@ class UserOverrideRequest(BaseModel):
     capabilities: dict[str, bool | None]  # e.g. {"view": True, "update": False, "delete": None, "execute": None}
 
 
-@router.get("/my-permissions")
+@router.get("/me/permissions")
 def get_my_permissions(
     user: Annotated[us.UserRecord | None, Depends(get_optional_user)],
 ) -> dict[str, dict[str, bool]]:
