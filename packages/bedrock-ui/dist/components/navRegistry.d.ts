@@ -30,6 +30,9 @@ export interface SubItem {
 export interface SubGroup {
     label: string;
     items: SubItem[];
+    module?: string;
+    action?: ActionType;
+    role?: string;
 }
 /** A top-level entry in the primary navigation rail. */
 export interface NavItem {

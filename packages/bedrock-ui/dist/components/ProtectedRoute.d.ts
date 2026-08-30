@@ -9,10 +9,12 @@
  *              instead of navigating away.
  */
 import type { ReactNode } from "react";
-interface ProtectedRouteProps {
+import { type ActionType } from "../hooks/useSecurity";
+export interface ProtectedRouteProps {
     children: ReactNode;
     requiredRole?: string;
     requiredModule?: string;
+    action?: ActionType;
     /**
      * When true, unauthenticated users are allowed if the anon role has the
      * required module. Used for otherwise-public pages that still respect
@@ -20,5 +22,4 @@ interface ProtectedRouteProps {
      */
     allowAnon?: boolean;
 }
-export default function ProtectedRoute({ children, requiredRole, requiredModule, allowAnon, }: ProtectedRouteProps): import("react").JSX.Element | null;
-export {};
+export default function ProtectedRoute({ children, requiredRole, requiredModule, action, allowAnon, }: ProtectedRouteProps): import("react").JSX.Element | null;

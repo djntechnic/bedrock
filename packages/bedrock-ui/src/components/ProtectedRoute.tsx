@@ -12,12 +12,14 @@ import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useModules } from "../hooks/useModules";
+import { useSecurity, type ActionType } from "../hooks/useSecurity";
 import ModuleDisabled from "./ModuleDisabled";
 
-interface ProtectedRouteProps {
+export interface ProtectedRouteProps {
   children: ReactNode;
   requiredRole?: string;
   requiredModule?: string;
+  action?: ActionType;
   /**
    * When true, unauthenticated users are allowed if the anon role has the
    * required module. Used for otherwise-public pages that still respect
@@ -30,10 +32,12 @@ export default function ProtectedRoute({
   children,
   requiredRole,
   requiredModule,
+  action,
   allowAnon = false,
 }: ProtectedRouteProps) {
   const { user, isAdmin, hasRole, isLoading: authLoading } = useAuth();
   const { hasModule, isLoading: modulesLoading } = useModules();
+  const { can, isLoading: securityLoading } = useSecurity();
   const location = useLocation();
 
   if (authLoading) return null;
@@ -53,9 +57,12 @@ export default function ProtectedRoute({
   }
 
   if (requiredModule && !isAdmin) {
-    if (modulesLoading) return null;
+    if (modulesLoading || securityLoading) return null;
     if (!hasModule(requiredModule)) {
       return <ModuleDisabled reason="module" required={requiredModule} />;
+    }
+    if (action && !can(requiredModule, action)) {
+      return <ModuleDisabled reason="role" required={`${requiredModule}:${action}`} />;
     }
   }
 
