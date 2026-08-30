@@ -255,12 +255,12 @@ def require_permission(
     """
     def _check(
         request: Request,
-        token: Annotated[str | None, Depends(oauth2_scheme)] = None,
+        user: Annotated[us.UserRecord | None, Depends(get_optional_user)] = None,
     ) -> us.UserRecord | None:
         client_ip = get_client_ip(request)
 
         # Anonymous branch
-        if not token:
+        if user is None:
             if allow_anon:
                 anon_perms = ss.resolve_user_permissions(None)
                 if anon_perms.get(module, {}).get(action, False):
@@ -273,19 +273,9 @@ def require_permission(
             )
             raise _unauth()
 
-        payload = us.decode_token(token)
-        if payload is None or "sub" not in payload or "jti" not in payload:
-            raise _unauth("Invalid or expired token")
-        if us.is_session_revoked(payload["jti"]):
-            raise _unauth("Session has been revoked")
-        try:
-            user_id = int(payload["sub"])
-        except (TypeError, ValueError):
-            raise _unauth("Invalid token subject")
-        user = us.get_user_by_id(user_id)
-        if user is None or not user.is_active:
-            raise _unauth("User inactive or missing")
-        request.state.jwt_payload = payload
+        # Superuser bypass
+        if user.is_superuser:
+            return user
 
         # Check granular permissions
         perms = ss.resolve_user_permissions(user.user_id, is_superuser=user.is_superuser)
