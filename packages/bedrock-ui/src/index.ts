@@ -58,7 +58,16 @@ export { default as PlatformHealthPanel } from "./components/admin/PlatformHealt
 export { formatBytes } from "./components/admin/PlatformHealthPanel";
 // `<AppSidebar>` links to `/profile`; this is what belongs behind that link.
 export { default as ProfilePage } from "./components/admin/ProfilePage";
+export { default as RoleMatrixPanel } from "./components/admin/RoleMatrixPanel";
+export { default as MenuNavEditorPanel } from "./components/admin/MenuNavEditorPanel";
+export { default as ModulesPanel } from "./components/admin/ModulesPanel";
+export { default as UserAccessProfileView } from "./components/admin/UserAccessProfileView";
+export { default as UserOverridesDrawer } from "./components/admin/UserOverridesDrawer";
 export * from "./hooks/useProfile";
+export * from "./hooks/useSecurity";
+export * from "./hooks/useRoleMatrix";
+export * from "./hooks/useUserOverrides";
+export * from "./hooks/useNavSettings";
 
 // ── Admin Grid Editor ────────────────────────────────────────────────────────
 export { default as GridEditor } from "./components/admin/gridEditor/GridEditor";
