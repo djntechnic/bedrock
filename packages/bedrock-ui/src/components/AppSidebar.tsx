@@ -215,14 +215,38 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-3 space-y-0.5 px-2">
-        {navItems.map((item) => {
+        {navItems.map((rawItem) => {
           // Dynamic security gating completely hides unauthorized items
-          if (!isNavItemVisible(item, { user, isAdmin, hasRole }, security)) {
+          if (!isNavItemVisible(rawItem, { user, isAdmin, hasRole }, security)) {
             return null;
           }
+
+          const filteredChildren = rawItem.children?.filter((child) => 
+            isNavItemVisible(child as unknown as NavItem, { user, isAdmin, hasRole }, security)
+          );
+
+          const filteredGroups = rawItem.groups?.map(g => ({
+            ...g,
+            items: g.items.filter(child => 
+              isNavItemVisible(child as unknown as NavItem, { user, isAdmin, hasRole }, security)
+            )
+          })).filter(g => g.items.length > 0);
+
+          const item = {
+            ...rawItem,
+            children: filteredChildren?.length ? filteredChildren : undefined,
+            groups: filteredGroups?.length ? filteredGroups : undefined,
+          };
+
+          const originallyHadChildren = !!(rawItem.children?.length || rawItem.groups?.length);
+          const hasChildren = !!(item.children?.length || item.groups?.length);
+
+          if (originallyHadChildren && !hasChildren && !item.exact) {
+            return null;
+          }
+
           const active = isParentActive(item);
           const Icon = item.icon || CircleDot;
-          const hasChildren = !!(item.children?.length || item.groups?.length);
           const open = hasChildren && isSectionOpen(item);
           const disabled = !!item.module && !hasModule(item.module);
 

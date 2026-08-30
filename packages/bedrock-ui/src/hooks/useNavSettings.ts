@@ -9,7 +9,7 @@ import * as LucideIcons from "lucide-react";
 import { useMemo } from "react";
 import { apiClient } from "../api/client";
 import { API_ROUTES } from "../api/routes";
-import { getNavItems, type NavItem } from "../components/navRegistry";
+import { getNavItems, type NavItem, type SubItem } from "../components/navRegistry";
 import { queryKeys } from "./queryKeys";
 
 export interface NavItemSetting {
@@ -90,6 +90,10 @@ export function useNavSettings(): {
             flatMap.set(child.to, {
               nav_key: child.to,
               label: child.label,
+              tooltip: child.tooltip,
+              module: child.module,
+              action: child.action,
+              role: child.role,
               default_parent_key: top.to,
               default_sort_order: orderIndex,
             });
@@ -105,6 +109,10 @@ export function useNavSettings(): {
               flatMap.set(item.to, {
                 nav_key: item.to,
                 label: item.label,
+                tooltip: item.tooltip,
+                module: item.module,
+                action: item.action,
+                role: item.role,
                 default_parent_key: top.to,
                 group_label: grp.label,
                 default_sort_order: orderIndex,
@@ -216,17 +224,25 @@ export function useNavSettings(): {
       if (children && children.length > 0) {
         children.sort((a, b) => a.sort_order - b.sort_order);
 
-        const simpleChildren: { to: string; label: string; tooltip?: string }[] = [];
-        const groupMap = new Map<string, { to: string; label: string; tooltip?: string }[]>();
+        const simpleChildren: SubItem[] = [];
+        const groupMap = new Map<string, SubItem[]>();
 
         for (const ch of children) {
           if (ch.nav_key.startsWith("spacer:")) continue;
+          const subItem: SubItem = {
+            to: ch.to,
+            label: ch.label,
+            tooltip: ch.tooltip,
+            module: ch.module,
+            action: ch.action,
+            role: ch.role,
+          };
           if (ch.group_label) {
             const grp = groupMap.get(ch.group_label) || [];
-            grp.push({ to: ch.to, label: ch.label, tooltip: ch.tooltip });
+            grp.push(subItem);
             groupMap.set(ch.group_label, grp);
           } else {
-            simpleChildren.push({ to: ch.to, label: ch.label, tooltip: ch.tooltip });
+            simpleChildren.push(subItem);
           }
         }
 
