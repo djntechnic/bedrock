@@ -10,7 +10,6 @@ import { Label } from "../ui/label.js";
 import PageHeader from "../PageHeader.js";
 import { useAuth } from "../../hooks/useAuth.js";
 import { useChangePassword } from "../../hooks/useProfile.js";
-import UserAccessProfileView from "./UserAccessProfileView.js";
 const MIN_PASSWORD_LENGTH = 8;
 function Field({ label, value }) {
   return /* @__PURE__ */ jsxs("div", { className: "flex flex-col gap-1", children: [
@@ -128,8 +127,7 @@ function ProfilePage() {
           /* @__PURE__ */ jsx("div", { children: /* @__PURE__ */ jsx(Button, { type: "submit", disabled: changePassword.isPending, children: changePassword.isPending ? "Saving…" : "Change password" }) })
         ] }) })
       ] })
-    ] }),
-    user?.user_id && /* @__PURE__ */ jsx(UserAccessProfileView, { userId: user.user_id })
+    ] })
   ] });
 }
 export {

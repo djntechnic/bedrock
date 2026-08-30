@@ -95,25 +95,25 @@ export const API_ROUTES = {
 
   // ── Modules ──────────────────────────────────────────────────────────────
   modules: {
+    list: () => "/api/v1/modules",
     me: () => "/api/v1/modules/me",
     registry: () => "/api/v1/modules/registry",
-    list: () => "/api/v1/modules",
     forUser: (userId: number | string) => `/api/v1/modules/users/${userId}`,
+  },
+
+  // ── Navigation ────────────────────────────────────────────────────────────
+  navigation: {
+    settings: () => "/api/v1/navigation/settings",
+    setting: (key: string) => `/api/v1/navigation/settings/${key}`,
   },
 
   // ── Security ─────────────────────────────────────────────────────────────
   security: {
-    myPermissions: () => "/api/v1/security/my-permissions",
+    matrix: () => "/api/v1/security/matrix",
     roles: () => "/api/v1/security/roles",
     role: (roleId: number | string) => `/api/v1/security/roles/${roleId}`,
-    matrix: () => "/api/v1/security/matrix",
-    userProfile: (userId: number | string) => `/api/v1/security/users/${userId}/profile`,
+    myPermissions: () => "/api/v1/security/me/permissions",
     userOverrides: (userId: number | string) => `/api/v1/security/users/${userId}/overrides`,
-  },
-
-  // ── Navigation ───────────────────────────────────────────────────────────
-  navigation: {
-    settings: () => "/api/v1/navigation/settings",
-    setting: (navKey: string) => `/api/v1/navigation/settings/${encodeURIComponent(navKey)}`,
+    userProfile: (userId: number | string) => `/api/v1/security/users/${userId}/profile`,
   },
 } as const;

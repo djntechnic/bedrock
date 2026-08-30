@@ -1,13 +1,12 @@
 import { jsx, jsxs, Fragment } from "react/jsx-runtime";
 import { forwardRef, useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { CircleDot, ChevronDown, User, LogOut, PinOff, Pin } from "lucide-react";
-import { isNavItemVisible } from "./navRegistry.js";
+import { ChevronDown, User, LogOut, PinOff, Pin } from "lucide-react";
+import { getNavItems, isNavItemVisible } from "./navRegistry.js";
 import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip.js";
 import { useAppSettings } from "../hooks/useAppSettings.js";
 import { useModules } from "../hooks/useModules.js";
 import { useSecurity } from "../hooks/useSecurity.js";
-import { useNavSettings } from "../hooks/useNavSettings.js";
 import { useAuth } from "../hooks/useAuth.js";
 import { useMediaQuery } from "../hooks/useMediaQuery.js";
 import { useSidebarStore } from "../store/sidebarStore.js";
@@ -31,8 +30,7 @@ function AppSidebar({ profilePath = "/profile" } = {}) {
   const [openSections, setOpenSections] = useState(/* @__PURE__ */ new Set());
   const { system } = useAppSettings();
   const { hasModule } = useModules();
-  const { navItems } = useNavSettings();
-  const security = useSecurity();
+  const { can } = useSecurity();
   const { user, isAdmin, hasRole, logout } = useAuth();
   const isMobile = useMediaQuery("(max-width: 1023px)");
   const pinned = useSidebarStore((s) => s.pinned);
@@ -65,13 +63,40 @@ function AppSidebar({ profilePath = "/profile" } = {}) {
     const search = child.to.slice(qIdx);
     return location.pathname === path && location.search === search;
   }
+  function isChildVisible(child) {
+    if (child.role) {
+      if (!user) return false;
+      if (!isAdmin && !hasRole(child.role)) return false;
+    }
+    if (child.module) {
+      if (!hasModule(child.module)) return false;
+      if (child.action && !can(child.module, child.action)) return false;
+    }
+    return true;
+  }
   function allSubItems(item) {
     if (item.children) return item.children;
     if (item.groups) return item.groups.flatMap((g) => g.items);
     return [];
   }
+  function isParentVisible(item) {
+    if (!isNavItemVisible(item, { user, isAdmin, hasRole })) {
+      return false;
+    }
+    if (item.module && item.action && !can(item.module, item.action)) {
+      return false;
+    }
+    const hasChildren = !!(item.children?.length || item.groups?.length);
+    if (hasChildren) {
+      const visibleChildren = allSubItems(item).filter(isChildVisible);
+      if (item.exact === false && visibleChildren.length === 0) {
+        return false;
+      }
+    }
+    return true;
+  }
   useEffect(() => {
-    for (const item of navItems) {
+    for (const item of getNavItems()) {
       if ((item.children || item.groups) && isParentActive(item)) {
         setOpenSections((prev) => {
           if (prev.has(item.to)) return prev;
@@ -81,7 +106,7 @@ function AppSidebar({ profilePath = "/profile" } = {}) {
         });
       }
     }
-  }, [location.pathname, navItems]);
+  }, [location.pathname]);
   function toggleSection(path) {
     setOpenSections((prev) => {
       const next = new Set(prev);
@@ -127,31 +152,13 @@ function AppSidebar({ profilePath = "/profile" } = {}) {
               /* @__PURE__ */ jsx("p", { className: "text-[10px] text-muted-foreground leading-tight font-medium tracking-wide uppercase", children: "Analytics" })
             ] })
           ] }) }),
-          /* @__PURE__ */ jsx("nav", { className: "flex-1 overflow-y-auto py-3 space-y-0.5 px-2", children: navItems.map((rawItem) => {
-            if (!isNavItemVisible(rawItem, { user, isAdmin, hasRole }, security)) {
-              return null;
-            }
-            const filteredChildren = rawItem.children?.filter(
-              (child) => isNavItemVisible(child, { user, isAdmin, hasRole }, security)
-            );
-            const filteredGroups = rawItem.groups?.map((g) => ({
-              ...g,
-              items: g.items.filter(
-                (child) => isNavItemVisible(child, { user, isAdmin, hasRole }, security)
-              )
-            })).filter((g) => g.items.length > 0);
-            const item = {
-              ...rawItem,
-              children: filteredChildren?.length ? filteredChildren : void 0,
-              groups: filteredGroups?.length ? filteredGroups : void 0
-            };
-            const originallyHadChildren = !!(rawItem.children?.length || rawItem.groups?.length);
-            const hasChildren = !!(item.children?.length || item.groups?.length);
-            if (originallyHadChildren && !hasChildren && !item.exact) {
+          /* @__PURE__ */ jsx("nav", { className: "flex-1 overflow-y-auto py-3 space-y-0.5 px-2", children: getNavItems().map((item) => {
+            if (!isParentVisible(item)) {
               return null;
             }
             const active = isParentActive(item);
-            const Icon = item.icon || CircleDot;
+            const Icon = item.icon;
+            const hasChildren = !!(item.children?.length || item.groups?.length);
             const open = hasChildren && isSectionOpen(item);
             const disabled = !!item.module && !hasModule(item.module);
             if (collapsed) {
@@ -167,7 +174,6 @@ function AppSidebar({ profilePath = "/profile" } = {}) {
                 Link,
                 {
                   to: item.to,
-                  title: item.tooltip || void 0,
                   className: [
                     "flex items-center justify-center px-2.5 py-2 rounded-md",
                     "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -179,24 +185,17 @@ function AppSidebar({ profilePath = "/profile" } = {}) {
               return /* @__PURE__ */ jsxs(Tooltip, { delayDuration: 0, children: [
                 /* @__PURE__ */ jsx(TooltipTrigger, { asChild: true, children: iconLink }),
                 /* @__PURE__ */ jsxs(TooltipContent, { side: "right", className: "text-xs", children: [
-                  disabled ? `${item.label} — not enabled for your account` : /* @__PURE__ */ jsxs("div", { children: [
-                    /* @__PURE__ */ jsx("div", { className: "font-semibold", children: item.label }),
-                    item.tooltip && /* @__PURE__ */ jsx("div", { className: "text-[11px] text-muted-foreground mt-0.5 max-w-[200px]", children: item.tooltip })
-                  ] }),
-                  hasChildren && /* @__PURE__ */ jsx("div", { className: "mt-1.5 pt-1.5 border-t border-border/50 space-y-0.5", children: allSubItems(item).map((child) => /* @__PURE__ */ jsx("div", { children: /* @__PURE__ */ jsxs(
+                  disabled ? `${item.label} — not enabled for your account` : item.label,
+                  hasChildren && /* @__PURE__ */ jsx("div", { className: "mt-1 space-y-0.5", children: allSubItems(item).map((child) => /* @__PURE__ */ jsx("div", { children: /* @__PURE__ */ jsx(
                     Link,
                     {
                       to: child.to,
-                      title: child.tooltip || void 0,
                       className: [
                         "block px-2 py-0.5 rounded text-xs",
                         "outline-none focus-visible:ring-2 focus-visible:ring-ring",
                         isChildActive(child) ? "font-semibold text-primary" : "text-muted-foreground hover:text-foreground"
                       ].join(" "),
-                      children: [
-                        /* @__PURE__ */ jsx("span", { children: child.label }),
-                        child.tooltip && /* @__PURE__ */ jsx("span", { className: "block text-[10px] text-muted-foreground font-normal", children: child.tooltip })
-                      ]
+                      children: child.label
                     }
                   ) }, child.to)) })
                 ] })
@@ -218,24 +217,6 @@ function AppSidebar({ profilePath = "/profile" } = {}) {
                     }
                   ) }),
                   /* @__PURE__ */ jsx(TooltipContent, { side: "right", className: "text-xs", children: "Not enabled for your account" })
-                ] }) : item.tooltip ? /* @__PURE__ */ jsxs(Tooltip, { delayDuration: 0, children: [
-                  /* @__PURE__ */ jsx(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsxs(
-                    Link,
-                    {
-                      to: item.to,
-                      title: item.tooltip || void 0,
-                      className: [
-                        "flex-1 flex items-center gap-3 px-2.5 py-2 rounded-md text-sm font-medium",
-                        "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                        active ? "bg-primary/10 text-primary font-semibold ring-1 ring-primary/20" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      ].join(" "),
-                      children: [
-                        /* @__PURE__ */ jsx(Icon, { className: "shrink-0 h-[18px] w-[18px]" }),
-                        /* @__PURE__ */ jsx("span", { className: "truncate", children: item.label })
-                      ]
-                    }
-                  ) }),
-                  /* @__PURE__ */ jsx(TooltipContent, { side: "right", className: "text-xs", children: item.tooltip })
                 ] }) : /* @__PURE__ */ jsxs(
                   Link,
                   {
@@ -273,13 +254,12 @@ function AppSidebar({ profilePath = "/profile" } = {}) {
                 )
               ] }),
               hasChildren && open && !disabled && /* @__PURE__ */ jsxs("div", { className: "mt-0.5 ml-4 pl-3 border-l border-border space-y-0.5", children: [
-                item.children && item.children.map((child) => {
+                item.children && item.children.filter(isChildVisible).map((child) => {
                   const childActive = isChildActive(child);
-                  const childLink = /* @__PURE__ */ jsx(
+                  return /* @__PURE__ */ jsx(
                     Link,
                     {
                       to: child.to,
-                      title: child.tooltip || void 0,
                       className: [
                         "flex items-center px-2 py-1.5 rounded-md text-xs font-medium",
                         "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -289,41 +269,30 @@ function AppSidebar({ profilePath = "/profile" } = {}) {
                     },
                     child.to
                   );
-                  if (child.tooltip) {
-                    return /* @__PURE__ */ jsxs(Tooltip, { delayDuration: 0, children: [
-                      /* @__PURE__ */ jsx(TooltipTrigger, { asChild: true, children: childLink }),
-                      /* @__PURE__ */ jsx(TooltipContent, { side: "right", className: "text-xs", children: child.tooltip })
-                    ] }, child.to);
-                  }
-                  return childLink;
                 }),
-                item.groups && item.groups.map((group) => /* @__PURE__ */ jsxs("div", { className: "pt-1.5", children: [
-                  /* @__PURE__ */ jsx("p", { className: "px-2 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60", children: group.label }),
-                  group.items.map((child) => {
-                    const childActive = isChildActive(child);
-                    const groupChildLink = /* @__PURE__ */ jsx(
-                      Link,
-                      {
-                        to: child.to,
-                        title: child.tooltip || void 0,
-                        className: [
-                          "flex items-center px-2 py-1.5 rounded-md text-xs font-medium",
-                          "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                          childActive ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                        ].join(" "),
-                        children: child.label
-                      },
-                      child.to
-                    );
-                    if (child.tooltip) {
-                      return /* @__PURE__ */ jsxs(Tooltip, { delayDuration: 0, children: [
-                        /* @__PURE__ */ jsx(TooltipTrigger, { asChild: true, children: groupChildLink }),
-                        /* @__PURE__ */ jsx(TooltipContent, { side: "right", className: "text-xs", children: child.tooltip })
-                      ] }, child.to);
-                    }
-                    return groupChildLink;
-                  })
-                ] }, group.label))
+                item.groups && item.groups.map((group) => {
+                  const visibleGroupItems = group.items.filter(isChildVisible);
+                  if (visibleGroupItems.length === 0) return null;
+                  return /* @__PURE__ */ jsxs("div", { className: "pt-1.5", children: [
+                    /* @__PURE__ */ jsx("p", { className: "px-2 pb-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60", children: group.label }),
+                    visibleGroupItems.map((child) => {
+                      const childActive = isChildActive(child);
+                      return /* @__PURE__ */ jsx(
+                        Link,
+                        {
+                          to: child.to,
+                          className: [
+                            "flex items-center px-2 py-1.5 rounded-md text-xs font-medium",
+                            "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                            childActive ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          ].join(" "),
+                          children: child.label
+                        },
+                        child.to
+                      );
+                    })
+                  ] }, group.label);
+                })
               ] })
             ] }, item.to);
           }) }),

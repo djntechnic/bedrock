@@ -66,22 +66,23 @@ export declare const queryKeys: {
     };
     readonly modules: {
         readonly all: readonly ["modules"];
+        readonly list: () => readonly ["modules", "list"];
         /** Token-scoped cache so login/logout invalidates the anon set cleanly. */
         readonly me: (token: string | null) => readonly ["modules", "me", string];
         readonly registry: () => readonly ["modules", "registry"];
-        readonly list: () => readonly ["modules", "list"];
         readonly forUser: (userId: number | string) => readonly ["modules", "user", string | number];
-    };
-    readonly security: {
-        readonly all: readonly ["security"];
-        readonly myPermissions: (token: string | null) => readonly ["security", "my-permissions", string];
-        readonly roles: () => readonly ["security", "roles"];
-        readonly matrix: () => readonly ["security", "matrix"];
-        readonly userProfile: (userId: number | string) => readonly ["security", "user-profile", string | number];
-        readonly userOverrides: (userId: number | string) => readonly ["security", "user-overrides", string | number];
     };
     readonly navigation: {
         readonly all: readonly ["navigation"];
         readonly settings: () => readonly ["navigation", "settings"];
+    };
+    readonly security: {
+        readonly all: readonly ["security"];
+        readonly matrix: () => readonly ["security", "matrix"];
+        readonly roles: () => readonly ["security", "roles"];
+        readonly role: (roleId: number | string) => readonly ["security", "role", string | number];
+        readonly myPermissions: (token: string | null) => readonly ["security", "myPermissions", string];
+        readonly userOverrides: (userId: number | string) => readonly ["security", "userOverrides", string | number];
+        readonly userProfile: (userId: number | string) => readonly ["security", "userProfile", string | number];
     };
 };

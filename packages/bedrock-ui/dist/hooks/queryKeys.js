@@ -58,25 +58,26 @@ const queryKeys = {
   // ── Modules ──────────────────────────────────────────────────────────────
   modules: {
     all: ["modules"],
+    list: () => ["modules", "list"],
     /** Token-scoped cache so login/logout invalidates the anon set cleanly. */
     me: (token) => ["modules", "me", token ?? "anon"],
     registry: () => ["modules", "registry"],
-    list: () => ["modules", "list"],
     forUser: (userId) => ["modules", "user", userId]
+  },
+  // ── Navigation ────────────────────────────────────────────────────────────
+  navigation: {
+    all: ["navigation"],
+    settings: () => ["navigation", "settings"]
   },
   // ── Security ─────────────────────────────────────────────────────────────
   security: {
     all: ["security"],
-    myPermissions: (token) => ["security", "my-permissions", token ?? "anon"],
-    roles: () => ["security", "roles"],
     matrix: () => ["security", "matrix"],
-    userProfile: (userId) => ["security", "user-profile", userId],
-    userOverrides: (userId) => ["security", "user-overrides", userId]
-  },
-  // ── Navigation ───────────────────────────────────────────────────────────
-  navigation: {
-    all: ["navigation"],
-    settings: () => ["navigation", "settings"]
+    roles: () => ["security", "roles"],
+    role: (roleId) => ["security", "role", roleId],
+    myPermissions: (token) => ["security", "myPermissions", token ?? "anon"],
+    userOverrides: (userId) => ["security", "userOverrides", userId],
+    userProfile: (userId) => ["security", "userProfile", userId]
   }
 };
 export {

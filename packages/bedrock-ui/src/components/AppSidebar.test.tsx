@@ -10,8 +10,7 @@ import AppSidebar from "./AppSidebar";
 import * as useAuthModule from "../hooks/useAuth";
 import * as useModulesModule from "../hooks/useModules";
 import * as useSecurityModule from "../hooks/useSecurity";
-import * as useNavSettingsModule from "../hooks/useNavSettings";
-import { __clearNavItems } from "./navRegistry";
+import { __clearNavItems, registerNavItems } from "./navRegistry";
 
 // Mock zustand stores
 vi.mock("../store/sidebarStore", () => ({
@@ -69,34 +68,30 @@ describe("AppSidebar", () => {
       },
     } as any);
 
-    vi.spyOn(useNavSettingsModule, "useNavSettings").mockReturnValue({
-      isLoading: false,
-      settings: [],
-      navItems: [
-        {
-          to: "/inventory",
-          label: "Inventory",
-          icon: () => <svg />,
-          module: "inventory",
-          action: "view",
-          exact: false,
-          children: [
-            {
-              to: "/inventory/allowed",
-              label: "Allowed Child",
-              module: "inventory",
-              action: "view",
-            },
-            {
-              to: "/inventory/restricted",
-              label: "Restricted Child",
-              module: "inventory",
-              action: "update",
-            }
-          ]
-        }
-      ]
-    });
+    registerNavItems([
+      {
+        to: "/inventory",
+        label: "Inventory",
+        icon: () => <svg />,
+        module: "inventory",
+        action: "view",
+        exact: false,
+        children: [
+          {
+            to: "/inventory/allowed",
+            label: "Allowed Child",
+            module: "inventory",
+            action: "view",
+          },
+          {
+            to: "/inventory/restricted",
+            label: "Restricted Child",
+            module: "inventory",
+            action: "update",
+          }
+        ]
+      }
+    ]);
 
     render(
       <MemoryRouter initialEntries={["/inventory"]}>
@@ -133,26 +128,22 @@ describe("AppSidebar", () => {
       can: () => false, // All capabilities denied
     } as any);
 
-    vi.spyOn(useNavSettingsModule, "useNavSettings").mockReturnValue({
-      isLoading: false,
-      settings: [],
-      navItems: [
-        {
-          to: "/settings",
-          label: "Settings",
-          icon: () => <svg />,
-          exact: false, // Not a standalone view
-          children: [
-            {
-              to: "/settings/users",
-              label: "Users",
-              module: "admin",
-              action: "view",
-            }
-          ]
-        }
-      ]
-    });
+    registerNavItems([
+      {
+        to: "/settings",
+        label: "Settings",
+        icon: () => <svg />,
+        exact: false, // Not a standalone view
+        children: [
+          {
+            to: "/settings/users",
+            label: "Users",
+            module: "admin",
+            action: "view",
+          }
+        ]
+      }
+    ]);
 
     render(
       <MemoryRouter>

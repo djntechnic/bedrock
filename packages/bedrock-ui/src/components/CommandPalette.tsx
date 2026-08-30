@@ -24,12 +24,10 @@ import {
   CommandGroup,
   CommandItem,
 } from "./ui/command";
-import { isNavItemVisible, type NavItem } from "./navRegistry";
-import { useAuth } from "../hooks/useAuth";
-import { useSecurity } from "../hooks/useSecurity";
 import { getCommandRoutes, type CommandRouteItem } from "../lib/commandRoutes";
 import { fuzzyFilter } from "../lib/fuzzyMatch";
 import { useModules } from "../hooks/useModules";
+import { useSecurity } from "../hooks/useSecurity";
 import { useCommandPaletteStore } from "../store/commandPaletteStore";
 import { logger } from "../lib/logger";
 import {
@@ -135,8 +133,7 @@ export default function CommandPalette({
 }: CommandPaletteProps = {}) {
   const navigate = useNavigate();
   const { hasModule } = useModules();
-  const { user, isAdmin, hasRole } = useAuth();
-  const security = useSecurity();
+  const { can } = useSecurity();
 
   // Snapshotted on first render: registration is import-time, and freezing the
   // list guarantees the source components keep a stable order for their hooks.
@@ -179,11 +176,13 @@ export default function CommandPalette({
   }, [open]);
 
   const visibleRoutes = useMemo(
-    () => getCommandRoutes().filter((r) => {
-      if (r.module && !hasModule(r.module)) return false;
-      return isNavItemVisible(r as unknown as NavItem, { user, isAdmin, hasRole }, security);
-    }),
-    [hasModule, user, isAdmin, hasRole, security]
+    () =>
+      getCommandRoutes().filter((r) => {
+        if (r.module && !hasModule(r.module)) return false;
+        if (r.module && r.action && !can(r.module, r.action)) return false;
+        return true;
+      }),
+    [hasModule, can]
   );
   const visibleById = useMemo(
     () => new Map(visibleRoutes.map((r) => [r.id, r] as const)),

@@ -71,21 +71,21 @@ export declare const API_ROUTES: {
         readonly verifyEmailConfirm: () => string;
     };
     readonly modules: {
+        readonly list: () => string;
         readonly me: () => string;
         readonly registry: () => string;
-        readonly list: () => string;
         readonly forUser: (userId: number | string) => string;
-    };
-    readonly security: {
-        readonly myPermissions: () => string;
-        readonly roles: () => string;
-        readonly role: (roleId: number | string) => string;
-        readonly matrix: () => string;
-        readonly userProfile: (userId: number | string) => string;
-        readonly userOverrides: (userId: number | string) => string;
     };
     readonly navigation: {
         readonly settings: () => string;
-        readonly setting: (navKey: string) => string;
+        readonly setting: (key: string) => string;
+    };
+    readonly security: {
+        readonly matrix: () => string;
+        readonly roles: () => string;
+        readonly role: (roleId: number | string) => string;
+        readonly myPermissions: () => string;
+        readonly userOverrides: (userId: number | string) => string;
+        readonly userProfile: (userId: number | string) => string;
     };
 };

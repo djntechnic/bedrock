@@ -3,12 +3,10 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { PinOff, Clock, Pin, ArrowRight } from "lucide-react";
 import { CommandDialog, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "./ui/command.js";
-import { isNavItemVisible } from "./navRegistry.js";
-import { useAuth } from "../hooks/useAuth.js";
-import { useSecurity } from "../hooks/useSecurity.js";
 import { getCommandRoutes } from "../lib/commandRoutes.js";
 import { fuzzyFilter } from "../lib/fuzzyMatch.js";
 import { useModules } from "../hooks/useModules.js";
+import { useSecurity } from "../hooks/useSecurity.js";
 import { useCommandPaletteStore } from "../store/commandPaletteStore.js";
 import { logger } from "../lib/logger.js";
 import { getSearchSources, getSearchAllTarget } from "./searchSourceRegistry.js";
@@ -62,8 +60,7 @@ function CommandPalette({
 } = {}) {
   const navigate = useNavigate();
   const { hasModule } = useModules();
-  const { user, isAdmin, hasRole } = useAuth();
-  const security = useSecurity();
+  const { can } = useSecurity();
   const [allSources] = useState(getSearchSources);
   const [allTarget] = useState(getSearchAllTarget);
   const [sourceStatus, setSourceStatus] = useState({});
@@ -100,9 +97,10 @@ function CommandPalette({
   const visibleRoutes = useMemo(
     () => getCommandRoutes().filter((r) => {
       if (r.module && !hasModule(r.module)) return false;
-      return isNavItemVisible(r, { user, isAdmin, hasRole }, security);
+      if (r.module && r.action && !can(r.module, r.action)) return false;
+      return true;
     }),
-    [hasModule, user, isAdmin, hasRole, security]
+    [hasModule, can]
   );
   const visibleById = useMemo(
     () => new Map(visibleRoutes.map((r) => [r.id, r])),

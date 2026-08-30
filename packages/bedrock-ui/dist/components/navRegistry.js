@@ -1,10 +1,4 @@
-function isNavItemVisible(item, auth, security) {
-  if (item.is_hidden) return false;
-  if (item.module && security) {
-    if (!security.can(item.module, item.action ?? "view")) {
-      return false;
-    }
-  }
+function isNavItemVisible(item, auth) {
   if (item.module === "admin" && (!auth.user || !auth.isAdmin)) return false;
   if (item.role) {
     if (!auth.user) return false;

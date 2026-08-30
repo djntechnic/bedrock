@@ -65,24 +65,24 @@ const API_ROUTES = {
   },
   // ── Modules ──────────────────────────────────────────────────────────────
   modules: {
+    list: () => "/api/v1/modules",
     me: () => "/api/v1/modules/me",
     registry: () => "/api/v1/modules/registry",
-    list: () => "/api/v1/modules",
     forUser: (userId) => `/api/v1/modules/users/${userId}`
+  },
+  // ── Navigation ────────────────────────────────────────────────────────────
+  navigation: {
+    settings: () => "/api/v1/navigation/settings",
+    setting: (key) => `/api/v1/navigation/settings/${key}`
   },
   // ── Security ─────────────────────────────────────────────────────────────
   security: {
-    myPermissions: () => "/api/v1/security/my-permissions",
+    matrix: () => "/api/v1/security/matrix",
     roles: () => "/api/v1/security/roles",
     role: (roleId) => `/api/v1/security/roles/${roleId}`,
-    matrix: () => "/api/v1/security/matrix",
-    userProfile: (userId) => `/api/v1/security/users/${userId}/profile`,
-    userOverrides: (userId) => `/api/v1/security/users/${userId}/overrides`
-  },
-  // ── Navigation ───────────────────────────────────────────────────────────
-  navigation: {
-    settings: () => "/api/v1/navigation/settings",
-    setting: (navKey) => `/api/v1/navigation/settings/${encodeURIComponent(navKey)}`
+    myPermissions: () => "/api/v1/security/me/permissions",
+    userOverrides: (userId) => `/api/v1/security/users/${userId}/overrides`,
+    userProfile: (userId) => `/api/v1/security/users/${userId}/profile`
   }
 };
 export {
