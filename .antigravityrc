@@ -1,7 +1,8 @@
 {
   "permissions": {
     "additionalDirectories": [
-      "../claude-kit",
+      "../bedrock",
+	  "../claude-kit",
       "../CollectIt",
       "../MLBTracker"
     ],

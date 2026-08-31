@@ -2,8 +2,7 @@
  * @file SetPasswordPage.test.tsx
  * @description The page an invitation or reset link lands on.
  */
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -27,11 +26,10 @@ function renderPage(
   );
 }
 
-async function fillAndSubmit(password: string, confirm = password) {
-  const user = userEvent.setup();
-  await user.type(screen.getByLabelText("New password"), password);
-  await user.type(screen.getByLabelText("Confirm password"), confirm);
-  await user.click(screen.getByRole("button", { name: /create account|update password/i }));
+function fillAndSubmit(password: string, confirm = password) {
+  fireEvent.change(screen.getByLabelText("New password"), { target: { value: password } });
+  fireEvent.change(screen.getByLabelText("Confirm password"), { target: { value: confirm } });
+  fireEvent.click(screen.getByRole("button", { name: /create account|update password/i }));
 }
 
 beforeEach(() => {
