@@ -1,9 +1,9 @@
 import { jsx, jsxs } from "react/jsx-runtime";
-import * as React from "react";
 import { Dialog } from "radix-ui";
+import * as React from "react";
+import { XIcon } from "lucide-react";
 import { cn } from "../../lib/utils.js";
 import { Button } from "./button.js";
-import { XIcon } from "lucide-react";
 const Sheet = Dialog.Root;
 const SheetTrigger = Dialog.Trigger;
 const SheetClose = Dialog.Close;
@@ -27,38 +27,47 @@ const sheetVariants = {
   left: "inset-y-0 left-0 h-full w-3/4 sm:max-w-sm border-r data-open:slide-in-from-left-10 data-closed:slide-out-to-left-10",
   right: "inset-y-0 right-0 h-full w-3/4 sm:max-w-sm border-l data-open:slide-in-from-right-10 data-closed:slide-out-to-right-10"
 };
-const SheetContent = React.forwardRef(({ className, children, side = "right", showCloseButton = true, showOverlay = true, ...props }, ref) => /* @__PURE__ */ jsxs(SheetPortal, { children: [
-  showOverlay && /* @__PURE__ */ jsx(SheetOverlay, {}),
-  /* @__PURE__ */ jsxs(
-    Dialog.Content,
-    {
-      ref,
-      "data-slot": "sheet-content",
-      "data-side": side,
-      className: cn(
-        "fixed z-50 flex flex-col gap-4 bg-popover bg-clip-padding text-sm text-popover-foreground shadow-lg transition duration-200 ease-in-out data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
-        sheetVariants[side],
-        className
-      ),
-      ...props,
-      children: [
-        children,
-        showCloseButton && /* @__PURE__ */ jsx(Dialog.Close, { "data-slot": "sheet-close", asChild: true, children: /* @__PURE__ */ jsxs(
-          Button,
-          {
-            variant: "ghost",
-            className: "absolute top-3 right-3",
-            size: "icon-sm",
-            children: [
-              /* @__PURE__ */ jsx(XIcon, {}),
-              /* @__PURE__ */ jsx("span", { className: "sr-only", children: "Close" })
-            ]
-          }
-        ) })
-      ]
-    }
-  )
-] }));
+const SheetContent = React.forwardRef(
+  ({
+    className,
+    children,
+    side = "right",
+    showCloseButton = true,
+    showOverlay = true,
+    ...props
+  }, ref) => /* @__PURE__ */ jsxs(SheetPortal, { children: [
+    showOverlay && /* @__PURE__ */ jsx(SheetOverlay, {}),
+    /* @__PURE__ */ jsxs(
+      Dialog.Content,
+      {
+        ref,
+        "data-slot": "sheet-content",
+        "data-side": side,
+        className: cn(
+          "fixed z-50 flex flex-col gap-4 bg-popover bg-clip-padding text-sm text-popover-foreground shadow-lg transition duration-200 ease-in-out data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+          sheetVariants[side],
+          className
+        ),
+        ...props,
+        children: [
+          children,
+          showCloseButton && /* @__PURE__ */ jsx(Dialog.Close, { "data-slot": "sheet-close", asChild: true, children: /* @__PURE__ */ jsxs(
+            Button,
+            {
+              variant: "ghost",
+              className: "absolute top-3 right-3",
+              size: "icon-sm",
+              children: [
+                /* @__PURE__ */ jsx(XIcon, {}),
+                /* @__PURE__ */ jsx("span", { className: "sr-only", children: "Close" })
+              ]
+            }
+          ) })
+        ]
+      }
+    )
+  ] })
+);
 SheetContent.displayName = Dialog.Content.displayName;
 const SheetHeader = ({ className, ...props }) => /* @__PURE__ */ jsx(
   "div",
