@@ -15,10 +15,12 @@ const { default: SetPasswordPage } = await import("./SetPasswordPage");
 
 const COMPLETE_URL = "/api/v1/auth/password-reset/complete";
 
-function renderPage(
-  { token, mode }: { token?: string; mode?: "invite" | "reset" } = {},
-) {
-  const search = token === undefined ? "" : `?token=${encodeURIComponent(token)}`;
+function renderPage({
+  token,
+  mode,
+}: { token?: string; mode?: "invite" | "reset" } = {}) {
+  const search =
+    token === undefined ? "" : `?token=${encodeURIComponent(token)}`;
   return render(
     <MemoryRouter initialEntries={[`/reset-password${search}`]}>
       <SetPasswordPage mode={mode} />
@@ -27,9 +29,15 @@ function renderPage(
 }
 
 function fillAndSubmit(password: string, confirm = password) {
-  fireEvent.change(screen.getByLabelText("New password"), { target: { value: password } });
-  fireEvent.change(screen.getByLabelText("Confirm password"), { target: { value: confirm } });
-  fireEvent.click(screen.getByRole("button", { name: /create account|update password/i }));
+  fireEvent.change(screen.getByLabelText("New password"), {
+    target: { value: password },
+  });
+  fireEvent.change(screen.getByLabelText("Confirm password"), {
+    target: { value: confirm },
+  });
+  fireEvent.click(
+    screen.getByRole("button", { name: /create account|update password/i }),
+  );
 }
 
 beforeEach(() => {
@@ -90,7 +98,9 @@ describe("validation happens before the request", () => {
     renderPage({ token: "tok-123" });
     await fillAndSubmit("short");
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/at least 8 characters/i);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /at least 8 characters/i,
+    );
     expect(post).not.toHaveBeenCalled();
   });
 
@@ -107,20 +117,28 @@ describe("outcomes", () => {
     await fillAndSubmit("correct horse battery");
 
     expect(await screen.findByText(/password updated/i)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /continue to sign in/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /continue to sign in/i }),
+    ).toBeInTheDocument();
   });
 
   it("shows the backend's message for a dead token", async () => {
     const { AxiosError } = await import("axios");
     const err = new AxiosError("Request failed");
     // @ts-expect-error — minimal response shape.
-    err.response = { data: { detail: "This link is invalid or has expired. Request a new one." } };
+    err.response = {
+      data: {
+        detail: "This link is invalid or has expired. Request a new one.",
+      },
+    };
     post.mockRejectedValue(err);
 
     renderPage({ token: "spent" });
     await fillAndSubmit("correct horse battery");
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/invalid or has expired/i);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /invalid or has expired/i,
+    );
     // Still on the form: the whole point of the message is that they can retry
     // with a fresh link, and a success screen would say the opposite.
     expect(screen.getByLabelText("New password")).toBeInTheDocument();
@@ -132,7 +150,9 @@ describe("outcomes", () => {
     renderPage({ token: "tok-123" });
     await fillAndSubmit("correct horse battery");
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/something went wrong/i);
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      /something went wrong/i,
+    );
   });
 });
 
