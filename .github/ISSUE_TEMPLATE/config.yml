@@ -1,0 +1,9 @@
+# Require a template — no blank freeform issues.
+blank_issues_enabled: false
+contact_links:
+  - name: Bedrock Platform Standards (CLAUDE.md)
+    url: https://github.com/djntechnic/bedrock/blob/master/CLAUDE.md
+    about: Non-negotiable platform standards, extension point rules (Registry vs. Provider), and release workflows. Read before filing.
+  - name: Platform Guide & Architecture
+    url: https://github.com/djntechnic/bedrock/blob/master/docs/platform_guide.md
+    about: Core platform architecture, boundary rules, and consumer invariants.
