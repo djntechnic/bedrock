@@ -1,34 +1,104 @@
+# ==============================================================================
+# 1. PYTHON, TESTING & CACHE
+# ==============================================================================
 __pycache__/
 *.py[cod]
+*$py.class
 *.egg-info/
-.pytest_cache/
-*.db
 
-# Build / Distribution
-dist/
-!packages/bedrock-ui/dist/
+# Pytest / Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# pytest-testmon local cache (delta-based test selection; per-dev/per-session)
+.testmondata
+.testmondata-journal
+.testmondata-shm
+.testmondata-wal
+
+# ==============================================================================
+# 2. ENVIRONMENT, CONFIG & DEPENDENCIES
+# ==============================================================================
+.env
+.env.local
+.dependencies_installed
+node_modules/
+.venv/
+
+# ==============================================================================
+# 3. BUILD, PACKAGING & DISTRIBUTION
+# ==============================================================================
 build/
+dist/
 *.zip
 
-# Editor / IDE / OS Files
+# ==============================================================================
+# 4. DATABASES & DATA STORAGE
+# ==============================================================================
+*.db
+*.sqlite
+*.sqlite3
+
+# SQLite sidecars (WAL / shared-memory / rollback journal)
+*.db-wal
+*.db-shm
+*.db-journal
+
+# Data directories (with explicit inclusions)
+data/
+!data/rankings.json
+imports/
+
+# ==============================================================================
+# 5. IDE, WORKSPACE & OS
+# ==============================================================================
+.vscode/
+.antigravity/
+.antigravityrc
 *.code-workspace
 *_FileTree.*
 
-# Virtual Environments / Dependencies
-node_modules/
+# ==============================================================================
+# 6. AI AGENTS & TOOLING HOOKS
+# ==============================================================================
+.playwright-mcp/
+.superpowers/
 
-# Never commit an environment file. deploy/.env.example is the template;
-# a real .env holds JWT_SECRET and SMTP_PASSWORD.
-.env
-.env.*
-!.env.example
+# Agent hook state (prevents stop-hook tree dirtying)
+.claude/state/
 
-# Editor state, and Vite's dev-server config cache. Both are per-machine and
-# both show up as a dirty tree mid-run, which the compaction-seam check reads
-# as uncommitted work.
-.vscode/
+# Isolated worktrees created by the agent harness (EnterWorktree)
+.claude/worktrees/
 
-# TreeFile
-*_FileTree.md
+# ==============================================================================
+# 7. DOCUMENTATION, DESIGN & MEDIA ASSETS
+# ==============================================================================
+# Stitch design renders (track .html sources only)
+.stitch/designs/*.png
+.stitch/designs/*/*.png
 
-.superpowers/
+# Design reference imagery (large binaries; the docs that cite them are tracked)
+docs/project/*/reference/
+
+# Pre-eviction leftovers. These folders no longer exist in the repo — §S8 retires
+# docs out of the tree entirely — but untracked files still sit under these paths
+# in working copies that predate the eviction. The rules stay until those are
+# cleared by hand, so that a `git add -A` cannot silently re-track them.
+docs/archive/
+docs/artifacts/
+docs/screenshots/
+docs/working files/
+
+# Application static media assets
+api/static/headshots/
+
+# ==============================================================================
+# 8. LOCAL SCRATCH, AUDITS & DEBUG
+# ==============================================================================
+scratch/
+debug_tab*.png
+
+# Project module exclusions
+/Core
+/Cloud
