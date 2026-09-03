@@ -1,0 +1,13 @@
+# Auto-detect text files and normalize LF line endings
+* text=auto eol=lf
+
+# Force strict LF on compiled distributions and source code
+packages/bedrock-ui/dist/** text eol=lf
+*.js text eol=lf
+*.d.ts text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.py text eol=lf
+*.sql text eol=lf
+*.json text eol=lf
+*.md text eol=lf
