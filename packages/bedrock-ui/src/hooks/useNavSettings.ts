@@ -52,6 +52,7 @@ export function useNavSettings(): {
     // 1. Flatten all registered base items and sub-items
     interface FlatItemCandidate {
       nav_key: string;
+      to: string;
       label: string;
       icon?: ComponentType<{ className?: string }>;
       tooltip?: string;
@@ -71,6 +72,7 @@ export function useNavSettings(): {
       if (!flatMap.has(top.to)) {
         flatMap.set(top.to, {
           nav_key: top.to,
+          to: top.to,
           label: top.label,
           icon: top.icon,
           tooltip: top.tooltip,
@@ -86,9 +88,11 @@ export function useNavSettings(): {
 
       if (top.children) {
         for (const child of top.children) {
-          if (!flatMap.has(child.to)) {
-            flatMap.set(child.to, {
-              nav_key: child.to,
+          const childNavKey = `${top.to}::${child.to}`;
+          if (!flatMap.has(childNavKey)) {
+            flatMap.set(childNavKey, {
+              nav_key: childNavKey,
+              to: child.to,
               label: child.label,
               tooltip: child.tooltip,
               module: child.module,
@@ -105,9 +109,11 @@ export function useNavSettings(): {
       if (top.groups) {
         for (const grp of top.groups) {
           for (const item of grp.items) {
-            if (!flatMap.has(item.to)) {
-              flatMap.set(item.to, {
-                nav_key: item.to,
+            const groupItemNavKey = `${top.to}::${item.to}`;
+            if (!flatMap.has(groupItemNavKey)) {
+              flatMap.set(groupItemNavKey, {
+                nav_key: groupItemNavKey,
+                to: item.to,
                 label: item.label,
                 tooltip: item.tooltip,
                 module: item.module,
@@ -127,14 +133,20 @@ export function useNavSettings(): {
     // Include any custom items from database settings
     for (const s of settings) {
       if (!flatMap.has(s.nav_key)) {
-        const isSpacer = s.nav_key.startsWith("spacer:");
-        flatMap.set(s.nav_key, {
-          nav_key: s.nav_key,
-          label: s.label_override || (isSpacer ? "Section" : s.nav_key),
-          default_parent_key: s.parent_key ?? null,
-          default_sort_order: s.sort_order ?? orderIndex,
-        });
-        orderIndex += 10;
+        const isLegacyChild = Boolean(
+          s.parent_key && flatMap.has(`${s.parent_key}::${s.nav_key}`)
+        );
+        if (!isLegacyChild) {
+          const isSpacer = s.nav_key.startsWith("spacer:");
+          flatMap.set(s.nav_key, {
+            nav_key: s.nav_key,
+            to: s.nav_key.includes("::") ? s.nav_key.split("::")[1] : s.nav_key,
+            label: s.label_override || (isSpacer ? "Section" : s.nav_key),
+            default_parent_key: s.parent_key ?? null,
+            default_sort_order: s.sort_order ?? orderIndex,
+          });
+          orderIndex += 10;
+        }
       }
     }
 
@@ -158,7 +170,16 @@ export function useNavSettings(): {
     const resolvedItems: ResolvedItem[] = [];
 
     for (const [nav_key, cand] of flatMap.entries()) {
-      const s = settingsMap.get(nav_key);
+      let s = settingsMap.get(nav_key);
+      if (!s && cand.default_parent_key) {
+        const fallback = settingsMap.get(cand.to);
+        if (
+          fallback &&
+          (cand.to !== cand.default_parent_key || fallback.parent_key === cand.default_parent_key)
+        ) {
+          s = fallback;
+        }
+      }
       const isHidden = s ? Boolean(s.is_hidden_override) : false;
       if (isHidden) continue;
 
@@ -177,7 +198,7 @@ export function useNavSettings(): {
 
       resolvedItems.push({
         nav_key,
-        to: nav_key,
+        to: cand.to,
         label,
         icon: IconComp,
         tooltip,

@@ -163,4 +163,59 @@ describe("AppSidebar", () => {
     expect(screen.queryByText("Settings")).not.toBeInTheDocument();
     expect(screen.queryByText("Users")).not.toBeInTheDocument();
   });
+
+  it("renders sub-items sharing the parent route properly when expanded", () => {
+    vi.spyOn(useAuthModule, "useAuth").mockReturnValue({
+      user: { id: 1 },
+      isAdmin: false,
+      hasRole: () => false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      isLoading: false,
+      isAuthenticated: true,
+    } as any);
+
+    vi.spyOn(useModulesModule, "useModules").mockReturnValue({
+      hasModule: () => true,
+    } as any);
+
+    vi.spyOn(useSecurityModule, "useSecurity").mockReturnValue({
+      can: () => true,
+    } as any);
+
+    registerNavItems([
+      {
+        to: "/collection",
+        label: "Collection",
+        icon: () => <svg />,
+        children: [
+          {
+            to: "/collection",
+            label: "My Collection",
+          },
+          {
+            to: "/collection/sets",
+            label: "My Sets",
+          },
+        ],
+      },
+    ]);
+
+    render(
+      <MemoryRouter initialEntries={["/collection"]}>
+        <AppSidebar />
+      </MemoryRouter>
+    );
+
+    // Parent should be visible
+    expect(screen.getByText("Collection")).toBeInTheDocument();
+
+    // Both sub-items should be rendered in the sidebar
+    expect(screen.getByText("My Collection")).toBeInTheDocument();
+    expect(screen.getByText("My Sets")).toBeInTheDocument();
+
+    // The sub-item sharing the parent route should have href="/collection"
+    const myCollectionLink = screen.getByRole("link", { name: "My Collection" });
+    expect(myCollectionLink).toHaveAttribute("href", "/collection");
+  });
 });
