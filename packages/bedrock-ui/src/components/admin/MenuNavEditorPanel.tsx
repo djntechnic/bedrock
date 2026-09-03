@@ -189,13 +189,17 @@ export default function MenuNavEditorPanel() {
   React.useEffect(() => {
     const map: Record<string, NavItemSetting> = {};
     for (const item of allFlatItems) {
+      const subRoute =
+        item.parent_key && item.nav_key.startsWith(`${item.parent_key}::`)
+          ? item.nav_key.slice(item.parent_key.length + 2)
+          : null;
       const existing =
         settings.find((s) => s.nav_key === item.nav_key) ??
-        (item.parent_key && item.nav_key.startsWith(`${item.parent_key}::`)
+        (subRoute
           ? settings.find(
               (s) =>
-                s.nav_key === item.nav_key.slice(item.parent_key!.length + 2) &&
-                (s.parent_key === item.parent_key || !s.parent_key)
+                s.nav_key === subRoute &&
+                (subRoute !== item.parent_key || s.parent_key === item.parent_key)
             )
           : undefined);
       map[item.nav_key] = {
@@ -664,11 +668,17 @@ export default function MenuNavEditorPanel() {
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     ) : (() => {
+                      const subRoute =
+                        base.parent_key && base.nav_key.startsWith(`${base.parent_key}::`)
+                          ? base.nav_key.slice(base.parent_key.length + 2)
+                          : null;
                       const existing =
                         settings.find((s) => s.nav_key === base.nav_key) ||
-                        (base.parent_key && base.nav_key.startsWith(`${base.parent_key}::`)
+                        (subRoute
                           ? settings.find(
-                              (s) => s.nav_key === base.nav_key.slice(base.parent_key!.length + 2)
+                              (s) =>
+                                s.nav_key === subRoute &&
+                                (subRoute !== base.parent_key || s.parent_key === base.parent_key)
                             )
                           : undefined);
                       return existing ? (
