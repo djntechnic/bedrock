@@ -33,10 +33,11 @@ function extractAllNavItems(baseItems, customSettings) {
     }
     if (item.children) {
       for (const child of item.children) {
-        if (!registeredKeys.has(child.to)) {
-          registeredKeys.add(child.to);
+        const childNavKey = `${item.to}::${child.to}`;
+        if (!registeredKeys.has(childNavKey)) {
+          registeredKeys.add(childNavKey);
           list.push({
-            nav_key: child.to,
+            nav_key: childNavKey,
             parent_key: item.to,
             label: child.label,
             group_label: null,
@@ -67,10 +68,11 @@ function extractAllNavItems(baseItems, customSettings) {
           sortIndex += 10;
         }
         for (const sub of group.items) {
-          if (!registeredKeys.has(sub.to)) {
-            registeredKeys.add(sub.to);
+          const subNavKey = `${item.to}::${sub.to}`;
+          if (!registeredKeys.has(subNavKey)) {
+            registeredKeys.add(subNavKey);
             list.push({
-              nav_key: sub.to,
+              nav_key: subNavKey,
               parent_key: item.to,
               label: sub.label,
               group_label: group.label,
@@ -86,7 +88,10 @@ function extractAllNavItems(baseItems, customSettings) {
     }
   }
   for (const setting of customSettings) {
-    if (!registeredKeys.has(setting.nav_key)) {
+    const isRegistered = registeredKeys.has(setting.nav_key) || Boolean(
+      setting.parent_key && registeredKeys.has(`${setting.parent_key}::${setting.nav_key}`)
+    );
+    if (!isRegistered) {
       const isSpacer = setting.nav_key.startsWith("spacer:");
       list.push({
         nav_key: setting.nav_key,
@@ -122,7 +127,10 @@ function MenuNavEditorPanel() {
   React__default.useEffect(() => {
     const map = {};
     for (const item of allFlatItems) {
-      const existing = settings.find((s) => s.nav_key === item.nav_key);
+      const subRoute = item.parent_key && item.nav_key.startsWith(`${item.parent_key}::`) ? item.nav_key.slice(item.parent_key.length + 2) : null;
+      const existing = settings.find((s) => s.nav_key === item.nav_key) ?? (subRoute ? settings.find(
+        (s) => s.nav_key === subRoute && (subRoute !== item.parent_key || s.parent_key === item.parent_key)
+      ) : void 0);
       map[item.nav_key] = {
         nav_key: item.nav_key,
         parent_key: existing?.parent_key ?? item.parent_key ?? null,
@@ -411,7 +419,7 @@ function MenuNavEditorPanel() {
                     isSpacer && /* @__PURE__ */ jsx(Badge, { variant: "outline", className: "text-[9px] px-1 py-0 h-3.5 border-amber-500/40 text-amber-600 dark:text-amber-400", children: "Section Header" }),
                     base.group_label && /* @__PURE__ */ jsx(Badge, { variant: "outline", className: "text-[9px] px-1 py-0 h-3.5 text-muted-foreground", children: base.group_label })
                   ] }),
-                  !isSpacer && /* @__PURE__ */ jsx("span", { className: "text-[10px] text-muted-foreground font-mono truncate max-w-[200px]", children: base.nav_key })
+                  !isSpacer && /* @__PURE__ */ jsx("span", { className: "text-[10px] text-muted-foreground font-mono truncate max-w-[200px]", children: base.nav_key.includes("::") ? base.nav_key.split("::")[1] : base.nav_key })
                 ] })
               ] }) }),
               /* @__PURE__ */ jsx("td", { className: "px-3 py-2", children: /* @__PURE__ */ jsxs(
@@ -492,18 +500,24 @@ function MenuNavEditorPanel() {
                   title: `Delete ${isSpacer ? "section header" : "custom navigation item"}`,
                   children: /* @__PURE__ */ jsx(Trash2, { className: "h-3.5 w-3.5" })
                 }
-              ) : Boolean(settings.find((s) => s.nav_key === base.nav_key)) ? /* @__PURE__ */ jsx(
-                Button,
-                {
-                  size: "sm",
-                  variant: "ghost",
-                  className: "h-7 w-7 p-0 text-muted-foreground hover:text-foreground",
-                  onClick: () => handleDeleteItem(base.nav_key, draft.label_override || base.label),
-                  disabled: isDeleting,
-                  title: "Reset item overrides to code default",
-                  children: /* @__PURE__ */ jsx(RotateCcw, { className: "h-3.5 w-3.5" })
-                }
-              ) : /* @__PURE__ */ jsx("span", { className: "text-muted-foreground/30 text-xs", children: "—" }) })
+              ) : (() => {
+                const subRoute = base.parent_key && base.nav_key.startsWith(`${base.parent_key}::`) ? base.nav_key.slice(base.parent_key.length + 2) : null;
+                const existing = settings.find((s) => s.nav_key === base.nav_key) || (subRoute ? settings.find(
+                  (s) => s.nav_key === subRoute && (subRoute !== base.parent_key || s.parent_key === base.parent_key)
+                ) : void 0);
+                return existing ? /* @__PURE__ */ jsx(
+                  Button,
+                  {
+                    size: "sm",
+                    variant: "ghost",
+                    className: "h-7 w-7 p-0 text-muted-foreground hover:text-foreground",
+                    onClick: () => handleDeleteItem(existing.nav_key, draft.label_override || base.label),
+                    disabled: isDeleting,
+                    title: "Reset item overrides to code default",
+                    children: /* @__PURE__ */ jsx(RotateCcw, { className: "h-3.5 w-3.5" })
+                  }
+                ) : /* @__PURE__ */ jsx("span", { className: "text-muted-foreground/30 text-xs", children: "—" });
+              })() })
             ]
           },
           `${base.nav_key}-${base.parent_key || "root"}-${idx}`
