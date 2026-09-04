@@ -76,6 +76,7 @@ modules that are not there.
 
 Run the type check **after** the tests, so a genuine failure is reported rather
 than a missing matcher type on a test file. CI does this deliberately.
+During iteration, run targeted unit tests; reserve full test runs and typecheck for pre-PR gating.
 
 ---
 
@@ -142,6 +143,8 @@ pins from inside this repo.
 
 `.github/workflows/ci.yml` — two jobs on every PR and every push to `master`:
 `bedrock-api (pytest)` and `bedrock-ui (vitest + tsc)`. Both block merge.
+Wait for CI via background `gh pr checks <pr> --watch` and yield the turn; never
+`sleep`-poll. All checks must pass (exit code 0) before merge. Zero broken tests ship to master.
 
 Precise typing only — `any` casts and `@ts-ignore` / `@ts-expect-error` are
 banned as fixes.
