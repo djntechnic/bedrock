@@ -27,6 +27,7 @@ Closes #<!-- issue number -->
 
 - [ ] **Platform Boundary** — zero business domain logic added; application-specific behaviors exposed via extension points (Registry or Provider)
 - [ ] **Extension Points** — documented in `docs/extension_points.md` if added or changed
+- [ ] **Security & Navigation Models** — honors Granular Security Model (tri-state module capability matrix/overrides, audit logging) and Config-Driven Navigation (`app_nav_item_settings`, in-place `<PermissionDenied>`) contracts
 - [ ] **Logging** — structured Pino logging in UI (`log`), Loguru in API; no `console.*` / `print()`
 - [ ] **Typing** — precise TypeScript typing; zero `any` casts, `@ts-ignore`, or `@ts-expect-error`
 - [ ] **Version & Changelog** — `CHANGELOG.md` updated if breaking export or consumer-facing contract
