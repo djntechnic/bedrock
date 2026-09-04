@@ -146,6 +146,8 @@ pins from inside this repo.
 Wait for CI via background `gh pr checks <pr> --watch` and yield the turn; never
 `sleep`-poll. All checks must pass (exit code 0) before merge. Zero broken tests ship to master.
 
+After merging, synchronize local `master` (`git pull origin master`) and verify `git status --porcelain` is 100% clean. Zero uncommitted modifications, staged changes, or untracked files may remain before completion.
+
 Precise typing only — `any` casts and `@ts-ignore` / `@ts-expect-error` are
 banned as fixes.
 
