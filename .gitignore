@@ -82,6 +82,9 @@ imports/
 # Design reference imagery (large binaries; the docs that cite them are tracked)
 docs/project/*/reference/
 
+# Working/Scratch documents
+docs/project/*/punchlists/
+
 # Pre-eviction leftovers. These folders no longer exist in the repo — §S8 retires
 # docs out of the tree entirely — but untracked files still sit under these paths
 # in working copies that predate the eviction. The rules stay until those are
