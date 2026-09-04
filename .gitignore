@@ -83,7 +83,7 @@ imports/
 docs/project/*/reference/
 
 # Working/Scratch documents
-docs/project/*/punchlists/
+docs/project/punchlists/
 
 # Pre-eviction leftovers. These folders no longer exist in the repo — §S8 retires
 # docs out of the tree entirely — but untracked files still sit under these paths
