@@ -12,14 +12,37 @@
  * source when the admin endpoint is unreachable. Env-var overrides
  * (VITE_APP_*) are respected for the same boot-critical values.
  */
+/**
+ * Resolve the dynamic application name across window override, active runtime config,
+ * build-time env var, and default platform fallback (#61).
+ */
+export function resolveAppName(runtimeConfigAppName?: string): string {
+  // 1. Runtime window override
+  if (typeof window !== "undefined" && (window as any).__BEDROCK_APP_NAME__) {
+    return (window as any).__BEDROCK_APP_NAME__;
+  }
+  // 2. Active runtime config context (e.g. app_config_settings.system_app_name)
+  if (runtimeConfigAppName && runtimeConfigAppName.trim() !== "") {
+    return runtimeConfigAppName;
+  }
+  // 3. Fallback to import.meta.env.VITE_APP_NAME if defined at build time
+  const envName = (typeof import.meta !== "undefined" && import.meta.env?.VITE_APP_NAME) as string | undefined;
+  if (envName && envName.trim() !== "") {
+    return envName;
+  }
+  // 4. Default platform fallback
+  return "Bedrock";
+}
+
 export const appSettings = {
   system: {
     // Human-readable application name shown in the sidebar, footer, and browser
     // tab. Authoritative value lives in app_config_settings.system_app_name and
-    // is delivered via useAppSettings(); this literal is only the boot-time
-    // fallback before the first admin/config fetch resolves. Env var
-    // VITE_APP_NAME overrides for boot-critical rendering.
-    appName: (import.meta.env.VITE_APP_NAME as string) || 'bedrock',
+    // is delivered via useAppSettings(); this dynamic getter provides boot-time
+    // resolution via resolveAppName().
+    get appName(): string {
+      return resolveAppName();
+    },
   },
   logging: {
     // Falls back to safe parameters to guarantee layout efficiency

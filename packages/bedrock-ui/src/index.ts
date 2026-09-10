@@ -186,3 +186,4 @@ export * from "./api/client";
 export * from "./api/routes";
 export * from "./lib/logger";
 export * from "./utils/logger";
+export * from "./config";

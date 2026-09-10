@@ -12,6 +12,7 @@ import {
 } from "./ui/tooltip";
 import { useKeyboardShortcuts } from "../context/KeyboardShortcutsContext";
 import { useAppSettings } from "../hooks/useAppSettings";
+import { resolveAppName } from "../config";
 
 export interface AppFooterProps {
   /**
@@ -27,6 +28,7 @@ export default function AppFooter({ tagline }: AppFooterProps = {}) {
   const year = new Date().getFullYear();
   const { open } = useKeyboardShortcuts();
   const { system } = useAppSettings();
+  const appName = resolveAppName(system.appName);
   return (
     <footer className="app-footer border-t border-border bg-card/80 px-6 py-2.5 shrink-0">
       <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -34,7 +36,7 @@ export default function AppFooter({ tagline }: AppFooterProps = {}) {
           <div className="h-4 w-4 rounded bg-primary/10 flex items-center justify-center">
             <div className="h-2 w-2 rounded-full bg-primary/60" />
           </div>
-          <span className="font-semibold text-foreground/80">{system.appName}</span>
+          <span className="font-semibold text-foreground/80">{appName}</span>
           {tagline ? (
             <>
               <span className="text-border">·</span>
