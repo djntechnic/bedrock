@@ -216,23 +216,67 @@ export default function MenuNavEditorPanel() {
   }, [allFlatItems, settings]);
 
   const itemsList = useMemo(() => {
-    return allFlatItems
-      .map((item) => {
-        const draft = drafts[item.nav_key] || {
-          nav_key: item.nav_key,
-          parent_key: item.parent_key ?? null,
-          sort_order: item.default_sort_order ?? 0,
-          label_override: "",
-          icon_override: "",
-          tooltip_override: "",
-          is_hidden_override: false,
-        };
-        return {
-          base: item,
-          draft,
-        };
-      })
-      .sort((a, b) => a.draft.sort_order - b.draft.sort_order);
+    const list = allFlatItems.map((item) => {
+      const draft = drafts[item.nav_key] || {
+        nav_key: item.nav_key,
+        parent_key: item.parent_key ?? null,
+        sort_order: item.default_sort_order ?? 0,
+        label_override: "",
+        icon_override: "",
+        tooltip_override: "",
+        is_hidden_override: false,
+      };
+      return {
+        base: item,
+        draft,
+      };
+    });
+
+    // Group items hierarchically: root items sorted by sort_order,
+    // with child items grouped immediately beneath their resolved parent item,
+    // also sorted by sort_order within their group.
+    const roots: typeof list = [];
+    const childrenByParent = new Map<string, typeof list>();
+    const orphanedChildren: typeof list = [];
+
+    for (const entry of list) {
+      const parentKey = entry.draft.parent_key;
+      if (!parentKey) {
+        roots.push(entry);
+      } else {
+        const group = childrenByParent.get(parentKey) || [];
+        group.push(entry);
+        childrenByParent.set(parentKey, group);
+      }
+    }
+
+    // Sort roots by sort_order
+    roots.sort((a, b) => a.draft.sort_order - b.draft.sort_order);
+
+    // Build the clustered result
+    const clustered: typeof list = [];
+    const parentKeysSeen = new Set<string>();
+
+    for (const root of roots) {
+      clustered.push(root);
+      parentKeysSeen.add(root.base.nav_key);
+
+      const children = childrenByParent.get(root.base.nav_key);
+      if (children) {
+        children.sort((a, b) => a.draft.sort_order - b.draft.sort_order);
+        clustered.push(...children);
+      }
+    }
+
+    // Handle any orphaned children whose parent_key was not found in roots
+    for (const [parentKey, children] of childrenByParent.entries()) {
+      if (!parentKeysSeen.has(parentKey)) {
+        children.sort((a, b) => a.draft.sort_order - b.draft.sort_order);
+        orphanedChildren.push(...children);
+      }
+    }
+
+    return [...clustered, ...orphanedChildren];
   }, [allFlatItems, drafts]);
 
   // Modal Dialog States
@@ -373,10 +417,22 @@ export default function MenuNavEditorPanel() {
     }
   };
 
-  const handleDeleteItem = async (navKey: string, label: string) => {
-    if (confirm(`Delete custom navigation item / spacer '${label}'?`)) {
+  const handleResetItem = async (navKey: string, label: string) => {
+    if (confirm(`Reset overrides for '${label}' to code defaults?`)) {
       try {
         await deleteSetting(navKey);
+        toast.success(`Reset overrides for '${label}'`);
+      } catch (err: unknown) {
+        toast.error("Failed to reset navigation overrides");
+      }
+    }
+  };
+
+  const handleDeleteItem = async (navKey: string, label: string) => {
+    if (confirm(`Delete custom item '${label}'?`)) {
+      try {
+        await deleteSetting(navKey);
+        toast.success(`Deleted '${label}'`);
       } catch (err: unknown) {
         toast.error("Failed to delete navigation item");
       }
@@ -663,7 +719,7 @@ export default function MenuNavEditorPanel() {
                         className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
                         onClick={() => handleDeleteItem(base.nav_key, draft.label_override || base.label)}
                         disabled={isDeleting}
-                        title={`Delete ${isSpacer ? "section header" : "custom navigation item"}`}
+                        title="Delete Item"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -677,9 +733,9 @@ export default function MenuNavEditorPanel() {
                         (subRoute
                           ? settings.find(
                               (s) =>
-                                s.nav_key === subRoute &&
-                                (subRoute !== base.parent_key || s.parent_key === base.parent_key)
-                            )
+                                 s.nav_key === subRoute &&
+                                 (subRoute !== base.parent_key || s.parent_key === base.parent_key)
+                             )
                           : undefined);
                       return existing ? (
                         <Button
@@ -687,10 +743,10 @@ export default function MenuNavEditorPanel() {
                           variant="ghost"
                           className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
                           onClick={() =>
-                            handleDeleteItem(existing.nav_key, draft.label_override || base.label)
+                            handleResetItem(existing.nav_key, draft.label_override || base.label)
                           }
                           disabled={isDeleting}
-                          title="Reset item overrides to code default"
+                          title="Reset Overrides"
                         >
                           <RotateCcw className="h-3.5 w-3.5" />
                         </Button>
