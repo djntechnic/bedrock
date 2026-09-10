@@ -293,6 +293,8 @@ export interface GridColumnSetting {
    * `config.readOnly === 1`.
    */
   editable?: boolean;
+  /** Whether automated directional KPI gradient styling is enabled for numeric values. */
+  enable_kpi_gradient?: boolean;
 }
 
 /** Audit log entry for a CSV or PDF export event. */
@@ -398,7 +400,10 @@ export function useCreateConfig() {
       const { data } = await apiClient.post(API_ROUTES.admin.config(), body);
       return data;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.admin.configAll() }); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.admin.configAll() });
+      qc.invalidateQueries({ queryKey: queryKeys.appConfig.all });
+    },
   });
 }
 
@@ -410,7 +415,10 @@ export function useDeleteConfig() {
       const { data } = await apiClient.delete(API_ROUTES.admin.configItem(key));
       return data;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: queryKeys.admin.configAll() }); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.admin.configAll() });
+      qc.invalidateQueries({ queryKey: queryKeys.appConfig.all });
+    },
   });
 }
 
@@ -520,6 +528,7 @@ export function useUpdateConfig() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.admin.configAll() });
+      qc.invalidateQueries({ queryKey: queryKeys.appConfig.all });
     },
   });
 }

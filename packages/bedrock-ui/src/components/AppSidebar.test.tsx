@@ -2,14 +2,14 @@
  * @file AppSidebar.test.tsx
  * @description Tests for AppSidebar component, verifying security filtering on children.
  */
-import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import AppSidebar from "./AppSidebar";
 import * as useAuthModule from "../hooks/useAuth";
 import * as useModulesModule from "../hooks/useModules";
 import * as useSecurityModule from "../hooks/useSecurity";
+import AppSidebar from "./AppSidebar";
 import { __clearNavItems, getNavItems, registerNavItems } from "./navRegistry";
 
 // Mock zustand stores
@@ -32,17 +32,20 @@ vi.mock("../store/commandPaletteStore", () => ({
 }));
 
 vi.mock("../hooks/useAppSettings", () => ({
-  useAppSettings: () => ({ system: { appName: "Test App" } })
+  useAppSettings: () => ({ system: { appName: "Test App" } }),
 }));
 
 vi.mock("../hooks/useMediaQuery", () => ({
-  useMediaQuery: () => false
+  useMediaQuery: () => false,
 }));
+
+let mockNavItems: any = null;
+let mockNavSettings: any[] = [];
 
 vi.mock("../hooks/useNavSettings", () => ({
   useNavSettings: () => ({
-    navItems: getNavItems(),
-    settings: [],
+    navItems: mockNavItems ?? getNavItems(),
+    settings: mockNavSettings,
     isLoading: false,
   }),
 }));
@@ -50,6 +53,8 @@ vi.mock("../hooks/useNavSettings", () => ({
 describe("AppSidebar", () => {
   beforeEach(() => {
     __clearNavItems();
+    mockNavItems = null;
+    mockNavSettings = [];
     vi.restoreAllMocks();
   });
 
@@ -96,23 +101,23 @@ describe("AppSidebar", () => {
             label: "Restricted Child",
             module: "inventory",
             action: "update",
-          }
-        ]
-      }
+          },
+        ],
+      },
     ]);
 
     render(
       <MemoryRouter initialEntries={["/inventory"]}>
         <AppSidebar />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     // Parent should be visible
     expect(screen.getByText("Inventory")).toBeInTheDocument();
-    
+
     // Allowed child should be visible
     expect(screen.getByText("Allowed Child")).toBeInTheDocument();
-    
+
     // Restricted child should NOT be visible
     expect(screen.queryByText("Restricted Child")).not.toBeInTheDocument();
   });
@@ -148,15 +153,15 @@ describe("AppSidebar", () => {
             label: "Users",
             module: "admin",
             action: "view",
-          }
-        ]
-      }
+          },
+        ],
+      },
     ]);
 
     render(
       <MemoryRouter>
         <AppSidebar />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     // The entire parent should be hidden
@@ -204,7 +209,7 @@ describe("AppSidebar", () => {
     render(
       <MemoryRouter initialEntries={["/collection"]}>
         <AppSidebar />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
 
     // Parent should be visible
@@ -215,7 +220,57 @@ describe("AppSidebar", () => {
     expect(screen.getByText("My Sets")).toBeInTheDocument();
 
     // The sub-item sharing the parent route should have href="/collection"
-    const myCollectionLink = screen.getByRole("link", { name: "My Collection" });
+    const myCollectionLink = screen.getByRole("link", {
+      name: "My Collection",
+    });
     expect(myCollectionLink).toHaveAttribute("href", "/collection");
+  });
+
+  it("renders dynamic tooltips on parent and child links and applies overrides", () => {
+    vi.spyOn(useAuthModule, "useAuth").mockReturnValue({
+      user: { id: 1 },
+      isAdmin: false,
+      hasRole: () => false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      isLoading: false,
+      isAuthenticated: true,
+    } as any);
+
+    vi.spyOn(useModulesModule, "useModules").mockReturnValue({
+      hasModule: () => true,
+    } as any);
+
+    vi.spyOn(useSecurityModule, "useSecurity").mockReturnValue({
+      can: () => true,
+    } as any);
+
+    mockNavItems = [
+      {
+        to: "/catalog",
+        label: "Master Catalog",
+        tooltip: "Browse all cards and sets",
+        icon: () => <svg />,
+        children: [
+          {
+            to: "/catalog/cards",
+            label: "Cards",
+            tooltip: "Card database view",
+          },
+        ],
+      },
+    ];
+
+    render(
+      <MemoryRouter initialEntries={["/catalog"]}>
+        <AppSidebar />
+      </MemoryRouter>,
+    );
+
+    const parentLink = screen.getByRole("link", { name: /Master Catalog/i });
+    expect(parentLink).toHaveAttribute("title", "Browse all cards and sets");
+
+    const childLink = screen.getByRole("link", { name: "Cards" });
+    expect(childLink).toHaveAttribute("title", "Card database view");
   });
 });

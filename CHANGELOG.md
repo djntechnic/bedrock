@@ -16,6 +16,76 @@ When drafting a release body, write the section as `## For consumers`, not
 nested form — the cascade workflow's extractor matches `^## For consumers`
 literally and fails the release's cascade job on a mismatch.
 
+## v0.9.2
+
+### Added — public grid layout and column metadata endpoints
+
+Unauthenticated read-only access is now supported for `/api/grids/{grid_id}/layout`
+and column metadata endpoints. Public-facing consumers and unauthenticated views
+can fetch and render table configurations without requiring an active session
+or generating 401 unauthorized errors on initial page load.
+
+### Added — automated directional KPI gradient inference (#67)
+
+Implemented automated directional KPI gradient inference in `DataGrid`.
+Applications can register a domain policy via `registerKpiGradientPolicy()`
+defining whether lower values are better (e.g. ERA, WHIP, rank) or higher
+values are better (e.g. OPS, HR, AVG). When `enable_kpi_gradient` is active
+on a column setting, `DataGrid` infers and renders directional background
+shading automatically.
+
+### Added — config-driven in-app quick help system (#69)
+
+Added `<HelpPopover topic="..." />` and `useHelpConfig(topic)` hook for
+rendering lightweight contextual popovers. Help topics are configured centrally,
+rendering markdown text with optional external documentation links and clean
+visual indicators across pages.
+
+### Added — dynamic application name resolution (#61)
+
+Replaced static build-time inlining of the application name with dynamic
+runtime resolution from `useAppConfig`. Changes to the configured application
+title propagate immediately across headers, document titles, and footers
+without requiring UI bundle rebuilds.
+
+### Fixed — connection failure resilience in ProtectedRoute (#77)
+
+`ProtectedRoute` previously treated any module resolution error as a disabled
+module, incorrectly redirecting users to the `ModuleDisabled` view on transient
+network drops. It now distinguishes connection failures from explicit 403/disabled
+module responses, rendering a retry screen and preserving access once connectivity
+is restored.
+
+### Fixed — useAppConfig boot caching eliminates 401 startup noise (#76)
+
+`useAppSettings` now consumes cached configuration through `useAppConfig`.
+Unauthenticated boots and cold page loads no longer spam `/api/app-config`
+requests or trigger noisy 401 authentication warnings in browser consoles.
+
+### Fixed — dynamic sidebar tooltips and navigation hierarchy (#73, #75)
+
+`AppSidebar` now consumes `useNavSettings` and renders dynamic tooltips when
+collapsed, respecting user accessibility and disclosure settings.
+`MenuNavEditorPanel` in the admin console now clusters submenu items
+hierarchically under their parent navigation entries and disambiguates
+between resetting settings to defaults and deleting custom configurations.
+
+### Fixed — developer standard references cleaned from UI (#70)
+
+Cleaned developer-facing internal standard references (such as §S9 tokens)
+from admin tooltips, subtitles, and labels in `GridSettingsPanel` and
+`GridColumnsPanel`, replacing them with user-facing platform descriptions.
+
+### For consumers
+
+**Adoption Requirements for MLBTracker and CollectIt:**
+- Re-pin both `bedrock-api` and `@djntechnic/bedrock-ui` to `v0.9.2`.
+- **Public Grids**: Public views can consume `/api/grids/{grid_id}/layout` directly without auth headers.
+- **KPI Gradients**: Call `registerKpiGradientPolicy((colId) => ({ lowerBetter: boolean }))` in domain initialization to take advantage of automated directional gradient shading on KPI columns (#67).
+- **In-App Quick Help**: Mount `<HelpPopover topic="<topic_key>" />` beside relevant section headers and form fields to expose contextual markdown documentation (#69).
+- **Navigation Editor & AppSidebar**: Take advantage of clustered hierarchy in `MenuNavEditorPanel` and enhanced sidebar tooltips in collapsed modes (#73, #75).
+- **Connection Resilience & Boot Noise**: No application changes required; `ProtectedRoute` connection resilience (#77) and `useAppConfig` cold boot 401 noise elimination (#76) apply automatically.
+
 ## v0.8.2
 
 ### Fixed — platform migration 004 aborted the whole chain on MLBTracker

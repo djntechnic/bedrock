@@ -24,6 +24,7 @@ class Tables:
     APP_GRID_COLUMN_SETTINGS_USER: Final = "app_grid_column_settings_user"
     APP_GRID_SETTINGS: Final = "app_grid_settings"
     APP_GRID_SETTINGS_USER: Final = "app_grid_settings_user"
+    APP_HELP_ENTRIES: Final = "app_help_entries"
     APP_NAV_ITEM_SETTINGS: Final = "app_nav_item_settings"
     APP_UI_QUERY_CONFIG: Final = "app_ui_query_config"
     AUTH_ACTIVITY_LOG: Final = "auth_activity_log"
@@ -67,6 +68,7 @@ class Indexes:
     IDX_AUTH_SESSIONS_USER: Final = "idx_auth_sessions_user"
     IDX_LOG_ACTIVITY_EVENT_TYPE_TS: Final = "idx_log_activity_event_type_ts"
     IDX_LOG_ACTIVITY_USER_ID: Final = "idx_log_activity_user_id"
+    UX_APP_HELP_ENTRIES_TOPIC: Final = "ux_app_help_entries_topic"
 
 
 ALL_TABLES: Final = frozenset(v for k, v in vars(Tables).items()

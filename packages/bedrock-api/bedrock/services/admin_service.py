@@ -259,6 +259,7 @@ _GRID_COLUMN_BOOL_COLS: tuple[str, ...] = (
     "wrap_text", "resizable", "group_by",
     # Phase 8 H3
     "editable",
+    "enable_kpi_gradient",
 )
 
 _GRID_COLUMN_NUM_COLS: tuple[str, ...] = (
@@ -298,6 +299,7 @@ _GRID_COLUMN_UPDATE_ALLOWED = frozenset({
     "gradient_from_color", "gradient_to_color",
     # Phase 8 H3: `editable` gates the `<EditableCell>` runtime primitive.
     "editable",
+    "enable_kpi_gradient",
     "modified_by",
 })
 

@@ -4,14 +4,16 @@ import { Button } from "./ui/button.js";
 import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip.js";
 import { useKeyboardShortcuts } from "../context/KeyboardShortcutsContext.js";
 import { useAppSettings } from "../hooks/useAppSettings.js";
+import { resolveAppName } from "../config/index.js";
 function AppFooter({ tagline } = {}) {
   const year = (/* @__PURE__ */ new Date()).getFullYear();
   const { open } = useKeyboardShortcuts();
   const { system } = useAppSettings();
+  const appName = resolveAppName(system.appName);
   return /* @__PURE__ */ jsx("footer", { className: "app-footer border-t border-border bg-card/80 px-6 py-2.5 shrink-0", children: /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between text-xs text-muted-foreground", children: [
     /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1.5", children: [
       /* @__PURE__ */ jsx("div", { className: "h-4 w-4 rounded bg-primary/10 flex items-center justify-center", children: /* @__PURE__ */ jsx("div", { className: "h-2 w-2 rounded-full bg-primary/60" }) }),
-      /* @__PURE__ */ jsx("span", { className: "font-semibold text-foreground/80", children: system.appName }),
+      /* @__PURE__ */ jsx("span", { className: "font-semibold text-foreground/80", children: appName }),
       tagline ? /* @__PURE__ */ jsxs(Fragment, { children: [
         /* @__PURE__ */ jsx("span", { className: "text-border", children: "·" }),
         /* @__PURE__ */ jsx("span", { children: tagline })

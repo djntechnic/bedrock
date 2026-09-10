@@ -252,7 +252,7 @@ function GridSettingsPanel({
       {
         storageKey: "grid.liveStyle",
         title: "Live data & styling",
-        subtitle: "§S9 scoreboard tokens — condensed numerals, changed-cell flash, row-accent rows.",
+        subtitle: "Scoreboard styling — condensed numerals, changed-cell flash, and row-accent highlights.",
         children: [
           /* @__PURE__ */ jsx(
             SelectRow,

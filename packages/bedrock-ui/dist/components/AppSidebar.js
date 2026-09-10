@@ -1,19 +1,27 @@
 import { jsx, jsxs, Fragment } from "react/jsx-runtime";
+import { ChevronDown, User, LogOut, PinOff, Pin } from "lucide-react";
 import { forwardRef, useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ChevronDown, User, LogOut, PinOff, Pin } from "lucide-react";
-import { isNavItemVisible } from "./navRegistry.js";
-import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip.js";
 import { useAppSettings } from "../hooks/useAppSettings.js";
-import { useModules } from "../hooks/useModules.js";
-import { useSecurity } from "../hooks/useSecurity.js";
-import { useNavSettings } from "../hooks/useNavSettings.js";
 import { useAuth } from "../hooks/useAuth.js";
 import { useMediaQuery } from "../hooks/useMediaQuery.js";
+import { useModules } from "../hooks/useModules.js";
+import { useNavSettings } from "../hooks/useNavSettings.js";
+import { useSecurity } from "../hooks/useSecurity.js";
 import { useSidebarStore } from "../store/sidebarStore.js";
+import { isNavItemVisible } from "./navRegistry.js";
+import { Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip.js";
 const ProfileTarget = forwardRef(function ProfileTarget2({ to, className, title, children }, ref) {
   if (!to) {
-    return /* @__PURE__ */ jsx("span", { ref, className, title, children });
+    return /* @__PURE__ */ jsx(
+      "span",
+      {
+        ref,
+        className,
+        title,
+        children
+      }
+    );
   }
   return /* @__PURE__ */ jsx(
     Link,
@@ -26,7 +34,9 @@ const ProfileTarget = forwardRef(function ProfileTarget2({ to, className, title,
     }
   );
 });
-function AppSidebar({ profilePath = "/profile" } = {}) {
+function AppSidebar({
+  profilePath = "/profile"
+} = {}) {
   const location = useLocation();
   const [openSections, setOpenSections] = useState(/* @__PURE__ */ new Set());
   const { system } = useAppSettings();
@@ -143,22 +153,68 @@ function AppSidebar({ profilePath = "/profile" } = {}) {
           collapsed ? "w-16" : "w-60"
         ].join(" "),
         children: [
-          /* @__PURE__ */ jsx("div", { className: "h-14 flex items-center px-3 border-b border-border shrink-0 overflow-hidden bg-primary/5", children: /* @__PURE__ */ jsxs(Link, { to: "/", className: "flex items-center gap-2.5 min-w-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring", children: [
-            /* @__PURE__ */ jsx("div", { className: "shrink-0 h-8 w-8 rounded-lg bg-primary flex items-center justify-center shadow-sm ring-1 ring-primary/20", children: /* @__PURE__ */ jsxs("svg", { viewBox: "0 0 20 20", className: "h-4 w-4 fill-primary-foreground", "aria-hidden": true, children: [
-              /* @__PURE__ */ jsx("circle", { cx: "10", cy: "10", r: "8", stroke: "currentColor", strokeWidth: "1.5", fill: "none", className: "stroke-primary-foreground/60" }),
-              /* @__PURE__ */ jsx("path", { d: "M10 2 Q12 10 10 18 Q8 10 10 2Z", fill: "currentColor", opacity: "0.9" }),
-              /* @__PURE__ */ jsx("path", { d: "M2 10 Q10 12 18 10 Q10 8 2 10Z", fill: "currentColor", opacity: "0.9" })
-            ] }) }),
-            !collapsed && /* @__PURE__ */ jsxs("div", { className: "min-w-0", children: [
-              /* @__PURE__ */ jsx("p", { className: "font-bold text-sm leading-tight text-foreground tracking-tight truncate", children: system.appName }),
-              /* @__PURE__ */ jsx("p", { className: "text-[10px] text-muted-foreground leading-tight font-medium tracking-wide uppercase", children: "Analytics" })
-            ] })
-          ] }) }),
+          /* @__PURE__ */ jsx("div", { className: "h-14 flex items-center px-3 border-b border-border shrink-0 overflow-hidden bg-primary/5", children: /* @__PURE__ */ jsxs(
+            Link,
+            {
+              to: "/",
+              className: "flex items-center gap-2.5 min-w-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              children: [
+                /* @__PURE__ */ jsx("div", { className: "shrink-0 h-8 w-8 rounded-lg bg-primary flex items-center justify-center shadow-sm ring-1 ring-primary/20", children: /* @__PURE__ */ jsxs(
+                  "svg",
+                  {
+                    viewBox: "0 0 20 20",
+                    className: "h-4 w-4 fill-primary-foreground",
+                    "aria-hidden": true,
+                    children: [
+                      /* @__PURE__ */ jsx(
+                        "circle",
+                        {
+                          cx: "10",
+                          cy: "10",
+                          r: "8",
+                          stroke: "currentColor",
+                          strokeWidth: "1.5",
+                          fill: "none",
+                          className: "stroke-primary-foreground/60"
+                        }
+                      ),
+                      /* @__PURE__ */ jsx(
+                        "path",
+                        {
+                          d: "M10 2 Q12 10 10 18 Q8 10 10 2Z",
+                          fill: "currentColor",
+                          opacity: "0.9"
+                        }
+                      ),
+                      /* @__PURE__ */ jsx(
+                        "path",
+                        {
+                          d: "M2 10 Q10 12 18 10 Q10 8 2 10Z",
+                          fill: "currentColor",
+                          opacity: "0.9"
+                        }
+                      )
+                    ]
+                  }
+                ) }),
+                !collapsed && /* @__PURE__ */ jsxs("div", { className: "min-w-0", children: [
+                  /* @__PURE__ */ jsx("p", { className: "font-bold text-sm leading-tight text-foreground tracking-tight truncate", children: system.appName }),
+                  /* @__PURE__ */ jsx("p", { className: "text-[10px] text-muted-foreground leading-tight font-medium tracking-wide uppercase", children: "Analytics" })
+                ] })
+              ]
+            }
+          ) }),
           /* @__PURE__ */ jsx("nav", { className: "flex-1 overflow-y-auto py-3 space-y-0.5 px-2", children: navItems.map((item) => {
             const isSpacer = item.to.startsWith("spacer:");
             if (isSpacer) {
               if (collapsed) {
-                return /* @__PURE__ */ jsx("div", { className: "my-2 border-t border-border/40" }, item.to);
+                return /* @__PURE__ */ jsx(
+                  "div",
+                  {
+                    className: "my-2 border-t border-border/40"
+                  },
+                  item.to
+                );
               }
               return /* @__PURE__ */ jsx("div", { className: "pt-3 pb-1 px-2.5", children: /* @__PURE__ */ jsx("p", { className: "text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider", children: item.label }) }, item.to);
             }
@@ -194,11 +250,15 @@ function AppSidebar({ profilePath = "/profile" } = {}) {
               return /* @__PURE__ */ jsxs(Tooltip, { delayDuration: 0, children: [
                 /* @__PURE__ */ jsx(TooltipTrigger, { asChild: true, children: iconLink }),
                 /* @__PURE__ */ jsxs(TooltipContent, { side: "right", className: "text-xs", children: [
-                  disabled ? `${item.label} — not enabled for your account` : item.label,
+                  disabled ? `${item.label} — not enabled for your account` : item.tooltip ? /* @__PURE__ */ jsxs("div", { children: [
+                    /* @__PURE__ */ jsx("div", { className: "font-semibold", children: item.label }),
+                    /* @__PURE__ */ jsx("div", { className: "text-muted-foreground", children: item.tooltip })
+                  ] }) : item.label,
                   hasChildren && /* @__PURE__ */ jsx("div", { className: "mt-1 space-y-0.5", children: allSubItems(item).map((child) => /* @__PURE__ */ jsx("div", { children: /* @__PURE__ */ jsx(
                     Link,
                     {
                       to: child.to,
+                      title: child.tooltip || child.label,
                       className: [
                         "block px-2 py-0.5 rounded text-xs",
                         "outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -230,6 +290,7 @@ function AppSidebar({ profilePath = "/profile" } = {}) {
                   Link,
                   {
                     to: item.to,
+                    title: item.tooltip || item.label,
                     className: [
                       "flex-1 flex items-center gap-3 px-2.5 py-2 rounded-md text-sm font-medium",
                       "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -269,6 +330,7 @@ function AppSidebar({ profilePath = "/profile" } = {}) {
                     Link,
                     {
                       to: child.to,
+                      title: child.tooltip || child.label,
                       className: [
                         "flex items-center px-2 py-1.5 rounded-md text-xs font-medium",
                         "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -290,6 +352,7 @@ function AppSidebar({ profilePath = "/profile" } = {}) {
                         Link,
                         {
                           to: child.to,
+                          title: child.tooltip || child.label,
                           className: [
                             "flex items-center px-2 py-1.5 rounded-md text-xs font-medium",
                             "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",

@@ -25,6 +25,7 @@ export interface UseModulesResult {
   authenticated: boolean;
   isLoading: boolean;
   isError: boolean;
+  refetch: () => Promise<unknown>;
 }
 
 export function useModules(): UseModulesResult {
@@ -41,6 +42,14 @@ export function useModules(): UseModulesResult {
     },
     staleTime: 1000 * 60 * 5,
     refetchOnWindowFocus: false,
+    retry: (failureCount, error: any) => {
+      // Retry up to 3 times on 5xx or network errors; do not retry 4xx
+      const status = error?.response?.status;
+      if (status && status >= 400 && status < 500) {
+        return false;
+      }
+      return failureCount < 3;
+    },
   });
 
   const modules = useMemo(
@@ -54,5 +63,6 @@ export function useModules(): UseModulesResult {
     authenticated: query.data?.authenticated ?? false,
     isLoading: query.isLoading,
     isError: query.isError,
+    refetch: query.refetch,
   };
 }

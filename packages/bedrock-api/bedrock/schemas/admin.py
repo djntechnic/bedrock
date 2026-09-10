@@ -148,6 +148,7 @@ class GridColumnSettingSchema(BaseModel):
     gradient_to_color: Optional[str] = None
     # Phase 8 H3: opt-in inline editing via <EditableCell>.
     editable: bool = False
+    enable_kpi_gradient: bool = False
     model_config = {"from_attributes": True}
 
 class ExportLogSchema(BaseModel):

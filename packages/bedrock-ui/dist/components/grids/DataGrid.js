@@ -22,6 +22,7 @@ import { useSelectionStore } from "../../store/selectionStore.js";
 import { useAdmin } from "../../hooks/useAdminPlatform.js";
 import { DndColumnWrapper } from "../../hooks/useDraggableColumns.js";
 import { useRowAccentResolver } from "./rowAccentRegistry.js";
+import { resolveKpiGradientPolicy } from "./kpiGradientRegistry.js";
 import { hasDashboardPinHost } from "./dashboardPinRegistry.js";
 import { unwrapCellPayload, renderMediaCell, renderCell } from "./cellRenderers.js";
 import EditableCell from "./EditableCell.js";
@@ -301,6 +302,27 @@ function DataGrid({
                 col.gradient_from_color,
                 col.gradient_to_color
               );
+            }
+          } else if (col.enable_kpi_gradient) {
+            const policy = resolveKpiGradientPolicy(columnId);
+            if (policy) {
+              const minMax = computeColumnMinMax(
+                rows,
+                columnId
+              );
+              if (minMax && typeof value === "number") {
+                const positiveHex = "#16a34a";
+                const negativeHex = "#dc2626";
+                const fromColor = policy.lowerBetter ? positiveHex : negativeHex;
+                const toColor = policy.lowerBetter ? negativeHex : positiveHex;
+                gradientStyle = getGradientCellStyle(
+                  value,
+                  minMax.min,
+                  minMax.max,
+                  fromColor,
+                  toColor
+                );
+              }
             }
           }
           let content;

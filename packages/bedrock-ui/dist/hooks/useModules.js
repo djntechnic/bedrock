@@ -15,7 +15,14 @@ function useModules() {
       return data;
     },
     staleTime: 1e3 * 60 * 5,
-    refetchOnWindowFocus: false
+    refetchOnWindowFocus: false,
+    retry: (failureCount, error) => {
+      const status = error?.response?.status;
+      if (status && status >= 400 && status < 500) {
+        return false;
+      }
+      return failureCount < 3;
+    }
   });
   const modules = useMemo(
     () => new Set(query.data?.modules ?? []),
@@ -26,7 +33,8 @@ function useModules() {
     hasModule: (slug) => modules.has(slug),
     authenticated: query.data?.authenticated ?? false,
     isLoading: query.isLoading,
-    isError: query.isError
+    isError: query.isError,
+    refetch: query.refetch
   };
 }
 export {

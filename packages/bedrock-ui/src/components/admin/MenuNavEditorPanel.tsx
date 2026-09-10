@@ -3,6 +3,7 @@
  * @module @djntechnic/bedrock-ui/components/admin
  * @description Dynamic Menu Navigation, Submenu Hierarchy & Section Spacer Customization Panel.
  */
+import * as LucideIcons from "lucide-react";
 import {
   ArrowDown,
   ArrowUp,
@@ -13,7 +14,6 @@ import {
   RotateCcw,
   Trash2,
 } from "lucide-react";
-import * as LucideIcons from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -47,14 +47,17 @@ export interface FlatNavItem {
   parent_key: string | null;
   label: string;
   group_label: string | null;
-  icon?: import('react').ComponentType<{ className?: string }>;
+  icon?: import("react").ComponentType<{ className?: string }>;
   default_sort_order: number;
   is_sub_item: boolean;
   is_spacer: boolean;
   is_custom?: boolean;
 }
 
-function extractAllNavItems(baseItems: NavItem[], customSettings: NavItemSetting[]): FlatNavItem[] {
+function extractAllNavItems(
+  baseItems: NavItem[],
+  customSettings: NavItemSetting[],
+): FlatNavItem[] {
   const list: FlatNavItem[] = [];
   const registeredKeys = new Set<string>();
   let sortIndex = 10;
@@ -142,14 +145,17 @@ function extractAllNavItems(baseItems: NavItem[], customSettings: NavItemSetting
     const isRegistered =
       registeredKeys.has(setting.nav_key) ||
       Boolean(
-        setting.parent_key && registeredKeys.has(`${setting.parent_key}::${setting.nav_key}`)
+        setting.parent_key &&
+        registeredKeys.has(`${setting.parent_key}::${setting.nav_key}`),
       );
     if (!isRegistered) {
       const isSpacer = setting.nav_key.startsWith("spacer:");
       list.push({
         nav_key: setting.nav_key,
         parent_key: setting.parent_key ?? null,
-        label: setting.label_override || (isSpacer ? "Custom Section Header" : setting.nav_key),
+        label:
+          setting.label_override ||
+          (isSpacer ? "Custom Section Header" : setting.nav_key),
         group_label: null,
         icon: undefined,
         default_sort_order: setting.sort_order ?? sortIndex,
@@ -199,7 +205,8 @@ export default function MenuNavEditorPanel() {
           ? settings.find(
               (s) =>
                 s.nav_key === subRoute &&
-                (subRoute !== item.parent_key || s.parent_key === item.parent_key)
+                (subRoute !== item.parent_key ||
+                  s.parent_key === item.parent_key),
             )
           : undefined);
       map[item.nav_key] = {
@@ -216,23 +223,67 @@ export default function MenuNavEditorPanel() {
   }, [allFlatItems, settings]);
 
   const itemsList = useMemo(() => {
-    return allFlatItems
-      .map((item) => {
-        const draft = drafts[item.nav_key] || {
-          nav_key: item.nav_key,
-          parent_key: item.parent_key ?? null,
-          sort_order: item.default_sort_order ?? 0,
-          label_override: "",
-          icon_override: "",
-          tooltip_override: "",
-          is_hidden_override: false,
-        };
-        return {
-          base: item,
-          draft,
-        };
-      })
-      .sort((a, b) => a.draft.sort_order - b.draft.sort_order);
+    const list = allFlatItems.map((item) => {
+      const draft = drafts[item.nav_key] || {
+        nav_key: item.nav_key,
+        parent_key: item.parent_key ?? null,
+        sort_order: item.default_sort_order ?? 0,
+        label_override: "",
+        icon_override: "",
+        tooltip_override: "",
+        is_hidden_override: false,
+      };
+      return {
+        base: item,
+        draft,
+      };
+    });
+
+    // Group items hierarchically: root items sorted by sort_order,
+    // with child items grouped immediately beneath their resolved parent item,
+    // also sorted by sort_order within their group.
+    const roots: typeof list = [];
+    const childrenByParent = new Map<string, typeof list>();
+    const orphanedChildren: typeof list = [];
+
+    for (const entry of list) {
+      const parentKey = entry.draft.parent_key;
+      if (!parentKey) {
+        roots.push(entry);
+      } else {
+        const group = childrenByParent.get(parentKey) || [];
+        group.push(entry);
+        childrenByParent.set(parentKey, group);
+      }
+    }
+
+    // Sort roots by sort_order
+    roots.sort((a, b) => a.draft.sort_order - b.draft.sort_order);
+
+    // Build the clustered result
+    const clustered: typeof list = [];
+    const parentKeysSeen = new Set<string>();
+
+    for (const root of roots) {
+      clustered.push(root);
+      parentKeysSeen.add(root.base.nav_key);
+
+      const children = childrenByParent.get(root.base.nav_key);
+      if (children) {
+        children.sort((a, b) => a.draft.sort_order - b.draft.sort_order);
+        clustered.push(...children);
+      }
+    }
+
+    // Handle any orphaned children whose parent_key was not found in roots
+    for (const [parentKey, children] of childrenByParent.entries()) {
+      if (!parentKeysSeen.has(parentKey)) {
+        children.sort((a, b) => a.draft.sort_order - b.draft.sort_order);
+        orphanedChildren.push(...children);
+      }
+    }
+
+    return [...clustered, ...orphanedChildren];
   }, [allFlatItems, drafts]);
 
   // Modal Dialog States
@@ -247,7 +298,7 @@ export default function MenuNavEditorPanel() {
   const handleLocalDraftChange = (
     navKey: string,
     field: keyof NavItemSetting,
-    value: string | boolean | number | null
+    value: string | boolean | number | null,
   ) => {
     setDrafts((prev) => ({
       ...prev,
@@ -275,14 +326,17 @@ export default function MenuNavEditorPanel() {
         },
       ]);
     } catch (err: unknown) {
-      toast.error((err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || "Failed to update navigation setting");
+      toast.error(
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail || "Failed to update navigation setting",
+      );
     }
   };
 
   const handleDirectUpdate = async (
     navKey: string,
     field: keyof NavItemSetting,
-    value: string | boolean | number | null
+    value: string | boolean | number | null,
   ) => {
     const current = drafts[navKey];
     if (!current) return;
@@ -314,7 +368,10 @@ export default function MenuNavEditorPanel() {
         ...prev,
         [navKey]: current,
       }));
-      toast.error((err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || "Failed to update navigation setting");
+      toast.error(
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail || "Failed to update navigation setting",
+      );
     }
   };
 
@@ -361,22 +418,37 @@ export default function MenuNavEditorPanel() {
   const handleRestoreDefaults = async () => {
     if (
       confirm(
-        "Are you sure you want to restore all navigation settings to core application defaults? All custom labels, orderings, icon overrides, and custom spacers will be cleared."
+        "Are you sure you want to restore all navigation settings to core application defaults? All custom labels, orderings, icon overrides, and custom spacers will be cleared.",
       )
     ) {
       try {
         await resetSettings();
         toast.success("Navigation settings restored to defaults");
       } catch (err: unknown) {
-        toast.error((err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || "Failed to restore defaults");
+        toast.error(
+          (err as { response?: { data?: { detail?: string } } })?.response?.data
+            ?.detail || "Failed to restore defaults",
+        );
+      }
+    }
+  };
+
+  const handleResetItem = async (navKey: string, label: string) => {
+    if (confirm(`Reset overrides for '${label}' to code defaults?`)) {
+      try {
+        await deleteSetting(navKey);
+        toast.success(`Reset overrides for '${label}'`);
+      } catch (err: unknown) {
+        toast.error("Failed to reset navigation overrides");
       }
     }
   };
 
   const handleDeleteItem = async (navKey: string, label: string) => {
-    if (confirm(`Delete custom navigation item / spacer '${label}'?`)) {
+    if (confirm(`Delete custom item '${label}'?`)) {
       try {
         await deleteSetting(navKey);
+        toast.success(`Deleted '${label}'`);
       } catch (err: unknown) {
         toast.error("Failed to delete navigation item");
       }
@@ -399,7 +471,10 @@ export default function MenuNavEditorPanel() {
     }
 
     const parentKey = addParentKey === "root" ? null : addParentKey;
-    const maxOrder = itemsList.length > 0 ? Math.max(...itemsList.map((i) => i.draft.sort_order)) + 10 : 10;
+    const maxOrder =
+      itemsList.length > 0
+        ? Math.max(...itemsList.map((i) => i.draft.sort_order)) + 10
+        : 10;
 
     try {
       await updateSettings([
@@ -413,7 +488,9 @@ export default function MenuNavEditorPanel() {
           is_hidden_override: 0,
         },
       ]);
-      toast.success(`Created ${addItemType === "spacer" ? "section header" : "navigation item"} '${addLabel}'`);
+      toast.success(
+        `Created ${addItemType === "spacer" ? "section header" : "navigation item"} '${addLabel}'`,
+      );
       setIsAddOpen(false);
       setAddNavKey("");
       setAddLabel("");
@@ -421,7 +498,10 @@ export default function MenuNavEditorPanel() {
       setAddTooltip("");
       setAddParentKey("root");
     } catch (err: unknown) {
-      toast.error((err as { response?: { data?: { detail?: string } } })?.response?.data?.detail || "Failed to create item");
+      toast.error(
+        (err as { response?: { data?: { detail?: string } } })?.response?.data
+          ?.detail || "Failed to create item",
+      );
     }
   };
 
@@ -441,9 +521,12 @@ export default function MenuNavEditorPanel() {
       {/* Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold tracking-tight">Menu Navigation & Submenu Editor</h2>
+          <h2 className="text-xl font-semibold tracking-tight">
+            Menu Navigation & Submenu Editor
+          </h2>
           <p className="text-sm text-muted-foreground">
-            Configure dynamic ordering, custom display labels, Lucide icons, tooltips, and section spacers across top-level menus and submenus.
+            Configure dynamic ordering, custom display labels, Lucide icons,
+            tooltips, and section spacers across top-level menus and submenus.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -474,11 +557,19 @@ export default function MenuNavEditorPanel() {
           <thead>
             <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground bg-muted/30">
               <th className="px-3 py-3 text-center w-14">Order</th>
-              <th className="px-3 py-3 text-left min-w-[240px]">Menu Item / Section</th>
+              <th className="px-3 py-3 text-left min-w-[240px]">
+                Menu Item / Section
+              </th>
               <th className="px-3 py-3 text-left min-w-[140px]">Parent Menu</th>
-              <th className="px-3 py-3 text-left min-w-[180px]">Display Label Override</th>
-              <th className="px-3 py-3 text-left min-w-[140px]">Icon Override</th>
-              <th className="px-3 py-3 text-left min-w-[180px]">Tooltip Override</th>
+              <th className="px-3 py-3 text-left min-w-[180px]">
+                Display Label Override
+              </th>
+              <th className="px-3 py-3 text-left min-w-[140px]">
+                Icon Override
+              </th>
+              <th className="px-3 py-3 text-left min-w-[180px]">
+                Tooltip Override
+              </th>
               <th className="px-3 py-3 text-center w-16">Hidden</th>
               <th className="px-3 py-3 text-center w-12">Actions</th>
             </tr>
@@ -487,7 +578,12 @@ export default function MenuNavEditorPanel() {
             {itemsList.map(({ base, draft }, idx) => {
               let PreviewIcon = base.icon;
               if (draft.icon_override && draft.icon_override in LucideIcons) {
-                PreviewIcon = (LucideIcons as unknown as Record<string, import('react').ComponentType<{ className?: string }>>)[draft.icon_override];
+                PreviewIcon = (
+                  LucideIcons as unknown as Record<
+                    string,
+                    import("react").ComponentType<{ className?: string }>
+                  >
+                )[draft.icon_override];
               }
 
               const isSpacer = base.is_spacer;
@@ -499,8 +595,8 @@ export default function MenuNavEditorPanel() {
                     isSpacer
                       ? "bg-muted/25 font-semibold"
                       : base.is_sub_item
-                      ? "bg-muted/5"
-                      : "bg-card"
+                        ? "bg-muted/5"
+                        : "bg-card"
                   }`}
                 >
                   {/* Reorder Buttons */}
@@ -529,38 +625,55 @@ export default function MenuNavEditorPanel() {
 
                   {/* Hierarchical Structure & Route */}
                   <td className="px-3 py-2">
-                    <div className={`flex items-center gap-2 ${Boolean(draft.parent_key) ? "pl-5" : ""}`}>
+                    <div
+                      className={`flex items-center gap-2 ${Boolean(draft.parent_key) ? "pl-5" : ""}`}
+                    >
                       {isSpacer ? (
                         <Layers className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                       ) : Boolean(draft.parent_key) ? (
                         <CornerDownRight className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
                       ) : (
-                        PreviewIcon && <PreviewIcon className="h-4 w-4 text-primary shrink-0" />
+                        PreviewIcon && (
+                          <PreviewIcon className="h-4 w-4 text-primary shrink-0" />
+                        )
                       )}
                       <div className="flex flex-col">
                         <div className="flex items-center gap-1.5">
                           {Boolean(draft.parent_key) && (
                             <span className="text-[11px] font-mono text-muted-foreground/60">
-                              {parentOptions.find((p) => p.key === draft.parent_key)?.label || draft.parent_key} ›
+                              {parentOptions.find(
+                                (p) => p.key === draft.parent_key,
+                              )?.label || draft.parent_key}{" "}
+                              ›
                             </span>
                           )}
-                          <span className={`text-xs ${isSpacer ? "text-foreground font-semibold uppercase tracking-wider text-[11px]" : "font-medium text-foreground"}`}>
+                          <span
+                            className={`text-xs ${isSpacer ? "text-foreground font-semibold uppercase tracking-wider text-[11px]" : "font-medium text-foreground"}`}
+                          >
                             {draft.label_override || base.label}
                           </span>
                           {isSpacer && (
-                            <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 border-amber-500/40 text-amber-600 dark:text-amber-400">
+                            <Badge
+                              variant="outline"
+                              className="text-[9px] px-1 py-0 h-3.5 border-amber-500/40 text-amber-600 dark:text-amber-400"
+                            >
                               Section Header
                             </Badge>
                           )}
                           {base.group_label && (
-                            <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5 text-muted-foreground">
+                            <Badge
+                              variant="outline"
+                              className="text-[9px] px-1 py-0 h-3.5 text-muted-foreground"
+                            >
                               {base.group_label}
                             </Badge>
                           )}
                         </div>
                         {!isSpacer && (
                           <span className="text-[10px] text-muted-foreground font-mono truncate max-w-[200px]">
-                            {base.nav_key.includes("::") ? base.nav_key.split("::")[1] : base.nav_key}
+                            {base.nav_key.includes("::")
+                              ? base.nav_key.split("::")[1]
+                              : base.nav_key}
                           </span>
                         )}
                       </div>
@@ -572,7 +685,11 @@ export default function MenuNavEditorPanel() {
                     <Select
                       value={draft.parent_key || "root"}
                       onValueChange={(val) =>
-                        handleDirectUpdate(base.nav_key, "parent_key", val === "root" ? null : val)
+                        handleDirectUpdate(
+                          base.nav_key,
+                          "parent_key",
+                          val === "root" ? null : val,
+                        )
                       }
                       disabled={isUpdating}
                     >
@@ -597,11 +714,16 @@ export default function MenuNavEditorPanel() {
                       placeholder={base.label}
                       value={draft.label_override ?? ""}
                       onChange={(e) =>
-                        handleLocalDraftChange(base.nav_key, "label_override", e.target.value)
+                        handleLocalDraftChange(
+                          base.nav_key,
+                          "label_override",
+                          e.target.value,
+                        )
                       }
                       onBlur={() => handleSaveField(base.nav_key)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                        if (e.key === "Enter")
+                          (e.target as HTMLInputElement).blur();
                       }}
                       className="h-8 text-xs w-full"
                     />
@@ -615,11 +737,16 @@ export default function MenuNavEditorPanel() {
                       value={draft.icon_override ?? ""}
                       disabled={isSpacer}
                       onChange={(e) =>
-                        handleLocalDraftChange(base.nav_key, "icon_override", e.target.value)
+                        handleLocalDraftChange(
+                          base.nav_key,
+                          "icon_override",
+                          e.target.value,
+                        )
                       }
                       onBlur={() => handleSaveField(base.nav_key)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                        if (e.key === "Enter")
+                          (e.target as HTMLInputElement).blur();
                       }}
                       className="h-8 text-xs w-full font-mono text-[11px] disabled:opacity-40"
                     />
@@ -633,11 +760,16 @@ export default function MenuNavEditorPanel() {
                       value={draft.tooltip_override ?? ""}
                       disabled={isSpacer}
                       onChange={(e) =>
-                        handleLocalDraftChange(base.nav_key, "tooltip_override", e.target.value)
+                        handleLocalDraftChange(
+                          base.nav_key,
+                          "tooltip_override",
+                          e.target.value,
+                        )
                       }
                       onBlur={() => handleSaveField(base.nav_key)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                        if (e.key === "Enter")
+                          (e.target as HTMLInputElement).blur();
                       }}
                       className="h-8 text-xs w-full disabled:opacity-40"
                     />
@@ -648,7 +780,11 @@ export default function MenuNavEditorPanel() {
                     <Switch
                       checked={Boolean(draft.is_hidden_override)}
                       onCheckedChange={(checked) =>
-                        handleDirectUpdate(base.nav_key, "is_hidden_override", checked)
+                        handleDirectUpdate(
+                          base.nav_key,
+                          "is_hidden_override",
+                          checked,
+                        )
                       }
                       aria-label={`Hide ${base.label}`}
                     />
@@ -661,43 +797,57 @@ export default function MenuNavEditorPanel() {
                         size="sm"
                         variant="ghost"
                         className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                        onClick={() => handleDeleteItem(base.nav_key, draft.label_override || base.label)}
+                        onClick={() =>
+                          handleDeleteItem(
+                            base.nav_key,
+                            draft.label_override || base.label,
+                          )
+                        }
                         disabled={isDeleting}
-                        title={`Delete ${isSpacer ? "section header" : "custom navigation item"}`}
+                        title="Delete Item"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
-                    ) : (() => {
-                      const subRoute =
-                        base.parent_key && base.nav_key.startsWith(`${base.parent_key}::`)
-                          ? base.nav_key.slice(base.parent_key.length + 2)
-                          : null;
-                      const existing =
-                        settings.find((s) => s.nav_key === base.nav_key) ||
-                        (subRoute
-                          ? settings.find(
-                              (s) =>
-                                s.nav_key === subRoute &&
-                                (subRoute !== base.parent_key || s.parent_key === base.parent_key)
-                            )
-                          : undefined);
-                      return existing ? (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                          onClick={() =>
-                            handleDeleteItem(existing.nav_key, draft.label_override || base.label)
-                          }
-                          disabled={isDeleting}
-                          title="Reset item overrides to code default"
-                        >
-                          <RotateCcw className="h-3.5 w-3.5" />
-                        </Button>
-                      ) : (
-                        <span className="text-muted-foreground/30 text-xs">—</span>
-                      );
-                    })()}
+                    ) : (
+                      (() => {
+                        const subRoute =
+                          base.parent_key &&
+                          base.nav_key.startsWith(`${base.parent_key}::`)
+                            ? base.nav_key.slice(base.parent_key.length + 2)
+                            : null;
+                        const existing =
+                          settings.find((s) => s.nav_key === base.nav_key) ||
+                          (subRoute
+                            ? settings.find(
+                                (s) =>
+                                  s.nav_key === subRoute &&
+                                  (subRoute !== base.parent_key ||
+                                    s.parent_key === base.parent_key),
+                              )
+                            : undefined);
+                        return existing ? (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                            onClick={() =>
+                              handleResetItem(
+                                existing.nav_key,
+                                draft.label_override || base.label,
+                              )
+                            }
+                            disabled={isDeleting}
+                            title="Reset Overrides"
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                          </Button>
+                        ) : (
+                          <span className="text-muted-foreground/30 text-xs">
+                            —
+                          </span>
+                        );
+                      })()
+                    )}
                   </td>
                 </tr>
               );
@@ -716,7 +866,8 @@ export default function MenuNavEditorPanel() {
                 Add Navigation Item or Spacer
               </DialogTitle>
               <DialogDescription className="text-xs">
-                Create a new navigation destination route or a visual submenu section header spacer.
+                Create a new navigation destination route or a visual submenu
+                section header spacer.
               </DialogDescription>
             </DialogHeader>
 
@@ -749,11 +900,17 @@ export default function MenuNavEditorPanel() {
               {/* Display Label / Header Name */}
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="add-label" className="text-xs">
-                  {addItemType === "spacer" ? "Section Header Title *" : "Display Label *"}
+                  {addItemType === "spacer"
+                    ? "Section Header Title *"
+                    : "Display Label *"}
                 </Label>
                 <Input
                   id="add-label"
-                  placeholder={addItemType === "spacer" ? "e.g. Data & Media" : "e.g. Custom Reports"}
+                  placeholder={
+                    addItemType === "spacer"
+                      ? "e.g. Data & Media"
+                      : "e.g. Custom Reports"
+                  }
                   value={addLabel}
                   onChange={(e) => setAddLabel(e.target.value)}
                   className="h-8 text-xs"

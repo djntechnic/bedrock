@@ -634,6 +634,9 @@ function ColumnEditForm({ col, setColumnField, isCustomColumn }: ColumnEditFormP
         <ColorRow label="Gradient to" value={col.gradient_to_color}
           disabled={isCustomColumn}
           onChange={(v) => set("gradient_to_color", v)} />
+        <SwitchRow label="Enable KPI gradient" checked={bool(col.enable_kpi_gradient)}
+          disabled={isCustomColumn}
+          onChange={(v) => set("enable_kpi_gradient", v)} />
         <TextAreaRow label="Conditional format (JSON)" value={col.conditional_format ?? ""}
           disabled={isCustomColumn}
           placeholder='[{"op":"gte","value":0.9,"color":"emerald"}]'

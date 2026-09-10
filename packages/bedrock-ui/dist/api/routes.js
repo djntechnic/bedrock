@@ -28,7 +28,13 @@ const API_ROUTES = {
     apiHealth: () => "/api/v1/admin/api-health",
     audit: () => "/api/v1/admin/audit",
     auditHistory: (limit) => `/api/v1/admin/audit/history?limit=${limit}`,
-    auditRun: (runId) => `/api/v1/admin/audit/history/${runId}`
+    auditRun: (runId) => `/api/v1/admin/audit/history/${runId}`,
+    helpList: () => "/api/v1/admin/help",
+    helpEntry: (topicKey) => `/api/v1/admin/help/${encodeURIComponent(topicKey)}`
+  },
+  // ── Help (in-app quick help) ─────────────────────────────────────────────
+  help: {
+    topic: (topicKey) => `/api/v1/help/${encodeURIComponent(topicKey)}`
   },
   // ── User preferences (per-user grid customization) ───────────────────────
   userPreferences: {

@@ -48,7 +48,8 @@ import subprocess
 import sys
 import os
 
-router = APIRouter(dependencies=[require_role("admin")])
+public_router = APIRouter()
+admin_router = APIRouter(dependencies=[require_role("admin")])
 
 # ─── Users (Phase 5.8) ──────────────────────────────────────────────────────
 
@@ -94,7 +95,7 @@ def _row_to_admin_user(row: dict) -> AdminUserRow:
     )
 
 
-@router.get("/users/summary", response_model=ApiResponse[dict],
+@admin_router.get("/users/summary", response_model=ApiResponse[dict],
             description="Aggregate active/inactive user counts for the Admin dashboard KPI tile. Admin only.")
 
 def get_users_summary(_admin: Annotated[_us.UserRecord, require_role("admin")]):
@@ -102,7 +103,7 @@ def get_users_summary(_admin: Annotated[_us.UserRecord, require_role("admin")]):
     return ApiResponse(status="ok", data=_admin_users.get_admin_users_counts())
 
 
-@router.get("/users", response_model=ApiResponse[list[AdminUserRow]],
+@admin_router.get("/users", response_model=ApiResponse[list[AdminUserRow]],
             description="List every user with role slugs and status for the Admin Users tab. Admin only.")
 
 def list_users(_admin: Annotated[_us.UserRecord, require_role("admin")]):
@@ -111,7 +112,7 @@ def list_users(_admin: Annotated[_us.UserRecord, require_role("admin")]):
     return ApiResponse(status="ok", data=[_row_to_admin_user(r) for r in rows])
 
 
-@router.get("/users/{user_id}", response_model=ApiResponse[AdminUserRow],
+@admin_router.get("/users/{user_id}", response_model=ApiResponse[AdminUserRow],
             description="Fetch a single user by id with roles + status. Returns 404 if the user does not exist. Admin only.")
 
 def get_user(
@@ -124,7 +125,7 @@ def get_user(
     return ApiResponse(status="ok", data=_row_to_admin_user(row))
 
 
-@router.patch("/users/{user_id}", response_model=ApiResponse[AdminUserRow],
+@admin_router.patch("/users/{user_id}", response_model=ApiResponse[AdminUserRow],
               description="Toggle is_active and/or replace the role set for one user. Admins cannot deactivate themselves or remove their own admin role (409). Admin only.")
 
 def update_user(
@@ -176,7 +177,7 @@ def update_user(
     return ApiResponse(status="ok", data=_row_to_admin_user(fresh))
 
 
-@router.post("/users/invite", response_model=ApiResponse[AdminUserRow], status_code=201,
+@admin_router.post("/users/invite", response_model=ApiResponse[AdminUserRow], status_code=201,
              description="Create a new user with the given role. `password` is optional — omit to create an OAuth-only account. Admin only.")
 
 def invite_user(
@@ -250,7 +251,7 @@ class AdminSessionRow(BaseModel):
     revoked_at: str | None
 
 
-@router.get("/sessions", response_model=ApiResponse[list[AdminSessionRow]],
+@admin_router.get("/sessions", response_model=ApiResponse[list[AdminSessionRow]],
             description="Return the 500 most recent auth sessions with user email joined. Powers the Admin Sessions tab. Admin only.")
 
 def list_sessions(_admin: Annotated[_us.UserRecord, require_role("admin")]):
@@ -272,7 +273,7 @@ def list_sessions(_admin: Annotated[_us.UserRecord, require_role("admin")]):
     return ApiResponse(status="ok", data=out)
 
 
-@router.delete("/sessions/{session_id}", status_code=204,
+@admin_router.delete("/sessions/{session_id}", status_code=204,
                description="Revoke a session by its session_id (JWT jti). Subsequent requests with that token return 401. Admin only.")
 
 def revoke_session(
@@ -305,7 +306,7 @@ class SecurityEventRow(BaseModel):
     detail: dict | None
 
 
-@router.get("/security/events", response_model=ApiResponse[dict],
+@admin_router.get("/security/events", response_model=ApiResponse[dict],
             description="Paginated auth_activity_log query with optional event_type and user_id filters. Powers the Admin Security Log tab. Admin only.")
 
 def security_events(
@@ -339,7 +340,7 @@ def security_events(
 
 # ─── KPI ─────────────────────────────────────────────────────────────────────
 
-@router.get("/database/summary", response_model=ApiResponse[DatabaseSummarySchema])
+@admin_router.get("/database/summary", response_model=ApiResponse[DatabaseSummarySchema])
 def get_database_summary():
     """
     Overview of database size, tables, and their row counts & sizes.
@@ -349,7 +350,7 @@ def get_database_summary():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/api-health", response_model=ApiResponse[list])
+@admin_router.get("/api-health", response_model=ApiResponse[list])
 def get_api_health(request: Request):
     """
     Retrieve listing of versioned API routes with call statistics and inline documentation
@@ -461,12 +462,12 @@ def get_api_health(request: Request):
 
 # ─── Config Settings ─────────────────────────────────────────────────────────
 
-@router.get("/config", response_model=ApiResponse[List[ConfigSettingSchema]])
+@admin_router.get("/config", response_model=ApiResponse[List[ConfigSettingSchema]])
 def get_config_settings(category: Optional[str] = Query(default=None)):
     """List app config settings, optionally filtered by category."""
     return ApiResponse(status="ok", data=list_config_settings_service(category=category))
 
-@router.post("/config", response_model=ApiResponse[dict])
+@admin_router.post("/config", response_model=ApiResponse[dict])
 def create_config_setting(body: ConfigCreateSchema, request: Request):
     """Create a new app config setting. Audited to auth_activity_log."""
     try:
@@ -486,7 +487,7 @@ def create_config_setting(body: ConfigCreateSchema, request: Request):
                                     "category": body.category}})
     return ApiResponse(status="ok", data=result)
 
-@router.patch("/config/{key:path}", response_model=ApiResponse[dict])
+@admin_router.patch("/config/{key:path}", response_model=ApiResponse[dict])
 def update_config_setting(key: str, body: dict, request: Request):
     """Update whitelisted fields on an app config setting. Audited (before/after)."""
     before = _admin_users.snapshot_config_row(key)
@@ -502,7 +503,7 @@ def update_config_setting(key: str, body: dict, request: Request):
                           "before": before, "after": after})
     return ApiResponse(status="ok", data=result)
 
-@router.delete("/config/{key:path}", response_model=ApiResponse[dict])
+@admin_router.delete("/config/{key:path}", response_model=ApiResponse[dict])
 def delete_config_setting(key: str, request: Request):
     """Delete an app config setting by key. Audited."""
     before = _admin_users.snapshot_config_row(key)
@@ -517,22 +518,22 @@ def delete_config_setting(key: str, request: Request):
 
 # ─── Grid Settings ────────────────────────────────────────────────────────────
 
-@router.get("/grids", response_model=ApiResponse[List[GridSettingSchema]])
+@public_router.get("/grids", response_model=ApiResponse[List[GridSettingSchema]])
 def get_grid_settings():
     """List all grid-level UI settings."""
     return ApiResponse(status="ok", data=list_grid_settings_service())
 
-@router.get("/grids/pages", response_model=ApiResponse[List[str]])
+@public_router.get("/grids/pages", response_model=ApiResponse[List[str]])
 def get_grid_pages():
     """Distinct set of page names for the admin Grid Editor's Screen dropdown."""
     return ApiResponse(status="ok", data=list_grid_pages_service())
 
-@router.get("/grids/{grid_id}/columns", response_model=ApiResponse[List[GridColumnSettingSchema]])
+@public_router.get("/grids/{grid_id}/columns", response_model=ApiResponse[List[GridColumnSettingSchema]])
 def get_grid_columns(grid_id: str):
     """Ordered list of column configurations for `grid_id`."""
     return ApiResponse(status="ok", data=list_grid_columns_service(grid_id=grid_id))
 
-@router.patch("/grids/{grid_id}/columns/{column_id}", response_model=ApiResponse[dict])
+@admin_router.patch("/grids/{grid_id}/columns/{column_id}", response_model=ApiResponse[dict])
 def update_grid_column(grid_id: str, column_id: str, body: dict, request: Request):
     """Update whitelisted column-level settings. Audited."""
     try:
@@ -545,7 +546,7 @@ def update_grid_column(grid_id: str, column_id: str, body: dict, request: Reques
                           "body": body})
     return ApiResponse(status="ok", data=result)
 
-@router.post("/grids/{grid_id}/columns", response_model=ApiResponse[dict])
+@admin_router.post("/grids/{grid_id}/columns", response_model=ApiResponse[dict])
 def create_grid_column(grid_id: str, body: dict):
     """Insert a new column into `app_grid_column_settings`.
 
@@ -562,7 +563,7 @@ def create_grid_column(grid_id: str, body: dict):
         raise HTTPException(status_code=409, detail=str(e))
     return ApiResponse(status="ok", data=result)
 
-@router.delete("/grids/{grid_id}/columns/{column_id}", response_model=ApiResponse[dict])
+@admin_router.delete("/grids/{grid_id}/columns/{column_id}", response_model=ApiResponse[dict])
 def delete_grid_column(grid_id: str, column_id: str):
     """Delete a column row from `app_grid_column_settings`."""
     try:
@@ -571,7 +572,7 @@ def delete_grid_column(grid_id: str, column_id: str):
         raise HTTPException(status_code=404, detail=str(e))
     return ApiResponse(status="ok", data=result)
 
-@router.patch("/grids/{grid_id}", response_model=ApiResponse[dict])
+@admin_router.patch("/grids/{grid_id}", response_model=ApiResponse[dict])
 def update_grid_setting(grid_id: str, body: dict, request: Request):
     """Update whitelisted grid-level settings. Audited."""
     try:
@@ -585,7 +586,7 @@ def update_grid_setting(grid_id: str, body: dict, request: Request):
 
 # ─── Exports ──────────────────────────────────────────────────────────────────
 
-@router.post("/exports/log", response_model=ApiResponse[dict])
+@admin_router.post("/exports/log", response_model=ApiResponse[dict])
 def log_export(payload: ExportLogSchema):
     """
     Log a CSV or PDF export event.
@@ -608,7 +609,7 @@ def log_export(payload: ExportLogSchema):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/exports", response_model=ApiResponse[List[ExportRunSchema]])
+@admin_router.get("/exports", response_model=ApiResponse[List[ExportRunSchema]])
 def get_export_history():
     """
     Retrieve recent export history.
@@ -625,7 +626,7 @@ def get_export_history():
 
 # ─── Logs & Sync ─────────────────────────────────────────────────────────────
 
-@router.get("/logs", response_model=ApiResponse[list])
+@admin_router.get("/logs", response_model=ApiResponse[list])
 def get_logs(
     source: Optional[str] = Query(default=None),
     # source: activity | import | export | all (default)
@@ -657,7 +658,7 @@ def get_logs(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/sync/schedule", response_model=ApiResponse[dict])
+@admin_router.get("/sync/schedule", response_model=ApiResponse[dict])
 def get_sync_schedule(limit: int = Query(default=50, ge=1, le=200)):
     """
     Sync run history from import_runs.
@@ -698,7 +699,7 @@ def get_sync_schedule(limit: int = Query(default=50, ge=1, le=200)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/sync/status", response_model=ApiResponse[SyncStatusSchema])
+@admin_router.get("/sync/status", response_model=ApiResponse[SyncStatusSchema])
 def get_sync_status():
     """
     Retrieve sync history and current status.
@@ -720,13 +721,13 @@ def get_sync_status():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/lookup/ui-query-config", response_model=ApiResponse[list])
+@admin_router.get("/lookup/ui-query-config", response_model=ApiResponse[list])
 def get_ui_query_config():
     """Return all UI hook query configuration rows."""
     return ApiResponse(status="ok", data=list_ui_query_config_service())
 
 
-@router.patch("/lookup/ui-query-config/{hook_name}",
+@admin_router.patch("/lookup/ui-query-config/{hook_name}",
               response_model=ApiResponse[dict])
 
 def update_ui_query_config(hook_name: str, body: dict):
@@ -747,7 +748,7 @@ def update_ui_query_config(hook_name: str, body: dict):
 
 # ─── Player Aliases ───────────────────────────────────────────────────────────
 
-@router.get("/audit", response_model=ApiResponse[dict])
+@admin_router.get("/audit", response_model=ApiResponse[dict])
 def run_audit(skip_db: bool = Query(default=False)):
     """
     Run the project audit toolkit and return findings as structured JSON.
@@ -775,12 +776,12 @@ def run_audit(skip_db: bool = Query(default=False)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/audit/history", response_model=ApiResponse)
+@admin_router.get("/audit/history", response_model=ApiResponse)
 def get_audit_history(limit: int = Query(20, ge=1, le=100)):
     """Return past audit runs from the sys_audit_runs table."""
     return ApiResponse(status="ok", data=list_audit_history_service(limit=limit))
 
-@router.get("/audit/history/{run_id}", response_model=ApiResponse)
+@admin_router.get("/audit/history/{run_id}", response_model=ApiResponse)
 def get_audit_run(run_id: int):
     """Return findings for a specific audit run.
     Path parameters: run_id (path).
@@ -825,7 +826,7 @@ def get_audit_run(run_id: int):
 from bedrock.dependencies import require_role as _require_role  # noqa: E402
 from bedrock.services import auth_activity_service as _audit    # noqa: E402
 
-@router.get("/security/events")
+@admin_router.get("/security/events")
 def list_security_events(
     event_type: Optional[str] = Query(default=None),
     user_id: Optional[int] = Query(default=None),
@@ -852,3 +853,8 @@ def list_security_events(
         "offset": offset,
         "count": len(events),
     })
+
+
+router = APIRouter()
+router.include_router(public_router)
+router.include_router(admin_router)

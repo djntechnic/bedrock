@@ -6,7 +6,8 @@
  *              an optional `requiredRole`, and (c) enforces an optional
  *              `requiredModule` via the P5.9 module registry. When the module
  *              is disabled the shared `<ModuleDisabled>` page renders in place
- *              instead of navigating away.
+ *              instead of navigating away. If module/security checks fail due
+ *              to network or server errors, renders a retry affordance.
  */
 import type { ReactNode } from "react";
 import { type ActionType } from "../hooks/useSecurity";

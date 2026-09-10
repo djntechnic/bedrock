@@ -8,5 +8,6 @@ export interface UseModulesResult {
     authenticated: boolean;
     isLoading: boolean;
     isError: boolean;
+    refetch: () => Promise<unknown>;
 }
 export declare function useModules(): UseModulesResult;
