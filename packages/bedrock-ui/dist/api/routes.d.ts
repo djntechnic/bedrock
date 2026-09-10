@@ -42,6 +42,11 @@ export declare const API_ROUTES: {
         readonly audit: () => string;
         readonly auditHistory: (limit: number) => string;
         readonly auditRun: (runId: string | number) => string;
+        readonly helpList: () => string;
+        readonly helpEntry: (topicKey: string) => string;
+    };
+    readonly help: {
+        readonly topic: (topicKey: string) => string;
     };
     readonly userPreferences: {
         readonly grids: () => string;

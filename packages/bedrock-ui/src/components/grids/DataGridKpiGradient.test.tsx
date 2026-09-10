@@ -1,11 +1,9 @@
-import { render, screen } from "@testing-library/react";
-import React from "react";
+import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { GridColumnSetting } from "../../hooks/useAdminPlatform";
+import type { GridColumnSetting, GridSetting } from "../../hooks/useAdminPlatform";
 import { buildGridConfig } from "../../hooks/useGridConfig";
 import {
   registerKpiGradientPolicy,
-  resolveKpiGradientPolicy,
   __clearKpiGradientPolicies,
 } from "./kpiGradientRegistry";
 import DataGrid from "./DataGrid";

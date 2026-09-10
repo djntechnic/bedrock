@@ -4,7 +4,6 @@
  * @description Config-driven in-app quick help popover (Bedrock #69 / MLBTracker #401).
  * Composes Radix Popover primitives, markdown/text rendering, and external documentation link.
  */
-import * as React from "react";
 import { ExternalLink, HelpCircle, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import {
@@ -73,7 +72,7 @@ function SimpleMarkdown({ content }: { content: string }) {
 
 export default function HelpPopover({
   topic,
-  variant = "icon",
+  variant: _variant = "icon",
   align = "end",
   side = "bottom",
   className,

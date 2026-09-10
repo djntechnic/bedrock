@@ -144,7 +144,7 @@ function MenuNavEditorPanel() {
     setDrafts(map);
   }, [allFlatItems, settings]);
   const itemsList = useMemo(() => {
-    return allFlatItems.map((item) => {
+    const list = allFlatItems.map((item) => {
       const draft = drafts[item.nav_key] || {
         nav_key: item.nav_key,
         parent_key: item.parent_key ?? null,
@@ -158,7 +158,39 @@ function MenuNavEditorPanel() {
         base: item,
         draft
       };
-    }).sort((a, b) => a.draft.sort_order - b.draft.sort_order);
+    });
+    const roots = [];
+    const childrenByParent = /* @__PURE__ */ new Map();
+    const orphanedChildren = [];
+    for (const entry of list) {
+      const parentKey = entry.draft.parent_key;
+      if (!parentKey) {
+        roots.push(entry);
+      } else {
+        const group = childrenByParent.get(parentKey) || [];
+        group.push(entry);
+        childrenByParent.set(parentKey, group);
+      }
+    }
+    roots.sort((a, b) => a.draft.sort_order - b.draft.sort_order);
+    const clustered = [];
+    const parentKeysSeen = /* @__PURE__ */ new Set();
+    for (const root of roots) {
+      clustered.push(root);
+      parentKeysSeen.add(root.base.nav_key);
+      const children = childrenByParent.get(root.base.nav_key);
+      if (children) {
+        children.sort((a, b) => a.draft.sort_order - b.draft.sort_order);
+        clustered.push(...children);
+      }
+    }
+    for (const [parentKey, children] of childrenByParent.entries()) {
+      if (!parentKeysSeen.has(parentKey)) {
+        children.sort((a, b) => a.draft.sort_order - b.draft.sort_order);
+        orphanedChildren.push(...children);
+      }
+    }
+    return [...clustered, ...orphanedChildren];
   }, [allFlatItems, drafts]);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [addItemType, setAddItemType] = useState("route");
@@ -192,7 +224,9 @@ function MenuNavEditorPanel() {
         }
       ]);
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Failed to update navigation setting");
+      toast.error(
+        err?.response?.data?.detail || "Failed to update navigation setting"
+      );
     }
   };
   const handleDirectUpdate = async (navKey, field, value) => {
@@ -223,7 +257,9 @@ function MenuNavEditorPanel() {
         ...prev,
         [navKey]: current
       }));
-      toast.error(err?.response?.data?.detail || "Failed to update navigation setting");
+      toast.error(
+        err?.response?.data?.detail || "Failed to update navigation setting"
+      );
     }
   };
   const handleMove = async (index, direction) => {
@@ -266,14 +302,27 @@ function MenuNavEditorPanel() {
         await resetSettings();
         toast.success("Navigation settings restored to defaults");
       } catch (err) {
-        toast.error(err?.response?.data?.detail || "Failed to restore defaults");
+        toast.error(
+          err?.response?.data?.detail || "Failed to restore defaults"
+        );
+      }
+    }
+  };
+  const handleResetItem = async (navKey, label) => {
+    if (confirm(`Reset overrides for '${label}' to code defaults?`)) {
+      try {
+        await deleteSetting(navKey);
+        toast.success(`Reset overrides for '${label}'`);
+      } catch (err) {
+        toast.error("Failed to reset navigation overrides");
       }
     }
   };
   const handleDeleteItem = async (navKey, label) => {
-    if (confirm(`Delete custom navigation item / spacer '${label}'?`)) {
+    if (confirm(`Delete custom item '${label}'?`)) {
       try {
         await deleteSetting(navKey);
+        toast.success(`Deleted '${label}'`);
       } catch (err) {
         toast.error("Failed to delete navigation item");
       }
@@ -306,7 +355,9 @@ function MenuNavEditorPanel() {
           is_hidden_override: 0
         }
       ]);
-      toast.success(`Created ${addItemType === "spacer" ? "section header" : "navigation item"} '${addLabel}'`);
+      toast.success(
+        `Created ${addItemType === "spacer" ? "section header" : "navigation item"} '${addLabel}'`
+      );
       setIsAddOpen(false);
       setAddNavKey("");
       setAddLabel("");
@@ -314,7 +365,9 @@ function MenuNavEditorPanel() {
       setAddTooltip("");
       setAddParentKey("root");
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Failed to create item");
+      toast.error(
+        err?.response?.data?.detail || "Failed to create item"
+      );
     }
   };
   const parentOptions = useMemo(() => {
@@ -407,26 +460,59 @@ function MenuNavEditorPanel() {
                   }
                 )
               ] }) }),
-              /* @__PURE__ */ jsx("td", { className: "px-3 py-2", children: /* @__PURE__ */ jsxs("div", { className: `flex items-center gap-2 ${Boolean(draft.parent_key) ? "pl-5" : ""}`, children: [
-                isSpacer ? /* @__PURE__ */ jsx(Layers, { className: "h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" }) : Boolean(draft.parent_key) ? /* @__PURE__ */ jsx(CornerDownRight, { className: "h-3.5 w-3.5 text-muted-foreground/60 shrink-0" }) : PreviewIcon && /* @__PURE__ */ jsx(PreviewIcon, { className: "h-4 w-4 text-primary shrink-0" }),
-                /* @__PURE__ */ jsxs("div", { className: "flex flex-col", children: [
-                  /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1.5", children: [
-                    Boolean(draft.parent_key) && /* @__PURE__ */ jsxs("span", { className: "text-[11px] font-mono text-muted-foreground/60", children: [
-                      parentOptions.find((p) => p.key === draft.parent_key)?.label || draft.parent_key,
-                      " ›"
-                    ] }),
-                    /* @__PURE__ */ jsx("span", { className: `text-xs ${isSpacer ? "text-foreground font-semibold uppercase tracking-wider text-[11px]" : "font-medium text-foreground"}`, children: draft.label_override || base.label }),
-                    isSpacer && /* @__PURE__ */ jsx(Badge, { variant: "outline", className: "text-[9px] px-1 py-0 h-3.5 border-amber-500/40 text-amber-600 dark:text-amber-400", children: "Section Header" }),
-                    base.group_label && /* @__PURE__ */ jsx(Badge, { variant: "outline", className: "text-[9px] px-1 py-0 h-3.5 text-muted-foreground", children: base.group_label })
-                  ] }),
-                  !isSpacer && /* @__PURE__ */ jsx("span", { className: "text-[10px] text-muted-foreground font-mono truncate max-w-[200px]", children: base.nav_key.includes("::") ? base.nav_key.split("::")[1] : base.nav_key })
-                ] })
-              ] }) }),
+              /* @__PURE__ */ jsx("td", { className: "px-3 py-2", children: /* @__PURE__ */ jsxs(
+                "div",
+                {
+                  className: `flex items-center gap-2 ${Boolean(draft.parent_key) ? "pl-5" : ""}`,
+                  children: [
+                    isSpacer ? /* @__PURE__ */ jsx(Layers, { className: "h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" }) : Boolean(draft.parent_key) ? /* @__PURE__ */ jsx(CornerDownRight, { className: "h-3.5 w-3.5 text-muted-foreground/60 shrink-0" }) : PreviewIcon && /* @__PURE__ */ jsx(PreviewIcon, { className: "h-4 w-4 text-primary shrink-0" }),
+                    /* @__PURE__ */ jsxs("div", { className: "flex flex-col", children: [
+                      /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1.5", children: [
+                        Boolean(draft.parent_key) && /* @__PURE__ */ jsxs("span", { className: "text-[11px] font-mono text-muted-foreground/60", children: [
+                          parentOptions.find(
+                            (p) => p.key === draft.parent_key
+                          )?.label || draft.parent_key,
+                          " ",
+                          "›"
+                        ] }),
+                        /* @__PURE__ */ jsx(
+                          "span",
+                          {
+                            className: `text-xs ${isSpacer ? "text-foreground font-semibold uppercase tracking-wider text-[11px]" : "font-medium text-foreground"}`,
+                            children: draft.label_override || base.label
+                          }
+                        ),
+                        isSpacer && /* @__PURE__ */ jsx(
+                          Badge,
+                          {
+                            variant: "outline",
+                            className: "text-[9px] px-1 py-0 h-3.5 border-amber-500/40 text-amber-600 dark:text-amber-400",
+                            children: "Section Header"
+                          }
+                        ),
+                        base.group_label && /* @__PURE__ */ jsx(
+                          Badge,
+                          {
+                            variant: "outline",
+                            className: "text-[9px] px-1 py-0 h-3.5 text-muted-foreground",
+                            children: base.group_label
+                          }
+                        )
+                      ] }),
+                      !isSpacer && /* @__PURE__ */ jsx("span", { className: "text-[10px] text-muted-foreground font-mono truncate max-w-[200px]", children: base.nav_key.includes("::") ? base.nav_key.split("::")[1] : base.nav_key })
+                    ] })
+                  ]
+                }
+              ) }),
               /* @__PURE__ */ jsx("td", { className: "px-3 py-2", children: /* @__PURE__ */ jsxs(
                 Select,
                 {
                   value: draft.parent_key || "root",
-                  onValueChange: (val) => handleDirectUpdate(base.nav_key, "parent_key", val === "root" ? null : val),
+                  onValueChange: (val) => handleDirectUpdate(
+                    base.nav_key,
+                    "parent_key",
+                    val === "root" ? null : val
+                  ),
                   disabled: isUpdating,
                   children: [
                     /* @__PURE__ */ jsx(SelectTrigger, { className: "h-7 text-xs w-full max-w-[140px]", children: /* @__PURE__ */ jsx(SelectValue, { placeholder: "Top Level" }) }),
@@ -443,10 +529,15 @@ function MenuNavEditorPanel() {
                   size: 1,
                   placeholder: base.label,
                   value: draft.label_override ?? "",
-                  onChange: (e) => handleLocalDraftChange(base.nav_key, "label_override", e.target.value),
+                  onChange: (e) => handleLocalDraftChange(
+                    base.nav_key,
+                    "label_override",
+                    e.target.value
+                  ),
                   onBlur: () => handleSaveField(base.nav_key),
                   onKeyDown: (e) => {
-                    if (e.key === "Enter") e.target.blur();
+                    if (e.key === "Enter")
+                      e.target.blur();
                   },
                   className: "h-8 text-xs w-full"
                 }
@@ -458,10 +549,15 @@ function MenuNavEditorPanel() {
                   placeholder: isSpacer ? "—" : "e.g. Star, Shield",
                   value: draft.icon_override ?? "",
                   disabled: isSpacer,
-                  onChange: (e) => handleLocalDraftChange(base.nav_key, "icon_override", e.target.value),
+                  onChange: (e) => handleLocalDraftChange(
+                    base.nav_key,
+                    "icon_override",
+                    e.target.value
+                  ),
                   onBlur: () => handleSaveField(base.nav_key),
                   onKeyDown: (e) => {
-                    if (e.key === "Enter") e.target.blur();
+                    if (e.key === "Enter")
+                      e.target.blur();
                   },
                   className: "h-8 text-xs w-full font-mono text-[11px] disabled:opacity-40"
                 }
@@ -473,10 +569,15 @@ function MenuNavEditorPanel() {
                   placeholder: isSpacer ? "—" : "Custom hover tooltip",
                   value: draft.tooltip_override ?? "",
                   disabled: isSpacer,
-                  onChange: (e) => handleLocalDraftChange(base.nav_key, "tooltip_override", e.target.value),
+                  onChange: (e) => handleLocalDraftChange(
+                    base.nav_key,
+                    "tooltip_override",
+                    e.target.value
+                  ),
                   onBlur: () => handleSaveField(base.nav_key),
                   onKeyDown: (e) => {
-                    if (e.key === "Enter") e.target.blur();
+                    if (e.key === "Enter")
+                      e.target.blur();
                   },
                   className: "h-8 text-xs w-full disabled:opacity-40"
                 }
@@ -485,7 +586,11 @@ function MenuNavEditorPanel() {
                 Switch,
                 {
                   checked: Boolean(draft.is_hidden_override),
-                  onCheckedChange: (checked) => handleDirectUpdate(base.nav_key, "is_hidden_override", checked),
+                  onCheckedChange: (checked) => handleDirectUpdate(
+                    base.nav_key,
+                    "is_hidden_override",
+                    checked
+                  ),
                   "aria-label": `Hide ${base.label}`
                 }
               ) }),
@@ -495,9 +600,12 @@ function MenuNavEditorPanel() {
                   size: "sm",
                   variant: "ghost",
                   className: "h-7 w-7 p-0 text-muted-foreground hover:text-destructive",
-                  onClick: () => handleDeleteItem(base.nav_key, draft.label_override || base.label),
+                  onClick: () => handleDeleteItem(
+                    base.nav_key,
+                    draft.label_override || base.label
+                  ),
                   disabled: isDeleting,
-                  title: `Delete ${isSpacer ? "section header" : "custom navigation item"}`,
+                  title: "Delete Item",
                   children: /* @__PURE__ */ jsx(Trash2, { className: "h-3.5 w-3.5" })
                 }
               ) : (() => {
@@ -511,9 +619,12 @@ function MenuNavEditorPanel() {
                     size: "sm",
                     variant: "ghost",
                     className: "h-7 w-7 p-0 text-muted-foreground hover:text-foreground",
-                    onClick: () => handleDeleteItem(existing.nav_key, draft.label_override || base.label),
+                    onClick: () => handleResetItem(
+                      existing.nav_key,
+                      draft.label_override || base.label
+                    ),
                     disabled: isDeleting,
-                    title: "Reset item overrides to code default",
+                    title: "Reset Overrides",
                     children: /* @__PURE__ */ jsx(RotateCcw, { className: "h-3.5 w-3.5" })
                   }
                 ) : /* @__PURE__ */ jsx("span", { className: "text-muted-foreground/30 text-xs", children: "—" });

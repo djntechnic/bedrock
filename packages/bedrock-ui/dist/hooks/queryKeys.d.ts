@@ -85,4 +85,9 @@ export declare const queryKeys: {
         readonly userProfile: (userId: number | string) => readonly ["security", "user-profile", string | number];
         readonly userOverrides: (userId: number | string) => readonly ["security", "user-overrides", string | number];
     };
+    readonly help: {
+        readonly all: readonly ["help"];
+        readonly topic: (topicKey: string) => readonly ["help", "topic", string];
+        readonly adminList: () => readonly ["admin", "help"];
+    };
 };

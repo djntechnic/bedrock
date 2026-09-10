@@ -78,6 +78,12 @@ const queryKeys = {
     matrix: () => ["security", "matrix"],
     userProfile: (userId) => ["security", "user-profile", userId],
     userOverrides: (userId) => ["security", "user-overrides", userId]
+  },
+  // ── Help ─────────────────────────────────────────────────────────────────
+  help: {
+    all: ["help"],
+    topic: (topicKey) => ["help", "topic", topicKey],
+    adminList: () => ["admin", "help"]
   }
 };
 export {

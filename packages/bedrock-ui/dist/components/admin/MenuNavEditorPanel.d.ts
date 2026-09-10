@@ -4,7 +4,7 @@ export interface FlatNavItem {
     parent_key: string | null;
     label: string;
     group_label: string | null;
-    icon?: import('react').ComponentType<{
+    icon?: import("react").ComponentType<{
         className?: string;
     }>;
     default_sort_order: number;

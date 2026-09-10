@@ -641,6 +641,15 @@ function ColumnEditForm({ col, setColumnField, isCustomColumn }) {
         }
       ),
       /* @__PURE__ */ jsx(
+        SwitchRow,
+        {
+          label: "Enable KPI gradient",
+          checked: bool(col.enable_kpi_gradient),
+          disabled: isCustomColumn,
+          onChange: (v) => set("enable_kpi_gradient", v)
+        }
+      ),
+      /* @__PURE__ */ jsx(
         TextAreaRow,
         {
           label: "Conditional format (JSON)",

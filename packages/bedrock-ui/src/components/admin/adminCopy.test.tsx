@@ -45,7 +45,7 @@ describe("Admin UI Copy Standards Check", () => {
       logout: vi.fn(),
       isAuthenticated: true,
       isLoading: false,
-    });
+    } as any);
 
     vi.spyOn(useNavSettingsModule, "useNavSettingsManager").mockReturnValue({
       settings: [],
@@ -64,6 +64,8 @@ describe("Admin UI Copy Standards Check", () => {
     const mockGrid = {
       grid_setting_id: 1,
       grid_id: "test_grid",
+      grid_label: "Test Grid",
+      read_only: false,
       pagination_enabled: 1,
       default_page_size: 25,
       page_size_options: "25,50,100",
@@ -104,7 +106,7 @@ describe("Admin UI Copy Standards Check", () => {
 
     const { container } = render(
       <GridSettingsPanel
-        draftGrid={mockGrid}
+        draftGrid={mockGrid as any}
         columnIds={["id", "name"]}
         setGridField={vi.fn()}
       />,
@@ -129,7 +131,7 @@ describe("Admin UI Copy Standards Check", () => {
         label_override: null,
         tooltip_override: null,
         column_order: 10,
-        default_visible: 1,
+        default_visible: true,
         allow_sort: true,
         allow_sort_mode: "both" as const,
         default_sort: null,
@@ -140,7 +142,7 @@ describe("Admin UI Copy Standards Check", () => {
         max_width: 200,
         cell_type: "text",
         format_string: null,
-        null_display: null,
+        null_display: "—",
         aggregate_function: null,
         link_target: null,
         sort_asc_color: null,
@@ -160,7 +162,7 @@ describe("Admin UI Copy Standards Check", () => {
 
     const { container } = render(
       <GridColumnsPanel
-        draftColumns={mockColumns}
+        draftColumns={mockColumns as any}
         setColumnField={vi.fn()}
       />,
       { wrapper: createWrapper() },

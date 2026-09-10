@@ -12,9 +12,14 @@
  * source when the admin endpoint is unreachable. Env-var overrides
  * (VITE_APP_*) are respected for the same boot-critical values.
  */
+/**
+ * Resolve the dynamic application name across window override, active runtime config,
+ * build-time env var, and default platform fallback (#61).
+ */
+export declare function resolveAppName(runtimeConfigAppName?: string): string;
 export declare const appSettings: {
     system: {
-        appName: string;
+        readonly appName: string;
     };
     logging: {
         level: string;

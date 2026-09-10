@@ -11,6 +11,7 @@ import { EmptyTableRow } from "./components/EmptyTableRow.js";
 import { default as default8 } from "./components/ColumnToggle.js";
 import { __clearCellRegistry, getMediaCellTypes, isMediaCellType, registerColumnRenderer, registerColumnRenderers, registerMediaRenderer, resolveColumnRenderer, resolveMediaRenderer } from "./components/grids/cellRegistry.js";
 import { __clearRowAccentResolver, registerRowAccentResolver, useRowAccentResolver } from "./components/grids/rowAccentRegistry.js";
+import { __clearKpiGradientPolicies, registerKpiGradientPolicy, resolveKpiGradientPolicy } from "./components/grids/kpiGradientRegistry.js";
 import { __clearDashboardPinHost, hasDashboardPinHost, registerDashboardPinHost } from "./components/grids/dashboardPinRegistry.js";
 import { GridStatusContent, GridStatusRow } from "./components/GridStatus.js";
 import { default as default9 } from "./components/admin/LogViewer.js";
@@ -50,18 +51,19 @@ import "lucide-react";
 import { cn } from "./lib/utils.js";
 import { Toaster } from "./components/ui/sonner.js";
 import { toast } from "sonner";
+import { default as default32 } from "./components/HelpPopover.js";
 import { __clearNavItems, getNavItems, isNavItemVisible, registerNavItems } from "./components/navRegistry.js";
 import { __clearSearchSources, getSearchAllTarget, getSearchSources, registerSearchAllTarget, registerSearchSource } from "./components/searchSourceRegistry.js";
 import { __clearCommandRoutes, getCommandRoutes, registerCommandRoutes } from "./lib/commandRoutes.js";
-import { default as default32 } from "./components/ProtectedRoute.js";
-import { default as default33 } from "./components/ModuleDisabled.js";
+import { default as default33 } from "./components/ProtectedRoute.js";
+import { default as default34 } from "./components/ModuleDisabled.js";
 import { AuthContext } from "./context/AuthContext.js";
 import { useAuth } from "./hooks/useAuth.js";
 import { useModules } from "./hooks/useModules.js";
-import { default as default34 } from "./components/auth/SetPasswordPage.js";
-import { default as default35 } from "./components/auth/ForgotPasswordPage.js";
-import { default as default36 } from "./components/auth/VerifyEmailPage.js";
-import { default as default37 } from "./components/auth/AuthFlowCard.js";
+import { default as default35 } from "./components/auth/SetPasswordPage.js";
+import { default as default36 } from "./components/auth/ForgotPasswordPage.js";
+import { default as default37 } from "./components/auth/VerifyEmailPage.js";
+import { default as default38 } from "./components/auth/AuthFlowCard.js";
 import { AUTH_FLOW_PATHS, TOKEN_PARAM, completePasswordReset, confirmEmailVerification, messageFromError, requestEmailVerification, requestPasswordReset } from "./components/auth/authFlowApi.js";
 import { buildGridConfig, useGridConfig } from "./hooks/useGridConfig.js";
 import { mergeUserGridPreference, useTogglePlayerPin, useUnpinUserGridColumn, useUpdateUserGridPreference, useUserGridConfig, useUserGridPreference, useUserGridPreferences, useUserPinnedGrids, useUserPlayerPins } from "./hooks/useUserGridConfig.js";
@@ -75,6 +77,7 @@ import { useAppSettings } from "./hooks/useAppSettings.js";
 import { useMediaQuery } from "./hooks/useMediaQuery.js";
 import { DISCLOSURE_KEY_PREFIX, usePersistedDisclosure } from "./hooks/usePersistedDisclosure.js";
 import { queryKeys } from "./hooks/queryKeys.js";
+import { useHelpConfig } from "./hooks/useHelpConfig.js";
 import { clearDocumentHead, documentHeadTags, useDocumentHead } from "./hooks/useDocumentHead.js";
 import { AppConfigContext, useAppConfigContext } from "./context/AppConfigContext.js";
 import { BUILT_IN_THEMES, DEFAULT_THEME_SEED, SYSTEM_THEME_ID, ThemeProvider, resolveSystemPalette, useTheme } from "./context/ThemeContext.js";
@@ -112,6 +115,7 @@ import { apiClient, getAuthToken, setAuthToken } from "./api/client.js";
 import { API_ROUTES } from "./api/routes.js";
 import { logger } from "./lib/logger.js";
 import { log } from "./utils/logger.js";
+import { appSettings, resolveAppName } from "./config/index.js";
 export {
   API_ROUTES,
   AUTH_FLOW_PATHS,
@@ -131,7 +135,7 @@ export {
   default31 as AppFooter,
   default23 as AppSidebar,
   AuthContext,
-  default37 as AuthFlowCard,
+  default38 as AuthFlowCard,
   BUILT_IN_THEMES,
   Badge,
   default30 as Breadcrumb,
@@ -181,7 +185,7 @@ export {
   DndColumnWrapper,
   default4 as EditableCell,
   EmptyTableRow,
-  default35 as ForgotPasswordPage,
+  default36 as ForgotPasswordPage,
   default25 as GlobalSearchBar,
   default20 as GridEditor,
   default22 as GridFocusMode,
@@ -191,13 +195,14 @@ export {
   GridStatusContent,
   GridStatusRow,
   default7 as GridWrapper,
+  default32 as HelpPopover,
   Input,
   KeyboardShortcutsProvider,
   default26 as KeyboardShortcutsSheet,
   Label,
   default9 as LogViewer,
   default16 as MenuNavEditorPanel,
-  default33 as ModuleDisabled,
+  default34 as ModuleDisabled,
   default17 as ModulesPanel,
   PLATFORM_EVENT_TYPES,
   default27 as PageHeader,
@@ -214,7 +219,7 @@ export {
   PopoverTrigger,
   PresentationalTableChrome,
   default14 as ProfilePage,
-  default32 as ProtectedRoute,
+  default33 as ProtectedRoute,
   default15 as RoleMatrixPanel,
   SYSTEM_THEME_ID,
   default10 as SecurityLogViewer,
@@ -229,7 +234,7 @@ export {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-  default34 as SetPasswordPage,
+  default35 as SetPasswordPage,
   Sheet,
   SheetClose,
   SheetContent,
@@ -264,16 +269,18 @@ export {
   default18 as UserAccessProfileView,
   default19 as UserOverridesDrawer,
   default12 as UsersPanel,
-  default36 as VerifyEmailPage,
+  default37 as VerifyEmailPage,
   __clearApiPreviewEndpoints,
   __clearCellRegistry,
   __clearCommandRoutes,
   __clearDashboardPinHost,
   __clearDatasetSchemas,
+  __clearKpiGradientPolicies,
   __clearNavItems,
   __clearRowAccentResolver,
   __clearSearchSources,
   apiClient,
+  appSettings,
   applyColumnSizing,
   applyDraft,
   applyDrafts,
@@ -335,6 +342,7 @@ export {
   registerCommandRoutes,
   registerDashboardPinHost,
   registerDatasetSchemas,
+  registerKpiGradientPolicy,
   registerMediaRenderer,
   registerNavItems,
   registerRowAccentResolver,
@@ -342,7 +350,9 @@ export {
   registerSearchSource,
   requestEmailVerification,
   requestPasswordReset,
+  resolveAppName,
   resolveColumnRenderer,
+  resolveKpiGradientPolicy,
   resolveMediaRenderer,
   resolveShortcutsConfig,
   resolveSystemPalette,
@@ -386,6 +396,7 @@ export {
   useGridPages,
   useGridSettings,
   useHealthCheck,
+  useHelpConfig,
   useInvalidateDiagnosticRuns,
   useInviteAdminUser,
   useKeyboardShortcuts,

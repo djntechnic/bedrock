@@ -1,11 +1,26 @@
+const __vite_import_meta_env__ = {};
+function resolveAppName(runtimeConfigAppName) {
+  if (typeof window !== "undefined" && window.__BEDROCK_APP_NAME__) {
+    return window.__BEDROCK_APP_NAME__;
+  }
+  if (runtimeConfigAppName && runtimeConfigAppName.trim() !== "") {
+    return runtimeConfigAppName;
+  }
+  const envName = typeof import.meta !== "undefined" && __vite_import_meta_env__?.VITE_APP_NAME;
+  if (envName && envName.trim() !== "") {
+    return envName;
+  }
+  return "Bedrock";
+}
 const appSettings = {
   system: {
     // Human-readable application name shown in the sidebar, footer, and browser
     // tab. Authoritative value lives in app_config_settings.system_app_name and
-    // is delivered via useAppSettings(); this literal is only the boot-time
-    // fallback before the first admin/config fetch resolves. Env var
-    // VITE_APP_NAME overrides for boot-critical rendering.
-    appName: "bedrock"
+    // is delivered via useAppSettings(); this dynamic getter provides boot-time
+    // resolution via resolveAppName().
+    get appName() {
+      return resolveAppName();
+    }
   },
   logging: {
     // Falls back to safe parameters to guarantee layout efficiency
@@ -36,6 +51,7 @@ const appSettings = {
   }
 };
 export {
-  appSettings
+  appSettings,
+  resolveAppName
 };
 //# sourceMappingURL=index.js.map
