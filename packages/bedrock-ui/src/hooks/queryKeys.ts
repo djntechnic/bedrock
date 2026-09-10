@@ -110,4 +110,11 @@ export const queryKeys = {
     userOverrides: (userId: number | string) =>
       ["security", "user-overrides", userId] as const,
   },
+
+  // ── Help ─────────────────────────────────────────────────────────────────
+  help: {
+    all: ["help"] as const,
+    topic: (topicKey: string) => ["help", "topic", topicKey] as const,
+    adminList: () => ["admin", "help"] as const,
+  },
 } as const;

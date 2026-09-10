@@ -41,6 +41,7 @@ describe("the map holds platform routes only", () => {
       "appConfig",
       "auth",
       "diagnostics",
+      "help",
       "modules",
       "navigation",
       "security",

@@ -57,6 +57,13 @@ export const API_ROUTES = {
       `/api/v1/admin/audit/history?limit=${limit}`,
     auditRun: (runId: string | number) =>
       `/api/v1/admin/audit/history/${runId}`,
+    helpList: () => "/api/v1/admin/help",
+    helpEntry: (topicKey: string) => `/api/v1/admin/help/${encodeURIComponent(topicKey)}`,
+  },
+
+  // ── Help (in-app quick help) ─────────────────────────────────────────────
+  help: {
+    topic: (topicKey: string) => `/api/v1/help/${encodeURIComponent(topicKey)}`,
   },
 
   // ── User preferences (per-user grid customization) ───────────────────────

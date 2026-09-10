@@ -97,6 +97,8 @@ export * from "./components/EmptyState";
 export { Toaster } from "./components/ui/sonner";
 export type { PlatformToasterProps } from "./components/ui/sonner";
 export { toast } from "sonner";
+export { default as HelpPopover } from "./components/HelpPopover";
+export type { HelpPopoverProps } from "./components/HelpPopover";
 export * from "./components/navRegistry";
 export * from "./components/searchSourceRegistry";
 export * from "./lib/commandRoutes";
@@ -133,6 +135,7 @@ export * from "./hooks/useAppSettings";
 export * from "./hooks/useMediaQuery";
 export * from "./hooks/usePersistedDisclosure";
 export * from "./hooks/queryKeys";
+export * from "./hooks/useHelpConfig";
 // Per-route document head (F5). The sitemap half is server-side.
 export * from "./hooks/useDocumentHead";
 

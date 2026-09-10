@@ -70,6 +70,7 @@ PLATFORM_ROUTER_MOUNTS: dict[str, str] = {
     "security": "/api/v1/security",
     "navigation": "/api/v1/navigation",
     "diagnostics": "/api/v1/diagnostics",
+    "help": "/api/v1",
 }
 
 #: Where the browser is when nobody configured anything: the Vite dev server.
