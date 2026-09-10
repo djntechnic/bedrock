@@ -296,13 +296,23 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
               <Tooltip key={item.to} delayDuration={0}>
                 <TooltipTrigger asChild>{iconLink}</TooltipTrigger>
                 <TooltipContent side="right" className="text-xs">
-                  {disabled ? `${item.label} — not enabled for your account` : item.label}
+                  {disabled
+                    ? `${item.label} — not enabled for your account`
+                    : item.tooltip
+                    ? (
+                      <div>
+                        <div className="font-semibold">{item.label}</div>
+                        <div className="text-muted-foreground">{item.tooltip}</div>
+                      </div>
+                    )
+                    : item.label}
                   {hasChildren && (
                     <div className="mt-1 space-y-0.5">
                       {allSubItems(item).map((child) => (
                         <div key={child.to}>
                           <Link
                             to={child.to}
+                            title={child.tooltip || child.label}
                             className={[
                               "block px-2 py-0.5 rounded text-xs",
                               "outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -346,6 +356,7 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
                 ) : (
                 <Link
                   to={item.to}
+                  title={item.tooltip || item.label}
                   className={[
                     "flex-1 flex items-center gap-3 px-2.5 py-2 rounded-md text-sm font-medium",
                     "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -388,6 +399,7 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
                       <Link
                         key={child.to}
                         to={child.to}
+                        title={child.tooltip || child.label}
                         className={[
                           "flex items-center px-2 py-1.5 rounded-md text-xs font-medium",
                           "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -414,6 +426,7 @@ export default function AppSidebar({ profilePath = "/profile" }: AppSidebarProps
                             <Link
                               key={child.to}
                               to={child.to}
+                              title={child.tooltip || child.label}
                               className={[
                                 "flex items-center px-2 py-1.5 rounded-md text-xs font-medium",
                                 "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",

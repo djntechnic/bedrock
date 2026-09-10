@@ -39,10 +39,13 @@ vi.mock("../hooks/useMediaQuery", () => ({
   useMediaQuery: () => false
 }));
 
+let mockNavItems: any = null;
+let mockNavSettings: any[] = [];
+
 vi.mock("../hooks/useNavSettings", () => ({
   useNavSettings: () => ({
-    navItems: getNavItems(),
-    settings: [],
+    navItems: mockNavItems ?? getNavItems(),
+    settings: mockNavSettings,
     isLoading: false,
   }),
 }));
@@ -50,6 +53,8 @@ vi.mock("../hooks/useNavSettings", () => ({
 describe("AppSidebar", () => {
   beforeEach(() => {
     __clearNavItems();
+    mockNavItems = null;
+    mockNavSettings = [];
     vi.restoreAllMocks();
   });
 
@@ -217,5 +222,53 @@ describe("AppSidebar", () => {
     // The sub-item sharing the parent route should have href="/collection"
     const myCollectionLink = screen.getByRole("link", { name: "My Collection" });
     expect(myCollectionLink).toHaveAttribute("href", "/collection");
+  });
+
+  it("renders dynamic tooltips on parent and child links and applies overrides", () => {
+    vi.spyOn(useAuthModule, "useAuth").mockReturnValue({
+      user: { id: 1 },
+      isAdmin: false,
+      hasRole: () => false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      isLoading: false,
+      isAuthenticated: true,
+    } as any);
+
+    vi.spyOn(useModulesModule, "useModules").mockReturnValue({
+      hasModule: () => true,
+    } as any);
+
+    vi.spyOn(useSecurityModule, "useSecurity").mockReturnValue({
+      can: () => true,
+    } as any);
+
+    mockNavItems = [
+      {
+        to: "/catalog",
+        label: "Master Catalog",
+        tooltip: "Browse all cards and sets",
+        icon: () => <svg />,
+        children: [
+          {
+            to: "/catalog/cards",
+            label: "Cards",
+            tooltip: "Card database view",
+          },
+        ],
+      },
+    ];
+
+    render(
+      <MemoryRouter initialEntries={["/catalog"]}>
+        <AppSidebar />
+      </MemoryRouter>
+    );
+
+    const parentLink = screen.getByRole("link", { name: /Master Catalog/i });
+    expect(parentLink).toHaveAttribute("title", "Browse all cards and sets");
+
+    const childLink = screen.getByRole("link", { name: "Cards" });
+    expect(childLink).toHaveAttribute("title", "Card database view");
   });
 });
