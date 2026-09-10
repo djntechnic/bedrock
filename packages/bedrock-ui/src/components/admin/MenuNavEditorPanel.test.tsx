@@ -1,10 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import * as useNavSettingsModule from "../../hooks/useNavSettings";
 import { __clearNavItems, registerNavItems } from "../navRegistry";
 import MenuNavEditorPanel from "./MenuNavEditorPanel";
-import * as useNavSettingsModule from "../../hooks/useNavSettings";
 
 vi.mock("sonner", () => ({
   toast: {
@@ -77,7 +77,9 @@ describe("MenuNavEditorPanel", () => {
     expect(parentInput).toBeDefined();
 
     // The child row should have placeholder or value "My Collection", NOT "Vault"
-    const childInput = inputs.find((inp) => inp.placeholder === "My Collection");
+    const childInput = inputs.find(
+      (inp) => inp.placeholder === "My Collection",
+    );
     expect(childInput).toBeDefined();
     expect(childInput?.value).toBe(""); // Not overridden by parent's "Vault"
 
@@ -130,7 +132,9 @@ describe("MenuNavEditorPanel", () => {
     fireEvent.click(resetButtons[1]);
 
     await waitFor(() => {
-      expect(mockDeleteSetting).toHaveBeenCalledWith("/collection::/collection");
+      expect(mockDeleteSetting).toHaveBeenCalledWith(
+        "/collection::/collection",
+      );
       // Must NOT have called deleteSetting with the parent's key
       expect(mockDeleteSetting).not.toHaveBeenCalledWith("/collection");
     });
@@ -289,13 +293,16 @@ describe("MenuNavEditorPanel", () => {
 
     // Click reset on core item
     fireEvent.click(resetButtons[0]);
-    expect(confirmSpy).toHaveBeenCalledWith("Reset overrides for 'Vault' to code defaults?");
+    expect(confirmSpy).toHaveBeenCalledWith(
+      "Reset overrides for 'Vault' to code defaults?",
+    );
     expect(mockDeleteSetting).toHaveBeenCalledWith("/collection");
 
     // Click delete on custom link
     fireEvent.click(deleteButtons[0]);
-    expect(confirmSpy).toHaveBeenCalledWith("Delete custom item 'Custom Link'?");
+    expect(confirmSpy).toHaveBeenCalledWith(
+      "Delete custom item 'Custom Link'?",
+    );
     expect(mockDeleteSetting).toHaveBeenCalledWith("/custom-link");
   });
 });
-
