@@ -10,4 +10,4 @@ export interface AppSidebarProps {
      */
     profilePath?: string | null;
 }
-export default function AppSidebar({ profilePath }?: AppSidebarProps): import("react").JSX.Element | null;
+export default function AppSidebar({ profilePath, }?: AppSidebarProps): import("react").JSX.Element | null;

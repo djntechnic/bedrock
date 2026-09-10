@@ -1,8 +1,5 @@
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { API_ROUTES } from "../api/routes.js";
-import { apiClient } from "../api/client.js";
-import { queryKeys } from "./queryKeys.js";
+import { useAppConfigContext } from "../context/AppConfigContext.js";
 import { appSettings } from "../config/index.js";
 const CONFIG_KEY = {
   system: {
@@ -22,97 +19,62 @@ const CONFIG_KEY = {
     sequenceTimeoutMs: "shortcuts_sequence_timeout_ms"
   }
 };
-function coerce(setting, fallback) {
-  if (!setting || setting.value === null || setting.value === void 0 || setting.value === "") {
+function coerceValue(raw, fallback) {
+  if (raw === null || raw === void 0 || raw === "") {
     return fallback;
   }
-  const raw = setting.value;
-  switch (setting.value_type) {
-    case "integer":
-    case "float": {
-      const n = Number(raw);
-      return Number.isFinite(n) ? n : fallback;
-    }
-    case "boolean":
-      return /^(true|1|yes)$/i.test(raw);
-    case "json":
-      try {
-        return JSON.parse(raw);
-      } catch {
-        return fallback;
-      }
-    default:
-      return raw;
+  if (typeof fallback === "boolean") {
+    return /^(true|1|yes)$/i.test(raw);
   }
-}
-async function fetchCategory(category) {
-  const { data } = await apiClient.get(
-    `${API_ROUTES.admin.config()}?category=${category}`
-  );
-  return data.data ?? [];
+  if (typeof fallback === "number") {
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : fallback;
+  }
+  if (Array.isArray(fallback)) {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  return raw;
 }
 function useAppSettings() {
-  const system = useQuery({
-    queryKey: queryKeys.admin.config("system"),
-    queryFn: () => fetchCategory("system"),
-    staleTime: 5 * 6e4
-  });
-  const grid = useQuery({
-    queryKey: queryKeys.admin.config("grid"),
-    queryFn: () => fetchCategory("grid"),
-    staleTime: 5 * 6e4
-  });
-  const logging = useQuery({
-    queryKey: queryKeys.admin.config("logging"),
-    queryFn: () => fetchCategory("logging"),
-    staleTime: 5 * 6e4
-  });
-  const shortcuts = useQuery({
-    queryKey: queryKeys.admin.config("shortcuts"),
-    queryFn: () => fetchCategory("shortcuts"),
-    staleTime: 5 * 6e4
-  });
+  const appConfig = useAppConfigContext();
   return useMemo(() => {
-    const byKey = (rows) => {
-      const map = /* @__PURE__ */ new Map();
-      (rows ?? []).forEach((r) => map.set(r.key, r));
-      return map;
-    };
-    const sys = byKey(system.data);
-    const g = byKey(grid.data);
-    const l = byKey(logging.data);
-    const s = byKey(shortcuts.data);
+    const map = appConfig?.app_config ?? {};
     return {
       system: {
-        appName: coerce(sys.get(CONFIG_KEY.system.appName), appSettings.system.appName)
+        appName: coerceValue(map[CONFIG_KEY.system.appName], appSettings.system.appName)
       },
       logging: {
-        level: coerce(l.get(CONFIG_KEY.logging.level), appSettings.logging.level),
-        disableConsoleInProd: coerce(
-          l.get(CONFIG_KEY.logging.disableConsoleInProd),
+        level: coerceValue(map[CONFIG_KEY.logging.level], appSettings.logging.level),
+        disableConsoleInProd: coerceValue(
+          map[CONFIG_KEY.logging.disableConsoleInProd],
           appSettings.logging.disableConsoleInProd
         ),
-        redactKeys: coerce(
-          l.get(CONFIG_KEY.logging.redactKeys),
+        redactKeys: coerceValue(
+          map[CONFIG_KEY.logging.redactKeys],
           appSettings.logging.redactKeys
         )
       },
       grid: {
-        tooltipDelayDuration: coerce(
-          g.get(CONFIG_KEY.grid.tooltipDelayDuration),
+        tooltipDelayDuration: coerceValue(
+          map[CONFIG_KEY.grid.tooltipDelayDuration],
           appSettings.grid.tooltipDelayDuration
         )
       },
       shortcuts: {
-        enabled: coerce(s.get(CONFIG_KEY.shortcuts.enabled), appSettings.shortcuts.enabled),
-        helpKey: coerce(s.get(CONFIG_KEY.shortcuts.helpKey), appSettings.shortcuts.helpKey),
-        sequenceTimeoutMs: coerce(
-          s.get(CONFIG_KEY.shortcuts.sequenceTimeoutMs),
+        enabled: coerceValue(map[CONFIG_KEY.shortcuts.enabled], appSettings.shortcuts.enabled),
+        helpKey: coerceValue(map[CONFIG_KEY.shortcuts.helpKey], appSettings.shortcuts.helpKey),
+        sequenceTimeoutMs: coerceValue(
+          map[CONFIG_KEY.shortcuts.sequenceTimeoutMs],
           appSettings.shortcuts.sequenceTimeoutMs
         )
       }
     };
-  }, [system.data, grid.data, logging.data, shortcuts.data]);
+  }, [appConfig]);
 }
 export {
   useAppSettings

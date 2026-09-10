@@ -62,6 +62,7 @@ function useCreateConfig() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.admin.configAll() });
+      qc.invalidateQueries({ queryKey: queryKeys.appConfig.all });
     }
   });
 }
@@ -74,6 +75,7 @@ function useDeleteConfig() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.admin.configAll() });
+      qc.invalidateQueries({ queryKey: queryKeys.appConfig.all });
     }
   });
 }
@@ -164,6 +166,7 @@ function useUpdateConfig() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.admin.configAll() });
+      qc.invalidateQueries({ queryKey: queryKeys.appConfig.all });
     }
   });
 }

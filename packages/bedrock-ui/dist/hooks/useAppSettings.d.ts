@@ -17,8 +17,8 @@ export interface ResolvedAppSettings {
     };
 }
 /**
- * React Query hook that returns the merged appSettings surface. Boot-time
- * env-var defaults are returned until the first fetch resolves, so consumers
+ * React hook that returns the merged appSettings surface. Boot-time
+ * env-var defaults are returned until AppConfigContext resolves, so consumers
  * never see undefined during the pre-hydration render.
  */
 export declare function useAppSettings(): ResolvedAppSettings;
