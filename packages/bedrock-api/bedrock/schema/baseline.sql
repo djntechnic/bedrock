@@ -203,6 +203,7 @@ CREATE TABLE IF NOT EXISTS app_grid_column_settings (
     gradient_from_color   TEXT,
     gradient_to_color     TEXT,
     editable              INTEGER NOT NULL DEFAULT 0,     -- Phase 8 H3: <EditableCell> opt-in
+    enable_kpi_gradient   INTEGER NOT NULL DEFAULT 0,     -- automated directional KPI gradient
     created_at        TEXT    NOT NULL DEFAULT (datetime('now')),
     created_by        TEXT    NOT NULL DEFAULT 'Admin',
     modified_at       TEXT    NOT NULL DEFAULT (datetime('now')),

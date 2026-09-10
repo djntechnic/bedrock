@@ -293,6 +293,8 @@ export interface GridColumnSetting {
    * `config.readOnly === 1`.
    */
   editable?: boolean;
+  /** Whether automated directional KPI gradient styling is enabled for numeric values. */
+  enable_kpi_gradient?: boolean;
 }
 
 /** Audit log entry for a CSV or PDF export event. */

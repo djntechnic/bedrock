@@ -85,6 +85,7 @@ import { useSelectionStore } from "../../store/selectionStore";
 import { useAdmin, type GridColumnSetting } from "../../hooks/useAdminPlatform";
 import { DndColumnWrapper } from "../../hooks/useDraggableColumns";
 import { useRowAccentResolver } from "./rowAccentRegistry";
+import { resolveKpiGradientPolicy } from "./kpiGradientRegistry";
 import { hasDashboardPinHost } from "./dashboardPinRegistry";
 
 import { renderCell, renderMediaCell, unwrapCellPayload } from "./cellRenderers";
@@ -819,6 +820,28 @@ export default function DataGrid<T extends Record<string, any>>({
                   col.gradient_from_color,
                   col.gradient_to_color,
                 );
+              }
+            } else if (col.enable_kpi_gradient) {
+              const policy = resolveKpiGradientPolicy(columnId);
+              if (policy) {
+                const minMax = computeColumnMinMax(
+                  rows as unknown as Record<string, unknown>[],
+                  columnId,
+                );
+                if (minMax && typeof value === "number") {
+                  // Semantic palette: positive is emerald green, negative is red
+                  const positiveHex = "#16a34a";
+                  const negativeHex = "#dc2626";
+                  const fromColor = policy.lowerBetter ? positiveHex : negativeHex;
+                  const toColor = policy.lowerBetter ? negativeHex : positiveHex;
+                  gradientStyle = getGradientCellStyle(
+                    value,
+                    minMax.min,
+                    minMax.max,
+                    fromColor,
+                    toColor,
+                  );
+                }
               }
             }
 
