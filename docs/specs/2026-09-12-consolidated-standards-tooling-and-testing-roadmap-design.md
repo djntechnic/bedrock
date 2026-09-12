@@ -32,6 +32,7 @@ This architectural specification consolidates and reconciles four foundational i
 - **1-to-1 Audit Script Parity**: Every standard has exactly one corresponding audit script (`bedrock.tools.audit_s001_duplicates.py`, `scripts/audits/audit_s101_ebay_compliance.py`). No standard is purely "review-enforced."
 - **Declarative Manifest Configuration (`bedrock.toml`)**: Tools source exemptions additively from `bedrock.toml`. Every tool section requires an explicit `exemptions = [...]` list.
 - **Shared Tooling Authority in `claude-kit`**: `claude-kit` is the single canonical source of truth for all shared skills, agents, and hooks. Shared assets are tracked only in `claude-kit` and deployed to consumer repositories as untracked NTFS directory junctions.
+- **Automated Workstation Synchronization**: Scheduled Windows tasks execute background maintenance to ensure directory junctions and superpowers paths stay continuously synchronized.
 - **Automated Workstation Synchronization & Token Hygiene**: Scheduled Windows tasks execute background maintenance to ensure directory junctions and superpowers paths stay continuously synchronized while actively purging stale symlinks, redundant agents, and dead hooks to prevent token bloat.
 
 ---

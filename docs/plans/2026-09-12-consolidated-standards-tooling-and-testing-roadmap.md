@@ -11,8 +11,10 @@
 **Spec:** [`C:\Dev\bedrock\docs\specs\2026-09-12-consolidated-standards-tooling-and-testing-roadmap-design.md`](file:///C:/Dev/bedrock/docs/specs/2026-09-12-consolidated-standards-tooling-and-testing-roadmap-design.md)
 
 ## Global Constraints
+
 - **Zero Business Logic Changes (MANDATORY)**: This entire roadmap strictly addresses tooling, standardization, repository structure, workflows, and automated testing architecture. There are **zero intended business logic modifications**. If an implementation step attempts or requires altering domain models, business calculations, persistence methods, or database seed definitions, it is **out of scope and considered a defect**.
 - Target Repositories: `C:\Dev\claude-kit`, `C:\Dev\bedrock`, `C:\Dev\CollectIt`, `C:\Dev\MLBTracker`.
+- Python Interpreter: `.venv\Scripts\python.exe` on Windows 11 / PowerShell 7.
 - Python Interpreter Environments: `C:\Dev\CollectIt\.venv\Scripts\python.exe` is used exclusively for `CollectIt`. `bedrock` and `MLBTracker` deliberately do not use local virtual environments and execute directly via the host Python 3.11 environment (`python` on PATH).
 - Zero broken tests ship to master (§S005).
 - Standards naming on disk is strictly lowercase kebab-case (`docs/standards/s001-no-duplicate-ui-code.md` ... `s012-dual-pin-platform-governance.md`).
