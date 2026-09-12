@@ -1,8 +1,8 @@
 # Consolidated Ecosystem Standards, Tooling, and Testing Architecture Roadmap
 
-**Document ID**: `SPEC-2026-09-12-CONSOLIDATED-ECOSYSTEM-ROADMAP`  
-**Status**: Approved Architectural Design  
-**Date**: 2026-09-12  
+**Document ID**: `SPEC-2026-09-12-CONSOLIDATED-ECOSYSTEM-ROADMAP`
+**Status**: Approved Architectural Design
+**Date**: 2026-09-12
 **Ecosystem Scope**:
 - `bedrock` (`C:\Dev\bedrock`) — Platform substrate (`bedrock-api`, `@djntechnic/bedrock-ui`)
 - `CollectIt` (`C:\Dev\CollectIt`) — Domain consumer: Collectibles & eBay listing engine
