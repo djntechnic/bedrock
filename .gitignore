@@ -1,79 +1,97 @@
 # ==============================================================================
-# 1. PYTHON, TESTING & CACHE
+# 1. PYTHON, TESTING, COVERAGE & CACHE
 # ==============================================================================
 __pycache__/
 *.py[cod]
 *$py.class
 *.egg-info/
-
-# Pytest / Coverage
 .pytest_cache/
 .coverage
 htmlcov/
-
-# pytest-testmon local cache (delta-based test selection; per-dev/per-session)
-.testmondata
-.testmondata-journal
-.testmondata-shm
-.testmondata-wal
+# pytest-testmon delta cache (per-developer / per-session local execution state)
+.testmondata*
+.testmon
 
 # ==============================================================================
-# 2. ENVIRONMENT, CONFIG & DEPENDENCIES
+# 2. ENVIRONMENT, SECRETS & DEPENDENCY RUNTIMES
 # ==============================================================================
 .env
-.env.local
+.env.*
+!.env.example
 .dependencies_installed
 node_modules/
 .venv/
 
 # ==============================================================================
-# 3. BUILD, PACKAGING & DISTRIBUTION
+# 3. BUILD, PACKAGING & DISTRIBUTION ARTIFACTS
 # ==============================================================================
 build/
-/dist/
+dist/
+/packages/*/dist/
 !packages/bedrock-ui/dist/
 *.zip
+*.tar.gz
 
 # ==============================================================================
-# 4. DATABASES & DATA STORAGE
+# 4. DATABASES, LOGS, DATA DIRECTORIES & RUNTIME ASSETS
 # ==============================================================================
+# SQLite database files and runtime sidecars
 *.db
 *.sqlite
 *.sqlite3
-
-# SQLite sidecars (WAL / shared-memory / rollback journal)
 *.db-wal
 *.db-shm
 *.db-journal
+*.sqbpro
+*.log
 
-# Data directories (with explicit inclusions)
+# Data directories (ephemeral downloads, uncommitted ETL data, backups, test fixtures)
 data/
 !data/rankings.json
 imports/
+exports/
+Exports/
+api/static/headshots/
 
 # ==============================================================================
-# 5. IDE, WORKSPACE & OS
+# 5. IDE, EDITOR, SYSTEM & LOCAL WORKSPACE PROFILES
 # ==============================================================================
-.vscode/
-.antigravity/
-.antigravityrc
-*.code-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.vscode/*.local.json
+Thumbs.db
+Desktop.ini
+.DS_Store
 *_FileTree.*
 
+# Local workspace files (IDE/agent workspace configurations)
+*.code-workspace
+*.code-workspace.local
+.antigravityrc*
+.antigravity/
+
 # ==============================================================================
-# 6. AI AGENTS & TOOLING HOOKS
+# 6. AI AGENTS, TOOLING HOOKS & DEPLOYED READ-ONLY HARNESSES
 # ==============================================================================
+# Agent state caches & sandboxes
 .playwright-mcp/
 .superpowers/
-
-# Agent hook state (prevents stop-hook tree dirtying)
 .claude/state/
-
-# Isolated worktrees created by the agent harness (EnterWorktree)
 .claude/worktrees/
+.claude/settings.local.json
+
+# Deployed read-only junctions from claude-kit (in consumer repos: bedrock, CollectIt, MLBTracker)
+# All agentic tools are authored canonically in claude-kit and linked as untracked junctions
+.agents/skills/
+.agents/agents/
+.claude/skills/
+.claude/agents/
+.claude/hooks/
 
 # ==============================================================================
-# 7. DOCUMENTATION, DESIGN & MEDIA ASSETS
+# 7. DOCUMENTATION ARTIFACTS, DESIGNS & EPHEMERAL SCRATCH
 # ==============================================================================
 # Stitch design renders (track .html sources only)
 .stitch/designs/*.png
@@ -82,25 +100,19 @@ imports/
 # Design reference imagery (large binaries; the docs that cite them are tracked)
 docs/project/*/reference/
 
-# Working/Scratch documents
+# Ephemeral developer scratch and punchlists
+scratch/
 docs/project/punchlists/
+docs/reference/punchlists/
 
-# Pre-eviction leftovers. These folders no longer exist in the repo — §S8 retires
-# docs out of the tree entirely — but untracked files still sit under these paths
-# in working copies that predate the eviction. The rules stay until those are
-# cleared by hand, so that a `git add -A` cannot silently re-track them.
+# Deprecated/pre-eviction directory guards (prevent accidental re-commit via git add -A)
+docs/punchlists/
 docs/archive/
 docs/artifacts/
 docs/screenshots/
 docs/working files/
 
-# Application static media assets
-api/static/headshots/
-
-# ==============================================================================
-# 8. LOCAL SCRATCH, AUDITS & DEBUG
-# ==============================================================================
-scratch/
+# Large binaries / screenshots outside designated design roots
 debug_tab*.png
 
 # Project module exclusions
