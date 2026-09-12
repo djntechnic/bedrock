@@ -34,9 +34,10 @@
 
 - **Phase 0: Workstation & Tooling Foundation (Zero-Tag)**
   - Task 0.1: Headless PowerShell `$PROFILE` Zero-Token Bailout
-  - Task 0.2: Standardize `.gitignore` Baseline Across Repositories
-  - Task 0.3: Deploy `Sync-AgenticTooling.ps1` & Windows Scheduled Task
-  - Task 0.4: Deploy Superpowers Path Alignment & Windows Scheduled Task
+  - Task 0.2: Comprehensive Master `.gitignore` Baseline Standardization & Data Directory Guard
+  - Task 0.3: Centralize All Agentic Tooling in `claude-kit`, Authoring Runbook & Sync Engine
+  - Task 0.4: Clean Up Inconsistent Symlinks, Deprecated Tools & Token Bloat
+  - Task 0.5: Deploy Superpowers Path Alignment & Windows Scheduled Task
 - **Phase 1: Bedrock Canonical Platform Implementation**
   - Task 1.1: Platform Standards `s001` through `s012` Authoring & Citation Sweep
   - Task 1.2: Audit Reporter Substrate (`bedrock.tools._reporter`)
@@ -136,163 +137,326 @@ Expected output: Exactly `CLEAN_PROFILE` with zero terminal icons, PSReadLine me
 
 ---
 
-### Task 0.2: Standardize `.gitignore` Baseline Across Repositories
+### Task 0.2: Comprehensive Master `.gitignore` Baseline Standardization & Data Directory Guard
 
 **Agent Recommendation:**
-
 - Claude: `model: haiku`, `effort: low`
 - AGY: `model: flash`, `thinking: low`
 
 **Files:**
-
 - Modify: `C:\Dev\claude-kit\.gitignore`
 - Modify: `C:\Dev\bedrock\.gitignore`
 - Modify: `C:\Dev\CollectIt\.gitignore`
 - Modify: `C:\Dev\MLBTracker\.gitignore`
 
 **Interfaces:**
+- Produces: Standardized, exhaustive `.gitignore` files with explanatory section headers, locking down runtime artifacts, database journals, data directories (`data/`, `imports/`, `exports/`), local workspace configurations, and deployed agentic tooling junctions.
 
-- Produces: Uniform ignore rules for `.antigravityrc.local`, `.claude/state/`, `.superpowers/sdd/**`, `scratch/`, `.testmondata*`, and SQLite WAL sidecars.
-
-- [ ] **Step 1: Append standard AI agent ignore block to all 4 repositories**
-Append the following block to `.gitignore` in `claude-kit`, `bedrock`, `CollectIt`, and `MLBTracker`:
-      Append the following block to `.gitignore` in `claude-kit`, `bedrock`, `CollectIt`, and `MLBTracker`:
+- [ ] **Step 1: Deploy master `.gitignore` template across all repositories**
+Deploy the following canonical master `.gitignore` template across `claude-kit`, `bedrock`, `CollectIt`, and `MLBTracker`, preserving only repository-specific build exemptions (e.g. `!packages/bedrock-ui/dist/` in Bedrock, or `!data/rankings.json` in MLBTracker/CollectIt):
 
 ```gitignore
 # ==============================================================================
-# AI AGENTS, WORKSPACES & LOCAL OVERRIDES
+# 1. PYTHON, TESTING, COVERAGE & CACHE
 # ==============================================================================
-.antigravityrc.local
-.claude/settings.local.json
-*.local.json
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+# pytest-testmon delta cache (per-developer / per-session local execution state)
+.testmondata*
+.testmon
 
-# Agent runtime caches, state & worktrees
+# ==============================================================================
+# 2. ENVIRONMENT, SECRETS & DEPENDENCY RUNTIMES
+# ==============================================================================
+.env
+.env.*
+!.env.example
+.dependencies_installed
+node_modules/
+.venv/
+
+# ==============================================================================
+# 3. BUILD, PACKAGING & DISTRIBUTION ARTIFACTS
+# ==============================================================================
+build/
+dist/
+/packages/*/dist/
+!packages/bedrock-ui/dist/
+*.zip
+*.tar.gz
+
+# ==============================================================================
+# 4. DATABASES, LOGS, DATA DIRECTORIES & RUNTIME ASSETS
+# ==============================================================================
+# SQLite database files and runtime sidecars
+*.db
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+*.db-journal
+*.sqbpro
+*.log
+
+# Data directories (ephemeral downloads, uncommitted ETL data, backups, test fixtures)
+data/
+!data/rankings.json
+imports/
+exports/
+Exports/
+api/static/headshots/
+
+# ==============================================================================
+# 5. IDE, EDITOR, SYSTEM & LOCAL WORKSPACE PROFILES
+# ==============================================================================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.vscode/*.local.json
+Thumbs.db
+Desktop.ini
+.DS_Store
+*_FileTree.*
+
+# Local workspace files (canonical <repo>.code-workspace and .antigravityrc are tracked)
+*.code-workspace.local
+.antigravityrc.local
+.antigravity/
+
+# ==============================================================================
+# 6. AI AGENTS, TOOLING HOOKS & DEPLOYED READ-ONLY HARNESSES
+# ==============================================================================
+# Agent state caches & sandboxes
+.playwright-mcp/
+.superpowers/
 .claude/state/
 .claude/worktrees/
-.playwright-mcp/
-.superpowers/sdd/**
+.claude/settings.local.json
+
+# Deployed read-only junctions from claude-kit (in consumer repos: bedrock, CollectIt, MLBTracker)
+# All agentic tools are authored canonically in claude-kit and linked as untracked junctions
+.agents/skills/
+.agents/agents/
+.claude/skills/
+.claude/agents/
+.claude/hooks/
+
+# ==============================================================================
+# 7. DOCUMENTATION ARTIFACTS, DESIGNS & EPHEMERAL SCRATCH
+# ==============================================================================
+# Ephemeral developer scratch and punchlists
 scratch/
 docs/project/punchlists/
 docs/reference/punchlists/
 
-# Local workspace files
-*.code-workspace.local
+# Deprecated/pre-eviction directory guards (prevent accidental re-commit via git add -A)
+docs/punchlists/
+docs/archive/
+docs/artifacts/
+docs/screenshots/
+docs/working files/
 
-# pytest-testmon delta caches
-.testmondata*
-
-# Local SQLite databases & sidecars
-*.db-wal
-*.db-shm
-*.db-journal
+# Large binaries / screenshots outside designated design roots
+debug_tab*.png
 ```
 
-- [ ] **Step 2: Verify git status is clean of ephemeral files**
-Run:
-      Run:
+*(Note: In `claude-kit`, section 6 does NOT ignore `.claude/` or `plugins/`, as `claude-kit` is the authoritative git repository for all agentic tools).*
 
+- [ ] **Step 2: Verify git status is clean of data, sidecar, and ephemeral files**
+Run:
 ```powershell
 "claude-kit", "bedrock", "CollectIt", "MLBTracker" | ForEach-Object {
     git -C "C:\Dev\$_" status --short
 }
 ```
-
-Expected output: Clean status for ephemeral patterns.
+Expected output: Clean working trees without untracked `data/`, WAL sidecars, or local workspace files.
 
 - [ ] **Step 3: Commit `.gitignore` across repositories**
-
 ```bash
-# In claude-kit:
-git -C C:\Dev\claude-kit add .gitignore && git -C C:\Dev\claude-kit commit -m "chore(git): standardize agentic .gitignore baseline"
-# In bedrock:
-git -C C:\Dev\bedrock add .gitignore && git -C C:\Dev\bedrock commit -m "chore(git): standardize agentic .gitignore baseline"
-# In CollectIt:
-git -C C:\Dev\CollectIt add .gitignore && git -C C:\Dev\CollectIt commit -m "chore(git): standardize agentic .gitignore baseline"
-# In MLBTracker:
-git -C C:\Dev\MLBTracker add .gitignore && git -C C:\Dev\MLBTracker commit -m "chore(git): standardize agentic .gitignore baseline"
+git -C C:\Dev\claude-kit add .gitignore && git -C C:\Dev\claude-kit commit -m "chore(git): update comprehensive master .gitignore baseline"
+git -C C:\Dev\bedrock add .gitignore && git -C C:\Dev\bedrock commit -m "chore(git): update comprehensive master .gitignore baseline"
+git -C C:\Dev\CollectIt add .gitignore && git -C C:\Dev\CollectIt commit -m "chore(git): update comprehensive master .gitignore baseline"
+git -C C:\Dev\MLBTracker add .gitignore && git -C C:\Dev\MLBTracker commit -m "chore(git): update comprehensive master .gitignore baseline"
 ```
 
 ---
 
-### Task 0.3: Deploy `Sync-AgenticTooling.ps1` & Windows Scheduled Task
+### Task 0.3: Centralize All Agentic Tooling in `claude-kit`, Authoring Runbook & Sync Engine
 
 **Agent Recommendation:**
-
-- Claude: `model: sonnet`, `effort: medium`
-- AGY: `model: pro`, `thinking: medium`
+- Claude: `model: sonnet`, `effort: high`
+- AGY: `model: pro`, `thinking: high`
 
 **Files:**
-
-- Create/Verify: `C:\Dev\claude-kit\scripts\Sync-AgenticTooling.ps1`
+- Create/Organize: `C:\Dev\claude-kit\plugins\`
+  - `bedrock-doctrine/skills/bump-bedrock-pin/`
+  - `bedrock-doctrine/skills/cut-release/`
+  - `bedrock-doctrine/agents/quality-gatekeeper.json`
+  - `dev-doctrine/skills/anti-ui-slop/`
+  - `dev-doctrine/skills/issue-triage/`
+  - `dev-doctrine/skills/react-best-practices/`
+  - `dev-doctrine/skills/sql-sentinel/`
+  - `dev-doctrine/skills/triage-plan/`
+  - `dev-doctrine/skills/implement-issue/`
+  - `dev-doctrine/skills/run-tests/`
+  - `dev-doctrine/skills/finalize-changes/`
+  - `collectit-doctrine/skills/audit-ebay-compliance/`
+  - `collectit-doctrine/agents/exporter-pipeline-specialist.json`
+  - `collectit-doctrine/agents/listing-studio-engineer.json`
+  - `collectit-doctrine/agents/route-security-engineer.json`
+  - `collectit-doctrine/agents/schema-domain-architect.json`
+  - `collectit-doctrine/hooks/post-edit-check.sh`
+  - `mlbtracker-doctrine/skills/check-grid/`
+  - `mlbtracker-doctrine/skills/grid-guru/`
+  - `mlbtracker-doctrine/hooks/compaction_brief.py`
+  - `mlbtracker-doctrine/hooks/session_context.py`
+  - `mlbtracker-doctrine/hooks/stop-reminder.sh`
+- Create: `C:\Dev\claude-kit\docs\guide\authoring-and-deploying-agentic-tooling.md`
+- Modify: `C:\Dev\claude-kit\scripts\Sync-AgenticTooling.ps1`
 - Register: Windows Scheduled Task `Bedrock-Sync-AgenticTooling`
 
 **Interfaces:**
+- Consumes: All skills, agents, and hooks across the ecosystem.
+- Produces: Single authoritative source in `claude-kit`; read-only NTFS Directory Junctions (`New-Item -ItemType Junction`) into consumer `.agents/skills/`, `.agents/agents/`, `.claude/skills/`, `.claude/agents/`, `.claude/hooks/`, and global user paths (`~/.gemini/skills`, `~/.claude/skills`).
 
-- Consumes: Canonical shared skills in `claude-kit/plugins/*/skills/`.
-- Produces: Read-only NTFS Directory Junctions (`New-Item -ItemType Junction`) into consumer `.agents/skills/` and global user discovery paths (`~/.gemini/skills`, `~/.claude/skills`).
+- [ ] **Step 1: Consolidate all domain skills, agents, and hooks into `claude-kit/plugins/`**
+Move and organize:
+- `cut-release` from `bedrock/.claude/skills/` -> `claude-kit/plugins/bedrock-doctrine/skills/cut-release/`.
+- `triage-plan`, `implement-issue`, `run-tests`, `finalize-changes` -> `claude-kit/plugins/dev-doctrine/skills/`.
+- `audit-ebay-compliance` and all CollectIt agents (`exporter-pipeline-specialist`, `listing-studio-engineer`, `route-security-engineer`, `schema-domain-architect`) and `post-edit-check.sh` -> `claude-kit/plugins/collectit-doctrine/`.
+- `check-grid`, `grid-guru`, `compaction_brief.py`, `session_context.py`, `stop-reminder.sh` -> `claude-kit/plugins/mlbtracker-doctrine/`.
 
-- [ ] **Step 1: Verify `Sync-AgenticTooling.ps1` logic**
-Ensure script creates NTFS Directory Junctions without elevation for:
-      Ensure script creates NTFS Directory Junctions without elevation for:
-- `anti-ui-slop`
-- `bump-bedrock-pin`
-- `issue-triage`
-- `react-best-practices`
-- `sql-sentinel`
-- Compiled multi-target agents (`quality-gatekeeper.json`).
+- [ ] **Step 2: Author `claude-kit/docs/guide/authoring-and-deploying-agentic-tooling.md`**
+Document the canonical developer process:
+1. All changes, additions, and edits must be committed directly in `claude-kit`.
+2. Directory structure for core vs domain plugins.
+3. How to author dual-target agent schemas (`targets.claude` and `targets.antigravity`).
+4. How to configure the repository distribution manifest in `Sync-AgenticTooling.ps1`.
+5. How consumer repositories consume tools as gitignored, read-only NTFS junctions.
 
-- [ ] **Step 2: Execute `Sync-AgenticTooling.ps1`**
+- [ ] **Step 3: Update `Sync-AgenticTooling.ps1` distribution engine**
+Implement logic to deploy:
+- To `bedrock`: `dev-doctrine` + `bedrock-doctrine`.
+- To `CollectIt`: `dev-doctrine` + `bedrock-doctrine` + `collectit-doctrine`.
+- To `MLBTracker`: `dev-doctrine` + `bedrock-doctrine` + `mlbtracker-doctrine`.
+- To `$HOME\.gemini\skills` & `$HOME\.claude\skills`: global shared doctrine.
+- Ensure all links are created via `New-Item -ItemType Junction`.
+
+- [ ] **Step 4: Execute `Sync-AgenticTooling.ps1`**
 Run:
-      Run:
-
 ```powershell
 pwsh -File "C:\Dev\claude-kit\scripts\Sync-AgenticTooling.ps1"
 ```
+Expected output: All junctions established cleanly across all target repos.
 
-Expected output: All junctions established successfully with status `PASS`.
-
-- [ ] **Step 3: Register Windows Scheduled Task**
+- [ ] **Step 5: Register Windows Scheduled Task**
 Run:
-      Run:
-
 ```powershell
 $action = New-ScheduledTaskAction -Execute "pwsh.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\Dev\claude-kit\scripts\Sync-AgenticTooling.ps1"
 $trigger1 = New-ScheduledTaskTrigger -AtLogon
 $trigger2 = New-ScheduledTaskTrigger -Daily -At 03:00AM
-Register-ScheduledTask -TaskName "Bedrock-Sync-AgenticTooling" -Action $action -Trigger @($trigger1, $trigger2) -Description "Synchronizes Bedrock shared agentic skills and junctions" -Force
+Register-ScheduledTask -TaskName "Bedrock-Sync-AgenticTooling" -Action $action -Trigger @($trigger1, $trigger2) -Description "Synchronizes Bedrock shared and domain agentic skills and junctions" -Force
 ```
-
 Expected output: Task registered with state `Ready`.
 
-- [ ] **Step 4: Commit in `claude-kit`**
-
+- [ ] **Step 6: Commit in `claude-kit`**
 ```bash
-git -C C:\Dev\claude-kit add scripts/Sync-AgenticTooling.ps1
-git -C C:\Dev\claude-kit commit -m "feat(tooling): deploy Sync-AgenticTooling engine and task registration"
+git -C C:\Dev\claude-kit add plugins/ docs/ scripts/Sync-AgenticTooling.ps1
+git -C C:\Dev\claude-kit commit -m "feat(doctrine): centralize all core and domain agentic tooling in claude-kit"
 ```
 
 ---
 
-### Task 0.4: Deploy Superpowers Path Alignment & Windows Scheduled Task
+### Task 0.4: Clean Up Inconsistent Symlinks, Deprecated Tools & Token Bloat
 
 **Agent Recommendation:**
+- Claude: `model: sonnet`, `effort: medium`
+- AGY: `model: pro`, `thinking: medium`
 
+**Files:**
+- Clean up: `C:\Dev\MLBTracker\.agents\skills\grid-refact` (permanently retire and delete)
+- Convert: Convert existing `SymbolicLink` directories in `CollectIt`, `MLBTracker`, `bedrock`, and `$HOME\.gemini\skills` to uniform `Junction` points
+- Create: `C:\Dev\claude-kit\scripts\Audit-AgenticTooling.ps1`
+
+**Interfaces:**
+- Consumes: Target directories across all repos and user profile.
+- Produces: Clean, uniform `LinkType: Junction` for all linked tools with zero dangling symlinks, zero redundant skills, and zero token waste during context discovery.
+
+- [ ] **Step 1: Retire and delete deprecated `grid-refact` in MLBTracker**
+Run:
+```powershell
+Remove-Item -Path "C:\Dev\MLBTracker\.agents\skills\grid-refact" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -Path "C:\Dev\MLBTracker\.claude\skills\grid-refact" -Recurse -Force -ErrorAction SilentlyContinue
+```
+
+- [ ] **Step 2: Convert existing `SymbolicLink` directories to pure NTFS Junctions**
+Run:
+```powershell
+"CollectIt", "MLBTracker", "bedrock" | ForEach-Object {
+    $repo = $_
+    Get-ChildItem -Path "C:\Dev\$repo\.agents\skills", "C:\Dev\$repo\.claude\skills" -ErrorAction SilentlyContinue | Where-Object {
+        $_.LinkType -eq 'SymbolicLink'
+    } | ForEach-Object {
+        $target = $_.Target
+        $path = $_.FullName
+        Remove-Item -Path $path -Force
+        New-Item -ItemType Junction -Path $path -Target $target | Out-Null
+        Write-Host "Converted $path to Junction -> $target" -ForegroundColor Green
+    }
+}
+
+# Convert global $HOME\.gemini\skills
+Get-ChildItem -Path "$HOME\.gemini\skills" -ErrorAction SilentlyContinue | Where-Object {
+    $_.LinkType -eq 'SymbolicLink'
+} | ForEach-Object {
+    $target = $_.Target
+    $path = $_.FullName
+    Remove-Item -Path $path -Force
+    New-Item -ItemType Junction -Path $path -Target $target | Out-Null
+    Write-Host "Converted $path to Junction -> $target" -ForegroundColor Green
+}
+```
+
+- [ ] **Step 3: Implement and execute `Audit-AgenticTooling.ps1`**
+Create `C:\Dev\claude-kit\scripts\Audit-AgenticTooling.ps1` verifying:
+1. Every linked skill and agent across repos has `LinkType: Junction`.
+2. Every junction target exists on disk (0 dangling pointers).
+3. Deprecated tools (`grid-refact`) do not exist.
+Run:
+```powershell
+pwsh -File "C:\Dev\claude-kit\scripts\Audit-AgenticTooling.ps1"
+```
+Expected output: 100% pass with 0 broken links, 0 symlinks, and 0 obsolete tools.
+
+- [ ] **Step 4: Commit in `claude-kit`**
+```bash
+git -C C:\Dev\claude-kit add scripts/Audit-AgenticTooling.ps1
+git -C C:\Dev\claude-kit commit -m "feat(tooling): implement Audit-AgenticTooling verification engine"
+```
+
+---
+
+### Task 0.5: Deploy Superpowers Path Alignment & Windows Scheduled Task
+
+**Agent Recommendation:**
 - Claude: `model: sonnet`, `effort: low`
 - AGY: `model: flash`, `thinking: low`
 
 **Files:**
-
 - Modify: `C:\Dev\TheLab\WorkstationTools\SuperpowersUpdates\update-superpowers-paths.ps1`
 - Register: Windows Scheduled Task `Bedrock-Align-SuperpowersPaths`
 
 **Interfaces:**
-
 - Produces: Automatic rewriting of installed superpower skills (`brainstorming`, `writing-plans`, `executing-plans`) to emit specs to `docs/specs` and plans to `docs/plans`.
 
 - [ ] **Step 1: Set canonical paths in `update-superpowers-paths.ps1`**
 Ensure default parameters in `update-superpowers-paths.ps1` specify:
-      Ensure default parameters in `update-superpowers-paths.ps1` specify:
-
 ```powershell
 [string]$CustomSpecPath = "docs/specs",
 [string]$CustomPlanPath = "docs/plans",
@@ -300,24 +464,18 @@ Ensure default parameters in `update-superpowers-paths.ps1` specify:
 
 - [ ] **Step 2: Execute `update-superpowers-paths.ps1`**
 Run:
-      Run:
-
 ```powershell
 pwsh -File "C:\Dev\TheLab\WorkstationTools\SuperpowersUpdates\update-superpowers-paths.ps1"
 ```
-
 Expected output: All superpower skills patched successfully.
 
 - [ ] **Step 3: Register Windows Scheduled Task**
 Run:
-      Run:
-
 ```powershell
 $action = New-ScheduledTaskAction -Execute "pwsh.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\Dev\TheLab\WorkstationTools\SuperpowersUpdates\update-superpowers-paths.ps1 -CustomSpecPath docs/specs -CustomPlanPath docs/plans"
 $trigger = New-ScheduledTaskTrigger -AtLogon
 Register-ScheduledTask -TaskName "Bedrock-Align-SuperpowersPaths" -Action $action -Trigger $trigger -Description "Aligns superpower skill output paths to canonical 6-folder model" -Force
 ```
-
 Expected output: Task registered with state `Ready`.
 
 ---
