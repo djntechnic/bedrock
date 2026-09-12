@@ -21,6 +21,8 @@ This architectural specification consolidates and reconciles four foundational i
 4. **Ecosystem Standards & Tooling Architecture (S001–S012)** (`docs/specs/2026-09-12-ecosystem-standards-and-tooling-architecture.md`)
 
 ### Core Architectural Decisions & Invariants
+- **Zero Business Logic Changes (MANDATORY)**: This entire initiative strictly encompasses tooling, standards enforcement, directory taxonomy, workflow automation, and testing architecture. There are **zero intended business logic modifications**. If any step attempts or requires modifying domain calculations, persistence logic, business rules, or database models, it is **out of scope and considered a defect**.
+- **Python Environment Realities**: `C:\Dev\CollectIt\.venv\Scripts\python.exe` is the only repository-scoped virtualenv in the ecosystem. `bedrock` and `MLBTracker` deliberately do not use local virtualenvs; they execute directly on the host Python 3.11 environment (`python` on PATH).
 - **Platform-First Delivery (`v0.10.0`)**: Bedrock centralizes all platform standards (`s001`–`s012`), 1:1 audit tools (`bedrock.tools.audit_s###`), declarative config (`bedrock.toml`), taxonomy remediation engine, and QA orchestrator (`run_qa.py`). Bedrock releases as `v0.10.0`, allowing `CollectIt` and `MLBTracker` to migrate in a single, coordinated PR without intermediate release thrashing.
 - **Canonical 3-Digit Standards Taxonomy with Lowercase Kebab-Case on Disk**:
   - `s001`–`s099`: Reserved strictly for Bedrock platform contracts.
@@ -30,7 +32,7 @@ This architectural specification consolidates and reconciles four foundational i
 - **1-to-1 Audit Script Parity**: Every standard has exactly one corresponding audit script (`bedrock.tools.audit_s001_duplicates.py`, `scripts/audits/audit_s101_ebay_compliance.py`). No standard is purely "review-enforced."
 - **Declarative Manifest Configuration (`bedrock.toml`)**: Tools source exemptions additively from `bedrock.toml`. Every tool section requires an explicit `exemptions = [...]` list.
 - **Shared Tooling Authority in `claude-kit`**: `claude-kit` is the single canonical source of truth for all shared skills, agents, and hooks. Shared assets are tracked only in `claude-kit` and deployed to consumer repositories as untracked NTFS directory junctions.
-- **Automated Workstation Synchronization**: Scheduled Windows tasks execute background maintenance to ensure directory junctions and superpowers paths stay continuously synchronized.
+- **Automated Workstation Synchronization & Token Hygiene**: Scheduled Windows tasks execute background maintenance to ensure directory junctions and superpowers paths stay continuously synchronized while actively purging stale symlinks, redundant agents, and dead hooks to prevent token bloat.
 
 ---
 
@@ -115,6 +117,7 @@ To ensure that local junctions and tool configurations never drift across reboot
    - **Trigger**: Daily at workstation startup / user logon and every 12 hours.
    - **Action**: Runs `pwsh -File C:\Dev\claude-kit\scripts\Sync-AgenticTooling.ps1`.
    - **Contract**: Rebuilds/verifies NTFS junctions from `claude-kit` into all consumer `.agents/skills/`, compiles dual-target agents, and verifies link health.
+   - **Pruning & Token Mitigation**: Explicitly scans and deletes stale/broken symlinks, orphaned directory junctions, deprecated skills (e.g. `grid-refact` in MLBTracker), and unused agent/hook files across all repositories and global directories (`~/.gemini/skills`, `~/.claude/skills`), eliminating agent context bloat and token waste.
 2. **`Bedrock-Align-SuperpowersPaths`**:
    - **Trigger**: Daily at user logon and on plugin update.
    - **Action**: Runs `pwsh -File C:\Dev\TheLab\WorkstationTools\SuperpowersUpdates\update-superpowers-paths.ps1 -CustomSpecPath "docs/specs" -CustomPlanPath "docs/plans"`.

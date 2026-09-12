@@ -11,8 +11,9 @@
 **Spec:** [`C:\Dev\bedrock\docs\specs\2026-09-12-consolidated-standards-tooling-and-testing-roadmap-design.md`](file:///C:/Dev/bedrock/docs/specs/2026-09-12-consolidated-standards-tooling-and-testing-roadmap-design.md)
 
 ## Global Constraints
+- **Zero Business Logic Changes (MANDATORY)**: This entire roadmap strictly addresses tooling, standardization, repository structure, workflows, and automated testing architecture. There are **zero intended business logic modifications**. If an implementation step attempts or requires altering domain models, business calculations, persistence methods, or database seed definitions, it is **out of scope and considered a defect**.
 - Target Repositories: `C:\Dev\claude-kit`, `C:\Dev\bedrock`, `C:\Dev\CollectIt`, `C:\Dev\MLBTracker`.
-- Python Interpreter: `.venv\Scripts\python.exe` on Windows 11 / PowerShell 7.
+- Python Interpreter Environments: `C:\Dev\CollectIt\.venv\Scripts\python.exe` is used exclusively for `CollectIt`. `bedrock` and `MLBTracker` deliberately do not use local virtual environments and execute directly via the host Python 3.11 environment (`python` on PATH).
 - Zero broken tests ship to master (§S005).
 - Standards naming on disk is strictly lowercase kebab-case (`docs/standards/s001-no-duplicate-ui-code.md` ... `s012-dual-pin-platform-governance.md`).
 - Standards citations in documentation and comments use 3-digit padded references: `§S001` or `[§S001](s001-no-duplicate-ui-code.md)`.
@@ -21,6 +22,7 @@
 - Strict consumer script partition: `scripts/audits/` (blocking quality gates) vs `scripts/maintenance/` (operational utilities).
 - Declarative manifests (`bedrock.toml`): Every audit tool section must declare `exemptions = [...]` (merged additively with platform baselines).
 - Shared tooling ownership: `claude-kit` is the sole canonical author of shared skills/doctrine. Deployed to consumers as untracked, read-only NTFS Directory Junctions.
+- Stale agent/hook/symlink pruning: Active pruning of broken junctions, orphaned skills, and dead hooks is enforced to prevent context pollution and token churn.
 - Lockstep dual-pin dependency governance: `requirements.txt` and `package.json` must reference the identical Bedrock release tag (`v0.10.0`).
 - Strict commit cadence: Atomic commit after every task; single coordinated PR per repo.
 
@@ -203,36 +205,52 @@ git -C C:\Dev\MLBTracker add .gitignore && git -C C:\Dev\MLBTracker commit -m "c
 - Consumes: Canonical shared skills in `claude-kit/plugins/*/skills/`.
 - Produces: Read-only NTFS Directory Junctions (`New-Item -ItemType Junction`) into consumer `.agents/skills/` and global user discovery paths (`~/.gemini/skills`, `~/.claude/skills`).
 
-- [ ] **Step 1: Verify `Sync-AgenticTooling.ps1` logic**
-Ensure script creates NTFS Directory Junctions without elevation for:
-- `anti-ui-slop`
-- `bump-bedrock-pin`
-- `issue-triage`
-- `react-best-practices`
-- `sql-sentinel`
-- Compiled multi-target agents (`quality-gatekeeper.json`).
+- [ ] **Step 1: Verify and enhance `Sync-AgenticTooling.ps1` logic**
+Ensure script:
+1. Prunes stale/broken symlinks, orphaned directory junctions, and obsolete skill folders (e.g. removes `C:\Dev\MLBTracker\.agents\skills\grid-refact` and `.claude\skills\grid-refact`) to prevent context bloat and token consumption.
+2. Creates non-elevated NTFS Directory Junctions (`New-Item -ItemType Junction`) for canonical shared skills:
+   - `anti-ui-slop`
+   - `bump-bedrock-pin`
+   - `issue-triage`
+   - `react-best-practices`
+   - `sql-sentinel`
+3. Compiles multi-target agent schemas (`quality-gatekeeper.json`).
 
-- [ ] **Step 2: Execute `Sync-AgenticTooling.ps1`**
+- [ ] **Step 2: Prune obsolete skills and stale links across repositories**
+Run:
+```powershell
+# Remove obsolete grid-refact from MLBTracker (redundant with grid-guru and S002)
+Remove-Item -Path "C:\Dev\MLBTracker\.agents\skills\grid-refact" -Recurse -Force -ErrorAction SilentlyContinue
+Remove-Item -Path "C:\Dev\MLBTracker\.claude\skills\grid-refact" -Recurse -Force -ErrorAction SilentlyContinue
+
+# Sweep and remove broken junctions or dangling symlinks in user discovery directories
+Get-ChildItem -Path "$HOME\.gemini\skills", "$HOME\.claude\skills" -ErrorAction SilentlyContinue | Where-Object {
+    $_.LinkType -and (-not (Test-Path $_.Target))
+} | Remove-Item -Force
+```
+
+- [ ] **Step 3: Execute `Sync-AgenticTooling.ps1`**
 Run:
 ```powershell
 pwsh -File "C:\Dev\claude-kit\scripts\Sync-AgenticTooling.ps1"
 ```
-Expected output: All junctions established successfully with status `PASS`.
+Expected output: Stale links pruned, all shared junctions established cleanly with status `PASS`.
 
-- [ ] **Step 3: Register Windows Scheduled Task**
+- [ ] **Step 4: Register Windows Scheduled Task**
 Run:
 ```powershell
 $action = New-ScheduledTaskAction -Execute "pwsh.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\Dev\claude-kit\scripts\Sync-AgenticTooling.ps1"
 $trigger1 = New-ScheduledTaskTrigger -AtLogon
 $trigger2 = New-ScheduledTaskTrigger -Daily -At 03:00AM
-Register-ScheduledTask -TaskName "Bedrock-Sync-AgenticTooling" -Action $action -Trigger @($trigger1, $trigger2) -Description "Synchronizes Bedrock shared agentic skills and junctions" -Force
+Register-ScheduledTask -TaskName "Bedrock-Sync-AgenticTooling" -Action $action -Trigger @($trigger1, $trigger2) -Description "Synchronizes Bedrock shared agentic skills and junctions while pruning stale tools" -Force
 ```
 Expected output: Task registered with state `Ready`.
 
-- [ ] **Step 4: Commit in `claude-kit`**
+- [ ] **Step 5: Commit in `claude-kit` and `MLBTracker`**
 ```bash
 git -C C:\Dev\claude-kit add scripts/Sync-AgenticTooling.ps1
-git -C C:\Dev\claude-kit commit -m "feat(tooling): deploy Sync-AgenticTooling engine and task registration"
+git -C C:\Dev\claude-kit commit -m "feat(tooling): deploy Sync-AgenticTooling with stale link pruning and task registration"
+git -C C:\Dev\MLBTracker add -A && git -C C:\Dev\MLBTracker commit -m "chore(agents): prune obsolete grid-refact skill to eliminate token churn" || true
 ```
 
 ---
