@@ -76,7 +76,7 @@ export default function AppSidebar({
 }: AppSidebarProps = {}) {
   const location = useLocation();
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
-  const { system } = useAppSettings();
+  const { system, grid } = useAppSettings();
   const { hasModule } = useModules();
   const { can } = useSecurity();
   const { navItems } = useNavSettings();
@@ -315,7 +315,7 @@ export default function AppSidebar({
               );
 
               return (
-                <Tooltip key={item.to} delayDuration={0}>
+                <Tooltip key={item.to} delayDuration={grid.tooltipDelayDuration}>
                   <TooltipTrigger asChild>{iconLink}</TooltipTrigger>
                   <TooltipContent side="right" className="text-xs">
                     {disabled ? (
@@ -362,7 +362,7 @@ export default function AppSidebar({
                 {/* Parent row */}
                 <div className="flex items-center gap-1">
                   {disabled ? (
-                    <Tooltip delayDuration={0}>
+                    <Tooltip delayDuration={grid.tooltipDelayDuration}>
                       <TooltipTrigger asChild>
                         <span
                           aria-disabled="true"
@@ -482,7 +482,7 @@ export default function AppSidebar({
             <div className="flex flex-col items-center gap-1">
               {user ? (
                 <>
-                  <Tooltip delayDuration={0}>
+                  <Tooltip delayDuration={grid.tooltipDelayDuration}>
                     <TooltipTrigger asChild>
                       <ProfileTarget
                         to={profilePath}
@@ -500,7 +500,7 @@ export default function AppSidebar({
                       Profile: {user.display_name || user.email}
                     </TooltipContent>
                   </Tooltip>
-                  <Tooltip delayDuration={0}>
+                  <Tooltip delayDuration={grid.tooltipDelayDuration}>
                     <TooltipTrigger asChild>
                       <button
                         type="button"
@@ -518,7 +518,7 @@ export default function AppSidebar({
                   </Tooltip>
                 </>
               ) : (
-                <Tooltip delayDuration={0}>
+                <Tooltip delayDuration={grid.tooltipDelayDuration}>
                   <TooltipTrigger asChild>
                     <Link
                       to="/login"

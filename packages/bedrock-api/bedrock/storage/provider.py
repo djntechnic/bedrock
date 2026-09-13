@@ -45,7 +45,7 @@ from bedrock.core.config import config
 from bedrock.core.providers import ProviderRegistry
 
 #: `app_config_settings` key naming the active backend.
-STORAGE_PROVIDER_KEY = "storage_provider"
+STORAGE_PROVIDER_KEY: str = "storage_provider"
 
 #: Name of the backend that needs no configuration and is therefore the
 #: fallback. Callers compare against this to tell "stored locally" from

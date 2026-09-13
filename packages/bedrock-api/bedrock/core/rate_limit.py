@@ -5,7 +5,7 @@ Desc:    Phase 5.7 — SlowAPI-based rate limiting. Provides a shared
          limiter singleton and a small helper to peel the caller's IP
          out of the request (respecting X-Forwarded-For behind proxies).
 
-         Limits are §S004-driven: read from db.get_config("rate_limit_*")
+         Limits are §S004-driven: read from db.get_config("rate_limit_*", default)
          with sensible defaults; admins can adjust without a deploy.
 
          Wire the limiter in api/main.py:

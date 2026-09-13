@@ -28,11 +28,55 @@ presentational_tables = [
 exemptions = []
 
 [tool.bedrock.audit.s003]
-exemptions = []
+exemptions = [
+  # Vendored dependencies are not source this repo owns.
+  "node_modules/**",
+  # These CLI tools' stdout is the functional contract (a rendered report
+  # consumed by CI logs, or machine-readable JSON) — not an incidental debug
+  # print. Same rationale as the scripts/** carve-out in the S003 doc.
+  "packages/bedrock-api/bedrock/tools/audit_*.py",
+  "packages/bedrock-api/bedrock/tools/remediate_taxonomy_and_casing.py",
+  "packages/bedrock-api/bedrock/tools/run_all.py",
+  "packages/bedrock-api/bedrock/tools/sync_standards.py",
+  # Dependency-free by design (see module docstring) so it can probe
+  # readiness before the app itself can import loguru.
+  "packages/bedrock-api/bedrock/tools/healthcheck.py",
+  "scripts/**",
+]
 
 [tool.bedrock.audit.s004]
 config_module = "bedrock.core.config"
-exemptions = []
+exemptions = [
+  # config.py IS the typed config surface the audit message points callers
+  # at — it cannot route its own env reads through itself. Same for the
+  # handful of bootstrap-time modules that must resolve before the database
+  # (and therefore db.get_config) exists: paths.py locates the .env before
+  # any .env is read, logging.py picks a log level before app_factory boots,
+  # migrations.py/db_health.py run ahead of/around schema setup, and
+  # app_factory's CORS read is explicitly documented as pre-DB-init.
+  "packages/bedrock-api/bedrock/core/config.py",
+  "packages/bedrock-api/bedrock/core/paths.py",
+  "packages/bedrock-api/bedrock/core/logging.py",
+  "packages/bedrock-api/bedrock/core/migrations.py",
+  "packages/bedrock-api/bedrock/core/db_health.py",
+  "packages/bedrock-api/bedrock/core/app_factory.py",
+  # Credential precedence helpers: env var wins (production canonical
+  # source), falling back to db.get_config, then a dev-only default. The
+  # secret must not live only in app_config_settings, which is admin-UI
+  # rendered and returned by the config export endpoint.
+  "packages/bedrock-api/bedrock/services/user_service.py",
+  "packages/bedrock-api/bedrock/services/oauth_service.py",
+  # Dependency-free by design (see module docstring) so it can probe
+  # readiness before the app itself can import the config/db stack.
+  "packages/bedrock-api/bedrock/tools/healthcheck.py",
+  # The audit source itself: its own regex patterns and diagnostic strings
+  # contain the literal text this audit scans for.
+  "packages/bedrock-api/bedrock/tools/audit_s004_config.py",
+  # Test fixtures intentionally write raw os.environ/get_config/secret-shaped
+  # literals as sample input and assertion text; s003 carries the same
+  # test-file carve-out structurally.
+  "packages/bedrock-api/tests/**",
+]
 
 [tool.bedrock.audit.s005]
 exemptions = []
