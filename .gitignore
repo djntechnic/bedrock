@@ -86,8 +86,10 @@ Desktop.ini
 # All agentic tools are authored canonically in claude-kit and linked as untracked junctions
 .agents/skills/
 .agents/agents/
+.agents/rules/
 .claude/skills/
 .claude/agents/
+.claude/rules/
 .claude/hooks/
 
 # ==============================================================================
