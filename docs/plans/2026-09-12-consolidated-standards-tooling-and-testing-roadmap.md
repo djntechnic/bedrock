@@ -90,13 +90,13 @@
 - Consumes: PowerShell environment variables and stream redirection flags.
 - Produces: Sub-10ms, silent execution for non-interactive / agent subprocesses while preserving interactive prompt decorations for human sessions.
 
-- [ ] **Step 1: Backup current PowerShell profile**
+- [x] **Step 1: Backup current PowerShell profile**
 
 ```powershell
 Copy-Item -Path $PROFILE -Destination "$PROFILE.bak" -Force
 ```
 
-- [ ] **Step 2: Add non-interactive fast bailout to top of `$PROFILE`**
+- [x] **Step 2: Add non-interactive fast bailout to top of `$PROFILE`**
 Insert at line 1 of `Microsoft.PowerShell_profile.ps1`:
 
 ```powershell
@@ -124,7 +124,7 @@ if ($isNonInteractive) {
 }
 ```
 
-- [ ] **Step 3: Verify non-interactive execution produces zero token overhead**
+- [x] **Step 3: Verify non-interactive execution produces zero token overhead**
 Run:
 
 ```powershell
@@ -333,6 +333,7 @@ exit 0
 ```
 
 Register the hook in `.claude/settings.json`:
+
 ```json
 {
   "hooks": {
@@ -1021,16 +1022,15 @@ git -C C:\Dev\claude-kit commit -m "feat(tooling): implement Audit-AgenticToolin
 
 - Produces: Automatic rewriting of installed superpower skills (`brainstorming`, `writing-plans`, `executing-plans`) to emit specs to `docs/specs` and plans to `docs/plans`.
 
-- [ ] **Step 1: Set canonical paths in `update-superpowers-paths.ps1`**
+- [x] **Step 1: Set canonical paths in `update-superpowers-paths.ps1`**
 Ensure default parameters in `update-superpowers-paths.ps1` specify:
-      Ensure default parameters in `update-superpowers-paths.ps1` specify:
 
 ```powershell
 [string]$CustomSpecPath = "docs/specs",
 [string]$CustomPlanPath = "docs/plans",
 ```
 
-- [ ] **Step 2: Execute `update-superpowers-paths.ps1`**
+- [x] **Step 2: Execute `update-superpowers-paths.ps1`**
 Run:
       Run:
 
@@ -1040,7 +1040,7 @@ pwsh -File "C:\Dev\TheLab\WorkstationTools\SuperpowersUpdates\update-superpowers
 
 Expected output: All superpower skills patched successfully.
 
-- [ ] **Step 3: Register Windows Scheduled Task**
+- [x] **Step 3: Register Windows Scheduled Task**
 Run:
 
 ```powershell

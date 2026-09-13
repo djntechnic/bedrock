@@ -10,6 +10,10 @@
 
 **Spec:** [`C:\Dev\bedrock\docs\specs\2026-09-12-cross-repo-standards-tooling-and-naming-architecture.md`](file:///C:/Dev/bedrock/docs/specs/2026-09-12-cross-repo-standards-tooling-and-naming-architecture.md)
 
+- [x] **Task 0.2 — Master `.gitignore` Baseline, Cross-Repo Permissions & PreToolUse Hook Guard** (Phase 0, tracked in the companion design spec): Canonical 7-section `.gitignore` deployed across `claude-kit`, `bedrock`, `CollectIt`, `MLBTracker` with repo-specific exemptions preserved; `.antigravityrc.local` and `.claude/settings.local.json` sandbox permissions deployed in all 4 repos; `claude-kit/hooks/pre-tool-guard.ps1` authored, mirrored, and registered as a blocking `PreToolUse` hook in all 4 repos' `.claude/settings.json`; `git status --porcelain` verified clean/expected across all 4 repos.
+
+- [x] **Task 0.3 — Centralize Agentic Tooling Architecture, Domain Doctrine, Declarative Manifests & Multi-Repo Junction Engine** (Phase 0, tracked in the companion design spec): Flattened `claude-kit` into `rules/` (5), `skills/` (12, incl. the 51-file `react-best-practices` subtree), `hooks/` (5), and `agents/` (9 canonical dual-target JSON schemas compiled to `.claude/agents/*.md` + `.agents/agents/*.md`); deployed `agentic.toml` manifests to `bedrock`, `CollectIt`, `MLBTracker`; implemented and ran `C:\Dev\claude-kit\scripts\Sync-AgenticTooling.ps1 -All` (junction/hardlink mount with stale-link replacement, verified idempotent on re-run); authored `claude-kit/docs/guide/authoring-and-deploying-agentic-tooling.md`; registered Windows Scheduled Task `Bedrock-Sync-AgenticTooling` (daily 03:00 — the at-logon trigger needs admin elevation unavailable in this session and remains outstanding); added `sync-agentic-tooling` / `Invoke-AgenticTool` `$PROFILE` aliases.
+
 ## Global Constraints
 
 - Python modules and maintenance scripts strictly use `snake_case.py` (`^[a-z0-9_]+\.py$`).
