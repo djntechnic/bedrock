@@ -1267,17 +1267,17 @@ git -C C:\Dev\bedrock commit -m "feat(tools): implement declarative bedrock.toml
 - Consumes: `load_bedrock_config`, `AuditReporter`.
 - Produces: Standalone CLI tools returning exit codes `0`, `1`, or `2`.
 
-- [ ] **Step 1: Write unit tests verifying CLI exit codes for `audit_s001`–`audit_s004`**
-- [ ] **Step 2: Implement `audit_s001_duplicates.py`**
-- [ ] **Step 3: Implement `audit_s002_grids.py`** (purge hardcoded app tables, source presentational tables from config)
-- [ ] **Step 4: Implement `audit_s003_logging.py`** (ban bare `console.*` and `print`)
-- [ ] **Step 5: Implement `audit_s004_config.py`** (AppConfigKey enum matching)
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 1: Write unit tests verifying CLI exit codes for `audit_s001`–`audit_s004`**
+- [x] **Step 2: Implement `audit_s001_duplicates.py`**
+- [x] **Step 3: Implement `audit_s002_grids.py`** (purge hardcoded app tables, source presentational tables from config)
+- [x] **Step 4: Implement `audit_s003_logging.py`** (ban bare `console.*` and `print`)
+- [x] **Step 5: Implement `audit_s004_config.py`** (AppConfigKey enum matching)
+- [x] **Step 6: Run tests to verify they pass**
 Run: `pytest packages/bedrock-api/tests/test_audit_s001_to_s004.py`
 Expected output: PASS.
       Run: `pytest packages/bedrock-api/tests/test_audit_s001_to_s004.py`
       Expected output: PASS.
-- [ ] **Step 7: Commit in Bedrock**
+- [x] **Step 7: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/audit_s001_duplicates.py packages/bedrock-api/bedrock/tools/audit_s002_grids.py packages/bedrock-api/bedrock/tools/audit_s003_logging.py packages/bedrock-api/bedrock/tools/audit_s004_config.py packages/bedrock-api/tests/test_audit_s001_to_s004.py
