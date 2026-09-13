@@ -102,8 +102,15 @@ Consumer repositories (`CollectIt`, `MLBTracker`) enforce strict subdirectory pa
 
 ---
 
+## 3. Shared Tooling Ownership, Junctions, & Automated Windows Tasks
 ## 3. Shared & Domain Tooling Canonical Ownership in `claude-kit`
 
+### 3.1 Ownership & Immutability Contract
+- **Canonical Owner**: `C:\Dev\claude-kit` is the sole authoring authority for all shared skills, doctrine plugins, canonical agent definitions, and global hooks.
+- **Git Tracking**: Shared assets are committed to git **only** in `claude-kit`.
+- **Consumer Deployment**: In consumer repositories (`bedrock`, `CollectIt`, `MLBTracker`), shared assets are deployed as read-only NTFS Directory Junctions (`New-Item -ItemType Junction`).
+- **Git Status in Consumers**: Directory junctions to external shared skills are excluded or treated as read-only links; no edits may be initiated from consumer repositories.
+- **Domain Tools**: Domain-specific skills (e.g. `audit-ebay-compliance` in CollectIt, `check-grid` in MLBTracker) and domain agents remain locally authored and tracked in their respective repositories.
 ### 3.1 Total Tooling Authority & Immutability Contract
 - **Universal Canonical Owner**: `C:\Dev\claude-kit` is the **sole authoring authority for ALL agents, skills, rules, and hooks** across the entire ecosystem — including both cross-cutting core doctrine and application-specific domain doctrine (e.g. CollectIt's `audit-ebay-compliance` and listing studio agents; MLBTracker's `check-grid` and `grid-guru`).
 - **Git Tracking Exclusivity**: All skills, agents, rules, and hooks are committed to git **exclusively** in `claude-kit`. Consumer repositories (`bedrock`, `CollectIt`, `MLBTracker`) do **not** track `.agents/skills/`, `.agents/agents/`, `.claude/skills/`, `.claude/agents/`, or `.claude/hooks/` in git; these paths are explicitly gitignored.
@@ -121,6 +128,8 @@ To ensure that local junctions and tool configurations never drift across reboot
 1. **`Bedrock-Sync-AgenticTooling`**:
    - **Trigger**: Daily at workstation startup / user logon and every 12 hours.
    - **Action**: Runs `pwsh -File C:\Dev\claude-kit\scripts\Sync-AgenticTooling.ps1`.
+   - **Contract**: Rebuilds/verifies NTFS junctions from `claude-kit` into all consumer `.agents/skills/`, compiles dual-target agents, and verifies link health.
+   - **Pruning & Token Mitigation**: Explicitly scans and deletes stale/broken symlinks, orphaned directory junctions, deprecated skills (e.g. `grid-refact` in MLBTracker), and unused agent/hook files across all repositories and global directories (`~/.gemini/skills`, `~/.claude/skills`), eliminating agent context bloat and token waste.
    - **Contract**: Deploys/rebuilds NTFS Directory Junctions from `claude-kit` into all consumer repos and global discovery paths (`~/.gemini/skills`, `~/.claude/skills`), compiles dual-target agents, and verifies link health.
    - **Pruning & Token Mitigation**: Explicitly scans and deletes stale/broken symlinks, orphaned directory junctions, deprecated skills (e.g. `grid-refact` in MLBTracker), and unused agent/hook files across all repositories and global directories, eliminating agent context bloat and token waste.
 2. **`Bedrock-Align-SuperpowersPaths`**:

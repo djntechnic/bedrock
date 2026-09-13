@@ -34,7 +34,7 @@
 
 - **Phase 0: Workstation & Tooling Foundation (Zero-Tag)**
   - Task 0.1: Headless PowerShell `$PROFILE` Zero-Token Bailout
-  - Task 0.2: Comprehensive Master `.gitignore` Baseline Standardization & Data Directory Guard
+  - Task 0.2: Standardize `.gitignore` Baseline Across Repositories
   - Task 0.3: Centralize All Agentic Tooling in `claude-kit`, Authoring Runbook & Sync Engine
   - Task 0.4: Clean Up Inconsistent Symlinks, Deprecated Tools & Token Bloat
   - Task 0.5: Deploy Superpowers Path Alignment & Windows Scheduled Task
@@ -98,7 +98,6 @@ Copy-Item -Path $PROFILE -Destination "$PROFILE.bak" -Force
 
 - [ ] **Step 2: Add non-interactive fast bailout to top of `$PROFILE`**
 Insert at line 1 of `Microsoft.PowerShell_profile.ps1`:
-      Insert at line 1 of `Microsoft.PowerShell_profile.ps1`:
 
 ```powershell
 # 1. Fast-Path Headless / Agent Subshell Bailout
@@ -127,7 +126,6 @@ if ($isNonInteractive) {
 
 - [ ] **Step 3: Verify non-interactive execution produces zero token overhead**
 Run:
-      Run:
 
 ```powershell
 pwsh -Command "Write-Output 'CLEAN_PROFILE'"
@@ -137,13 +135,15 @@ Expected output: Exactly `CLEAN_PROFILE` with zero terminal icons, PSReadLine me
 
 ---
 
-### Task 0.2: Comprehensive Master `.gitignore` Baseline Standardization & Data Directory Guard
+### Task 0.2: Standardize `.gitignore` Baseline Across Repositories
 
 **Agent Recommendation:**
+
 - Claude: `model: haiku`, `effort: low`
 - AGY: `model: flash`, `thinking: low`
 
 **Files:**
+
 - Modify: `C:\Dev\claude-kit\.gitignore`
 - Modify: `C:\Dev\bedrock\.gitignore`
 - Modify: `C:\Dev\CollectIt\.gitignore`
@@ -157,6 +157,7 @@ Deploy the following canonical master `.gitignore` template across `claude-kit`,
 
 ```gitignore
 # ==============================================================================
+# AI AGENTS, WORKSPACES & LOCAL OVERRIDES
 # 1. PYTHON, TESTING, COVERAGE & CACHE
 # ==============================================================================
 __pycache__/
@@ -227,8 +228,11 @@ Desktop.ini
 # Local workspace files (canonical <repo>.code-workspace and .antigravityrc are tracked)
 *.code-workspace.local
 .antigravityrc.local
+.claude/settings.local.json
+*.local.json
 .antigravity/
 
+# Agent runtime caches, state & worktrees
 # ==============================================================================
 # 6. AI AGENTS, TOOLING HOOKS & DEPLOYED READ-ONLY HARNESSES
 # ==============================================================================
@@ -237,6 +241,8 @@ Desktop.ini
 .superpowers/
 .claude/state/
 .claude/worktrees/
+.playwright-mcp/
+.superpowers/sdd/**
 .claude/settings.local.json
 
 # Deployed read-only junctions from claude-kit (in consumer repos: bedrock, CollectIt, MLBTracker)
@@ -255,6 +261,8 @@ scratch/
 docs/project/punchlists/
 docs/reference/punchlists/
 
+# Local workspace files
+*.code-workspace.local
 # Deprecated/pre-eviction directory guards (prevent accidental re-commit via git add -A)
 docs/punchlists/
 docs/archive/
@@ -262,14 +270,91 @@ docs/artifacts/
 docs/screenshots/
 docs/working files/
 
+# pytest-testmon delta caches
+.testmondata*
+
+# Local SQLite databases & sidecars
+*.db-wal
+*.db-shm
+*.db-journal
 # Large binaries / screenshots outside designated design roots
 debug_tab*.png
 ```
 
-*(Note: In `claude-kit`, section 6 does NOT ignore `.claude/` or `plugins/`, as `claude-kit` is the authoritative git repository for all agentic tools).*
+- [ ] **Step 2: Deploy cross-repository workspace permissions across all 4 targets**
+Create or update local workspace override configurations (`.antigravityrc.local` and `.claude/settings.local.json`) across `bedrock`, `CollectIt`, `MLBTracker`, and `claude-kit` with explicit relative paths:
 
-- [ ] **Step 2: Verify git status is clean of data, sidecar, and ephemeral files**
-Run:
+```json
+{
+  "permissions": {
+    "additionalDirectories": [
+      "../bedrock",
+      "../claude-kit",
+      "../CollectIt",
+      "../MLBTracker"
+    ],
+    "allow": [
+      "Read(//c/Dev/**)",
+      "Edit(//c/Dev/**)"
+    ]
+  }
+}
+```
+
+- [ ] **Step 3: Author and deploy PreToolUse file naming & path guard hook**
+Author `C:\Dev\claude-kit\hooks\pre-tool-guard.ps1` and register the hook in `.claude/settings.json` across all repositories:
+
+```powershell
+# C:\Dev\claude-kit\hooks\pre-tool-guard.ps1
+$inputJson = [Console]::In.ReadToEnd()
+if (-not $inputJson) { exit 0 }
+$data = $inputJson | ConvertFrom-Json
+if (-not $data.tool_input) { exit 0 }
+
+$path = if ($data.tool_input.file_path) { $data.tool_input.file_path } else { $data.tool_input.path }
+if (-not $path) { exit 0 }
+$norm = $path.Replace('\', '/')
+
+# Block deprecated directories and unapproved punchlist locations across relative and absolute paths
+if ($norm -match '(^|/)(Templates|Exports)/|(^|/)docs/(project/)?punchlists/') {
+    [Console]::Error.WriteLine("[FATAL GUARD] Access Denied: Writes to '$norm' are forbidden. Use canonical lowercase directories.")
+    exit 2
+}
+
+# Enforce kebab-case for markdown docs under docs/
+if ($norm -match '(^|/)docs/.*\.md$') {
+    $filename = Split-Path -Leaf $norm
+    if ($filename -notin @('README.md', 'CLAUDE.md', 'GEMINI.md') -and $filename -notmatch '^[a-z0-9-]+(\.[a-z0-9-]+)*\.md$') {
+        [Console]::Error.WriteLine("[FATAL GUARD] Access Denied: '$filename' must be lowercase kebab-case.")
+        exit 2
+    }
+}
+exit 0
+```
+
+Register the hook in `.claude/settings.json`:
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoProfile -File \"$(git rev-parse --show-toplevel)/.claude/hooks/pre-tool-guard.ps1\""
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+- [ ] **Step 4: Verify git status is clean of ephemeral files**
+*(Note: In `claude-kit`, section 6 does NOT ignore `.claude/`, `rules/`, `skills/`, `agents/`, or `hooks/`, as `claude-kit` is the authoritative git repository for all agentic tools).*
+ Run:
+
 ```powershell
 "claude-kit", "bedrock", "CollectIt", "MLBTracker" | ForEach-Object {
     git -C "C:\Dev\$_" status --short
@@ -277,8 +362,18 @@ Run:
 ```
 Expected output: Clean working trees without untracked `data/`, WAL sidecars, or local workspace files.
 
-- [ ] **Step 3: Commit `.gitignore` across repositories**
+
+- [ ] **Step 5: Commit `.gitignore` across repositories**
+
 ```bash
+# In claude-kit:
+git -C C:\Dev\claude-kit add .gitignore && git -C C:\Dev\claude-kit commit -m "chore(git): standardize agentic .gitignore baseline"
+# In bedrock:
+git -C C:\Dev\bedrock add .gitignore && git -C C:\Dev\bedrock commit -m "chore(git): standardize agentic .gitignore baseline"
+# In CollectIt:
+git -C C:\Dev\CollectIt add .gitignore && git -C C:\Dev\CollectIt commit -m "chore(git): standardize agentic .gitignore baseline"
+# In MLBTracker:
+git -C C:\Dev\MLBTracker add .gitignore && git -C C:\Dev\MLBTracker commit -m "chore(git): standardize agentic .gitignore baseline"
 git -C C:\Dev\claude-kit add .gitignore && git -C C:\Dev\claude-kit commit -m "chore(git): update comprehensive master .gitignore baseline"
 git -C C:\Dev\bedrock add .gitignore && git -C C:\Dev\bedrock commit -m "chore(git): update comprehensive master .gitignore baseline"
 git -C C:\Dev\CollectIt add .gitignore && git -C C:\Dev\CollectIt commit -m "chore(git): update comprehensive master .gitignore baseline"
@@ -287,88 +382,530 @@ git -C C:\Dev\MLBTracker add .gitignore && git -C C:\Dev\MLBTracker commit -m "c
 
 ---
 
-### Task 0.3: Centralize All Agentic Tooling in `claude-kit`, Authoring Runbook & Sync Engine
+### Task 0.3: Centralize Agentic Governance Engine, Declarative Manifests & Sync Engine
 
 **Agent Recommendation:**
+
 - Claude: `model: sonnet`, `effort: high`
 - AGY: `model: pro`, `thinking: high`
 
 **Files:**
-- Create/Organize: `C:\Dev\claude-kit\plugins\`
-  - `bedrock-doctrine/skills/bump-bedrock-pin/`
-  - `bedrock-doctrine/skills/cut-release/`
-  - `bedrock-doctrine/agents/quality-gatekeeper.json`
-  - `dev-doctrine/skills/anti-ui-slop/`
-  - `dev-doctrine/skills/issue-triage/`
-  - `dev-doctrine/skills/react-best-practices/`
-  - `dev-doctrine/skills/sql-sentinel/`
-  - `dev-doctrine/skills/triage-plan/`
-  - `dev-doctrine/skills/implement-issue/`
-  - `dev-doctrine/skills/run-tests/`
-  - `dev-doctrine/skills/finalize-changes/`
-  - `collectit-doctrine/skills/audit-ebay-compliance/`
-  - `collectit-doctrine/agents/exporter-pipeline-specialist.json`
-  - `collectit-doctrine/agents/listing-studio-engineer.json`
-  - `collectit-doctrine/agents/route-security-engineer.json`
-  - `collectit-doctrine/agents/schema-domain-architect.json`
-  - `collectit-doctrine/hooks/post-edit-check.sh`
-  - `mlbtracker-doctrine/skills/check-grid/`
-  - `mlbtracker-doctrine/skills/grid-guru/`
-  - `mlbtracker-doctrine/hooks/compaction_brief.py`
-  - `mlbtracker-doctrine/hooks/session_context.py`
-  - `mlbtracker-doctrine/hooks/stop-reminder.sh`
-- Create: `C:\Dev\claude-kit\docs\guide\authoring-and-deploying-agentic-tooling.md`
-- Modify: `C:\Dev\claude-kit\scripts\Sync-AgenticTooling.ps1`
-- Register: Windows Scheduled Task `Bedrock-Sync-AgenticTooling`
+
+- Author / Restructure in `C:\Dev\claude-kit\`:
+- `rules/s01-ui-primitives.md`
+- `rules/s03-logging-standards.md`
+- `rules/s05-zero-broken-tests.md`
+- `rules/ebay-sanitizer.md`
+- `rules/stat-invariants.md`
+- `skills/anti-ui-slop/SKILL.md`
+- `skills/audit-ebay-compliance/SKILL.md`
+- `skills/bump-bedrock-pin/SKILL.md`
+- `skills/check-grid/SKILL.md`
+- `skills/compact-test-runner/SKILL.md`
+- `skills/cut-release/SKILL.md`
+- `skills/grid-guru/SKILL.md`
+- `skills/implement-issue/SKILL.md`
+- `skills/react-best-practices/SKILL.md`
+- `skills/run-tests/SKILL.md`
+- `skills/sql-sentinel/SKILL.md`
+- `skills/triage-plan/SKILL.md`
+- `agents/backend-api-engineer.json`
+- `agents/exporter-pipeline-specialist.json`
+- `agents/frontend-ui-engineer.json`
+- `agents/grid-sentinel.json`
+- `agents/listing-studio-engineer.json`
+- `agents/quality-gatekeeper.json`
+- `agents/route-security-engineer.json`
+- `agents/schema-domain-architect.json`
+- `agents/ui-sentinel.json`
+- `hooks/PreToolUse/pre-tool-guard.ps1`
+- `hooks/PreToolUse/file_creation_guard.py`
+- `hooks/post-edit-check.sh`
+- `hooks/compaction_brief.py`
+- `hooks/session_context.py`
+- `hooks/stop-reminder.sh`
+- `scripts/Sync-AgenticTooling.ps1`
+- `scripts/Audit-AgenticTooling.ps1`
+- `docs/guide/authoring-and-deploying-agentic-tooling.md`
+- Consumer Manifests:
+- `C:\Dev\bedrock\agentic.toml`
+- `C:\Dev\CollectIt\agentic.toml`
+- `C:\Dev\MLBTracker\agentic.toml`
+- Registration: Windows Scheduled Task `Bedrock-Sync-AgenticTooling` and profile aliases
 
 **Interfaces:**
-- Consumes: All skills, agents, and hooks across the ecosystem.
-- Produces: Single authoritative source in `claude-kit`; read-only NTFS Directory Junctions (`New-Item -ItemType Junction`) into consumer `.agents/skills/`, `.agents/agents/`, `.claude/skills/`, `.claude/agents/`, `.claude/hooks/`, and global user paths (`~/.gemini/skills`, `~/.claude/skills`).
 
-- [ ] **Step 1: Consolidate all domain skills, agents, and hooks into `claude-kit/plugins/`**
-Move and organize:
-- `cut-release` from `bedrock/.claude/skills/` -> `claude-kit/plugins/bedrock-doctrine/skills/cut-release/`.
-- `triage-plan`, `implement-issue`, `run-tests`, `finalize-changes` -> `claude-kit/plugins/dev-doctrine/skills/`.
-- `audit-ebay-compliance` and all CollectIt agents (`exporter-pipeline-specialist`, `listing-studio-engineer`, `route-security-engineer`, `schema-domain-architect`) and `post-edit-check.sh` -> `claude-kit/plugins/collectit-doctrine/`.
-- `check-grid`, `grid-guru`, `compaction_brief.py`, `session_context.py`, `stop-reminder.sh` -> `claude-kit/plugins/mlbtracker-doctrine/`.
+- Consumes: Canonical flat asset registry (`rules/`, `skills/`, `agents/`, `hooks/`) in `claude-kit`.
+- Consumes: Consumer-level capability requests defined in local `agentic.toml` files.
+- Produces: Dual-target agent compilation (`.claude/agents/*.md` and `.agents/agents/*.md`), on-demand read-only NTFS Directory Junctions, hardened Windows ACL Deny rules, and global user discovery paths (`~/.gemini/skills`, `~/.claude/skills`).
 
-- [ ] **Step 2: Author `claude-kit/docs/guide/authoring-and-deploying-agentic-tooling.md`**
-Document the canonical developer process:
-1. All changes, additions, and edits must be committed directly in `claude-kit`.
-2. Directory structure for core vs domain plugins.
-3. How to author dual-target agent schemas (`targets.claude` and `targets.antigravity`).
-4. How to configure the repository distribution manifest in `Sync-AgenticTooling.ps1`.
-5. How consumer repositories consume tools as gitignored, read-only NTFS junctions.
+- [ ] **Step 1: Author the flat canonical registry in `claude-kit`** Structure `C:\Dev\claude-kit` as an agnostic system of record with four core directories: `rules/`, `skills/`, `agents/`, and `hooks/`. Drop all domain namespaces (`plugins/collectit-doctrine`, `plugins/mlbtracker-doctrine`). Author all agent definitions as multi-target JSON schemas.
 
-- [ ] **Step 3: Update `Sync-AgenticTooling.ps1` distribution engine**
-Implement logic to deploy:
-- To `bedrock`: `dev-doctrine` + `bedrock-doctrine`.
-- To `CollectIt`: `dev-doctrine` + `bedrock-doctrine` + `collectit-doctrine`.
-- To `MLBTracker`: `dev-doctrine` + `bedrock-doctrine` + `mlbtracker-doctrine`.
-- To `$HOME\.gemini\skills` & `$HOME\.claude\skills`: global shared doctrine.
-- Ensure all links are created via `New-Item -ItemType Junction`.
+Create `C:\Dev\claude-kit\agents\ui-sentinel.json`:
 
-- [ ] **Step 4: Execute `Sync-AgenticTooling.ps1`**
-Run:
-```powershell
-pwsh -File "C:\Dev\claude-kit\scripts\Sync-AgenticTooling.ps1"
+```json
+{
+"name": "ui-sentinel",
+"description": "Audits localhost applications via browser actuation, resolves console errors, enforces @djntechnic/bedrock-ui adoption, and flags inconsistent UX/save semantics.",
+"deprecated": false,
+"targets": {
+"claude": {
+"model": "sonnet",
+"effort": "high",
+"tools": ["Read", "Edit", "Bash"]
+},
+"antigravity": {
+"model": "gemini-3.1-pro",
+"thinking": "high",
+"mainAgent": true,
+"subagent": true,
+"tools": ["view_file", "replace_file_content", "run_command"],
+"skills": ["anti-ui-slop", "react-best-practices"],
+"commandExecutionPolicy": "auto"
+}
+},
+"directives": [
+"Zero Duplicate UI (§S001): Compose only from @djntechnic/bedrock-ui primitives.",
+"Design Tokens (§S009): Enforce theme token compliance; reject bare hex literals.",
+"Console Cleanliness (§S003): Ensure browser console is clear of warnings and unhandled rejections."
+]
+}
 ```
-Expected output: All junctions established cleanly across all target repos.
 
-- [ ] **Step 5: Register Windows Scheduled Task**
-Run:
+Create `C:\Dev\claude-kit\agents\grid-sentinel.json`:
+
+```json
+{
+"name": "grid-sentinel",
+"description": "DataGrid and 7-layer contract specialist. Audits, wires, and refactors DataGrids, useGridConfig, and Admin Grid Editor sync.",
+"deprecated": false,
+"targets": {
+"claude": {
+"model": "sonnet",
+"effort": "high",
+"tools": ["Read", "Edit", "Bash"]
+},
+"antigravity": {
+"model": "gemini-3.1-pro",
+"thinking": "high",
+"mainAgent": true,
+"subagent": true,
+"tools": ["view_file", "replace_file_content", "run_command"],
+"skills": ["check-grid", "grid-guru"],
+"commandExecutionPolicy": "auto"
+}
+},
+"directives": [
+"Standardized Grid Engine (§S002): All tabular data must compose the platform <DataGrid> and consume useGridConfig(gridId).",
+"7-Layer Contract Alignment: Every grid field must align across DB, migrations, Pydantic, route GET/PATCH, TS interfaces, runtime mapping, and UI components.",
+"Podium & Medal Gating: Row medal/podium tints (getRankRowClass) must be strictly gated on config.showRankHighlight."
+]
+}
+```
+
+- [ ] **Step 2: Deploy declarative `agentic.toml` manifests to consumer repositories**
+
+Create `C:\Dev\CollectIt\agentic.toml`:
+
+```ini, toml
+[runtime]
+harness = ["claude", "antigravity"]
+isolation_mode = "read_only_junction"
+
+rules = [
+"s01-ui-primitives",
+"s03-logging-standards",
+"s05-zero-broken-tests",
+"ebay-sanitizer"
+]
+
+skills = [
+"anti-ui-slop",
+"audit-ebay-compliance",
+"bump-bedrock-pin",
+"compact-test-runner",
+"implement-issue",
+"react-best-practices",
+"run-tests",
+"sql-sentinel",
+"triage-plan"
+]
+
+agents = [
+"exporter-pipeline-specialist",
+"listing-studio-engineer",
+"quality-gatekeeper",
+"route-security-engineer",
+"schema-domain-architect",
+"ui-sentinel"
+]
+
+hooks = [
+"pre-tool-guard.ps1",
+"post-edit-check.sh"
+]
+```
+
+Create `C:\Dev\MLBTracker\agentic.toml`:
+
+```ini, toml
+[runtime]
+harness = ["claude", "antigravity"]
+isolation_mode = "read_only_junction"
+
+rules = [
+"s01-ui-primitives",
+"s03-logging-standards",
+"s05-zero-broken-tests",
+"stat-invariants"
+]
+
+skills = [
+"anti-ui-slop",
+"audit-ebay-compliance",
+"bump-bedrock-pin",
+"check-grid",
+"compact-test-runner",
+"grid-guru",
+"implement-issue",
+"react-best-practices",
+"run-tests",
+"sql-sentinel",
+"triage-plan"
+]
+
+agents = [
+"backend-api-engineer",
+"frontend-ui-engineer",
+"grid-sentinel",
+"quality-gatekeeper",
+"schema-domain-architect",
+"ui-sentinel"
+]
+
+hooks = [
+"pre-tool-guard.ps1",
+"compaction_brief.py",
+"session_context.py",
+"stop-reminder.sh"
+]
+```
+
+Create `C:\Dev\bedrock\agentic.toml`:
+
+```ini, toml
+[runtime]
+harness = ["claude", "antigravity"]
+isolation_mode = "read_only_junction"
+
+rules = [
+"s01-ui-primitives",
+"s03-logging-standards",
+"s05-zero-broken-tests"
+]
+
+skills = [
+"anti-ui-slop",
+"bump-bedrock-pin",
+"compact-test-runner",
+"cut-release",
+"react-best-practices",
+"sql-sentinel",
+"triage-plan"
+]
+
+agents = [
+"backend-api-engineer",
+"frontend-ui-engineer",
+"quality-gatekeeper",
+"ui-sentinel"
+]
+
+hooks = [
+"pre-tool-guard.ps1"
+]
+```
+
+- [ ] **Step 3: Implement `Sync-AgenticTooling.ps1` compilation and binding engine**
+Author `C:\Dev\claude-kit\scripts\Sync-AgenticTooling.ps1`:
+
 ```powershell
-$action = New-ScheduledTaskAction -Execute "pwsh.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\Dev\claude-kit\scripts\Sync-AgenticTooling.ps1"
+<#
+.SYNOPSIS
+    Compiles and mounts declarative agentic tools from claude-kit into consumer workspaces.
+.DESCRIPTION
+    Parses agentic.toml, mounts requested rules and skills via NTFS junctions, compiles
+    dialect-specific agent definitions for Claude Code and Antigravity, provisions lifecycle
+    hooks, resolves third-party skill fallbacks, and applies read-only Windows ACLs.
+.PARAMETER RepoRoot
+    Target repository path. Defaults to the current working directory.
+.PARAMETER All
+    Iterates and applies synchronization across bedrock, CollectIt, and MLBTracker.
+.PARAMETER Clean
+    Purges dynamic junctions and compiled agent targets, returning the workspace to a zero-agent state.
+#>
+[CmdletBinding()]
+param(
+    [string]$RepoRoot = (Get-Location).Path,
+    [switch]$All,
+    [switch]$Clean
+)
+
+$ErrorActionPreference = 'Stop'
+$KitRoot = 'C:\Dev\claude-kit'
+$TargetRepos = if ($All) { @('C:\Dev\bedrock', 'C:\Dev\CollectIt', 'C:\Dev\MLBTracker') } else { @($RepoRoot) }
+
+function Reset-Junction([string]$Path) {
+    if (Test-Path -LiteralPath $Path) {
+        # Temporarily clear Deny rules to allow directory reset
+        try {
+            $acl = Get-Acl -LiteralPath $Path
+            $denyRules = $acl.Access | Where-Object { $_.AccessControlType -eq 'Deny' }
+            foreach ($rule in $denyRules) {
+                $acl.RemoveAccessRule($rule) | Out-Null
+            }
+            Set-Acl -LiteralPath $Path -AclObject $acl -ErrorAction SilentlyContinue
+        } catch {}
+
+        $item = Get-Item -LiteralPath $Path -Force
+        if ($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+            $item.Delete()
+        } else {
+            Remove-Item -LiteralPath $Path -Recurse -Force
+        }
+    }
+    $null = New-Item -ItemType Directory -Path $Path -Force
+}
+
+# 1. Global User Directory Discovery Sync
+$globalSkillPaths = @(
+    "$HOME\.claude\skills",
+    "$HOME\.gemini\skills",
+    "$HOME\.gemini\antigravity\skills"
+)
+foreach ($gp in $globalSkillPaths) {
+    if (-not (Test-Path -LiteralPath $gp)) {
+        $null = New-Item -ItemType Directory -Path $gp -Force
+    }
+}
+$allSharedSkills = Get-ChildItem -Path "$KitRoot\skills" -Directory
+foreach ($sk in $allSharedSkills) {
+    foreach ($gp in $globalSkillPaths) {
+        $dest = Join-Path $gp $sk.Name
+        if (-not (Test-Path -LiteralPath $dest)) {
+            $null = New-Item -ItemType Junction -Path $dest -Target $sk.FullName
+        }
+    }
+}
+
+# 2. Downstream Consumer Synchronization
+foreach ($repo in $TargetRepos) {
+    $manifestPath = Join-Path $repo 'agentic.toml'
+    if (-not (Test-Path -LiteralPath $manifestPath)) { continue }
+
+    Write-Host "Syncing Agentic Tooling for: $repo" -ForegroundColor Cyan
+
+    $manifest = & python -c "import tomllib, json, sys; print(json.dumps(tomllib.load(open(sys.argv[1], 'rb'))))" $manifestPath | ConvertFrom-Json
+
+    $claudeRules  = Join-Path $repo '.claude\rules'
+    $claudeSkills = Join-Path $repo '.claude\skills'
+    $claudeAgents = Join-Path $repo '.claude\agents'
+    $claudeHooks  = Join-Path $repo '.claude\hooks'
+    $agentRules   = Join-Path $repo '.agents\rules'
+    $agentSkills  = Join-Path $repo '.agents\skills'
+    $agentAgents  = Join-Path $repo '.agents\agents'
+
+    Reset-Junction $claudeRules
+    Reset-Junction $claudeSkills
+    Reset-Junction $claudeAgents
+    Reset-Junction $claudeHooks
+    Reset-Junction $agentRules
+    Reset-Junction $agentSkills
+    Reset-Junction $agentAgents
+
+    if ($Clean) {
+        Write-Host "[$repo] Cleaned all local mounts." -ForegroundColor Yellow
+        continue
+    }
+
+    # Mount Rules
+    if ($manifest.rules) {
+        foreach ($ruleName in $manifest.rules) {
+            $src = Join-Path $KitRoot "rules\$ruleName.md"
+            if (Test-Path -LiteralPath $src) {
+                Copy-Item -LiteralPath $src -Destination (Join-Path $claudeRules "$ruleName.md") -Force
+                Copy-Item -LiteralPath $src -Destination (Join-Path $agentRules "$ruleName.md") -Force
+                Write-Host "  -> Synced Rule: $ruleName" -ForegroundColor DarkGray
+            } else {
+                Write-Warning "[$repo] Rule not found in claude-kit: $ruleName"
+            }
+        }
+    }
+
+    # Mount Requested Skills (with Third-Party Fallback)
+    if ($manifest.skills) {
+        foreach ($skillName in $manifest.skills) {
+            $src = Join-Path $KitRoot "skills\$skillName"
+            if (-not (Test-Path -LiteralPath $src)) {
+                # Fallback to globally installed external runtime skills (e.g. superpowers)
+                $globalFallback = Join-Path "$HOME\.claude\skills" $skillName
+                if (Test-Path -LiteralPath $globalFallback) {
+                    $src = $globalFallback
+                }
+            }
+
+            if (Test-Path -LiteralPath $src) {
+                $null = New-Item -ItemType Junction -Path (Join-Path $claudeSkills $skillName) -Target $src
+                $null = New-Item -ItemType Junction -Path (Join-Path $agentSkills $skillName) -Target $src
+                Write-Host "  -> Linked Skill: $skillName" -ForegroundColor DarkGray
+            } else {
+                Write-Warning "[$repo] Skill not found in claude-kit or global paths: $skillName"
+            }
+        }
+    }
+
+    # Compile Dual-Dialect Agents
+    if ($manifest.agents) {
+        foreach ($agentName in $manifest.agents) {
+            $srcJson = Join-Path $KitRoot "agents\$agentName.json"
+            if (-not (Test-Path -LiteralPath $srcJson)) {
+                Write-Warning "[$repo] Agent schema not found in claude-kit: $agentName"
+                continue
+            }
+            $agentDef = Get-Content -LiteralPath $srcJson -Raw | ConvertFrom-Json
+            if ($agentDef.deprecated -eq $true) {
+                Write-Warning "[$repo] Skipping deprecated agent: $agentName"
+                continue
+            }
+
+			# Claude Format (.claude/agents/<agent>.md)
+            $claudeMd = Join-Path $claudeAgents "$agentName.md"
+            $cTools = ($agentDef.targets.claude.tools | ForEach-Object { "  - $_" }) -join "`n"
+            $cDirectives = ($agentDef.directives | ForEach-Object { "- $_" }) -join "`n"
+            @"
+---
+name: $($agentDef.name)
+description: $($agentDef.description)
+model: $($agentDef.targets.claude.model)
+effort: $($agentDef.targets.claude.effort)
+tools:
+$cTools
+---
+
+# $($agentDef.name)
+$($agentDef.description)
+
+## Directives
+$cDirectives
+"@ | Set-Content -LiteralPath $claudeMd -Encoding utf8
+
+            # Antigravity Format (.agents/agents/<agent>.md)
+            $agyMd = Join-Path $agentAgents "$agentName.md"
+            $aTools = ($agentDef.targets.antigravity.tools | ForEach-Object { "  - $_" }) -join "`n"
+            $aSkills = if ($agentDef.targets.antigravity.skills) {
+                "`nskills:`n" + (($agentDef.targets.antigravity.skills | ForEach-Object { "  - $_" }) -join "`n")
+            } else { "" }
+@"
+---
+name: $($agentDef.name)
+description: $($agentDef.description)
+model: $($agentDef.targets.antigravity.model)
+thinking: $($agentDef.targets.antigravity.thinking)
+mainAgent: true
+subagent: true
+tools:
+$aTools$aSkills
+commandExecutionPolicy: auto
+---
+
+# $($agentDef.name)
+$($agentDef.description)
+
+## Directives
+$cDirectives
+"@ | Set-Content -LiteralPath $agyMd -Encoding utf8
+
+            Write-Host "  -> Compiled Agent: $agentName" -ForegroundColor DarkGray
+        }
+    }
+
+	# Mount Lifecycle Hooks
+    if ($manifest.hooks) {
+        foreach ($hookFile in $manifest.hooks) {
+            $hSrc = Join-Path $KitRoot "hooks\$hookFile"
+            if (Test-Path -LiteralPath $hSrc) {
+                Copy-Item -LiteralPath $hSrc -Destination (Join-Path $claudeHooks $hookFile) -Force
+                Write-Host "  -> Synced Hook: $hookFile" -ForegroundColor DarkGray
+            }
+        }
+    }
+
+    # Enforce Read-Only Windows ACLs
+    $currentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+    $denyRule = New-Object System.Security.AccessControl.FileSystemAccessRule(
+        $currentUser,
+        "Write, Delete, DeleteSubdirectoriesAndFiles",
+        "ContainerInherit, ObjectInherit",
+        "None",
+        "Deny"
+    )
+    foreach ($dir in @($claudeRules, $agentRules, $claudeSkills, $agentSkills, $claudeAgents, $agentAgents)) {
+        $acl = Get-Acl -LiteralPath $dir
+        $acl.AddAccessRule($denyRule)
+        Set-Acl -LiteralPath $dir -AclObject $acl
+    }
+```
+
+- [ ] **Step 4: Author `claude-kit/docs/guide/authoring-and-deploying-agentic-tooling.md`** Document the canonical governance model:
+
+1. All rules, skills, agents, and hooks are authored directly in `claude-kit`.
+2. Repositories specify tooling requirements declaratively in `agentic.toml`.
+3. Agent definitions use multi-target `.json` files that compile to Claude and Antigravity frontmatter dialects.
+4. NTFS Directory Junctions allow tool re-use across repositories without duplicating files.
+5. Windows ACL Deny rules lock local consumer tool directories to prevent modifications by autonomous agents.
+6. Retiring or deprecating a tool in `claude-kit` removes it from consumers on the next synchronization.
+
+- [ ] **Step 5: Execute initial synchronization across all targets** Run:
+
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File "C:\Dev\claude-kit\scripts\Sync-AgenticTooling.ps1" -All
+```
+
+Expected output: All junctions, compiled agents, and hooks are deployed across `bedrock`, `CollectIt`, and `MLBTracker` with status `PASS`.
+
+- [ ] **Step 6: Register Windows Scheduled Task and interactive aliases** Run:
+
+```powershell
+$action = New-ScheduledTaskAction -Execute "pwsh.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\Dev\claude-kit\scripts\Sync-AgenticTooling.ps1 -All"
 $trigger1 = New-ScheduledTaskTrigger -AtLogon
 $trigger2 = New-ScheduledTaskTrigger -Daily -At 03:00AM
-Register-ScheduledTask -TaskName "Bedrock-Sync-AgenticTooling" -Action $action -Trigger @($trigger1, $trigger2) -Description "Synchronizes Bedrock shared and domain agentic skills and junctions" -Force
-```
-Expected output: Task registered with state `Ready`.
+Register-ScheduledTask -TaskName "Bedrock-Sync-AgenticTooling" -Action $action -Trigger @($trigger1, $trigger2) -Description "Synchronizes Bedrock declarative agentic tools and junctions" -Force
 
-- [ ] **Step 6: Commit in `claude-kit`**
+# Append aliases to PowerShell profile
+$aliasBlock = @'
+
+# Agentic Tooling Governance Aliases
+Set-Alias -Name sync-agentic-tooling -Value "C:\Dev\claude-kit\scripts\Sync-AgenticTooling.ps1"
+Set-Alias -Name Invoke-AgenticTool -Value "C:\Dev\claude-kit\scripts\Sync-AgenticTooling.ps1"
+'@
+if ((Get-Content $PROFILE -Raw) -notmatch 'sync-agentic-tooling') {
+    Add-Content -Path $PROFILE -Value $aliasBlock
+}
+```
+
+Expected output: Scheduled task registered; aliases active in interactive profile sessions.
+
+- [ ] **Step 7: Commit configuration in `claude-kit` and consumer repositories**
+
 ```bash
-git -C C:\Dev\claude-kit add plugins/ docs/ scripts/Sync-AgenticTooling.ps1
-git -C C:\Dev\claude-kit commit -m "feat(doctrine): centralize all core and domain agentic tooling in claude-kit"
+# In claude-kit:
+git -C C:\Dev\claude-kit add rules/ skills/ agents/ hooks/ docs/ scripts/Sync-AgenticTooling.ps1
+git -C C:\Dev\claude-kit commit -m "feat(doctrine): implement flat declarative agentic governance engine"
+
+# In consumers:
+git -C C:\Dev\bedrock add agentic.toml && git -C C:\Dev\bedrock commit -m "chore(agents): add declarative agentic.toml manifest"
+git -C C:\Dev\CollectIt add agentic.toml && git -C C:\Dev\CollectIt commit -m "chore(agents): add declarative agentic.toml manifest"
+git -C C:\Dev\MLBTracker add agentic.toml && git -C C:\Dev\MLBTracker commit -m "chore(agents): add declarative agentic.toml manifest"
 ```
 
 ---
@@ -388,11 +925,38 @@ git -C C:\Dev\claude-kit commit -m "feat(doctrine): centralize all core and doma
 - Consumes: Target directories across all repos and user profile.
 - Produces: Clean, uniform `LinkType: Junction` for all linked tools with zero dangling symlinks, zero redundant skills, and zero token waste during context discovery.
 
-- [ ] **Step 1: Retire and delete deprecated `grid-refact` in MLBTracker**
+- [ ] **Step 1: Unlock and retire deprecated skills across repos**
+Temporarily strip Deny ACLs if present, then purge obsolete tools:
 Run:
 ```powershell
-Remove-Item -Path "C:\Dev\MLBTracker\.agents\skills\grid-refact" -Recurse -Force -ErrorAction SilentlyContinue
-Remove-Item -Path "C:\Dev\MLBTracker\.claude\skills\grid-refact" -Recurse -Force -ErrorAction SilentlyContinue
+$deprecatedPaths = @(
+    "C:\Dev\MLBTracker\.agents\skills\grid-refact",
+    "C:\Dev\MLBTracker\.claude\skills\grid-refact",
+    "C:\Dev\CollectIt\.agents\skills\triage-plan-agy",
+    "C:\Dev\CollectIt\.claude\skills\triage-plan-agy"
+)
+
+foreach ($path in $deprecatedPaths) {
+    if (Test-Path -LiteralPath $path) {
+        try {
+            $parent = Split-Path -Parent $path
+            $acl = Get-Acl -LiteralPath $parent
+            $denyRules = $acl.Access | Where-Object { $_.AccessControlType -eq 'Deny' }
+            foreach ($rule in $denyRules) {
+                $acl.RemoveAccessRule($rule) | Out-Null
+            }
+            Set-Acl -LiteralPath $parent -AclObject $acl -ErrorAction SilentlyContinue
+        } catch {}
+
+        $item = Get-Item -LiteralPath $path -Force
+        if ($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+            $item.Delete()
+        } else {
+            Remove-Item -LiteralPath $path -Recurse -Force
+        }
+        Write-Host "Purged deprecated path: $path" -ForegroundColor Green
+    }
+}
 ```
 
 - [ ] **Step 2: Convert existing `SymbolicLink` directories to pure NTFS Junctions**
@@ -427,15 +991,14 @@ Get-ChildItem -Path "$HOME\.gemini\skills" -ErrorAction SilentlyContinue | Where
 Create `C:\Dev\claude-kit\scripts\Audit-AgenticTooling.ps1` verifying:
 1. Every linked skill and agent across repos has `LinkType: Junction`.
 2. Every junction target exists on disk (0 dangling pointers).
-3. Deprecated tools (`grid-refact`) do not exist.
-Run:
-```powershell
-pwsh -File "C:\Dev\claude-kit\scripts\Audit-AgenticTooling.ps1"
-```
-Expected output: 100% pass with 0 broken links, 0 symlinks, and 0 obsolete tools.
+3. Deprecated tools (`grid-refact`, legacy `triage-plan-agy`) do not exist.
+4. Stale compaction and transient files are absent from tracking (`.claude/state/compaction-brief.md`, `.gemini/audits/`, `.gemini/tracking/`).
 
 - [ ] **Step 4: Commit in `claude-kit`**
+
 ```bash
+git -C C:\Dev\claude-kit add scripts/Sync-AgenticTooling.ps1
+git -C C:\Dev\claude-kit commit -m "feat(tooling): deploy Sync-AgenticTooling engine and task registration"
 git -C C:\Dev\claude-kit add scripts/Audit-AgenticTooling.ps1
 git -C C:\Dev\claude-kit commit -m "feat(tooling): implement Audit-AgenticTooling verification engine"
 ```
@@ -445,18 +1008,23 @@ git -C C:\Dev\claude-kit commit -m "feat(tooling): implement Audit-AgenticToolin
 ### Task 0.5: Deploy Superpowers Path Alignment & Windows Scheduled Task
 
 **Agent Recommendation:**
+
 - Claude: `model: sonnet`, `effort: low`
 - AGY: `model: flash`, `thinking: low`
 
 **Files:**
+
 - Modify: `C:\Dev\TheLab\WorkstationTools\SuperpowersUpdates\update-superpowers-paths.ps1`
 - Register: Windows Scheduled Task `Bedrock-Align-SuperpowersPaths`
 
 **Interfaces:**
+
 - Produces: Automatic rewriting of installed superpower skills (`brainstorming`, `writing-plans`, `executing-plans`) to emit specs to `docs/specs` and plans to `docs/plans`.
 
 - [ ] **Step 1: Set canonical paths in `update-superpowers-paths.ps1`**
 Ensure default parameters in `update-superpowers-paths.ps1` specify:
+      Ensure default parameters in `update-superpowers-paths.ps1` specify:
+
 ```powershell
 [string]$CustomSpecPath = "docs/specs",
 [string]$CustomPlanPath = "docs/plans",
@@ -464,18 +1032,23 @@ Ensure default parameters in `update-superpowers-paths.ps1` specify:
 
 - [ ] **Step 2: Execute `update-superpowers-paths.ps1`**
 Run:
+      Run:
+
 ```powershell
 pwsh -File "C:\Dev\TheLab\WorkstationTools\SuperpowersUpdates\update-superpowers-paths.ps1"
 ```
+
 Expected output: All superpower skills patched successfully.
 
 - [ ] **Step 3: Register Windows Scheduled Task**
 Run:
+
 ```powershell
 $action = New-ScheduledTaskAction -Execute "pwsh.exe" -Argument "-NoProfile -ExecutionPolicy Bypass -File C:\Dev\TheLab\WorkstationTools\SuperpowersUpdates\update-superpowers-paths.ps1 -CustomSpecPath docs/specs -CustomPlanPath docs/plans"
 $trigger = New-ScheduledTaskTrigger -AtLogon
 Register-ScheduledTask -TaskName "Bedrock-Align-SuperpowersPaths" -Action $action -Trigger $trigger -Description "Aligns superpower skill output paths to canonical 6-folder model" -Force
 ```
+
 Expected output: Task registered with state `Ready`.
 
 ---
