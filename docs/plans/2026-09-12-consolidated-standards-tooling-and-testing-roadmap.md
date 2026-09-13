@@ -1202,7 +1202,7 @@ git -C C:\Dev\bedrock commit -m "feat(tools): implement unified AuditReporter en
   - Merges consumer exemptions additively with platform defaults.
   - Enforces that every tool section has an `exemptions = [...]` list.
 
-- [ ] **Step 1: Write failing unit test for `load_bedrock_config`**
+- [x] **Step 1: Write failing unit test for `load_bedrock_config`**
 
 ```python
 # packages/bedrock-api/tests/test_config.py
@@ -1222,23 +1222,23 @@ def test_load_valid_config(tmp_path: Path):
     assert "default" in cfg.audit_s001.exemptions  # Platform baseline merged
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 Run: `pytest packages/bedrock-api/tests/test_config.py`
 Expected output: FAIL.
       Run: `pytest packages/bedrock-api/tests/test_config.py`
       Expected output: FAIL.
 
-- [ ] **Step 3: Implement `bedrock/tools/_config.py` and `bedrock.toml`**
+- [x] **Step 3: Implement `bedrock/tools/_config.py` and `bedrock.toml`**
 Implement typed config dataclasses with default baselines and additive merging. Create canonical `bedrock.toml` at Bedrock root.
       Implement typed config dataclasses with default baselines and additive merging. Create canonical `bedrock.toml` at Bedrock root.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 Run: `pytest packages/bedrock-api/tests/test_config.py`
 Expected output: PASS.
       Run: `pytest packages/bedrock-api/tests/test_config.py`
       Expected output: PASS.
 
-- [ ] **Step 5: Commit in Bedrock**
+- [x] **Step 5: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/_config.py packages/bedrock-api/tests/test_config.py bedrock.toml
