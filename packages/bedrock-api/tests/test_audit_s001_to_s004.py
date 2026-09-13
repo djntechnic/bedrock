@@ -126,6 +126,114 @@ def test_s002_returns_two_on_missing_bedrock_toml(tmp_path: Path):
     assert audit_s002_grids.main(["--root", str(tmp_path)]) == 2
 
 
+def test_audit_s002_fails_when_page_attribute_missing_or_empty(tmp_path: Path):
+    _write_toml(
+        tmp_path,
+        "[tool.bedrock.audit.s002]\npresentational_tables = []\nexemptions = []\n",
+    )
+    _write(
+        tmp_path / "schema" / "migrations" / "010_example_grid.sql",
+        """
+        INSERT INTO app_grid_settings (grid_id, grid_label, page, row_key_column)
+        VALUES ('example_grid', 'Example Grid', '', 'player_id');
+
+        INSERT INTO app_grid_column_settings (grid_setting_id, column_id)
+        VALUES (1, 'player_id');
+        """,
+    )
+
+    assert audit_s002_grids.main(["--root", str(tmp_path)]) == 1
+
+
+def test_audit_s002_fails_when_row_key_column_is_null_or_not_in_columns(tmp_path: Path):
+    _write_toml(
+        tmp_path,
+        "[tool.bedrock.audit.s002]\npresentational_tables = []\nexemptions = []\n",
+    )
+    _write(
+        tmp_path / "schema" / "migrations" / "011_example_grid.sql",
+        """
+        INSERT INTO app_grid_settings (grid_id, grid_label, page, row_key_column)
+        VALUES ('example_grid', 'Example Grid', 'Rankings', 'ghost_id');
+
+        INSERT INTO app_grid_column_settings (grid_setting_id, column_id)
+        VALUES (1, 'player_id');
+        """,
+    )
+
+    assert audit_s002_grids.main(["--root", str(tmp_path)]) == 1
+
+
+def test_audit_s002_fails_when_grid_preview_api_endpoint_missing_or_unwired(tmp_path: Path):
+    _write_toml(
+        tmp_path,
+        "[tool.bedrock.audit.s002]\npresentational_tables = []\nexemptions = []\n",
+    )
+    _write(
+        tmp_path / "schema" / "migrations" / "012_example_grid.sql",
+        """
+        INSERT INTO app_grid_settings (grid_id, grid_label, page, row_key_column)
+        VALUES ('example_grid', 'Example Grid', 'Rankings', 'player_id');
+
+        INSERT INTO app_grid_column_settings (grid_setting_id, column_id)
+        VALUES (1, 'player_id');
+        """,
+    )
+    _write(
+        tmp_path / "registration" / "gridPreviewRegistration.ts",
+        """
+        import { registerApiPreviewEndpoints } from "@djntechnic/bedrock-ui";
+
+        registerApiPreviewEndpoints({
+          example_grid: [],
+        });
+        """,
+    )
+
+    assert audit_s002_grids.main(["--root", str(tmp_path)]) == 1
+
+
+def test_audit_s002_passes_with_fully_compliant_7_layer_grid_definition(tmp_path: Path):
+    _write_toml(
+        tmp_path,
+        "[tool.bedrock.audit.s002]\npresentational_tables = []\nexemptions = []\n",
+    )
+    _write(
+        tmp_path / "schema" / "migrations" / "013_example_grid.sql",
+        """
+        INSERT INTO app_grid_settings (grid_id, grid_label, page, row_key_column)
+        VALUES ('example_grid', 'Example Grid', 'Rankings', 'player_id');
+
+        INSERT INTO app_grid_column_settings (grid_setting_id, column_id)
+        VALUES (1, 'player_id');
+        """,
+    )
+    _write(
+        tmp_path / "registration" / "gridPreviewRegistration.ts",
+        """
+        import { registerApiPreviewEndpoints } from "@djntechnic/bedrock-ui";
+
+        registerApiPreviewEndpoints({
+          example_grid: [
+            { id: "default", label: "Example", path: "/api/example", method: "GET", params: [] },
+          ],
+        });
+        """,
+    )
+    _write(
+        tmp_path / "components" / "ExampleGrid.tsx",
+        """
+        import { DataGrid, useGridConfig } from "@djntechnic/bedrock-ui";
+        export function ExampleGrid() {
+          const config = useGridConfig("example_grid");
+          return <DataGrid gridId="example_grid" />;
+        }
+        """,
+    )
+
+    assert audit_s002_grids.main(["--root", str(tmp_path)]) == 0
+
+
 # ---------------------------------------------------------------------------
 # audit_s003_logging
 # ---------------------------------------------------------------------------

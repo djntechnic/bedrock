@@ -41,6 +41,19 @@ happens.
   this order.
 - Tooltip delays, hover colors, and other runtime-tunable values resolve from
   `config.*` with a documented fallback — never a literal number inline.
+- Every `app_grid_settings` row declares a non-empty `page` attribute so the
+  admin Grid Editor can group it under a screen. A grid with a missing or
+  empty `page` is unreachable from the admin navigation, not just untidy.
+- Every `app_grid_settings` row declares a non-null, non-empty
+  `row_key_column` that matches an actual `column_id` inserted for that grid
+  in `app_grid_column_settings`. A `row_key_column` that is null or points at
+  a column the grid never registers breaks row selection and bulk-edit at
+  runtime (see `DataGrid.tsx`'s own `config.rowKeyColumn` invariant).
+- Every grid has at least one live API endpoint wired into the Admin Grid
+  Preview pane via `registerApiPreviewEndpoints`. A grid with no registered
+  binding, or a binding registered with an empty endpoint array, is an
+  orphaned preview config — the editor renders the grid with nothing to
+  preview.
 
 ## Architecture & Code Contracts
 
@@ -80,6 +93,40 @@ def update_grid_column(column_id: int, body: GridColumnSettingUpdate):
 Adding `gradient_from_color` here without the matching TypeScript interface
 field and `buildGridConfig` mapping is a seven-layer contract break — the
 audit's grid-diff mode flags exactly this shape of drift.
+
+**`page`, `row_key_column`, and the Preview API binding contract:**
+
+```ts
+// Runtime shape of an app_grid_settings row, as consumed by the Grid Editor.
+interface GridSettings {
+  gridId: string;
+  gridLabel: string;
+  page: string;              // non-empty; groups the grid under an admin screen
+  rowKeyColumn: string;      // non-empty; must match a registered column_id
+}
+
+// Migration-seeded; every grid_id inserted here must also appear as a key in
+// a registerApiPreviewEndpoints({ ... }) call somewhere in the consumer app.
+interface ApiEndpointBinding {
+  id: string;
+  label: string;
+  path: string;
+  method: "GET";
+  responsePath?: string;
+  params?: string[];
+}
+
+registerApiPreviewEndpoints({
+  example_grid: [
+    { id: "default", label: "Example", path: "/api/example", method: "GET", params: [] },
+  ],
+});
+```
+
+A grid seeded via `INSERT INTO app_grid_settings (...)` with an empty `page`,
+a `row_key_column` that doesn't match any `INSERT INTO app_grid_column_settings`
+`column_id`, or no corresponding `registerApiPreviewEndpoints` entry is a
+violation the audit reports with the offending migration file and line.
 
 ## Exceptions & Audit Exemptions
 
