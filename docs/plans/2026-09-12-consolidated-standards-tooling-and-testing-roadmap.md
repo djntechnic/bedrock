@@ -1137,7 +1137,7 @@ git -C C:\Dev\bedrock commit -m "docs(standards): author canonical platform stan
   - `fail_check(message: str, file_path: Path | str = None, line: int = None, hint: str = None) -> None`
   - `finish() -> int` (returns `0` on success, `1` on violation, `2` on configuration error)
 
-- [ ] **Step 1: Write failing unit test for `AuditReporter`**
+- [x] **Step 1: Write failing unit test for `AuditReporter`**
 
 ```python
 # packages/bedrock-api/tests/test_reporter.py
@@ -1157,23 +1157,23 @@ def test_audit_reporter_fail():
     assert reporter.finish() == 1
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 Run: `pytest packages/bedrock-api/tests/test_reporter.py`
 Expected output: FAIL (`ModuleNotFoundError: No module named 'bedrock.tools._reporter'`).
       Run: `pytest packages/bedrock-api/tests/test_reporter.py`
       Expected output: FAIL (`ModuleNotFoundError: No module named 'bedrock.tools._reporter'`).
 
-- [ ] **Step 3: Implement `bedrock/tools/_reporter.py`**
+- [x] **Step 3: Implement `bedrock/tools/_reporter.py`**
 Implement standard 80-column banner, monotonic microsecond timings, formatted failure output with line pointers and remediation hints, and exit code propagation.
       Implement standard 80-column banner, monotonic microsecond timings, formatted failure output with line pointers and remediation hints, and exit code propagation.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 Run: `pytest packages/bedrock-api/tests/test_reporter.py`
 Expected output: PASS (all tests green).
       Run: `pytest packages/bedrock-api/tests/test_reporter.py`
       Expected output: PASS (all tests green).
 
-- [ ] **Step 5: Commit in Bedrock**
+- [x] **Step 5: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/_reporter.py packages/bedrock-api/tests/test_reporter.py
