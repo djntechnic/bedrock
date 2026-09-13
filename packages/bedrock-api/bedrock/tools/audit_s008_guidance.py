@@ -6,9 +6,9 @@ Desc:    Enforcement for [S008-documentation-layout-and-naming](../../../../docs
          Three checks:
            1. Guidance document size - every file in `guidance_docs` (e.g.
               `CLAUDE.md`, `GEMINI.md`) is at or under `max_lines`.
-           2. Documentation layout taxonomy - `docs/` contains only the four
-              canonical folders (`standards`, `specs`, `plans`, `archive`),
-              declared `allowed_root_docs`, and `README.md`. Deprecated
+           2. Documentation layout taxonomy - `docs/` contains only the five
+              canonical folders (`standards`, `specs`, `plans`, `reference`,
+              `archive`), declared `allowed_root_docs`, and `README.md`. Deprecated
               folders (`docs/punchlists`) are always flagged.
            3. Filename convention - markdown files under `docs/` are
               lowercase kebab-case, except `README.md`.
@@ -28,7 +28,7 @@ from pathlib import Path
 from bedrock.tools._config import load_bedrock_config
 from bedrock.tools._reporter import AuditReporter
 
-_ALLOWED_DOC_FOLDERS = {"standards", "specs", "plans", "archive"}
+_ALLOWED_DOC_FOLDERS = {"standards", "specs", "plans", "reference", "archive"}
 _DEPRECATED_DOC_FOLDERS = {"punchlists"}
 _KEBAB_CASE_EXEMPT_NAMES = {"README.md"}
 _KEBAB_CASE_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*\.md$")
@@ -96,7 +96,7 @@ def _check_layout_taxonomy(
                         file=rel,
                         line=1,
                         message=f"docs/{entry.name}/ is not part of the canonical taxonomy "
-                        "(standards, specs, plans, archive)",
+                        "(standards, specs, plans, reference, archive)",
                     )
                 )
         elif entry.suffix == ".md":

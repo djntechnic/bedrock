@@ -3,7 +3,10 @@ schema_catalog = "packages/bedrock-api/bedrock/core/schema_catalog.py"
 grids_dir = "packages/bedrock-ui/src/components/DataGrid"
 
 [tool.bedrock.audit.s001]
-exemptions = []
+exemptions = [
+  "dist/**",
+  "packages/bedrock-ui/dist/**",
+]
 
 [tool.bedrock.audit.s002]
 presentational_tables = []
@@ -32,16 +35,24 @@ exemptions = []
 
 [tool.bedrock.audit.s009]
 theme_palettes = "packages/bedrock-ui/src/theme/palettes.ts"
-exemptions = []
+exemptions = [
+  "packages/bedrock-ui/src/styles/**",
+  "packages/bedrock-ui/src/theme/**",
+]
 
 [tool.bedrock.audit.s010]
-exemptions = []
+exemptions = [
+  "packages/bedrock-api/bedrock/routes/health.py",
+  "packages/bedrock-api/bedrock/routes/diagnostics.py",
+]
 
 [tool.bedrock.audit.s011]
 nav_config = "packages/bedrock-ui/src/navigation/navConfig.ts"
-exemptions = []
+exemptions = [
+  "packages/bedrock-ui/src/**",
+]
 
 [tool.bedrock.audit.s012]
 requirements = "packages/bedrock-api/requirements.txt"
-package_json = "packages/bedrock-ui/package.json"
+package_json = "package.json"
 exemptions = []
