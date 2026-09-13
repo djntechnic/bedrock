@@ -1508,17 +1508,17 @@ git -C C:\Dev\bedrock commit -m "feat(tools): implement platform audits s005 thr
 
 - Produces: Enforcement of raw color literals, route permissions/RBAC, navigation target reachability, and dual-pin release tag parity.
 
-- [ ] **Step 1: Write unit tests for `audit_s009`–`audit_s012`**
-- [ ] **Step 2: Implement `audit_s009_design_tokens.py`**
-- [ ] **Step 3: Implement `audit_s010_security.py`**
-- [ ] **Step 4: Implement `audit_s011_navigation.py`**
-- [ ] **Step 5: Implement `audit_s012_pins.py`**
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 1: Write unit tests for `audit_s009`–`audit_s012`**
+- [x] **Step 2: Implement `audit_s009_design_tokens.py`**
+- [x] **Step 3: Implement `audit_s010_security.py`**
+- [x] **Step 4: Implement `audit_s011_navigation.py`**
+- [x] **Step 5: Implement `audit_s012_pins.py`**
+- [x] **Step 6: Run tests to verify they pass**
 Run: `pytest packages/bedrock-api/tests/test_audit_s009_to_s012.py`
 Expected output: PASS.
       Run: `pytest packages/bedrock-api/tests/test_audit_s009_to_s012.py`
       Expected output: PASS.
-- [ ] **Step 7: Commit in Bedrock**
+- [x] **Step 7: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/audit_s009_design_tokens.py packages/bedrock-api/bedrock/tools/audit_s010_security.py packages/bedrock-api/bedrock/tools/audit_s011_navigation.py packages/bedrock-api/bedrock/tools/audit_s012_pins.py packages/bedrock-api/tests/test_audit_s009_to_s012.py
