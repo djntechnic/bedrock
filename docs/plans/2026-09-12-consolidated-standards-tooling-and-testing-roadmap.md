@@ -1470,17 +1470,17 @@ git -C C:\Dev\bedrock commit -m "feat(tools): harden audit_s001, audit_s003, and
 
 - Produces: Fully parameter-driven enforcement of test pairing, PR workflow/ledger freshness, bare SQL literals, and guidance link/line limits.
 
-- [ ] **Step 1: Write unit tests for `audit_s005`–`audit_s008`**
-- [ ] **Step 2: Implement `audit_s005_testing.py`**
-- [ ] **Step 3: Implement `audit_s006_pr_workflow.py`**
-- [ ] **Step 4: Implement `audit_s007_schema_catalog.py`**
-- [ ] **Step 5: Implement `audit_s008_guidance.py`**
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 1: Write unit tests for `audit_s005`–`audit_s008`**
+- [x] **Step 2: Implement `audit_s005_testing.py`**
+- [x] **Step 3: Implement `audit_s006_pr_workflow.py`**
+- [x] **Step 4: Implement `audit_s007_schema_catalog.py`**
+- [x] **Step 5: Implement `audit_s008_guidance.py`**
+- [x] **Step 6: Run tests to verify they pass**
 Run: `pytest packages/bedrock-api/tests/test_audit_s005_to_s008.py`
 Expected output: PASS.
       Run: `pytest packages/bedrock-api/tests/test_audit_s005_to_s008.py`
       Expected output: PASS.
-- [ ] **Step 7: Commit in Bedrock**
+- [x] **Step 7: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/audit_s005_testing.py packages/bedrock-api/bedrock/tools/audit_s006_pr_workflow.py packages/bedrock-api/bedrock/tools/audit_s007_schema_catalog.py packages/bedrock-api/bedrock/tools/audit_s008_guidance.py packages/bedrock-api/tests/test_audit_s005_to_s008.py
