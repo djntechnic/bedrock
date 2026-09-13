@@ -1090,15 +1090,15 @@ Populate each standard document ensuring:
 - Text citations use `§S001` through `§S012`.
 - Standards map 1:1 to `bedrock.tools.audit_s###`.
 
-- [ ] **Step 2: Create `docs/standards/README.md` index catalog**
+- [x] **Step 2: Create `docs/standards/README.md` index catalog**
 Include catalog table indexing S001 through S012 with contract descriptions and audit tool links.
       Include catalog table indexing S001 through S012 with contract descriptions and audit tool links.
 
-- [ ] **Step 3: Execute repository-wide find-and-replace sweep in Bedrock**
+- [x] **Step 3: Execute repository-wide find-and-replace sweep in Bedrock**
 Replace all legacy references (`S01`, `S1`, `S02`, etc.) with canonical 3-digit padded notation (`§S001`, `§S002`) and updated kebab-case filenames across `docs/` and `packages/bedrock-api`.
       Replace all legacy references (`S01`, `S1`, `S02`, etc.) with canonical 3-digit padded notation (`§S001`, `§S002`) and updated kebab-case filenames across `docs/` and `packages/bedrock-api`.
 
-- [ ] **Step 4: Verify markdown formatting**
+- [x] **Step 4: Verify markdown formatting**
 Run:
       Run:
 
