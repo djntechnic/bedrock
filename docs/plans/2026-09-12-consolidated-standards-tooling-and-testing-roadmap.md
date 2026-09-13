@@ -1612,7 +1612,7 @@ git -C C:\Dev\bedrock commit -m "feat(tools): implement audit_taxonomy_and_casin
 
 - Produces: 100% compliant Bedrock documentation following the canonical 6-folder model.
 
-- [ ] **Step 1: Move loose markdown files into `docs/reference/`**
+- [x] **Step 1: Move loose markdown files into `docs/reference/`**
 
 ```bash
 git -C C:\Dev\bedrock mv docs/app_assembly.md docs/reference/app_assembly.md
@@ -1627,7 +1627,7 @@ git -C C:\Dev\bedrock mv docs/roadmap.md docs/reference/roadmap.md
 git -C C:\Dev\bedrock mv docs/seo.md docs/reference/seo.md
 ```
 
-- [ ] **Step 2: Evict punchlists to `scratch/`**
+- [x] **Step 2: Evict punchlists to `scratch/`**
 
 ```powershell
 mkdir C:\Dev\bedrock\scratch -Force
@@ -1636,17 +1636,17 @@ Move-Item C:\Dev\bedrock\docs\punchlists\* C:\Dev\bedrock\scratch\ -Force -Error
 Remove-Item C:\Dev\bedrock\docs\punchlists -Recurse -Force -ErrorAction SilentlyContinue
 ```
 
-- [ ] **Step 3: Update directory README indexes**
+- [x] **Step 3: Update directory README indexes**
 Create/update `README.md` in `docs/reference/`, `docs/specs/`, and `docs/plans/`.
       Create/update `README.md` in `docs/reference/`, `docs/specs/`, and `docs/plans/`.
 
-- [ ] **Step 4: Run taxonomy audit in Bedrock**
+- [x] **Step 4: Run taxonomy audit in Bedrock**
 Run: `python -m bedrock.tools.audit_taxonomy_and_casing --root C:\Dev\bedrock`
 Expected output: `[PASS] Taxonomy and file casing audit clean`.
       Run: `python -m bedrock.tools.audit_taxonomy_and_casing --root C:\Dev\bedrock`
       Expected output: `[PASS] Taxonomy and file casing audit clean`.
 
-- [ ] **Step 5: Commit in Bedrock**
+- [x] **Step 5: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add -A
