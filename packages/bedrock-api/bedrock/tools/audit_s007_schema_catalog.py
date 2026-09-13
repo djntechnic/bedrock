@@ -38,9 +38,20 @@ _CREATE_TABLE_RE = re.compile(
     re.IGNORECASE | re.DOTALL,
 )
 _TABLE_NAME_RE = re.compile(r"^[a-z][a-z0-9_]*[a-z0-9]$")
+
+# Only the clauses that actually name a table/view are load-bearing here
+# (FROM/INTO/UPDATE/JOIN) — matching straight after SELECT instead grabs the
+# first column of the select-list, and matching any quoted word grabs English
+# prose in docstrings ("""Update whitelisted fields..."""). Keywords are
+# matched case-sensitively: every real query in this codebase spells them
+# uppercase, while prose that happens to contain "from"/"update" (docstrings,
+# `from x import y`) does not, so casing alone tells SQL from English. A
+# literal is only a *table* literal if it also carries one of the platform's
+# approved prefixes; SQLite catalog tables (sqlite_master, sqlite_schema) and
+# column names/aliases never do, so anchoring on the prefix set keeps both
+# classes of noise out without an exemption list.
 _BARE_LITERAL_RE = re.compile(
-    r"[\"'](?:SELECT|INSERT\s+INTO|UPDATE|DELETE\s+FROM|FROM)\s+([a-z][a-z0-9_]*)\b",
-    re.IGNORECASE,
+    r"[\"'][^\"']*\b(?:FROM|INTO|UPDATE|JOIN)\s+([a-z][a-z0-9_]*)\b"
 )
 
 
@@ -61,10 +72,32 @@ def _allowed_prefixes(domain_prefixes: list[str]) -> tuple[str, ...]:
     )
 
 
-def _check_bare_literals(root: Path, exemptions: list[str]) -> list[SchemaViolation]:
+_ALIAS_IMPORT_RE = re.compile(
+    r"from\s+bedrock\.core\.schema_catalog\s+import\s+(.+)"
+)
+
+
+def _catalog_aliases(text: str) -> set[str]:
+    """Names this file binds Tables/Views to (default names plus any `as` alias)."""
+    aliases = {"Tables", "Views"}
+    for match in _ALIAS_IMPORT_RE.finditer(text):
+        for part in match.group(1).split(","):
+            part = part.strip()
+            name, _, alias = part.partition(" as ")
+            name = name.strip()
+            if name in ("Tables", "Views") and alias.strip():
+                aliases.add(alias.strip())
+    return aliases
+
+
+def _check_bare_literals(
+    root: Path, domain_prefixes: list[str], exemptions: list[str]
+) -> list[SchemaViolation]:
     violations: list[SchemaViolation] = []
     if not root.is_dir():
         return violations
+
+    allowed_prefixes = _allowed_prefixes(domain_prefixes)
 
     for path in sorted(root.rglob("*.py")):
         rel = path.relative_to(root).as_posix()
@@ -74,17 +107,24 @@ def _check_bare_literals(root: Path, exemptions: list[str]) -> list[SchemaViolat
             continue
 
         text = path.read_text(encoding="utf-8", errors="replace")
+        aliases = _catalog_aliases(text)
         for lineno, line in enumerate(text.splitlines(), start=1):
             match = _BARE_LITERAL_RE.search(line)
-            if match and "Tables." not in line and "Views." not in line:
-                violations.append(
-                    SchemaViolation(
-                        file=rel,
-                        line=lineno,
-                        message=f"bare table/view literal '{match.group(1)}' - "
-                        "reference it through Tables.<SYMBOL> / Views.<SYMBOL> instead",
-                    )
+            if not match:
+                continue
+            name = match.group(1)
+            if not name.startswith(allowed_prefixes):
+                continue
+            if any(f"{alias}." in line for alias in aliases):
+                continue
+            violations.append(
+                SchemaViolation(
+                    file=rel,
+                    line=lineno,
+                    message=f"bare table/view literal '{name}' - "
+                    "reference it through Tables.<SYMBOL> / Views.<SYMBOL> instead",
                 )
+            )
     return violations
 
 
@@ -138,7 +178,7 @@ def _check_naming_and_audit_columns(
 def audit(
     root: Path, domain_prefixes: list[str], grandfathered: list[str], exemptions: list[str]
 ) -> list[SchemaViolation]:
-    return _check_bare_literals(root, exemptions) + _check_naming_and_audit_columns(
+    return _check_bare_literals(root, domain_prefixes, exemptions) + _check_naming_and_audit_columns(
         root, domain_prefixes, grandfathered, exemptions
     )
 

@@ -79,7 +79,13 @@ exemptions = [
 ]
 
 [tool.bedrock.audit.s005]
-exemptions = []
+exemptions = [
+  # This file's own test bodies write a `@pytest.mark.skip(...)` decorator as
+  # literal string content — a deliberate violation fixture proving the audit
+  # catches it — not an actual skip applied in this suite. Same rationale as
+  # s004's audit_s004_config.py carve-out for self-referential pattern text.
+  "packages/bedrock-api/tests/test_audit_s005_to_s008.py",
+]
 
 [tool.bedrock.audit.s006]
 ledger_files = [
@@ -88,7 +94,13 @@ ledger_files = [
 exemptions = []
 
 [tool.bedrock.audit.s007]
-exemptions = []
+exemptions = [
+  # Test fixtures intentionally write raw table-name literals as sample
+  # input (migration-runner test scaffolding) and as deliberate violation
+  # fixtures for the audit's own self-tests; s004 carries the same
+  # test-file carve-out structurally.
+  "packages/bedrock-api/tests/**",
+]
 
 [tool.bedrock.audit.s008]
 guidance_docs = ["CLAUDE.md", "GEMINI.md"]
