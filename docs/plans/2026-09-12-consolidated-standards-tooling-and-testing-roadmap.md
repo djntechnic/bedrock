@@ -1317,6 +1317,41 @@ git -C C:\Dev\bedrock commit -m "feat(audit): harden audit_s002 with page taxono
 
 ---
 
+### Task 1.4.2: Expand Standard S007 and Harden Platform Database Schema Invariants
+
+**Files:**
+
+- Modify: `docs/standards/s007-schema-catalog.md`
+- Modify: `docs/plans/2026-09-12-consolidated-standards-tooling-and-testing-roadmap.md`
+
+**Interfaces:**
+
+- Consumes: none (documentation-only expansion; `bedrock.tools.audit_s007_schema_catalog`
+  does not yet exist — its implementation is scoped to Task 1.5).
+- Produces: the comprehensive S007 specification — object naming and prefix
+  contracts, mandatory audit columns, boolean/lifecycle-state
+  standardization, and the SQLite/PostgreSQL cross-dialect portability
+  contract — that Task 1.5's `audit_s007_schema_catalog` implementation will
+  enforce.
+
+- [x] **Step 1: Expand `docs/standards/s007-schema-catalog.md`** with table/view/index
+      naming conventions, the five reserved platform prefixes (`auth_`, `app_`,
+      `sys_`, `log_`, `diag_`), the mandatory audit-columns contract
+      (`created_at`, `created_by`, `modified_at`, `modified_by`, `is_active`),
+      and the dual SQLite/PostgreSQL portability contract, while keeping the
+      standard free of consumer domain vocabulary
+- [x] **Step 2: Verify absence of domain terms**
+Run: `git grep -iE "(CollectIt|MLBTracker|Lahman|Chadwick|card|ebay)" docs/standards/s007-schema-catalog.md`
+Expected output: exit 1 (no matches).
+- [x] **Step 3: Commit in Bedrock**
+
+```bash
+git -C C:\Dev\bedrock add docs/standards/s007-schema-catalog.md docs/plans/2026-09-12-consolidated-standards-tooling-and-testing-roadmap.md
+git -C C:\Dev\bedrock commit -m "feat(standards): expand S007 with database object naming, audit columns, and cross-dialect portability"
+```
+
+---
+
 ### Task 1.5: Platform Audit Suite `audit_s005` through `audit_s008`
 
 **Agent Recommendation:**
