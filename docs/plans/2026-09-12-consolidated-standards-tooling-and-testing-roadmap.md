@@ -1674,16 +1674,16 @@ git -C C:\Dev\bedrock commit -m "refactor(docs): consolidate Bedrock docs into c
 
 - Produces: Multi-tier test orchestrator (`--mode fast|scoped|full`), AST dead-code elimination, and sharded Vitest execution.
 
-- [ ] **Step 1: Configure `pytest.ini` with strict Tri-Marking taxonomy**
-- [ ] **Step 2: Configure `vitest.workspace.ts` and `knip.json`**
-- [ ] **Step 3: Implement `scripts/maintenance/vulture_whitelist.py`**
-- [ ] **Step 4: Implement `scripts/run_qa.py`** with stdout buffering, telemetry JSONL writer, and exit code propagation.
-- [ ] **Step 5: Execute fast mode test**
+- [x] **Step 1: Configure `pytest.ini` with strict Tri-Marking taxonomy**
+- [x] **Step 2: Configure `vitest.workspace.ts` and `knip.json`**
+- [x] **Step 3: Implement `scripts/maintenance/vulture_whitelist.py`**
+- [x] **Step 4: Implement `scripts/run_qa.py`** with stdout buffering, telemetry JSONL writer, and exit code propagation.
+- [x] **Step 5: Execute fast mode test**
 Run: `python scripts/run_qa.py --mode fast --json`
 Expected output: `{"status": "pass", "exit": 0, ...}` in < 20s.
       Run: `python scripts/run_qa.py --mode fast --json`
       Expected output: `{"status": "pass", "exit": 0, ...}` in < 20s.
-- [ ] **Step 6: Commit in Bedrock**
+- [x] **Step 6: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add scripts/run_qa.py vitest.workspace.ts knip.json scripts/maintenance/vulture_whitelist.py packages/bedrock-api/pytest.ini
