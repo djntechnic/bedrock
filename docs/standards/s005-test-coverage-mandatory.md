@@ -36,9 +36,30 @@ matter of reviewer discipline.
   The test fixture clones or seeds an ephemeral database per session; a
   canary assertion refuses to run if the resolved test-DB path matches the
   live path.
+- Live-database isolation is enforced by more than one canary, because a
+  single check has a single point of failure: a setup-time path assertion
+  (case-insensitive, since the platform targets a case-insensitive
+  filesystem), a post-swap assertion before the test session's singleton
+  points at the resolved path, a teardown-time path guard before any delete
+  runs, and an mtime witness recorded at session start and re-checked at
+  teardown to prove the live database was never touched. If any canary
+  fires, the session stops and is investigated — it is never suppressed to
+  get a green run.
+- A test session seeds from one deterministic, idempotent fixture (safe to
+  re-run against an already-seeded database, e.g. `INSERT OR IGNORE`) rather
+  than depending on a developer's local data snapshot. When a new test
+  hardcodes an expected count or shape, the fixture is updated in the same
+  PR so the two never drift apart.
+- Tests are written for essential logic, contracts, edge cases, and known
+  regressions — not padded with redundant or microscopic mock tests that add
+  maintenance drag without a corresponding correctness guarantee.
 - CI re-runs the full path-scoped suite on every PR. A local fast/scoped test
   tier is a speed optimization for the agent loop, never a substitute for the
   CI gate.
+- Background test jobs and CI runs are never polled with a busy-wait loop
+  (a fixed `sleep` retried in a loop, or repeated manual status checks). The
+  triggering process yields after launching the job and resumes on the
+  event-driven completion signal.
 
 ## Architecture & Code Contracts
 

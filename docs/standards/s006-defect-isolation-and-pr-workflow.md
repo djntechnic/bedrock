@@ -39,6 +39,26 @@ automated — can evaluate a PR's diff against a single, stated defect.
   stated reason.
 - CI must pass — all configured checks green — before merge. A red or
   pending check is never overridden to land a PR faster.
+- A defect is not filed until its root cause is investigated: the exact
+  origin point (file and line where invalid state first arises), the data
+  flow traced backward across every architectural layer boundary it crosses,
+  and a minimal, source-level fix hypothesis are all recorded before the
+  issue is opened. An issue that states only the observed symptom, with no
+  origin trace, sends the next engineer to redo the investigation from
+  scratch before they can even start the fix.
+- Work items are filed under a declared, closed taxonomy of issue types
+  (e.g. defect, out-of-scope observation, feature/enhancement task, and any
+  domain-specific extension the consumer declares) — a free-form or
+  untyped issue is not a substitute for classification. An "out-of-scope"
+  classification is reserved for a non-failing observational discovery; it
+  can never excuse or bypass a currently failing test.
+- High-overhead, rate-limited, or external-network-dependent test paths are
+  never wired into the per-PR blocking gate — they run on a background or
+  post-merge schedule so an external service's rate limit cannot break every
+  contributor's PR.
+- CI execution is scoped to the layers a diff actually touches (a
+  path-filtered `changes` gate), so a change confined to one layer does not
+  block on, or wait for, an unrelated layer's suite.
 
 ## Architecture & Code Contracts
 

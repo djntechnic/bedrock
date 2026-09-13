@@ -33,6 +33,31 @@ responder needs, in every consumer, without per-app retrofitting.
   mode as a service emitting unstructured logs in production.
 - Framework log ingestion (uvicorn, uvicorn.access, fastapi) is intercepted at
   a single boot-time integration point, not re-configured per route.
+- Environment-dependent output shape is switched once, at the logging
+  surface's initialization, never per call site: local development renders
+  single-line, human-readable, color-coded output; a deployed environment
+  serializes the same structured payload as strict JSON lines for ingestion
+  by a log aggregator. A call site never branches on environment to decide
+  its own output format.
+- An exception is logged with its full captured context — stack frames, file,
+  line, and relevant local state — through the logging surface's dedicated
+  exception-capture call (e.g. `logger.exception(...)`), never reconstructed
+  by hand from `str(err)` or a manually formatted traceback.
+- A request-scoped correlation identifier is attached to every log line
+  emitted while handling that request (bound once at the boundary, not
+  passed explicitly to each call site), so a single request's log lines are
+  greppable as one unit across a distributed or multi-process deployment.
+
+## Structured Payload Shape
+
+- **Frontend**: message string as the second positional argument, structured
+  context as the first-positional object — `log.info({ gridId, action }, "…")`,
+  never string-interpolated context.
+- **Backend**: keyword-argument message formatting via Loguru's `{}`-style
+  placeholders resolved from kwargs — `logger.info("...{count}", count=n)`,
+  never Python `%`-style or f-string interpolation of variable values into
+  the message string, since that bypasses structured field extraction at the
+  aggregator.
 
 ## Architecture & Code Contracts
 

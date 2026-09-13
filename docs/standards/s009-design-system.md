@@ -37,7 +37,37 @@ of truth every built-in and custom theme derives from.
 - Structural tokens (spacing, breakpoints, elevation, z-index, motion timing)
   are defined once, theme-invariant, and never duplicated per theme.
 - Every motion addition respects `prefers-reduced-motion` — drop the
-  animation, keep the end-state as a static style.
+  animation, keep the end-state as a static style. When the reduced-motion
+  gate must be assertable in a component test rather than only visually
+  verified, it is applied in application code (conditionally adding the
+  animating class), not solely inside a CSS `@media` block.
+- Semantic color roles are named for their meaning, not their hue —
+  `primary`, `warning`, `destructive`, `neutral` (and the domain's own
+  additions in the same style) — never `orange`, `red`, `gray`. A bare
+  Tailwind color-shade utility (`bg-orange-500`, `text-red-600`) is banned
+  outside `tokens.css` itself for the same reason a literal hex value is:
+  both hardcode a hue that a token was supposed to abstract away.
+- A palette registers with the theme provider as a complete, named set —
+  partial palettes that leave some semantic roles unresolved and silently
+  falling back to another theme's values are a defect, not an acceptable
+  gap.
+
+## Structural Token Categories
+
+Every theme-invariant structural scale is defined exactly once and reused by
+every theme:
+
+- **Spacing** — a rounded step scale (e.g. `--space-xs` through
+  `--space-2xl`), consumed via arbitrary-value syntax if not Tailwind's own
+  namespace.
+- **Breakpoints** — overrides declared once in the design token layer, not
+  re-guessed per component with an inline pixel value.
+- **Elevation** — a small ordered set of shadow tokens (flush through
+  deepest-floating), theme-aware via `hsl(var(--foreground) / alpha)` so
+  shadow tint follows the active theme instead of a fixed black.
+- **Z-index** — a named, ordered stacking scale (base, dropdown, sticky,
+  overlay, modal, popover, toast, tooltip) so two components never silently
+  collide on an ad hoc magic number.
 
 ## Architecture & Code Contracts
 

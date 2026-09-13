@@ -36,7 +36,26 @@ typed, and defaulted — every reader and writer goes through it.
 - A new third-party import on the runtime/data-pipeline/test-collection path
   is declared in the package manifest (`requirements.txt` / `pyproject.toml`)
   in the same PR that introduces it, including transitive parsing engines
-  (e.g. `openpyxl` for `pandas.read_excel`).
+  (e.g. `openpyxl` for `pandas.read_excel`). The manifest is proven against a
+  fresh, isolated checkout (`python -m venv` + install from the manifest
+  alone), not against a developer's locally accumulated environment, because
+  a local environment can carry transitively-installed packages invisible to
+  a clean container.
+- Stored config values are untyped strings at the persistence layer; the
+  accessor coerces each read to its expected type (integer, float, boolean,
+  falling back to string) from a single coercion routine — a call site never
+  parses or casts a raw config string itself.
+- Frontend runtime settings (tooltip delays, feature toggles, shortcut
+  bindings, and similar UI-tunable values) are declared once as a typed key
+  map and resolved through a single settings hook that merges, in order: a
+  boot-time env-var/literal default (pre-hydration fallback), then the
+  database-backed admin config value once it resolves. A component reads the
+  hook's resolved value — it never hardcodes the literal inline or reaches
+  into the env var directly.
+- Every config key a consumer can read or write is enumerated in one typed
+  key registry (a key-name map or enum), not scattered as inline string
+  literals at each call site — the registry is what an admin config editor
+  and the audit both walk to know the full settings surface.
 
 ## Architecture & Code Contracts
 
@@ -65,6 +84,21 @@ live_cycle = int(os.environ.get("LIVE_CYCLE", "2026"))  # bypasses the config su
 from bedrock.core.database import db
 
 current = db.get_current_season()  # never a hardcoded year, never a raw config key
+```
+
+A "current"-shaped accessor resolves through a fallback chain, cached in
+memory and explicitly invalidated on write — never re-derived inline at each
+call site: (1) the record in the owning table explicitly flagged current,
+(2) the maximum/most-recent record if none is flagged, (3) a deterministic
+runtime fallback (e.g. the calendar year) if the table itself is empty or the
+query fails. A writer that changes which record is current must invalidate
+this cache explicitly, the same way `set_config` invalidates its own cache.
+
+**TypeScript — frontend runtime setting, correct:**
+
+```typescript
+const { grid } = useAppSettings();          // merges boot default -> DB-backed value
+const delay = grid.tooltipDelayDuration;     // never a literal 150 inlined in the component
 ```
 
 ## Exceptions & Audit Exemptions

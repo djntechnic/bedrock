@@ -52,6 +52,16 @@ tool call happens.
 - The two instruction files are audited independently — splitting the same
   content unevenly across both to dodge the cap is a violation of the
   standard's intent even where each file individually stays under 200 lines.
+- Every live document is reachable from at least one of: the docs root
+  index, its own folder's index, `CLAUDE.md`, `GEMINI.md`, another live
+  document, a shipped skill, a test, or a CI workflow. A document nothing
+  links to is treated as already orphaned, not as merely unlisted.
+- Retirement removes a document from the working tree rather than leaving it
+  in place under a different label — history stays recoverable through git,
+  but a retired document does not remain readable by a live agent session
+  (an ignore file is advisory per-harness and does not achieve this).
+  Retiring a document in the same PR that closes the work it describes
+  includes fixing every incoming reference so nothing cites a moving target.
 
 ## Architecture & Code Contracts
 

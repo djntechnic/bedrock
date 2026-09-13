@@ -1352,6 +1352,62 @@ git -C C:\Dev\bedrock commit -m "feat(standards): expand S007 with database obje
 
 ---
 
+### Task 1.4.3: Comparative Depth Audit & Remediation of Standards S001-S012 (Excluding S002 & S007) Against MLBTracker Doctrine
+
+**Files:**
+
+- Modify: `docs/standards/s001-no-duplicate-ui-code.md`
+- Modify: `docs/standards/s003-logging-protocol.md`
+- Modify: `docs/standards/s004-no-hardcoded-config-settings.md`
+- Modify: `docs/standards/s005-test-coverage-mandatory.md`
+- Modify: `docs/standards/s006-defect-isolation-and-pr-workflow.md`
+- Modify: `docs/standards/s008-documentation-layout-and-naming.md`
+- Modify: `docs/standards/s009-design-system.md`
+- Modify: `docs/standards/s010-granular-security-model.md`
+- Modify: `docs/standards/s011-config-driven-navigation.md`
+- Modify: `docs/standards/s012-dual-pin-platform-governance.md`
+- Modify: `docs/plans/2026-09-12-consolidated-standards-tooling-and-testing-roadmap.md`
+
+**Interfaces:**
+
+- Consumes: `C:\Dev\MLBTracker\docs\standards\` as the depth-parity source of
+  truth for consumer-side rules not yet generically represented in bedrock.
+- Produces: platform standards deepened to depth parity with MLBTracker's
+  doctrine while remaining fully generic — zero domain vocabulary, every
+  invariant expressed in platform primitives (consumers, domains, entities,
+  records, components) instead of application nouns.
+
+- [x] **Step 1: Pairwise gap analysis against MLBTracker's `S01`–`S11`**
+      S001 gained the compose-beside-not-fork pattern and single icon/form
+      primitive library invariants; S003 gained environment-switched output
+      shape (pretty local / JSON in production), structured exception
+      capture, correlation IDs, and payload-shape rules; S004 gained typed
+      config-value coercion, fresh-checkout manifest verification, a typed
+      config-key registry, and the frontend boot-default-then-DB-override
+      settings pattern; S005 gained the multi-canary live-DB isolation
+      contract, deterministic idempotent seed-fixture discipline, and the
+      anti-busy-wait CI polling rule; S006 gained root-cause-before-filing,
+      a closed issue-type taxonomy, and path-scoped/rate-limit-isolated CI
+      gating; S008 gained the reachability/orphan rule and the
+      retire-from-working-tree rule; S009 gained semantic color-role naming,
+      the bare-Tailwind-color-utility ban, and the structural token category
+      contract (spacing/breakpoints/elevation/z-index); S010 gained the
+      four-flag (`can_view`/`can_update`/`can_delete`/`can_execute`)
+      per-module model, the tri-state override resolution algorithm, the
+      security activity log, and mandatory audit columns. S011 and S012
+      were already at or beyond MLBTracker's depth and required no changes.
+- [x] **Step 2: Verify absence of domain terms**
+Run: `git grep -iE "(MLBTracker|CollectIt|player|team|card|ebay|statcast|lahman)" docs/standards/s001-no-duplicate-ui-code.md docs/standards/s003-logging-protocol.md docs/standards/s004-no-hardcoded-config-settings.md docs/standards/s005-test-coverage-mandatory.md docs/standards/s006-defect-isolation-and-pr-workflow.md docs/standards/s008-documentation-layout-and-naming.md docs/standards/s009-design-system.md docs/standards/s010-granular-security-model.md docs/standards/s011-config-driven-navigation.md docs/standards/s012-dual-pin-platform-governance.md`
+Expected output: exit 1 (no matches).
+- [x] **Step 3: Commit in Bedrock**
+
+```bash
+git -C C:\Dev\bedrock add docs/standards/ docs/plans/2026-09-12-consolidated-standards-tooling-and-testing-roadmap.md
+git -C C:\Dev\bedrock commit -m "feat(standards): deepen S001-S012 platform standards based on comparative audit against MLBTracker doctrine"
+```
+
+---
+
 ### Task 1.5: Platform Audit Suite `audit_s005` through `audit_s008`
 
 **Agent Recommendation:**

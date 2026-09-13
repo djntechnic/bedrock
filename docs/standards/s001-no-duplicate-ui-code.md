@@ -37,6 +37,18 @@ deterministic signal to block on when the answer was ignored.
 - A deliberate fork is legitimate exactly once: it declares `@shadows <Name>`
   in the file header with the reason, making a reasoned fork and an accident
   stop looking alike to both a reviewer and the audit.
+- When a platform component owns part of a screen and deliberately declines
+  the rest, the remainder is composed *beside* it as its own component, not
+  forked from it — a platform panel plus a consumer-authored sibling panel is
+  the correct shape; copying the platform panel's internals to add the extra
+  fields is not.
+- Icons resolve through exactly one icon library per consumer app, declared
+  once; no inline SVG icon markup duplicating a name already available from
+  that library.
+- Form and layout primitives (buttons, inputs, selects, dialogs) come from
+  the consumer's single declared component library; a hand-rolled `<button>`
+  or `<input>` reimplementing one of that library's primitives is a
+  duplicate, not a style choice.
 
 ## Architecture & Code Contracts
 
