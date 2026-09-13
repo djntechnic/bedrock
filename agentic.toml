@@ -1,0 +1,29 @@
+[repo]
+name = "bedrock"
+
+rules = [
+  "s01-ui-primitives",
+  "s03-logging-standards",
+  "s05-zero-broken-tests",
+]
+
+skills = [
+  "anti-ui-slop",
+  "bump-bedrock-pin",
+  "compact-test-runner",
+  "cut-release",
+  "react-best-practices",
+  "sql-sentinel",
+  "triage-plan",
+]
+
+agents = [
+  "backend-api-engineer",
+  "frontend-ui-engineer",
+  "quality-gatekeeper",
+  "ui-sentinel",
+]
+
+hooks = [
+  "pre-tool-guard.ps1",
+]
