@@ -1083,7 +1083,7 @@ Expected output: Task registered with state `Ready`.
 
 - Produces: Authoritative platform standards with 3-digit padded references (`§S001`–`§S012`) and zero domain-specific artifacts.
 
-- [ ] **Step 1: Author `docs/standards/s001-no-duplicate-ui-code.md` through `s012-dual-pin-platform-governance.md`**
+- [x] **Step 1: Author `docs/standards/s001-no-duplicate-ui-code.md` through `s012-dual-pin-platform-governance.md`**
 Populate each standard document ensuring:
       Populate each standard document ensuring:
 - Title uses 3-digit padded notation: `# Standard S001: No Duplicate UI Code`.
@@ -1108,7 +1108,7 @@ Get-ChildItem C:\Dev\bedrock\docs\standards\*.md | Select-Object Name
 
 Expected output: Exactly `README.md` and `s001-*.md` through `s012-*.md`.
 
-- [ ] **Step 5: Commit in Bedrock**
+- [x] **Step 5: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add docs/standards/
