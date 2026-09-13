@@ -1,0 +1,159 @@
+"""Unit tests for the declarative manifest engine (bedrock.tools._config)."""
+from pathlib import Path
+
+import pytest
+
+from bedrock.tools._config import BedrockConfig, load_bedrock_config
+
+
+def _write_toml(tmp_path: Path, content: str) -> Path:
+    toml_path = tmp_path / "bedrock.toml"
+    toml_path.write_text(content, encoding="utf-8")
+    return toml_path
+
+
+def test_load_valid_config(tmp_path: Path):
+    _write_toml(
+        tmp_path,
+        """
+        [tool.bedrock]
+        schema_catalog = "packages/bedrock-api/bedrock/core/schema_catalog.py"
+        grids_dir = "packages/bedrock-ui/src/components/DataGrid"
+
+        [tool.bedrock.audit.s001]
+        exemptions = ["TwinComponent"]
+        """,
+    )
+    cfg = load_bedrock_config(tmp_path)
+    assert isinstance(cfg, BedrockConfig)
+    assert cfg.schema_catalog == Path("packages/bedrock-api/bedrock/core/schema_catalog.py")
+    assert cfg.grids_dir == Path("packages/bedrock-ui/src/components/DataGrid")
+    assert "TwinComponent" in cfg.audit_s001.exemptions
+
+
+def test_consumer_exemptions_merge_additively_with_platform_baseline(tmp_path: Path):
+    _write_toml(
+        tmp_path,
+        """
+        [tool.bedrock]
+
+        [tool.bedrock.audit.s001]
+        exemptions = ["TwinComponent"]
+        """,
+    )
+    cfg = load_bedrock_config(tmp_path)
+    # Platform baseline exemptions (e.g. vendored/generated paths) always apply,
+    # regardless of what the consumer declares.
+    assert "**/node_modules/**" in cfg.audit_s001.exemptions
+    assert "TwinComponent" in cfg.audit_s001.exemptions
+
+
+def test_merged_exemptions_contain_no_duplicates(tmp_path: Path):
+    _write_toml(
+        tmp_path,
+        """
+        [tool.bedrock]
+
+        [tool.bedrock.audit.s001]
+        exemptions = ["**/node_modules/**", "**/node_modules/**"]
+        """,
+    )
+    cfg = load_bedrock_config(tmp_path)
+    assert cfg.audit_s001.exemptions.count("**/node_modules/**") == 1
+
+
+def test_missing_exemptions_key_on_declared_section_raises(tmp_path: Path):
+    _write_toml(
+        tmp_path,
+        """
+        [tool.bedrock]
+
+        [tool.bedrock.audit.s001]
+        allowlist_duplicates = []
+        """,
+    )
+    with pytest.raises(ValueError):
+        load_bedrock_config(tmp_path)
+
+
+def test_omitted_optional_sections_default_cleanly(tmp_path: Path):
+    _write_toml(
+        tmp_path,
+        """
+        [tool.bedrock]
+        """,
+    )
+    cfg = load_bedrock_config(tmp_path)
+    # Every one of the 12 audit sections must be present with sane defaults
+    # even when the consumer's bedrock.toml declares none of them.
+    for i in range(1, 13):
+        section = getattr(cfg, f"audit_s{i:03d}")
+        assert isinstance(section.exemptions, list)
+
+
+def test_s004_config_module_defaults_when_section_omitted(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock]\n")
+    cfg = load_bedrock_config(tmp_path)
+    assert cfg.audit_s004.config_module == "bedrock.core.config"
+
+
+def test_s004_config_module_overridable(tmp_path: Path):
+    _write_toml(
+        tmp_path,
+        """
+        [tool.bedrock]
+        [tool.bedrock.audit.s004]
+        config_module = "app.core.config"
+        exemptions = []
+        """,
+    )
+    cfg = load_bedrock_config(tmp_path)
+    assert cfg.audit_s004.config_module == "app.core.config"
+
+
+def test_s008_guidance_docs_and_max_lines_defaults(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock]\n")
+    cfg = load_bedrock_config(tmp_path)
+    assert cfg.audit_s008.guidance_docs == ["CLAUDE.md", "GEMINI.md"]
+    assert cfg.audit_s008.max_lines == 200
+
+
+def test_s002_presentational_tables_default_to_empty_list(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock]\n")
+    cfg = load_bedrock_config(tmp_path)
+    assert cfg.audit_s002.presentational_tables == []
+
+
+def test_s012_requirements_and_package_json_defaults(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock]\n")
+    cfg = load_bedrock_config(tmp_path)
+    assert cfg.audit_s012.requirements == "packages/bedrock-api/requirements.txt"
+    assert cfg.audit_s012.package_json == "packages/bedrock-ui/package.json"
+
+
+def test_missing_bedrock_toml_raises(tmp_path: Path):
+    with pytest.raises(FileNotFoundError):
+        load_bedrock_config(tmp_path)
+
+
+def test_auto_detects_repo_root_when_none_given():
+    # This repo's own bedrock.toml lives at the git repo root; auto-detection
+    # must walk up from the current working directory to find it.
+    cfg = load_bedrock_config(None)
+    assert isinstance(cfg, BedrockConfig)
+    assert cfg.audit_s001 is not None
+
+
+def test_explicit_repo_root_overrides_auto_detection(tmp_path: Path):
+    _write_toml(
+        tmp_path,
+        """
+        [tool.bedrock]
+        schema_catalog = "custom/path.py"
+
+        [tool.bedrock.audit.s001]
+        exemptions = []
+        """,
+    )
+    cfg = load_bedrock_config(tmp_path)
+    assert cfg.schema_catalog == Path("custom/path.py")

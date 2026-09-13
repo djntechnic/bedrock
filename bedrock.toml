@@ -1,0 +1,47 @@
+[tool.bedrock]
+schema_catalog = "packages/bedrock-api/bedrock/core/schema_catalog.py"
+grids_dir = "packages/bedrock-ui/src/components/DataGrid"
+
+[tool.bedrock.audit.s001]
+exemptions = []
+
+[tool.bedrock.audit.s002]
+presentational_tables = []
+exemptions = []
+
+[tool.bedrock.audit.s003]
+exemptions = []
+
+[tool.bedrock.audit.s004]
+config_module = "bedrock.core.config"
+exemptions = []
+
+[tool.bedrock.audit.s005]
+exemptions = []
+
+[tool.bedrock.audit.s006]
+exemptions = []
+
+[tool.bedrock.audit.s007]
+exemptions = []
+
+[tool.bedrock.audit.s008]
+guidance_docs = ["CLAUDE.md", "GEMINI.md"]
+max_lines = 200
+exemptions = []
+
+[tool.bedrock.audit.s009]
+theme_palettes = "packages/bedrock-ui/src/theme/palettes.ts"
+exemptions = []
+
+[tool.bedrock.audit.s010]
+exemptions = []
+
+[tool.bedrock.audit.s011]
+nav_config = "packages/bedrock-ui/src/navigation/navConfig.ts"
+exemptions = []
+
+[tool.bedrock.audit.s012]
+requirements = "packages/bedrock-api/requirements.txt"
+package_json = "packages/bedrock-ui/package.json"
+exemptions = []
