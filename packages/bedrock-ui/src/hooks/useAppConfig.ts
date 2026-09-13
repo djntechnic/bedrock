@@ -78,18 +78,18 @@ export function getInventoryStatuses(
   return [
     { status_key: "In Collection",    display_label: "In Collection",
       is_default: 1, aliases: null, sort_order: 0,
-      color_class: "bg-emerald-100 text-emerald-800" },
+      color_class: "bg-positive/15 text-positive" },
     { status_key: "On Hold",          display_label: "On Hold",
       is_default: 0, aliases: null, sort_order: 1,
-      color_class: "bg-amber-100 text-amber-800" },
+      color_class: "bg-warning/15 text-warning" },
     { status_key: "For Sale/Trade",   display_label: "For Sale/Trade",
       is_default: 0, aliases: null, sort_order: 2,
-      color_class: "bg-blue-100 text-blue-800" },
+      color_class: "bg-info/15 text-info" },
     { status_key: "Sale/Trade Pending", display_label: "Sale/Trade Pending",
       is_default: 0, aliases: null, sort_order: 3,
-      color_class: "bg-purple-100 text-purple-800" },
+      color_class: "bg-neutral/15 text-neutral" },
     { status_key: "Wantlist",         display_label: "Wantlist",
       is_default: 0, aliases: null, sort_order: 4,
-      color_class: "bg-rose-100 text-rose-800" },
+      color_class: "bg-negative/15 text-negative" },
   ];
 }

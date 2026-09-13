@@ -1,7 +1,7 @@
 /**
  * @file HelpPopover.tsx
  * @module @djntechnic/bedrock-ui/components
- * @description Config-driven in-app quick help popover (Bedrock #69 / MLBTracker #401).
+ * @description Config-driven in-app quick help popover (Bedrock issue 69 / MLBTracker issue 401).
  * Composes Radix Popover primitives, markdown/text rendering, and external documentation link.
  */
 import { ExternalLink, HelpCircle, Loader2 } from "lucide-react";

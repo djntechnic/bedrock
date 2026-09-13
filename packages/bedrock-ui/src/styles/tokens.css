@@ -40,6 +40,12 @@
     /* ── Scoreboard tokens (§S009) ── */
     --scoreboard-accent: 38 92% 55%;
     --live-pulse: 330 85% 55%;
+    /* ── Rank-medal identity tokens (§S009) — gold/silver/bronze have no
+     * semantic-status equivalent (not positive/negative/warning/info/neutral);
+     * they identify a leaderboard position, so they get their own role. ── */
+    --rank-gold: 43 96% 56%;
+    --rank-silver: 215 20% 65%;
+    --rank-bronze: 27 96% 61%;
     /* ── Chart-role tokens (§S009) — aliased to existing semantic tokens rather
      * than duplicated raw values, so per-theme distinctness comes for free. ── */
     --chart-1: var(--primary);
@@ -77,6 +83,10 @@
     /* ── Scoreboard tokens (§S009) ── */
     --scoreboard-accent: 38 92% 62%;
     --live-pulse: 330 88% 66%;
+    /* ── Rank-medal identity tokens (§S009, lighter for dark bg) ── */
+    --rank-gold: 43 96% 62%;
+    --rank-silver: 215 20% 72%;
+    --rank-bronze: 27 96% 66%;
     /* ── Chart-role tokens (§S009) — aliased, see :root above ── */
     --chart-1: var(--primary);
     --chart-2: var(--scoreboard-accent);
@@ -115,6 +125,11 @@
   /* ── Scoreboard tokens (§S009) ── */
   --color-scoreboard-accent: hsl(var(--scoreboard-accent));
   --color-live-pulse: hsl(var(--live-pulse));
+
+  /* ── Rank-medal identity tokens (§S009) ── */
+  --color-rank-gold: hsl(var(--rank-gold));
+  --color-rank-silver: hsl(var(--rank-silver));
+  --color-rank-bronze: hsl(var(--rank-bronze));
 
   /* ── Chart-role tokens (§S009) ── */
   --color-chart-1: hsl(var(--chart-1));

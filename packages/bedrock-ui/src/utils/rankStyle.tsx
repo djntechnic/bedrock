@@ -7,18 +7,18 @@ import { Medal } from "lucide-react";
 import type { ReactNode } from "react";
 
 export function getRankRowClass(rank: number): string {
-  if (rank === 1) return "bg-amber-500/8 border-l-2 border-amber-400";
-  if (rank === 2) return "bg-slate-400/8 border-l-2 border-slate-400";
-  if (rank === 3) return "bg-orange-400/8 border-l-2 border-orange-400/70";
+  if (rank === 1) return "bg-rank-gold/8 border-l-2 border-rank-gold";
+  if (rank === 2) return "bg-rank-silver/8 border-l-2 border-rank-silver";
+  if (rank === 3) return "bg-rank-bronze/8 border-l-2 border-rank-bronze/70";
   return "";
 }
 
 export function getRankIcon(rank: number): ReactNode {
   if (rank === 1)
-    return <Medal className="h-3 w-3 text-amber-500 inline-block shrink-0" />;
+    return <Medal className="h-3 w-3 text-rank-gold inline-block shrink-0" />;
   if (rank === 2)
-    return <Medal className="h-3 w-3 text-slate-400 inline-block shrink-0" />;
+    return <Medal className="h-3 w-3 text-rank-silver inline-block shrink-0" />;
   if (rank === 3)
-    return <Medal className="h-3 w-3 text-orange-400 inline-block shrink-0" />;
+    return <Medal className="h-3 w-3 text-rank-bronze inline-block shrink-0" />;
   return null;
 }

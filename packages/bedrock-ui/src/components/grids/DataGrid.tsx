@@ -106,6 +106,7 @@ import {
   computeAggValue,
   formatAggValue,
   hasAggregates,
+  resolveKpiGradientHexes,
 } from "../../utils/gridUtils";
 import type { SelectionColumnOptions } from "../../utils/gridUtils";
 import { getRankRowClass } from "../../utils/rankStyle";
@@ -829,11 +830,7 @@ export default function DataGrid<T extends Record<string, any>>({
                   columnId,
                 );
                 if (minMax && typeof value === "number") {
-                  // Semantic palette: positive is emerald green, negative is red
-                  const positiveHex = "#16a34a";
-                  const negativeHex = "#dc2626";
-                  const fromColor = policy.lowerBetter ? positiveHex : negativeHex;
-                  const toColor = policy.lowerBetter ? negativeHex : positiveHex;
+                  const { fromColor, toColor } = resolveKpiGradientHexes(policy.lowerBetter);
                   gradientStyle = getGradientCellStyle(
                     value,
                     minMax.min,

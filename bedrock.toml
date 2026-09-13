@@ -112,6 +112,24 @@ theme_palettes = "packages/bedrock-ui/src/theme/palettes.ts"
 exemptions = [
   "packages/bedrock-ui/src/styles/**",
   "packages/bedrock-ui/src/theme/**",
+  # editorFields.tsx's ColorRow renders a native <input type="color">, which
+  # the HTML spec requires to receive a literal #rrggbb value — there is no
+  # token-driven way to seed a browser color-picker widget.
+  "packages/bedrock-ui/src/components/admin/gridEditor/editorFields.tsx",
+  # gridUtils.tsx is the KPI-gradient color-interpolation engine itself: it
+  # parses admin-configured hex strings (app_grid_column_settings.gradient_*)
+  # and computes an in-between rgb(...) at render time. Those are runtime
+  # arithmetic outputs, not hardcoded design choices, and the same role this
+  # audit already carves out for tokens.css/theme/palettes.ts as the one place
+  # raw color math is allowed to live.
+  "packages/bedrock-ui/src/utils/gridUtils.tsx",
+  # Palette-shaped test fixtures: ThemeContext.test.tsx builds ThemePalette
+  # objects (the same six raw hex fields as theme/palettes.ts) to exercise
+  # resolveSystemPalette, and useDocumentHead.test.ts fabricates a
+  # `<meta content="#000">` DOM node to assert cleanup() only removes tags it
+  # wrote. Both are fixture data mimicking real inputs, not UI styling.
+  "packages/bedrock-ui/src/context/ThemeContext.test.tsx",
+  "packages/bedrock-ui/src/hooks/useDocumentHead.test.ts",
 ]
 
 [tool.bedrock.audit.s010]

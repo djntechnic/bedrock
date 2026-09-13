@@ -63,6 +63,37 @@ export function getGradientCellStyle(
   return { backgroundColor: `rgb(${r},${g},${b})` };
 }
 
+/** Converts a bare `H S% L%` token triplet (see tokens.css) to a `#rrggbb` hex string. */
+function hslTripletToHex(hslTriplet: string): string {
+  const [h, s, l] = hslTriplet.trim().split(/\s+/).map((part) => parseFloat(part));
+  const sFrac = s / 100;
+  const lFrac = l / 100;
+  const k = (n: number) => (n + h / 30) % 12;
+  const a = sFrac * Math.min(lFrac, 1 - lFrac);
+  const f = (n: number) => lFrac - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  const toHex = (n: number) => Math.round(f(n) * 255).toString(16).padStart(2, "0");
+  return `#${toHex(0)}${toHex(8)}${toHex(4)}`;
+}
+
+/** Reads a semantic color token's current (theme-resolved) value as hex, or falls back off-DOM. */
+function resolveTokenHex(tokenName: string, fallback: string): string {
+  if (typeof window === "undefined" || typeof document === "undefined") return fallback;
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(tokenName).trim();
+  if (!raw) return fallback;
+  return hslTripletToHex(raw);
+}
+
+/**
+ * Endpoint hex colors for the KPI directional gradient, resolved from the
+ * `--positive` / `--negative` semantic tokens so custom themes recolor the
+ * gradient automatically instead of freezing it to one palette.
+ */
+export function resolveKpiGradientHexes(lowerBetter: boolean): { fromColor: string; toColor: string } {
+  const positive = resolveTokenHex("--positive", hslTripletToHex("142 76% 36%"));
+  const negative = resolveTokenHex("--negative", hslTripletToHex("0 72% 51%"));
+  return lowerBetter ? { fromColor: positive, toColor: negative } : { fromColor: negative, toColor: positive };
+}
+
 /**
  * Computes the numeric min and max for a column across the provided rows.
  * Uses the current filtered/visible row set so gradients reflect the active view.
