@@ -73,7 +73,7 @@ class Config:
     # SMTP relay — read by bedrock.mail.smtp when `mail_provider` is "smtp".
     #
     # These are environment settings rather than `app_config_settings` rows,
-    # which is a deliberate departure from §S4: SMTP_PASSWORD is a credential,
+    # which is a deliberate departure from §S004: SMTP_PASSWORD is a credential,
     # and app config is rendered in an admin UI and returned by the config
     # export endpoint. The Cloudflare token above draws the same line. What is
     # admin-editable — which provider is active, the From address and display

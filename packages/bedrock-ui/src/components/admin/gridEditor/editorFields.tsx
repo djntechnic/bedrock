@@ -3,7 +3,7 @@
  * @module frontend/src/components/admin/gridEditor
  * @description Shared labelled field-row primitives for the Grid Editor panels
  *              (grid-level + column-level). Extracted so both panels render the
- *              same controls with zero duplication (§S1).
+ *              same controls with zero duplication (§S001).
  */
 
 import { HelpCircle } from "lucide-react";

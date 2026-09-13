@@ -8,7 +8,7 @@ Desc:    SMTP mail provider — the default backend for a self-hosted bedrock
 
          ── Where the settings live, and why they are split ──────────────────
          Connection settings come from the environment (`Config`), not from
-         `app_config_settings`. That is not the §S4 default and the deviation
+         `app_config_settings`. That is not the §S004 default and the deviation
          is deliberate: `SMTP_PASSWORD` is a credential, and
          `app_config_settings` is rendered in an admin UI and dumped by the
          config export endpoint. `Config` already draws this line for the

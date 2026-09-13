@@ -129,11 +129,11 @@ function buildCssVars(palette: ThemePalette): Record<string, string> {
     "--border": hexToHsl(palette.colorBorder),
     "--input": hexToHsl(palette.colorBorder),
     "--ring": hexToHsl(palette.colorPrimary),
-    // Scoreboard tokens (§S9) — theme-invariant identity colors, bumped
+    // Scoreboard tokens (§S009) — theme-invariant identity colors, bumped
     // lighter for dark backgrounds to match the built-in themes' pattern.
     "--scoreboard-accent": bgDark ? "38 92% 62%" : "38 92% 55%",
     "--live-pulse": bgDark ? "330 88% 66%" : "330 85% 55%",
-    // Chart-role tokens (§S9) — aliased to existing semantic tokens so each
+    // Chart-role tokens (§S009) — aliased to existing semantic tokens so each
     // theme's chart colors track its own identity automatically.
     "--chart-1": "var(--primary)",
     "--chart-2": "var(--scoreboard-accent)",
@@ -141,14 +141,14 @@ function buildCssVars(palette: ThemePalette): Record<string, string> {
   };
 }
 
-/** The full set of §S9 scoreboard token keys every theme surface must define. */
+/** The full set of §S009 scoreboard token keys every theme surface must define. */
 const SCOREBOARD_TOKEN_KEYS = ["--scoreboard-accent", "--live-pulse"] as const;
 
-/** The full set of §S9 chart-role token keys every theme surface must define. */
+/** The full set of §S009 chart-role token keys every theme surface must define. */
 const CHART_TOKEN_KEYS = ["--chart-1", "--chart-2", "--chart-3"] as const;
 
 /**
- * One-shot migration: a custom theme created before §S9 may carry a frozen
+ * One-shot migration: a custom theme created before §S009 may carry a frozen
  * `cssVars` snapshot (e.g. imported/patched by a future admin flow) missing
  * the newer scoreboard tokens. Patches them in using the same light/dark
  * defaults as {@link buildCssVars}, leaving themes that already have them —
@@ -176,7 +176,7 @@ function patchLegacyCssVars(palette: ThemePalette): ThemePalette {
 
 /**
  * MLB Classic's 6 raw color fields, shared with `AdminPage.tsx`'s blank
- * custom-theme form default (§S9 §5.2) — a single source so the two never
+ * custom-theme form default (§S009 §5.2) — a single source so the two never
  * drift out of sync again.
  */
 export const DEFAULT_THEME_SEED: Pick<
@@ -388,7 +388,7 @@ function applyTheme(palette: ThemePalette) {
  * Pure and exported so the rule can be tested without a `matchMedia` stub, and
  * so a host can ask the same question the provider asks.
  *
- * §S9 note: this only ever *selects* a registered palette. It defines no
+ * §S009 note: this only ever *selects* a registered palette. It defines no
  * colour of its own — a system mode that invented a light theme for a host
  * that ships only dark ones would be exactly the `:root` block the standard
  * forbids, arrived at by another route.
@@ -468,7 +468,7 @@ export function ThemeProvider({
     } catch {
       return [];
     }
-    // One-shot §S9 migration — patch any frozen custom-theme cssVars missing
+    // One-shot §S009 migration — patch any frozen custom-theme cssVars missing
     // the newer scoreboard tokens, then persist so this only runs once.
     const patched = stored.map(patchLegacyCssVars);
     if (patched.some((p, i) => p !== stored[i])) {

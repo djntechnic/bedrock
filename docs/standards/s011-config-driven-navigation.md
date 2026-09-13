@@ -1,11 +1,13 @@
 ---
 id: S011
-title: "Navigation & Information Architecture Standard"
+title: "Config-Driven Navigation"
 status: active
 tier: platform
 enforced_by: bedrock.tools.audit_s011_navigation
 cli_command: "python -m bedrock.tools.audit_s011_navigation --root ."
 ---
+
+# Standard S011: Config-Driven Navigation
 
 ## Purpose & Objective
 
@@ -64,7 +66,7 @@ export function AppSidebar() {
 // Hardcoded nav tree — bypasses navRegistry entirely.
 <nav>
   <a href="/dashboard">Dashboard</a>
-  <a href="/inventory">Inventory</a>
+  <a href="/reports">Reports</a>
 </nav>
 ```
 

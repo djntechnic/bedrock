@@ -145,7 +145,7 @@ def test_update_config_setting_service_updates_whitelisted_fields():
 # route has always had a pre-existing bug where `params = {**updates, "key": key, ...}`
 # overwrites the new-key bind with the path key, making the SQL UPDATE a
 # no-op for renames. Preserving the bug behavior here would be misleading;
-# fixing it belongs in its own §S6 out-of-scope defect PR.
+# fixing it belongs in its own §S006 out-of-scope defect PR.
 
 
 def test_update_config_setting_service_rejects_empty_updates():

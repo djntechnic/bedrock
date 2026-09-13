@@ -151,7 +151,7 @@ export * from "./store/flyoutStore";
 
 // ── UI primitives ────────────────────────────────────────────────────────────
 // shadcn components are normally copy-in-and-edit. They ship here instead
-// because §S9 already routes every color through a CSS token, so an app
+// because §S009 already routes every color through a CSS token, so an app
 // restyles them by overriding token values rather than by forking the
 // component. Apps stay free to `shadcn add` primitives of their own.
 export * from "./components/ui/alert-dialog";

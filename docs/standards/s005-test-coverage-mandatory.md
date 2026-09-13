@@ -1,11 +1,13 @@
 ---
 id: S005
-title: "Zero-Tolerance Defect Contract"
+title: "Test Coverage Mandatory"
 status: active
 tier: platform
 enforced_by: bedrock.tools.audit_s005_testing
 cli_command: "python -m bedrock.tools.audit_s005_testing --root ."
 ---
+
+# Standard S005: Test Coverage Mandatory
 
 ## Purpose & Objective
 

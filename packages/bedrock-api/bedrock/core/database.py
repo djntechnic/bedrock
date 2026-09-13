@@ -477,7 +477,7 @@ class DatabaseManager:
         `mlb_seasons` table — so it is supplied via
         `register_current_season_resolver()`. Caching, thread safety, error
         isolation and the calendar-year fallback stay here, which is why the
-        29 call sites and the §S4 contract are unchanged by the split.
+        29 call sites and the §S004 contract are unchanged by the split.
 
         With no resolver registered the calendar year is returned, which is a
         sane default for an application that has no season concept.

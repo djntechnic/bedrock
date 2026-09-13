@@ -210,11 +210,11 @@ export interface GridSetting {
    * prepends a chevron cell that toggles a caller-owned detail row.
    */
   allow_expansion?: boolean;
-  /** Phase 3 §S9: condensed tabular-numeral style for `cell_type: "number"` cells. */
+  /** Phase 3 §S009: condensed tabular-numeral style for `cell_type: "number"` cells. */
   numeral_style?: "default" | "tabular" | string;
-  /** Phase 3 §S9: flash changed cells with the `--live-pulse` token cue. */
+  /** Phase 3 §S009: flash changed cells with the `--live-pulse` token cue. */
   live_update_highlight?: boolean;
-  /** Phase 3 §S9: tint each row with an accent color the row supplies. */
+  /** Phase 3 §S009: tint each row with an accent color the row supplies. */
   row_accent_reactive?: boolean;
 }
 

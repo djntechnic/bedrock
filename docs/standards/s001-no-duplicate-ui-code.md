@@ -7,9 +7,11 @@ enforced_by: bedrock.tools.audit_s001_duplicates
 cli_command: "python -m bedrock.tools.audit_s001_duplicates --root ."
 ---
 
+# Standard S001: No Duplicate UI Code
+
 ## Purpose & Objective
 
-`@djntechnic/bedrock-ui` exists so `MLBTracker` and `CollectIt` share one grid
+`@djntechnic/bedrock-ui` exists so every consumer application shares one grid
 engine, one component library, and one admin shell. A local twin of a platform
 export — a second `useReactTable(` call site, a hand-rolled `cn()`, a
 re-implemented query-key factory — silently opts that one call site out of
@@ -44,8 +46,8 @@ deterministic signal to block on when the answer was ignored.
 import { DataGrid } from "@djntechnic/bedrock-ui";
 import { cn } from "@djntechnic/bedrock-ui";
 
-export function InventoryGrid() {
-  return <DataGrid gridId="inventory_grid" className={cn("h-full")} />;
+export function ExampleGrid() {
+  return <DataGrid gridId="example_grid" className={cn("h-full")} />;
 }
 ```
 
@@ -55,7 +57,7 @@ export function InventoryGrid() {
 // Second useReactTable call site outside DataGrid.tsx — blocked by the audit.
 import { useReactTable, getCoreRowModel } from "@tanstack/react-table";
 
-export function InventoryGrid() {
+export function ExampleGrid() {
   const table = useReactTable({ columns, data, getCoreRowModel: getCoreRowModel() });
   // ...
 }

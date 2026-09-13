@@ -373,7 +373,7 @@ class TestRequiresTableGuard:
 
 
 class TestBootstrapMissingBaseline:
-    """§S5 requires the error leg: `_bootstrap_baseline` warns and skips
+    """§S005 requires the error leg: `_bootstrap_baseline` warns and skips
     rather than raising when `baseline.sql` is not where it expects — an
     installation that dropped the package data, per its own docstring."""
 

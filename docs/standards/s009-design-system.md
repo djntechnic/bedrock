@@ -1,11 +1,13 @@
 ---
 id: S009
-title: "Theme & Design Tokens"
+title: "Design System"
 status: active
 tier: platform
 enforced_by: bedrock.tools.audit_s009_design_tokens
 cli_command: "python -m bedrock.tools.audit_s009_design_tokens --root ."
 ---
+
+# Standard S009: Design System
 
 ## Purpose & Objective
 
@@ -43,15 +45,15 @@ of truth every built-in and custom theme derives from.
 
 ```css
 :root {
-  --scoreboard-accent: 38 92% 55%;
+  --brand-accent: 38 92% 55%;
 }
 .dark {
-  --scoreboard-accent: 38 92% 62%;
+  --brand-accent: 38 92% 62%;
 }
 ```
 
 ```tsx
-<div className="bg-scoreboard-accent text-foreground" />
+<div className="bg-brand-accent text-foreground" />
 ```
 
 **Violation:**

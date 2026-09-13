@@ -1,11 +1,13 @@
 ---
 id: S003
-title: "Logging & Observability Protocol"
+title: "Logging Protocol"
 status: active
 tier: platform
 enforced_by: bedrock.tools.audit_s003_logging
 cli_command: "python -m bedrock.tools.audit_s003_logging --root ."
 ---
+
+# Standard S003: Logging Protocol
 
 ## Purpose & Objective
 

@@ -7,7 +7,7 @@ Desc:    Whitelist ↔ DDL parity guardrail for grid config tables (Phase 1.c of
          SQLite DDL has a corresponding field on the Pydantic response model.
          If a migration adds a column without updating the schema, this test
          fails on `pytest --collect-only` and blocks merge, closing the loop
-         between DB → API → frontend that §S2 depends on.
+         between DB → API → frontend that §S002 depends on.
 
          The reverse direction (model field with no DDL column) is treated as
          a warning-only case for now because response models legitimately

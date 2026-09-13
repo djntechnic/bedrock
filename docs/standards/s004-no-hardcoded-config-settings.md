@@ -1,11 +1,13 @@
 ---
 id: S004
-title: "Centralized Configuration"
+title: "No Hardcoded Config Settings"
 status: active
 tier: platform
 enforced_by: bedrock.tools.audit_s004_config
 cli_command: "python -m bedrock.tools.audit_s004_config --root ."
 ---
+
+# Standard S004: No Hardcoded Config Settings
 
 ## Purpose & Objective
 
@@ -44,7 +46,7 @@ typed, and defaulted — every reader and writer goes through it.
 from bedrock.core.database import db
 
 live_cycle = db.get_config("live_cycle", 2026)
-watch_enabled = db.get_config("inventory_watch_enabled", False)
+watch_enabled = db.get_config("feature_flag_enabled", False)
 
 db.set_config("live_cycle", 2027)  # invalidates the cache internally
 ```

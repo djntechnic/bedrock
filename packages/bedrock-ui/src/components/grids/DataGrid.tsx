@@ -18,7 +18,7 @@
  * The engine owns state (sorting, columnVisibility, globalFilter, density,
  * selection), column building, the cell pipeline (`customCells →
  * renderMediaCell → renderCell` with gradient handling), rank + selection column prepend,
- * rank-highlight row gating, and every GridConfig property from CLAUDE.md §S2. Pages
+ * rank-highlight row gating, and every GridConfig property from CLAUDE.md §S002. Pages
  * become dumb shells that fetch data and hand it off.
  */
 
@@ -589,12 +589,12 @@ export default function DataGrid<T extends Record<string, any>>({
     }
   }, [onBulkCommit, bulkDrafts, setBulkDrafts]);
 
-  // Phase 3 §S9: row accent tinting. The engine owns the mechanism (an inline
+  // Phase 3 §S009: row accent tinting. The engine owns the mechanism (an inline
   // style plus a left-border class); the host app supplies the row → color
   // policy via registerRowAccentResolver(). See ./rowAccentRegistry.
   const resolveRowAccent = useRowAccentResolver(config.rowAccentReactive);
 
-  // Phase 3 §S9: changed-cell "live pulse" detection. Snapshots the
+  // Phase 3 §S009: changed-cell "live pulse" detection. Snapshots the
   // previous `rows` (keyed by config.rowKeyColumn) and diffs on every
   // `rows` change; changed (rowKey, columnId) pairs flash
   // `.animate-live-pulse` for one animation cycle (1.1s, matching the
@@ -1377,13 +1377,13 @@ export default function DataGrid<T extends Record<string, any>>({
               const isGroupedRow = row.getIsGrouped();
               const data = row.original as T;
               const dataRecord = data as unknown as Record<string, unknown>;
-              // Phase 3 §S9: live-pulse cell flashing keys off this row's
+              // Phase 3 §S009: live-pulse cell flashing keys off this row's
               // resolved row-key value (same field DataGrid's row-id / draft
               // store use elsewhere).
               const rowKeyForRow = config.rowKeyColumn
                 ? dataRecord[config.rowKeyColumn]
                 : undefined;
-              // Phase 3 §S9: row accent tint. Grouped rows are never tinted.
+              // Phase 3 §S009: row accent tint. Grouped rows are never tinted.
               // `resolveRowAccent` is a pure mapper, so this is one call per
               // row with no hook involved (rules-of-hooks safe).
               const rowAccentStyle = !isGroupedRow
@@ -1413,7 +1413,7 @@ export default function DataGrid<T extends Record<string, any>>({
                     // embedded consumers (e.g. career-total vs stint-child
                     // vs season-header row styling).
                     !isGroupedRow && rowClassNameFor?.(data, renderIndex),
-                    // Phase 3 §S9: row-accent left-border tint.
+                    // Phase 3 §S009: row-accent left-border tint.
                     rowAccentStyle && "border-l-2 border-l-[color:var(--team-accent)]",
                   )}
                   style={rowAccentStyle}
@@ -1460,7 +1460,7 @@ export default function DataGrid<T extends Record<string, any>>({
                         : !isGroupedRow && sortDir === "desc"
                         ? (colConfig?.sort_desc_color ?? config.sortDescColor ?? null)
                         : null;
-                    // Phase 3 §S9: live-pulse flash for a cell whose value
+                    // Phase 3 §S009: live-pulse flash for a cell whose value
                     // just changed (see the changed-cell effect above).
                     const isFlashing =
                       config.liveUpdateHighlight &&

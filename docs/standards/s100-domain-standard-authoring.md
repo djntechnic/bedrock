@@ -7,17 +7,19 @@ enforced_by: bedrock.tools.audit_s100_domain_registry
 cli_command: "python -m bedrock.tools.audit_s100_domain_registry --root ."
 ---
 
+# Standard S100: Domain Standard Authoring Guide
+
 ## Purpose & Objective
 
-Bedrock holds no business domain — a standard about players, cards, or any
-other application concept does not belong in `bedrock/docs/standards/`. But a
-consumer (`MLBTracker`, `CollectIt`) legitimately needs its own non-negotiable
-contracts, and those contracts need the same machine-checkable shape platform
-standards have: numbered ID, frontmatter, an audit tool, an exemption path.
-This standard defines the numbering range, the audit contract, and the
-declaration mechanism a consumer uses to extend the standards system without
-colliding with the platform's own `S001`–`S099` range or with another
-consumer's numbers.
+Bedrock holds no business domain — a standard about a consumer's own domain
+models does not belong in `bedrock/docs/standards/`. But a consumer
+application legitimately needs its own non-negotiable contracts, and those
+contracts need the same machine-checkable shape platform standards have:
+numbered ID, frontmatter, an audit tool, an exemption path. This standard
+defines the numbering range, the audit contract, and the declaration
+mechanism a consumer uses to extend the standards system without colliding
+with the platform's own `S001`–`S099` range or with another consumer's
+numbers.
 
 ## Non-Negotiable Invariants
 
@@ -28,7 +30,7 @@ consumer's numbers.
 - Each consumer repository owns a disjoint sub-range by convention
   (documented in that consumer's own `docs/standards/README.md`) to avoid
   cross-repo ID collisions if standards are ever compared side by side —
-  e.g. `MLBTracker` uses `S101`–`S149`, `CollectIt` uses `S150`–`S199`.
+  e.g. one consumer uses `S101`–`S149`, another uses `S150`–`S199`.
   Renumbering on collision is a breaking change to every citation of the
   moved ID and is avoided by reserving the range up front.
 - Every domain standard follows the identical schema this document and
@@ -54,25 +56,25 @@ consumer's numbers.
 from pathlib import Path
 from bedrock.tools._reporter import AuditReporter
 
-class AuditS101PlayerIdentity(AuditReporter):
+class AuditS101CanonicalEntityIdentity(AuditReporter):
     def __init__(self, repo_root: Path, config_file: Path):
         super().__init__(
             audit_code="S101",
-            audit_name="Canonical Player Identity",
+            audit_name="Canonical Entity Identity",
             repo_root=repo_root,
             config_file=config_file,
         )
 
     def run(self) -> int:
-        self.start_check("every stat row resolves player_id through the canonical lookup")
-        violations = self._scan_for_bare_player_lookups()
+        self.start_check("every domain row resolves its entity id through the canonical lookup")
+        violations = self._scan_for_bare_entity_lookups()
         if violations:
             for file_path, line in violations:
                 self.fail_check(
-                    "bare player-name lookup bypasses canonical_player_id()",
+                    "bare entity-name lookup bypasses canonical_entity_id()",
                     file_path=file_path,
                     line=line,
-                    hint="import canonical_player_id from api.services.players",
+                    hint="import canonical_entity_id from api.services.entities",
                 )
         else:
             self.pass_check()
@@ -84,8 +86,8 @@ class AuditS101PlayerIdentity(AuditReporter):
 ```toml
 [runtime]
 rules = [
-  "s003-logging-and-observability",  # platform rule, mounted from bedrock
-  "s101-canonical-player-identity",  # domain rule, authored in-repo
+  "s003-logging-protocol",             # platform rule, mounted from bedrock
+  "s101-canonical-entity-identity",    # domain rule, authored in-repo
 ]
 ```
 
@@ -103,11 +105,11 @@ exempt_paths = [
 ```markdown
 ---
 id: S101
-title: "Canonical Player Identity"
+title: "Canonical Entity Identity"
 status: active
 tier: domain
-enforced_by: mlbtracker.tools.audit_s101_player_identity
-cli_command: "python -m mlbtracker.tools.audit_s101_player_identity --root ."
+enforced_by: consumer_app.tools.audit_s101_entity_identity
+cli_command: "python -m consumer_app.tools.audit_s101_entity_identity --root ."
 ---
 ```
 

@@ -175,7 +175,7 @@ export function renderMediaCell(
  * @param navigate   - Optional router navigate function (required for link_target).
  * @param playerId   - Optional player_id for link_target="player_page".
  * @param linkCtx    - Meta/row context for config-driven link_target resolution.
- * @param numeralStyle - Grid-level `config.numeralStyle` (§S9 Phase 3). `"tabular"`
+ * @param numeralStyle - Grid-level `config.numeralStyle` (§S009 Phase 3). `"tabular"`
  *                       applies the shared `.tabular-nums` utility to numeric cells.
  */
 export function renderCell(

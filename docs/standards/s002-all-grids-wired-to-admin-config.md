@@ -1,11 +1,13 @@
 ---
 id: S002
-title: "Unified DataGrid Contract"
+title: "All Grids Wired to Admin Config"
 status: active
 tier: platform
-enforced_by: bedrock.tools.audit_s002_grid_wiring
-cli_command: "python -m bedrock.tools.audit_s002_grid_wiring --root ."
+enforced_by: bedrock.tools.audit_s002_grids
+cli_command: "python -m bedrock.tools.audit_s002_grids --root ."
 ---
+
+# Standard S002: All Grids Wired to Admin Config
 
 ## Purpose & Objective
 
@@ -47,10 +49,10 @@ happens.
 ```tsx
 import { DataGrid, useGridConfig } from "@djntechnic/bedrock-ui";
 
-export function CollectionGrid() {
-  const config = useGridConfig("collection_grid");
+export function ExampleGrid() {
+  const config = useGridConfig("example_grid");
   if (!config.isLoaded) return null;
-  return <DataGrid gridId="collection_grid" />;
+  return <DataGrid gridId="example_grid" />;
 }
 ```
 
@@ -58,7 +60,7 @@ export function CollectionGrid() {
 
 ```tsx
 // Hardcodes what config.pageSizeOptions already owns.
-<DataGrid gridId="collection_grid" pageSizeOptions={[10, 25, 50]} />
+<DataGrid gridId="example_grid" pageSizeOptions={[10, 25, 50]} />
 ```
 
 **Python — GET/PATCH route pair for a grid-config field must stay in step:**
@@ -98,7 +100,7 @@ exemption with no matching rationale is a configuration error.
 ## Verification & Enforcement Gate
 
 ```bash
-python -m bedrock.tools.audit_s002_grid_wiring --root . --diff
+python -m bedrock.tools.audit_s002_grids --root . --diff
 ```
 
 - **Exit 0** — every grid's seven layers agree; no config field is read as a

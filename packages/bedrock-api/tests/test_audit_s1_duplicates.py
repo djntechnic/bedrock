@@ -1,4 +1,4 @@
-"""Tests for the §S1 no-duplicate-UI-code gate."""
+"""Tests for the §S001 no-duplicate-UI-code gate."""
 import json
 import pathlib
 
@@ -74,7 +74,7 @@ def test_a_colliding_component_is_a_finding(tmp_path):
 
 
 def test_a_shadows_marker_exempts_the_named_collision(tmp_path):
-    """§S1 option 3: a deliberate fork, declared with `@shadows <Name>`, is
+    """§S001 option 3: a deliberate fork, declared with `@shadows <Name>`, is
     not the same thing as an accidental twin and must not be flagged."""
     _make_package(tmp_path, ["Button"])
     _seed_minimum(tmp_path)
