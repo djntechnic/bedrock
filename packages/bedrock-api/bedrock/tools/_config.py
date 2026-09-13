@@ -70,11 +70,14 @@ class AuditS005Config:
 
 @dataclass
 class AuditS006Config:
+    ledger_files: list[str] = field(default_factory=list)
     exemptions: list[str] = field(default_factory=list)
 
 
 @dataclass
 class AuditS007Config:
+    domain_prefixes: list[str] = field(default_factory=list)
+    grandfathered_tables: list[str] = field(default_factory=list)
     exemptions: list[str] = field(default_factory=list)
 
 
@@ -82,6 +85,7 @@ class AuditS007Config:
 class AuditS008Config:
     guidance_docs: list[str] = field(default_factory=lambda: ["CLAUDE.md", "GEMINI.md"])
     max_lines: int = 200
+    allowed_root_docs: list[str] = field(default_factory=list)
     exemptions: list[str] = field(default_factory=list)
 
 
