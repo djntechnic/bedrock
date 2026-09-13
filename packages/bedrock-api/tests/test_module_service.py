@@ -4,15 +4,6 @@ Layer:   bedrock-api/tests
 Desc:    Coverage for bedrock.services.module_service — the effective
          module-visibility resolver: role defaults, per-user overrides
          (grant / deny / clear), and the platform's own module catalog.
-
-         Note: `list_user_overrides` selects `umo.granted`, a column that
-         does not exist on `auth_user_module_overrides` in this package's
-         own baseline schema (only `can_view`/`can_update`/`can_delete`/
-         `can_execute` are defined — see bedrock/schema/baseline.sql). That
-         makes `list_user_overrides` unusable against a freshly-provisioned
-         platform database. `TestListUserOverrides` below documents this as
-         the real, current behavior rather than papering over it; see the
-         PR/task notes for the follow-up this should get filed under.
 """
 from __future__ import annotations
 
@@ -21,7 +12,6 @@ import uuid
 import pytest
 
 from bedrock.core.database import db, DatabaseManager
-from bedrock.core.database import DatabaseQueryError
 from bedrock.core.schema_catalog import Tables as T
 from bedrock.services import module_service as ms
 from bedrock.services import user_service as us
@@ -195,21 +185,21 @@ class TestSetUserModuleOverride:
 
 # ── list_user_overrides ──────────────────────────────────────────────────────
 class TestListUserOverrides:
-    def test_raises_even_with_no_overrides(self, user):
-        """The `granted` column reference is invalid regardless of whether
-        any override row exists — SQLite rejects the query at parse time."""
-        with pytest.raises(DatabaseQueryError):
-            ms.list_user_overrides(user.user_id)
+    def test_empty_with_no_overrides(self, user):
+        assert ms.list_user_overrides(user.user_id) == {}
 
-    def test_raises_against_the_baseline_schema(self, user):
-        """Documents current, real behavior: the query selects a `granted`
-        column that `auth_user_module_overrides` does not define in this
-        package's baseline schema, so any override on the row makes this
-        call fail rather than return data. This is a genuine defect, not an
-        intentional contract — see the module docstring above."""
+    def test_reflects_granted_override(self, user):
         ms.set_user_module_override(user.user_id, "admin", True)
-        with pytest.raises(DatabaseQueryError):
-            ms.list_user_overrides(user.user_id)
+        assert ms.list_user_overrides(user.user_id) == {"admin": True}
+
+    def test_reflects_denied_override(self, user):
+        ms.set_user_module_override(user.user_id, "admin", False)
+        assert ms.list_user_overrides(user.user_id) == {"admin": False}
+
+    def test_cleared_override_is_absent(self, user):
+        ms.set_user_module_override(user.user_id, "admin", True)
+        ms.set_user_module_override(user.user_id, "admin", None)
+        assert ms.list_user_overrides(user.user_id) == {}
 
 
 # ── list_role_module_defaults ────────────────────────────────────────────────
