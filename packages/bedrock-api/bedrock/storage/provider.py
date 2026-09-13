@@ -4,7 +4,7 @@ Layer:   bedrock/storage
 Desc:    The storage capability (plan F4). Where an uploaded file's bytes go.
 
          A provider rather than a registry, by the test in
-         `docs/extension_points.md`: two storage backends do not both hold the
+         `docs/reference/extension-points.md`: two storage backends do not both hold the
          file. One wins, and which one is deployment configuration — the same
          application code runs against local disk in development and a CDN in
          production.

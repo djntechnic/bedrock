@@ -61,13 +61,13 @@ When Bedrock requires application knowledge, it exposes an extension point. Ther
 *   **Providers** are swappable implementations where exactly one wins, backed by rows in `app_config_settings` and resolved lazily.
 *   **Dotted-Path** is used for registries required *before* the application module runs imports (e.g., inline schema migrations).
 
-For a comprehensive guide on adding new registries or providers and their failure policies, see [`docs/extension_points.md`](extension_points.md).
+For a comprehensive guide on adding new registries or providers and their failure policies, see [`docs/extension-points.md`](extension-points.md).
 
 ## 4. Backend Platform Contract & Lifecycle
 
 ### Unified App Factory
 
-The entry point for building a Bedrock application is `bedrock.core.app_factory.create_app()`. This factory handles the mounting order, CORS configuration, platform error handlers, rate-limiting, the 7 platform routers, and SEO routes. (See [`docs/app_assembly.md`](app_assembly.md)).
+The entry point for building a Bedrock application is `bedrock.core.app_factory.create_app()`. This factory handles the mounting order, CORS configuration, platform error handlers, rate-limiting, the 7 platform routers, and SEO routes. (See [`docs/app-assembly.md`](app-assembly.md)).
 
 Crucially, it registers the `DatabaseQueryError` handler which ensures proper error envelopes are returned rather than failing silently and causing empty grids on the frontend. It also overrides the default slowapi rate limiter with Bedrock's custom 429 handler.
 
@@ -156,7 +156,7 @@ While Bedrock standardizes infrastructure, consumers utilize its features differ
 | **Domain** | Collectibles Marketplace | Baseball Analytics | Proves multi-domain platform decoupling. |
 | **Current Season Resolver** | Omitted | Registered | CollectIt has no season concept; degrades safely to current year. |
 | **Dashboard Pinning** | Omitted | Registered | CollectIt lacks a dashboard; omits `registerDashboardPinHost()`. |
-| **Storage Provider** | App-Local (R2) | Bedrock | CollectIt requires S3/R2 listing capabilities not in Bedrock's protocol ([`docs/object_storage.md`](object_storage.md), [`docs/media.md`](media.md)). |
+| **Storage Provider** | App-Local (R2) | Bedrock | CollectIt requires S3/R2 listing capabilities not in Bedrock's protocol ([`docs/object-storage.md`](object-storage.md), [`docs/media.md`](media.md)). |
 | **Extraction Status** | Fully Decoupled | Fully Decoupled | Legacy MLBTracker artifacts (e.g. `collector` role) have been scrubbed. |
 
 ### "Absence as a Feature"

@@ -11,7 +11,7 @@ Desc:    `/sitemap.xml` and `/robots.txt` (plan F5).
 
          In the compose stack nginx serves the SPA and proxies `/api`, so
          reaching these means adding two `location` blocks that proxy to the
-         API. `docs/seo.md` has them.
+         API. `docs/reference/seo.md` has them.
 """
 from fastapi import APIRouter, Response
 

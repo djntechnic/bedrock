@@ -40,7 +40,7 @@ s3 = ["boto3"]
 dev = ["pytest", "pytest-asyncio", "httpx", "pyyaml"]
 
 # Operational entry points. `bedrock-healthcheck` is what a container's
-# HEALTHCHECK runs — see deploy/Dockerfile.api and docs/deployment.md.
+# HEALTHCHECK runs — see deploy/Dockerfile.api and docs/reference/deployment.md.
 [project.scripts]
 bedrock-healthcheck = "bedrock.tools.healthcheck:main"
 

@@ -6,7 +6,7 @@ The standards in this folder are bedrock's non-negotiable engineering
 contracts — platform-wide invariants that apply to every consumer
 application installing `bedrock-api` and `@djntechnic/bedrock-ui`. They hold
 no business domain: nothing here knows what a consumer's application-layer
-data represents (see [`docs/extension_points.md`](../extension_points.md)
+data represents (see [`docs/reference/extension-points.md`](../reference/extension-points.md)
 for the registry/provider boundary that keeps it that way).
 
 Each standard follows the identical five-section schema — `Purpose &

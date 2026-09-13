@@ -73,7 +73,7 @@ rather than migrate into a state nobody intended.
 
 Its own routers, its static mounts, its own middleware, and the **eager
 imports** that register its contributions to the platform's extension points
-([`extension_points.md`](extension_points.md)).
+([`extension-points.md`](extension-points.md)).
 
 Registration must remain an import side effect — never an `after_bootstrap`
 hook. ASGI test transports do not run lifespan, so anything registered there is

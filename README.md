@@ -26,7 +26,7 @@ app = create_app(title="My App", routers=[RouterMount(r, prefix="/api/v1/app") f
 the platform's error handlers and rate limiter, and runs the database boot
 sequence in lifespan — with hooks for what a host has to do before migrations,
 after the database is healthy, and on the way down.
-See [`docs/app_assembly.md`](docs/app_assembly.md) and [`docs/platform_guide.md`](docs/platform_guide.md).
+See [`docs/reference/app-assembly.md`](docs/reference/app-assembly.md) and [`docs/reference/platform-guide.md`](docs/reference/platform-guide.md).
 
 ## The contract
 
@@ -60,10 +60,10 @@ Providers are declared with `core.providers.ProviderRegistry`.
 An application that owns its own object keys wants the wider `ObjectStore`
 protocol — caller-chosen keys, exhaustive prefix listing, batch deletes and
 public-URL verification — which `local` and `s3` implement and Cloudflare
-Images cannot. [`docs/object_storage.md`](docs/object_storage.md).
+Images cannot. [`docs/reference/object-storage.md`](docs/reference/object-storage.md).
 
 Error reporting is next. Mail is documented in
-[`docs/mail.md`](docs/mail.md): invitation, password reset and email
+[`docs/reference/mail.md`](docs/reference/mail.md): invitation, password reset and email
 verification, all of which degrade to a logged no-op when nothing is
 configured. `bedrock-ui` ships the three pages those links land on; mount them
 at `AUTH_FLOW_PATHS`, which is also what the backend builds the links from.
@@ -74,9 +74,9 @@ the package genuinely reusable rather than MLBTracker with the names filed off
 — and it is verified, not assumed.
 
 Full contract, including which kind to reach for and why the failure policy
-differs per registry: [`docs/extension_points.md`](docs/extension_points.md). For
+differs per registry: [`docs/reference/extension-points.md`](docs/reference/extension-points.md). For
 the complete cross-repository platform handbook, lifecycle model, and consumer invariants,
-see [`docs/platform_guide.md`](docs/platform_guide.md).
+see [`docs/reference/platform-guide.md`](docs/reference/platform-guide.md).
 
 ## Schema
 
@@ -96,7 +96,7 @@ reaches half the databases.
 and `.env.example` is the environment contract. Point every healthcheck at
 `/api/v1/health/ready`, which answers 503 when the database is unreachable —
 `/health` is a diagnostic report and always answers 200.
-[`docs/deployment.md`](docs/deployment.md).
+[`docs/reference/deployment.md`](docs/reference/deployment.md).
 
 ## Verification
 

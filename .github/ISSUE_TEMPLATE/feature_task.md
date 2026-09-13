@@ -54,5 +54,5 @@ assignees: []
 - [ ] Frontend tests cover new behavior: `npm test` from repo root
 - [ ] `npm run typecheck` clean (`tsc -b --noEmit`)
 - [ ] Structured logging only: Pino (`log`) in UI, Loguru in API
-- [ ] Extension points documented in `docs/extension_points.md` if applicable
+- [ ] Extension points documented in `docs/reference/extension-points.md` if applicable
 - [ ] Breaking changes called out in `CHANGELOG.md`

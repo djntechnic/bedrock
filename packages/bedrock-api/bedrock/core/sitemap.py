@@ -4,7 +4,7 @@ Layer:   bedrock/core
 Desc:    The sitemap registry and its XML (plan F5).
 
          A *registry*, not a provider, by the test in
-         `docs/extension_points.md`: every source contributes and all of them
+         `docs/reference/extension-points.md`: every source contributes and all of them
          run. A catalog's set pages and a blog's posts both belong in the same
          sitemap.
 

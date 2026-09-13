@@ -94,7 +94,7 @@ def registered_current_season_resolver() -> tuple[Callable[[], int], ...]:
     """:returns: The registered resolver as a 0- or 1-tuple.
 
     A tuple rather than `Callable | None` so this reader matches the other
-    registries' shape (see `docs/extension_points.md`) — every `registered_*`
+    registries' shape (see `docs/reference/extension-points.md`) — every `registered_*`
     hands back an immutable snapshot, and callers test it the same way
     regardless of whether the registry holds one contribution or many.
     """

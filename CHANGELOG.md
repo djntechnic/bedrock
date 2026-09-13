@@ -174,7 +174,7 @@ tag push so this cannot recur silently.
 Carries Milestone 3 and Milestone 4 both. No `v0.7.0` tag exists: M3's last two
 items and all of M4 landed on one branch, and both consumers adopt them in a
 single pin bump, so cutting two tags would have filed two adoption issues for
-one piece of work. `docs/roadmap.md` records the deviation in place.
+one piece of work. `docs/reference/roadmap.md` records the deviation in place.
 
 ### For consumers
 
@@ -185,7 +185,7 @@ one piece of work. `docs/roadmap.md` records the deviation in place.
   `bedrock.routes.seo` unprefixed (`mount_seo=False` to opt out), and runs the
   boot sequence in lifespan with `before_migrations` / `after_bootstrap` /
   `on_shutdown` hooks. `PLATFORM_ROUTER_MOUNTS` is exported alongside it.
-  [`docs/app_assembly.md`](docs/app_assembly.md).
+  [`docs/reference/app-assembly.md`](docs/reference/app-assembly.md).
 
 - `bedrock.storage.ObjectStore` — the storage capability widened for
   applications that own their own key space: `put(key, ...)` with the caller's
@@ -196,7 +196,7 @@ one piece of work. `docs/roadmap.md` records the deviation in place.
   Cloudflare R2, MinIO and S3. `pip install 'bedrock-api[s3]'`; configured from
   `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_ENDPOINT_URL`,
   `S3_REGION` and `S3_PUBLIC_BASE_URL`.
-  [`docs/object_storage.md`](docs/object_storage.md).
+  [`docs/reference/object-storage.md`](docs/reference/object-storage.md).
 
 - `<DataGrid gridRef={…}>` — the grid's sorted, filtered row order, pulled on
   demand through a `DataGridHandle` (`getSortedRowKeys(): string[]`). A plain
@@ -214,7 +214,7 @@ one piece of work. `docs/roadmap.md` records the deviation in place.
   dialect — so that stack failed at the first `CREATE TABLE` and had never
   booted. The `db` service is kept behind a `postgres` profile, off by default.
   `POSTGRES_PASSWORD` is no longer required to start the stack.
-  [`docs/deployment.md`](docs/deployment.md).
+  [`docs/reference/deployment.md`](docs/reference/deployment.md).
 
 - **`registerDashboardPinHost()` — the pin controls are now hidden by default,
   and this is how an app turns them back on (#36).** *Behaviour change:* the
@@ -829,7 +829,7 @@ it is hosted.
   CVE surface to every deploy for a three-line request. Standard library only,
   no bedrock imports, because it must work in the states where the application
   cannot import.
-- **`docs/deployment.md`**, including why the stack runs one worker: the rate
+- **`docs/reference/deployment.md`**, including why the stack runs one worker: the rate
   limiter and the diagnostics scheduler both hold per-process state, so N
   workers means N× the configured limit and N runs of every scheduled job.
 - **`.env` is gitignored.** It was not, and F1 gave the file a `SMTP_PASSWORD`
@@ -882,7 +882,7 @@ unused constant and a string literal are invisible to both.
   logged and skipped rather than failing the file — a sitemap that 500s makes a
   crawler back off the whole site rather than one section — and an app that
   registers nothing gets a valid empty `<urlset>`.
-- **`docs/seo.md`**, including the nginx blocks these two paths need (they are
+- **`docs/reference/seo.md`**, including the nginx blocks these two paths need (they are
   only honoured at the root of a host, so mounting under `/api/v1` produces
   files no crawler will request) and what is still missing: a scraper that does
   not run JavaScript sees `index.html`'s static tags, which is a rendering
@@ -905,7 +905,7 @@ unused constant and a string literal are invisible to both.
 - **`media_assets`**, keyed by `(entity_type, entity_id)` with no foreign key
   to any application table — which is what lets one table serve a card's
   photos, a gallery's images and a post's attachments, and which means nothing
-  cascades. `docs/media.md` says so and names the call an app makes instead.
+  cascades. `docs/reference/media.md` says so and names the call an app makes instead.
 
 ### Added — F1, the pages the links land on
 
@@ -959,7 +959,7 @@ with no route implementing either. This is that designed-but-unbuilt feature.
   application that already exists — `baseline.sql` only reaches databases
   created after the change, so every consumer would have had to hand-copy a
   migration for a table it does not own.
-- **`docs/mail.md`** — the operator's view: what to set, what the three flows
+- **`docs/reference/mail.md`** — the operator's view: what to set, what the three flows
   do, and what is deliberately not built yet.
 
 ### Fixed — F1
@@ -1004,7 +1004,7 @@ with no route implementing either. This is that designed-but-unbuilt feature.
   still boots. An unknown provider name logs once and degrades rather than
   raising, because the selecting value is admin-editable and a typo must not
   be able to halt the process.
-- **`docs/extension_points.md`.** Which kind to reach for, the naming
+- **`docs/reference/extension-points.md`.** Which kind to reach for, the naming
   convention, and why the failure policy deliberately differs per registry — a
   failing health counter is swallowed, a failing config section is not.
 - **A conformance test** (`test_extension_point_convention.py`) that asserts

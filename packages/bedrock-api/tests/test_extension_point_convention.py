@@ -2,7 +2,7 @@
 Module:  test_extension_point_convention.py
 Layer:   bedrock-api/tests
 Desc:    Enforces the two extension-point conventions documented in
-         `docs/extension_points.md` (plan F0).
+         `docs/reference/extension-points.md` (plan F0).
 
          A convention that lives only in a document is a convention until the
          first hurried afternoon. The specific failure this guards against is
@@ -170,5 +170,5 @@ class TestConventionsAreDistinct:
         unlisted = found - listed - NOT_REGISTRIES
         assert not unlisted, (
             f"registries missing from REGISTRIES in this file: {sorted(unlisted)}. "
-            f"Add a row, and a table row in docs/extension_points.md."
+            f"Add a row, and a table row in docs/reference/extension-points.md."
         )

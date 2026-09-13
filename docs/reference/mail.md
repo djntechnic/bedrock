@@ -61,7 +61,7 @@ Set `mail_provider` to `smtp` and mail is on. Nothing else is needed.
 | `null` | Drops the message and logs the recipient. What you get with nothing configured. |
 
 Adding another is the provider convention, unchanged
-([`extension_points.md`](extension_points.md)):
+([`extension-points.md`](extension-points.md)):
 
 ```python
 from bedrock.mail import mail, MailMessage
@@ -194,5 +194,5 @@ always restyles — so this link is the app's to place.
   a queue, which is F6.
 - **Template overrides.** The three messages are functions. An application that
   wants different copy writes its own sender today. A registry with one possible
-  registration is the failure mode `extension_points.md` exists to prevent —
+  registration is the failure mode `extension-points.md` exists to prevent —
   when a *second* application needs different wording, that is the signal.

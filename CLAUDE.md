@@ -39,7 +39,7 @@ application iff it touches an application table.* If you are about to add
 domain vocabulary to this repo, you are adding it in the wrong place — add an
 extension point instead.
 
-Read [`docs/extension_points.md`](docs/extension_points.md) before adding one.
+Read [`docs/reference/extension-points.md`](docs/reference/extension-points.md) before adding one.
 There are exactly **two kinds** and picking the wrong one is the mistake that
 document exists to prevent:
 
@@ -117,11 +117,11 @@ Consumers must add an `@source` line pointing at this package so Tailwind scans 
 
 ## Reference Docs
 
-- [`docs/platform_guide.md`](docs/platform_guide.md) — primary cross-repository architectural guide, lifecycle model, and consumer invariants.
-- [`docs/extension_points.md`](docs/extension_points.md) — registries vs. providers. **Read before adding either.**
-- [`docs/deployment.md`](docs/deployment.md) — `deploy/` Dockerfiles, compose, nginx.
-- [`docs/media.md`](docs/media.md) · [`docs/mail.md`](docs/mail.md) — the two provider-shaped subsystems.
-- [`docs/pagination.md`](docs/pagination.md) · [`docs/seo.md`](docs/seo.md)
+- [`docs/reference/platform-guide.md`](docs/reference/platform-guide.md) — primary cross-repository architectural guide, lifecycle model, and consumer invariants.
+- [`docs/reference/extension-points.md`](docs/reference/extension-points.md) — registries vs. providers. **Read before adding either.**
+- [`docs/reference/deployment.md`](docs/reference/deployment.md) — `deploy/` Dockerfiles, compose, nginx.
+- [`docs/reference/media.md`](docs/reference/media.md) · [`docs/reference/mail.md`](docs/reference/mail.md) — the two provider-shaped subsystems.
+- [`docs/reference/pagination.md`](docs/reference/pagination.md) · [`docs/reference/seo.md`](docs/reference/seo.md)
 - [`CHANGELOG.md`](CHANGELOG.md) — release notes. Consumers read this to decide whether a pin bump is mechanical.
 
 ---
