@@ -1578,15 +1578,15 @@ git -C C:\Dev\bedrock commit -m "feat(tools): implement sync_standards and run_a
 
 - Produces: Taxonomy and kebab-case validator, plus automated two-stage NTFS renamer (`__tmp`) and inbound link rewriter.
 
-- [ ] **Step 1: Write unit tests for taxonomy audit and two-stage rename planner**
-- [ ] **Step 2: Implement `audit_taxonomy_and_casing.py`**
-- [ ] **Step 3: Implement `remediate_taxonomy_and_casing.py`**
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 1: Write unit tests for taxonomy audit and two-stage rename planner**
+- [x] **Step 2: Implement `audit_taxonomy_and_casing.py`**
+- [x] **Step 3: Implement `remediate_taxonomy_and_casing.py`**
+- [x] **Step 4: Run tests to verify they pass**
 Run: `pytest packages/bedrock-api/tests/test_taxonomy_and_remediation.py`
 Expected output: PASS.
       Run: `pytest packages/bedrock-api/tests/test_taxonomy_and_remediation.py`
       Expected output: PASS.
-- [ ] **Step 5: Commit in Bedrock**
+- [x] **Step 5: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/audit_taxonomy_and_casing.py packages/bedrock-api/bedrock/tools/remediate_taxonomy_and_casing.py packages/bedrock-api/tests/test_taxonomy_and_remediation.py
