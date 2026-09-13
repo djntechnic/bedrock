@@ -46,12 +46,17 @@ _TAILWIND_COLOR_UTILITY = re.compile(
     r"(?:" + "|".join(_TAILWIND_HUES) + r")-\d{2,3}\b"
 )
 
-_CSS_VAR_DECL = re.compile(r"--[\w-]+:\s*([^;]+);")
+_CSS_VAR_DECL = re.compile(r"(--[\w-]+):\s*([^;]+);")
 _BARE_HSL_TRIPLET = re.compile(
     r"^\d+(?:\.\d+)?\s+\d+(?:\.\d+)?%\s+\d+(?:\.\d+)?%$"
 )
+_COLOR_VAR_NAME = re.compile(
+    r"(--color|--bg|--background|--fg|--foreground|--border|--primary|--secondary|"
+    r"--destructive|--accent|--muted|--popover|--card|--ring)"
+)
 
 _SOURCE_SUFFIXES = {".ts", ".tsx", ".css"}
+_EXCLUDED_DIR_NAMES = frozenset({"node_modules", "dist", "build", ".venv", "__pycache__"})
 
 
 @dataclass
@@ -68,7 +73,13 @@ def _is_exempt(value: str, exemptions: list[str]) -> bool:
 def _source_files(root: Path) -> list[Path]:
     if not root.is_dir():
         return []
-    return sorted(path for path in root.rglob("*") if path.suffix in _SOURCE_SUFFIXES)
+    return sorted(
+        path
+        for path in root.rglob("*")
+        if path.suffix in _SOURCE_SUFFIXES
+        and not path.name.endswith(".d.ts")
+        and not any(part in _EXCLUDED_DIR_NAMES for part in path.parts)
+    )
 
 
 def _line_of(text: str, offset: int) -> int:
@@ -126,15 +137,22 @@ def _check_tailwind_utilities(root: Path, exemptions: list[str]) -> list[TokenVi
     return violations
 
 
-def _check_bare_hsl_triplets(root: Path, tokens_css_paths: set[str]) -> list[TokenViolation]:
+def _check_bare_hsl_triplets(
+    root: Path, tokens_css_paths: set[str], exemptions: list[str]
+) -> list[TokenViolation]:
     violations: list[TokenViolation] = []
     for rel in tokens_css_paths:
+        if _is_exempt(rel, exemptions):
+            continue
         path = root / rel
         if not path.exists():
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
         for match in _CSS_VAR_DECL.finditer(text):
-            value = match.group(1).strip()
+            var_name = match.group(1)
+            if not _COLOR_VAR_NAME.search(var_name):
+                continue
+            value = match.group(2).strip()
             if not _BARE_HSL_TRIPLET.match(value):
                 violations.append(
                     TokenViolation(
@@ -156,7 +174,7 @@ def audit(
     return (
         _check_raw_literals(root, tokens_css_paths, theme_palette, exemptions)
         + _check_tailwind_utilities(root, exemptions)
-        + _check_bare_hsl_triplets(root, tokens_css_paths)
+        + _check_bare_hsl_triplets(root, tokens_css_paths, exemptions)
     )
 
 

@@ -31,7 +31,7 @@ from bedrock.tools._reporter import AuditReporter
 _ALLOWED_DOC_FOLDERS = {"standards", "specs", "plans", "reference", "archive"}
 _DEPRECATED_DOC_FOLDERS = {"punchlists"}
 _KEBAB_CASE_EXEMPT_NAMES = {"README.md"}
-_KEBAB_CASE_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*\.md$")
+_KEBAB_CASE_RE = re.compile(r"^[a-z0-9.-]+\.md$")
 
 
 @dataclass

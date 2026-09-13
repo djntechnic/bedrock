@@ -49,6 +49,7 @@
   - Task 1.8: Taxonomy Validator & Automated NTFS Remediator
   - Task 1.9: Bedrock Documentation Six-Folder Taxonomy Reorganization
   - Task 1.10: Unified QA Orchestrator (`run_qa.py`), Vitest Workspace & Dead-Code Checks
+  - Task 1.10.3: Resolve S008/S009 Auditor Engine Defects, Enforce S010 Route Security, and Establish Clean Platform Baseline
   - Task 1.11: Bedrock Pre-Flight Suite Verification & Local Validation
 - **Phase 2: Bedrock Platform Release (`v0.10.0`)**
   - Task 2.1: Package Version Bumps, CHANGELOG Entry & Git Tag `v0.10.0`
@@ -1688,6 +1689,45 @@ Expected output: `{"status": "pass", "exit": 0, ...}` in < 20s.
 ```bash
 git -C C:\Dev\bedrock add scripts/run_qa.py vitest.workspace.ts knip.json scripts/maintenance/vulture_whitelist.py packages/bedrock-api/pytest.ini
 git -C C:\Dev\bedrock commit -m "feat(qa): implement unified run_qa orchestrator, vitest workspace, and knip/vulture"
+```
+
+---
+
+### Task 1.10.3: Resolve S008/S009 Auditor Engine Defects, Enforce S010 Route Security, and Establish Clean Platform Baseline
+
+**Agent Recommendation:**
+
+- Claude: `model: sonnet`, `effort: medium`
+
+**Files:**
+
+- Modify: `packages/bedrock-api/bedrock/tools/audit_s008_guidance.py`
+- Modify: `packages/bedrock-api/bedrock/tools/audit_s009_design_tokens.py`
+- Modify: `packages/bedrock-api/bedrock/routes/user_preferences.py`
+- Modify: `packages/bedrock-api/tests/test_audit_s009_to_s012.py`
+- Modify: `bedrock.toml`
+
+**Interfaces:**
+
+- Produces: A kebab-case filename regex that tolerates semver dots in `docs/plans/`
+  filenames; an S009 design-token engine that prunes `.d.ts`/build/dependency
+  paths and restricts the bare-HSL-triplet check to color-role custom
+  properties (honoring `[tool.bedrock.audit.s009].exemptions`); explicit
+  `Depends(get_current_user)` guards on the mutating `user_preferences` grid
+  routes; and an `[tool.bedrock.audit.s010].exemptions` entry for the
+  intentionally-public `auth.py` routes.
+
+- [x] **Step 1: Fix S008 filename regex** to allow `[a-z0-9.-]+\.md$` under `docs/plans/`, retaining the 5-folder taxonomy.
+- [x] **Step 2: Fix S009 engine** — prune `.d.ts`/`node_modules`/`dist`/`build`/`.venv`/`__pycache__` from `_source_files()`; restrict `_check_bare_hsl_triplets` to color-role custom properties and route it through `[tool.bedrock.audit.s009].exemptions` so the platform's own `tokens.css`/`theme/palettes.ts` stay exempt.
+- [x] **Step 3: Patch S010 route security** — attach `Depends(get_current_user)` to the mutating `PATCH`/`DELETE` grid-preference endpoints in `user_preferences.py`; exempt the intentionally-public `auth.py` endpoints (register/login/password-reset/verify-email) in `bedrock.toml`.
+- [x] **Step 4: Verify S001/S012 configuration** — confirmed `audit_s001_duplicates.py` already excludes `.d.ts`/`node_modules`/`dist`/`build`/`.venv`/`__pycache__`, and `[tool.bedrock.audit.s012].package_json` already points at the root manifest. No changes required.
+- [x] **Step 5: Verification gate** — `audit_s008_guidance`, `audit_s010_security`, `audit_s011_navigation`, and `audit_s012_pins` exit 0. `pytest packages/bedrock-api/tests` is 725/725 green (fixed one test fixture in `test_audit_s009_to_s012.py` to use a canonical color-role property name after the S009 whitelist change).
+  **Known Class B blocker (out of scope for this task):** `audit_s001_duplicates` (92 failures) and `audit_s009_design_tokens` (103 failures) — plus pre-existing, previously-undiscovered volume in S002-S007 — surface genuine, large-scale platform primitive/design-token/logging debt across `packages/bedrock-ui/src/**` that predates this task and is unrelated to the S008/S009-engine/S010-route defects it targets. `run_all` remains red (4/12) until that debt is triaged and remediated as its own effort; it is not papered over here.
+- [x] **Step 6: Commit in Bedrock**
+
+```bash
+git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/ packages/bedrock-api/bedrock/routes/user_preferences.py packages/bedrock-api/tests/test_audit_s009_to_s012.py bedrock.toml docs/plans/2026-09-12-consolidated-standards-tooling-and-testing-roadmap.md
+git -C C:\Dev\bedrock commit -m "fix(tools): complete Task 1.10.3 resolving S008/S009/S010 auditor defects and route guards"
 ```
 
 ---

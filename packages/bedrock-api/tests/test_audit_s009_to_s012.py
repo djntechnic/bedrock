@@ -62,7 +62,7 @@ def test_s009_returns_one_on_wrapped_hsl_css_variable(tmp_path: Path):
     _write_toml(tmp_path, "[tool.bedrock.audit.s009]\nexemptions = []\n")
     _write(
         tmp_path / "packages" / "bedrock-ui" / "styles" / "tokens.css",
-        ":root {\n  --brand-accent: hsl(38, 92%, 55%);\n}\n",
+        ":root {\n  --color-accent: hsl(38, 92%, 55%);\n}\n",
     )
 
     assert audit_s009_design_tokens.main(["--root", str(tmp_path)]) == 1

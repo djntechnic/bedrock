@@ -42,6 +42,7 @@ exemptions = [
 
 [tool.bedrock.audit.s010]
 exemptions = [
+  "packages/bedrock-api/bedrock/routes/auth.py",
   "packages/bedrock-api/bedrock/routes/health.py",
   "packages/bedrock-api/bedrock/routes/diagnostics.py",
 ]
