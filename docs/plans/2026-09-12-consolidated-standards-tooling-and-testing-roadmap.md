@@ -1544,15 +1544,15 @@ git -C C:\Dev\bedrock commit -m "feat(tools): implement platform audits s009 thr
 
 - Produces: `sync_standards --check` for CI drift gating and `bedrock.tools.run_all` for full suite execution.
 
-- [ ] **Step 1: Write unit tests for `sync_standards` and `run_all`**
-- [ ] **Step 2: Implement `sync_standards.py`** (mirror writer with `--check` diffing)
-- [ ] **Step 3: Implement `run_all.py`** (dispatches `audit_s001` through `audit_s012`)
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 1: Write unit tests for `sync_standards` and `run_all`**
+- [x] **Step 2: Implement `sync_standards.py`** (mirror writer with `--check` diffing)
+- [x] **Step 3: Implement `run_all.py`** (dispatches `audit_s001` through `audit_s012`)
+- [x] **Step 4: Run tests to verify they pass**
 Run: `pytest packages/bedrock-api/tests/test_sync_and_run_all.py`
 Expected output: PASS.
       Run: `pytest packages/bedrock-api/tests/test_sync_and_run_all.py`
       Expected output: PASS.
-- [ ] **Step 5: Commit in Bedrock**
+- [x] **Step 5: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/sync_standards.py packages/bedrock-api/bedrock/tools/run_all.py packages/bedrock-api/tests/test_sync_and_run_all.py
