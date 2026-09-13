@@ -1286,6 +1286,37 @@ git -C C:\Dev\bedrock commit -m "feat(tools): implement platform audits s001 thr
 
 ---
 
+### Task 1.4.1: Harden Platform Audit S002 Engine and Synchronize Specification Documentation
+
+**Files:**
+
+- Modify: `packages/bedrock-api/bedrock/tools/audit_s002_grids.py`
+- Modify: `packages/bedrock-api/tests/test_audit_s001_to_s004.py`
+- Modify: `docs/standards/s002-all-grids-wired-to-admin-config.md`
+
+**Interfaces:**
+
+- Consumes: `load_bedrock_config`, `AuditReporter`.
+- Produces: `bedrock.tools.audit_s002_grids` exit codes `0`, `1`, `2`, now also
+  enforcing `page`, `row_key_column`, and Admin Grid Preview API wiring.
+
+- [x] **Step 1: Write failing tests for `page`, `row_key_column`, and Preview API wiring invariants**
+- [x] **Step 2: Harden `audit_s002_grids.py`** (enforce non-empty `page`, valid `row_key_column`, wired preview API endpoint; emit file/line/hint via `AuditReporter.fail_check`)
+- [x] **Step 3: Synchronize `docs/standards/s002-all-grids-wired-to-admin-config.md`** with the 3 new invariants and TypeScript contract examples
+- [x] **Step 4: Run tests to verify they pass**
+Run: `pytest packages/bedrock-api/tests/test_audit_s001_to_s004.py -k "s002"`
+Expected output: PASS.
+      Run: `pytest packages/bedrock-api/tests`
+      Expected output: 636 passed.
+- [x] **Step 5: Commit in Bedrock**
+
+```bash
+git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/audit_s002_grids.py packages/bedrock-api/tests/test_audit_s001_to_s004.py docs/standards/s002-all-grids-wired-to-admin-config.md docs/standards/README.md
+git -C C:\Dev\bedrock commit -m "feat(audit): harden audit_s002 with page taxonomy, row_key, and preview API checks"
+```
+
+---
+
 ### Task 1.5: Platform Audit Suite `audit_s005` through `audit_s008`
 
 **Agent Recommendation:**
