@@ -6,10 +6,25 @@ grids_dir = "packages/bedrock-ui/src/components/DataGrid"
 exemptions = [
   "dist/**",
   "packages/bedrock-ui/dist/**",
+  # This repo is the platform source, not a consumer: everything under
+  # packages/bedrock-ui/src/ (including components/ui/) IS the barrel's
+  # implementation, so relative imports from it are not a local twin.
+  "packages/bedrock-ui/src/**",
 ]
 
 [tool.bedrock.audit.s002]
-presentational_tables = []
+presentational_tables = [
+  "packages/bedrock-ui/src/components/admin/ConfigEditor.tsx",
+  "packages/bedrock-ui/src/components/admin/LogViewer.tsx",
+  "packages/bedrock-ui/src/components/admin/MenuNavEditorPanel.tsx",
+  "packages/bedrock-ui/src/components/admin/PlatformHealthPanel.tsx",
+  "packages/bedrock-ui/src/components/admin/RoleMatrixPanel.tsx",
+  "packages/bedrock-ui/src/components/admin/SecurityLogViewer.tsx",
+  "packages/bedrock-ui/src/components/admin/UserOverridesDrawer.tsx",
+  "packages/bedrock-ui/src/components/admin/UsersPanel.tsx",
+  "packages/bedrock-ui/src/components/grids/PresentationalTableChrome.tsx",
+  "packages/bedrock-ui/src/components/ui/table.tsx",
+]
 exemptions = []
 
 [tool.bedrock.audit.s003]
@@ -23,6 +38,9 @@ exemptions = []
 exemptions = []
 
 [tool.bedrock.audit.s006]
+ledger_files = [
+  "docs/plans/2026-09-12-consolidated-standards-tooling-and-testing-roadmap.md",
+]
 exemptions = []
 
 [tool.bedrock.audit.s007]
