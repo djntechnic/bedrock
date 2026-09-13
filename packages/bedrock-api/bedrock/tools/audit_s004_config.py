@@ -30,6 +30,10 @@ _HARDCODED_SETTING = re.compile(
     r"^\s*[A-Z][A-Z0-9_]*(?:_KEY|_SECRET|_PASSWORD|_TOKEN)\s*=\s*[\"'][^\"']+[\"']",
     re.M,
 )
+_GET_CONFIG_CALL = re.compile(r"\bget_config\(([^)]*)\)")
+_HARDCODED_TOOLTIP_DELAY = re.compile(r"\bdelayDuration=\{\s*\d+\s*\}")
+
+_TEST_SUFFIXES = (".test.ts", ".test.tsx", ".spec.ts", ".spec.tsx")
 
 
 @dataclass
@@ -47,6 +51,16 @@ def _backend_files(root: Path) -> list[Path]:
     if not root.is_dir():
         return []
     return sorted(path for path in root.rglob("*.py"))
+
+
+def _frontend_files(root: Path) -> list[Path]:
+    if not root.is_dir():
+        return []
+    return sorted(
+        path
+        for path in root.rglob("*")
+        if path.suffix in {".ts", ".tsx"} and not path.name.endswith(_TEST_SUFFIXES)
+    )
 
 
 def audit(root: Path, exemptions: list[str]) -> list[ConfigViolation]:
@@ -73,6 +87,33 @@ def audit(root: Path, exemptions: list[str]) -> list[ConfigViolation]:
                         file=rel,
                         line=lineno,
                         message="hardcoded secret/setting literal - use the typed config surface",
+                    )
+                )
+            match = _GET_CONFIG_CALL.search(line)
+            if match and "," not in match.group(1):
+                violations.append(
+                    ConfigViolation(
+                        file=rel,
+                        line=lineno,
+                        message="get_config(...) call missing a default argument - "
+                        "every call site must supply db.get_config(key, default)",
+                    )
+                )
+
+    for path in _frontend_files(root):
+        rel = path.relative_to(root).as_posix()
+        if _is_exempt(rel, exemptions):
+            continue
+
+        text = path.read_text(encoding="utf-8", errors="replace")
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            if _HARDCODED_TOOLTIP_DELAY.search(line):
+                violations.append(
+                    ConfigViolation(
+                        file=rel,
+                        line=lineno,
+                        message="TooltipProvider delayDuration is a hardcoded literal - "
+                        "bind it to the resolved app settings value instead",
                     )
                 )
 

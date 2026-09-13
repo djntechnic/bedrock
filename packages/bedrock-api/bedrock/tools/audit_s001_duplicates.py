@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import fnmatch
 import re
+from dataclasses import dataclass
 from pathlib import Path
 
 from bedrock.tools._config import load_bedrock_config
@@ -38,6 +39,85 @@ _EXPORT_DECL = re.compile(
     r"([A-Za-z_$][\w$]*)",
     re.M,
 )
+
+#: Form/layout/grid primitives that must resolve through the barrel export.
+_PRIMITIVE_NAMES = frozenset(
+    {"Button", "Input", "Select", "Dialog", "Modal", "Tabs", "Popover", "Command", "DataGrid"}
+)
+_BARREL_SPECIFIER = "@djntechnic/bedrock-ui"
+
+_IMPORT_STATEMENT = re.compile(
+    r"import\s+(?:type\s+)?\{([^}]*)\}\s+from\s+[\"']([^\"']+)[\"']"
+)
+
+#: Formatting called inline on a value rather than through a shared formatter.
+_INLINE_FORMATTER = re.compile(
+    r"\.(toLocaleDateString|toLocaleTimeString|toLocaleString|toFixed)\s*\("
+)
+
+#: A literal query-key array bypasses the app's single `queryKeys` factory.
+_INLINE_QUERY_KEY = re.compile(r"queryKey:\s*\[")
+
+
+@dataclass
+class PrimitiveViolation:
+    file: str
+    line: int
+    message: str
+
+
+def _line_of(text: str, offset: int) -> int:
+    return text.count("\n", 0, offset) + 1
+
+
+def find_primitive_violations(root: Path, exemptions: list[str]) -> list[PrimitiveViolation]:
+    """Non-duplicate-export S001 invariants: barrel-only primitives, shared
+    formatters, and a single `queryKeys` factory instead of inline literals."""
+    violations: list[PrimitiveViolation] = []
+
+    for path in _source_files(root):
+        rel = path.relative_to(root).as_posix()
+        if _is_exempt(rel, exemptions):
+            continue
+
+        text = path.read_text(encoding="utf-8", errors="replace")
+
+        for match in _IMPORT_STATEMENT.finditer(text):
+            names = {n.strip().split(" as ")[0].strip() for n in match.group(1).split(",")}
+            specifier = match.group(2)
+            if specifier == _BARREL_SPECIFIER:
+                continue
+            for name in names & _PRIMITIVE_NAMES:
+                violations.append(
+                    PrimitiveViolation(
+                        file=rel,
+                        line=_line_of(text, match.start()),
+                        message=f"`{name}` imported from `{specifier}` instead of "
+                        f"`{_BARREL_SPECIFIER}` - a local twin of a platform primitive",
+                    )
+                )
+
+        for lineno, line in enumerate(text.splitlines(), start=1):
+            if _INLINE_FORMATTER.search(line):
+                violations.append(
+                    PrimitiveViolation(
+                        file=rel,
+                        line=lineno,
+                        message="inline date/number formatting - import a shared formatter "
+                        "from lib/formatters or @djntechnic/bedrock-ui instead",
+                    )
+                )
+            if _INLINE_QUERY_KEY.search(line):
+                violations.append(
+                    PrimitiveViolation(
+                        file=rel,
+                        line=lineno,
+                        message="literal `queryKey` array - use the app's `queryKeys` "
+                        "factory instead of a second inline key builder",
+                    )
+                )
+
+    return violations
 
 
 def _is_exempt(rel_path: str, exemptions: list[str]) -> bool:
@@ -108,6 +188,17 @@ def main(argv: list[str] | None = None) -> int:
     else:
         reporter.start_check("Scanning for duplicate exported UI symbols")
         reporter.pass_check("no duplicate exported symbols found")
+
+    primitive_violations = find_primitive_violations(root, config.audit_s001.exemptions)
+    if primitive_violations:
+        for violation in primitive_violations:
+            reporter.start_check(f"Checking platform primitive usage in {violation.file}:{violation.line}")
+            reporter.fail_check(
+                violation.message, file_path=violation.file, line=violation.line
+            )
+    else:
+        reporter.start_check("Scanning for barrel-bypassing primitives, formatters, and query keys")
+        reporter.pass_check("no local primitive twins found")
 
     print(reporter.render())
     return reporter.finish()

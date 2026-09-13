@@ -1408,6 +1408,49 @@ git -C C:\Dev\bedrock commit -m "feat(standards): deepen S001-S012 platform stan
 
 ---
 
+### Task 1.4.4: Reconcile and Harden Audit Engines `audit_s001`, `audit_s003`, and `audit_s004` Against Enriched Platform Standards
+
+**Files:**
+
+- Modify: `packages/bedrock-api/bedrock/tools/audit_s001_duplicates.py`
+- Modify: `packages/bedrock-api/bedrock/tools/audit_s003_logging.py`
+- Modify: `packages/bedrock-api/bedrock/tools/audit_s004_config.py`
+- Modify: `packages/bedrock-api/tests/test_audit_s001_to_s004.py`
+- Modify: `docs/plans/2026-09-12-consolidated-standards-tooling-and-testing-roadmap.md`
+
+**Interfaces:**
+
+- Consumes: `load_bedrock_config`, `AuditReporter`, the enriched
+  `docs/standards/s001-no-duplicate-ui-code.md`,
+  `docs/standards/s003-logging-protocol.md`, and
+  `docs/standards/s004-no-hardcoded-config-settings.md` invariants produced by
+  Task 1.4.3.
+- Produces: `audit_s001_duplicates`, `audit_s003_logging`, and
+  `audit_s004_config`, still exiting `0`/`1`/`2`, now also enforcing:
+  S001 — barrel-only primitive imports (`Button`, `Input`, `Select`, `Dialog`,
+  `Modal`, `Tabs`, `Popover`, `Command`, `DataGrid`), inline formatter calls,
+  and inline `queryKey` array literals; S003 — `console.info` alongside
+  `log`/`warn`/`error`/`debug`, and exclusion of Python test files
+  (`test_*.py`, `tests/**`) from the `print()` scan; S004 — a `get_config(...)`
+  call site missing its default argument, and a hardcoded numeric
+  `TooltipProvider` `delayDuration` literal in frontend source.
+
+- [x] **Step 1: Write failing tests for the new S001/S003/S004 invariants**
+- [x] **Step 2: Harden `audit_s001_duplicates.py`, `audit_s003_logging.py`, and `audit_s004_config.py`** (deterministic regex scans; emit file/line/hint via `AuditReporter.fail_check`)
+- [x] **Step 3: Run tests to verify they pass**
+Run: `pytest packages/bedrock-api/tests/test_audit_s001_to_s004.py`
+Expected output: 34 passed.
+      Run: `pytest packages/bedrock-api/tests`
+      Expected output: 647 passed.
+- [x] **Step 4: Commit in Bedrock**
+
+```bash
+git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/audit_s001_duplicates.py packages/bedrock-api/bedrock/tools/audit_s003_logging.py packages/bedrock-api/bedrock/tools/audit_s004_config.py packages/bedrock-api/tests/test_audit_s001_to_s004.py docs/plans/2026-09-12-consolidated-standards-tooling-and-testing-roadmap.md
+git -C C:\Dev\bedrock commit -m "feat(tools): harden audit_s001, audit_s003, and audit_s004 to enforce enriched platform standards"
+```
+
+---
+
 ### Task 1.5: Platform Audit Suite `audit_s005` through `audit_s008`
 
 **Agent Recommendation:**

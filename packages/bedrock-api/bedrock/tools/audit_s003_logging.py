@@ -26,8 +26,13 @@ from bedrock.tools._reporter import AuditReporter
 
 _TEST_SUFFIXES = (".test.ts", ".test.tsx", ".spec.ts", ".spec.tsx")
 
-_CONSOLE_CALL = re.compile(r"\bconsole\.(log|warn|error|debug)\s*\(")
+_CONSOLE_CALL = re.compile(r"\bconsole\.(log|warn|error|debug|info)\s*\(")
 _PRINT_CALL = re.compile(r"(?<![\w.])print\s*\(")
+
+
+def _is_python_test_file(rel_path: str) -> bool:
+    path = Path(rel_path)
+    return "tests" in path.parts or path.name.startswith("test_")
 
 
 @dataclass
@@ -79,7 +84,7 @@ def audit(root: Path, exemptions: list[str]) -> list[LoggingViolation]:
 
     for path in _backend_files(root):
         rel = path.relative_to(root).as_posix()
-        if _is_exempt(rel, exemptions):
+        if _is_exempt(rel, exemptions) or _is_python_test_file(rel):
             continue
         text = path.read_text(encoding="utf-8", errors="replace")
         for lineno, line in enumerate(text.splitlines(), start=1):

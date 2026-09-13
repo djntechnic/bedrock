@@ -54,6 +54,77 @@ def test_s001_returns_two_on_missing_bedrock_toml(tmp_path: Path):
     assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 2
 
 
+def test_s001_flags_primitive_imported_outside_barrel(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s001]\nexemptions = []\n")
+    _write(
+        tmp_path / "components" / "PlayerCard.tsx",
+        'import { Button } from "./LocalButton";\n'
+        "export function PlayerCard() { return <Button />; }\n",
+    )
+
+    assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 1
+
+
+def test_s001_returns_zero_for_barrel_primitive_import(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s001]\nexemptions = []\n")
+    _write(
+        tmp_path / "components" / "PlayerCard.tsx",
+        'import { Button } from "@djntechnic/bedrock-ui";\n'
+        "export function PlayerCard() { return <Button />; }\n",
+    )
+
+    assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 0
+
+
+def test_s001_flags_inline_date_formatter(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s001]\nexemptions = []\n")
+    _write(
+        tmp_path / "components" / "PlayerRow.tsx",
+        "export function PlayerRow({ date }) {\n"
+        "  return <span>{date.toLocaleDateString()}</span>;\n"
+        "}\n",
+    )
+
+    assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 1
+
+
+def test_s001_returns_zero_for_formatter_from_lib(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s001]\nexemptions = []\n")
+    _write(
+        tmp_path / "components" / "PlayerRow.tsx",
+        'import { formatDate } from "lib/formatters";\n'
+        "export function PlayerRow({ date }) {\n"
+        "  return <span>{formatDate(date)}</span>;\n"
+        "}\n",
+    )
+
+    assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 0
+
+
+def test_s001_flags_inline_query_key_array(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s001]\nexemptions = []\n")
+    _write(
+        tmp_path / "hooks" / "usePlayers.ts",
+        "export function usePlayers(id) {\n"
+        '  return useQuery({ queryKey: ["players", id], queryFn: fetchPlayers });\n'
+        "}\n",
+    )
+
+    assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 1
+
+
+def test_s001_returns_zero_for_query_keys_factory(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s001]\nexemptions = []\n")
+    _write(
+        tmp_path / "hooks" / "usePlayers.ts",
+        "export function usePlayers(id) {\n"
+        "  return useQuery({ queryKey: queryKeys.players(id), queryFn: fetchPlayers });\n"
+        "}\n",
+    )
+
+    assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 0
+
+
 # ---------------------------------------------------------------------------
 # audit_s002_grids
 # ---------------------------------------------------------------------------
@@ -280,6 +351,23 @@ def test_s003_exempts_configured_paths(tmp_path: Path):
     assert audit_s003_logging.main(["--root", str(tmp_path)]) == 0
 
 
+def test_s003_returns_one_on_bare_console_info_call(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s003]\nexemptions = []\n")
+    _write(
+        tmp_path / "components" / "Grid.tsx",
+        'console.info("loaded grid " + gridId);\n',
+    )
+
+    assert audit_s003_logging.main(["--root", str(tmp_path)]) == 1
+
+
+def test_s003_ignores_python_test_files(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s003]\nexemptions = []\n")
+    _write(tmp_path / "tests" / "test_pipeline.py", "print('debug output for a human')\n")
+
+    assert audit_s003_logging.main(["--root", str(tmp_path)]) == 0
+
+
 def test_s003_returns_two_on_missing_bedrock_toml(tmp_path: Path):
     assert audit_s003_logging.main(["--root", str(tmp_path)]) == 2
 
@@ -327,6 +415,41 @@ def test_s004_exempts_configured_paths(tmp_path: Path):
     _write(
         tmp_path / "deploy" / "entrypoint.py",
         "import os\n\nport = os.environ.get('PORT', '8000')\n",
+    )
+
+    assert audit_s004_config.main(["--root", str(tmp_path)]) == 0
+
+
+def test_s004_returns_one_on_get_config_call_missing_default(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s004]\nexemptions = []\n")
+    _write(
+        tmp_path / "services" / "settings.py",
+        "from bedrock.core.database import db\n\nlive_cycle = db.get_config('live_cycle')\n",
+    )
+
+    assert audit_s004_config.main(["--root", str(tmp_path)]) == 1
+
+
+def test_s004_flags_hardcoded_tooltip_delay_duration(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s004]\nexemptions = []\n")
+    _write(
+        tmp_path / "components" / "AppShell.tsx",
+        "export function AppShell() {\n"
+        "  return <TooltipProvider delayDuration={150}>{children}</TooltipProvider>;\n"
+        "}\n",
+    )
+
+    assert audit_s004_config.main(["--root", str(tmp_path)]) == 1
+
+
+def test_s004_returns_zero_for_tooltip_delay_from_settings(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s004]\nexemptions = []\n")
+    _write(
+        tmp_path / "components" / "AppShell.tsx",
+        "export function AppShell() {\n"
+        "  const { grid } = useAppSettings();\n"
+        "  return <TooltipProvider delayDuration={grid.tooltipDelayDuration}>{children}</TooltipProvider>;\n"
+        "}\n",
     )
 
     assert audit_s004_config.main(["--root", str(tmp_path)]) == 0
