@@ -1893,7 +1893,7 @@ git -C C:\Dev\CollectIt commit -m "chore(deps): bump bedrock dual pins to v0.10.
 
 - [ ] **Step 1: Run automated remediation engine**
 Run:
-      Run:
+
 
 ```powershell
 python -m bedrock.tools.remediate_taxonomy_and_casing --root C:\Dev\CollectIt
@@ -1909,7 +1909,13 @@ git -C C:\Dev\CollectIt mv docs/ebay_templates_csv/* templates/ebay-import-csv/ 
 Remove-Item C:\Dev\CollectIt\docs\ebay_templates_csv -Force -ErrorAction SilentlyContinue
 ```
 
-- [ ] **Step 3: Evict punchlists and archive to `scratch/`**
+- [ ] **Step 3: Relocate eBay import CSVs**
+
+Update hard-coded references to `\Templates` and `\Export` folders. Move to a configurable App Setting as defined in S004.
+
+Validate that `\ebay_templates_csv` is not referenced directly in CollectIt. If so, move to a configurable App Setting.
+
+- [ ] **Step 4: Evict punchlists and archive to `scratch/`**
 
 ```powershell
 mkdir C:\Dev\CollectIt\scratch -Force
@@ -1920,7 +1926,7 @@ Move-Item C:\Dev\CollectIt\docs\design\* C:\Dev\CollectIt\scratch\ -Force -Error
 Remove-Item C:\Dev\CollectIt\docs\punchlists, C:\Dev\CollectIt\docs\archive, C:\Dev\CollectIt\docs\design -Recurse -Force -ErrorAction SilentlyContinue
 ```
 
-- [ ] **Step 4: Commit in CollectIt**
+- [ ] **Step 5: Commit in CollectIt**
 
 ```bash
 git -C C:\Dev\CollectIt add -A

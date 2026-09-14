@@ -18,15 +18,34 @@ rules = [
 
 skills = [
   "anti-ui-slop",
+  "audit-ui-runtime",
+  "brainstorming",
   "bump-bedrock-pin",
   "cut-release",
   "deliver-task",
+  "dispatching-parallel-agents",
+  "executing-plans",
+  "finishing-a-development-branch",
   "grid-guru",
+  "impeccable",
+  "issue-triage",
   "react-best-practices",
+  "receiving-code-review",
+  "requesting-code-review",
   "run-tests",
   "sql-sentinel",
+  "subagent-driven-development",
+  "systematic-debugging",
+  "tanstack-intent",
+  "test-driven-development",
   "triage-plan",
+  "using-git-worktrees",
+  "using-superpowers",
+  "verification-before-completion",
+  "writing-plans",
+  "writing-skills",
 ]
+
 
 agents = [
   "backend-api-engineer",
