@@ -1,9 +1,10 @@
 import { jsxs, jsx } from "react/jsx-runtime";
-import { useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Search, X, Undo2, Save, AlignJustify, Pin, PinOff, Download, Printer } from "lucide-react";
 import { Button } from "../ui/button.js";
 import { Input } from "../ui/input.js";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "../ui/tooltip.js";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "../ui/alert-dialog.js";
 import ColumnToggle from "../ColumnToggle.js";
 import { DENSITY_LABEL } from "../../hooks/useDensity.js";
 import { DEFAULT_TOOLTIP_DELAY } from "../../types/grid.js";
@@ -25,9 +26,12 @@ function GridHeader({
   bulkSaving = false,
   onBulkSave,
   onBulkDiscard,
+  confirmBulkDiscard = true,
+  onBeforeBulkDiscard,
   dashboardPin,
   onDashboardPinToggle
 }) {
+  const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
   const recordCount = useRecordCount(table);
   const tipDelay = config.tooltipDelayDuration ?? DEFAULT_TOOLTIP_DELAY;
   const showDensity = config.showDensityToggle && density !== void 0 && !!onDensityChange;
@@ -69,6 +73,28 @@ function GridHeader({
     );
     if (typeof window !== "undefined" && typeof window.print === "function") {
       window.print();
+    }
+  }
+  async function handleConfirmDiscard() {
+    if (onBeforeBulkDiscard) {
+      const allowed = await onBeforeBulkDiscard();
+      if (allowed === false) {
+        setIsDiscardDialogOpen(false);
+        return;
+      }
+    }
+    setIsDiscardDialogOpen(false);
+    log.info(
+      { gridId: config.gridId, action: "bulk-discard", recordCount },
+      "GridHeader: bulk discard"
+    );
+    await onBulkDiscard?.();
+  }
+  function handleDiscardClick() {
+    if (confirmBulkDiscard !== false) {
+      setIsDiscardDialogOpen(true);
+    } else {
+      void handleConfirmDiscard();
     }
   }
   const hasTitleBlock = !!config.title || !!config.subHeader;
@@ -119,13 +145,7 @@ function GridHeader({
               className: "gap-1.5",
               "aria-label": "Discard unsaved edits",
               disabled: bulkSaving,
-              onClick: () => {
-                log.info(
-                  { gridId: config.gridId, action: "bulk-discard", recordCount },
-                  "GridHeader: bulk discard"
-                );
-                onBulkDiscard();
-              },
+              onClick: handleDiscardClick,
               children: [
                 /* @__PURE__ */ jsx(Undo2, { className: "h-3.5 w-3.5" }),
                 "Discard"
@@ -222,7 +242,17 @@ function GridHeader({
           /* @__PURE__ */ jsx(TooltipContent, { side: "top", className: "text-xs", children: "Print / save as PDF" })
         ] })
       ] })
-    ] })
+    ] }),
+    confirmBulkDiscard !== false && /* @__PURE__ */ jsx(AlertDialog, { open: isDiscardDialogOpen, onOpenChange: setIsDiscardDialogOpen, children: /* @__PURE__ */ jsxs(AlertDialogContent, { children: [
+      /* @__PURE__ */ jsxs(AlertDialogHeader, { children: [
+        /* @__PURE__ */ jsx(AlertDialogTitle, { children: "Discard unsaved changes?" }),
+        /* @__PURE__ */ jsx(AlertDialogDescription, { children: "Are you sure you want to discard all unsaved edits in this table? This action cannot be undone." })
+      ] }),
+      /* @__PURE__ */ jsxs(AlertDialogFooter, { children: [
+        /* @__PURE__ */ jsx(AlertDialogCancel, { children: "Keep editing" }),
+        /* @__PURE__ */ jsx(AlertDialogAction, { variant: "destructive", onClick: () => void handleConfirmDiscard(), children: "Discard changes" })
+      ] })
+    ] }) })
   ] });
 }
 export {

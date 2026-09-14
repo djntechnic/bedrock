@@ -629,7 +629,7 @@ export default function MenuNavEditorPanel() {
                       className={`flex items-center gap-2 ${Boolean(draft.parent_key) ? "pl-5" : ""}`}
                     >
                       {isSpacer ? (
-                        <Layers className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                        <Layers className="h-3.5 w-3.5 text-warning shrink-0" />
                       ) : Boolean(draft.parent_key) ? (
                         <CornerDownRight className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
                       ) : (
@@ -655,7 +655,7 @@ export default function MenuNavEditorPanel() {
                           {isSpacer && (
                             <Badge
                               variant="outline"
-                              className="text-[9px] px-1 py-0 h-3.5 border-amber-500/40 text-amber-600 dark:text-amber-400"
+                              className="text-[9px] px-1 py-0 h-3.5 border-warning/40 text-warning"
                             >
                               Section Header
                             </Badge>

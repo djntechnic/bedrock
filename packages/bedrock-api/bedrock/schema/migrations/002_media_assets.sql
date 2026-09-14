@@ -9,7 +9,7 @@
 -- The cost of that choice, stated plainly: there is no referential integrity
 -- to the owning row. Deleting an entity does not cascade to its media. An
 -- application that wants that behaviour calls `media_service.delete_for_entity`
--- in the same transaction — see docs/media.md.
+-- in the same transaction — see docs/reference/media.md.
 
 CREATE TABLE IF NOT EXISTS media_assets (
     media_id            INTEGER PRIMARY KEY AUTOINCREMENT,

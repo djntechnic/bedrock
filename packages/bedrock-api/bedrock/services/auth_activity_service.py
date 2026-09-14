@@ -2,7 +2,7 @@
 Module:  auth_activity_service.py
 Layer:   api/services
 Desc:    Phase 5.10 — persisted, admin-visible audit trail for every
-         security-relevant event. Distinct from §S3 application logs:
+         security-relevant event. Distinct from §S003 application logs:
          this table is what the Admin → Security Log tab queries.
 
          Callers should use `record(event_type, ...)`; keep the surface

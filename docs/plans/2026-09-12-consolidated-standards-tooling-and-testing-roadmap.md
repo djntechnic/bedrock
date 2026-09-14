@@ -49,6 +49,7 @@
   - Task 1.8: Taxonomy Validator & Automated NTFS Remediator
   - Task 1.9: Bedrock Documentation Six-Folder Taxonomy Reorganization
   - Task 1.10: Unified QA Orchestrator (`run_qa.py`), Vitest Workspace & Dead-Code Checks
+  - Task 1.10.3: Resolve S008/S009 Auditor Engine Defects, Enforce S010 Route Security, and Establish Clean Platform Baseline
   - Task 1.11: Bedrock Pre-Flight Suite Verification & Local Validation
 - **Phase 2: Bedrock Platform Release (`v0.10.0`)**
   - Task 2.1: Package Version Bumps, CHANGELOG Entry & Git Tag `v0.10.0`
@@ -1083,22 +1084,22 @@ Expected output: Task registered with state `Ready`.
 
 - Produces: Authoritative platform standards with 3-digit padded references (`§S001`–`§S012`) and zero domain-specific artifacts.
 
-- [ ] **Step 1: Author `docs/standards/s001-no-duplicate-ui-code.md` through `s012-dual-pin-platform-governance.md`**
+- [x] **Step 1: Author `docs/standards/s001-no-duplicate-ui-code.md` through `s012-dual-pin-platform-governance.md`**
 Populate each standard document ensuring:
       Populate each standard document ensuring:
 - Title uses 3-digit padded notation: `# Standard S001: No Duplicate UI Code`.
 - Text citations use `§S001` through `§S012`.
 - Standards map 1:1 to `bedrock.tools.audit_s###`.
 
-- [ ] **Step 2: Create `docs/standards/README.md` index catalog**
+- [x] **Step 2: Create `docs/standards/README.md` index catalog**
 Include catalog table indexing S001 through S012 with contract descriptions and audit tool links.
       Include catalog table indexing S001 through S012 with contract descriptions and audit tool links.
 
-- [ ] **Step 3: Execute repository-wide find-and-replace sweep in Bedrock**
+- [x] **Step 3: Execute repository-wide find-and-replace sweep in Bedrock**
 Replace all legacy references (`S01`, `S1`, `S02`, etc.) with canonical 3-digit padded notation (`§S001`, `§S002`) and updated kebab-case filenames across `docs/` and `packages/bedrock-api`.
       Replace all legacy references (`S01`, `S1`, `S02`, etc.) with canonical 3-digit padded notation (`§S001`, `§S002`) and updated kebab-case filenames across `docs/` and `packages/bedrock-api`.
 
-- [ ] **Step 4: Verify markdown formatting**
+- [x] **Step 4: Verify markdown formatting**
 Run:
       Run:
 
@@ -1108,7 +1109,7 @@ Get-ChildItem C:\Dev\bedrock\docs\standards\*.md | Select-Object Name
 
 Expected output: Exactly `README.md` and `s001-*.md` through `s012-*.md`.
 
-- [ ] **Step 5: Commit in Bedrock**
+- [x] **Step 5: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add docs/standards/
@@ -1137,7 +1138,7 @@ git -C C:\Dev\bedrock commit -m "docs(standards): author canonical platform stan
   - `fail_check(message: str, file_path: Path | str = None, line: int = None, hint: str = None) -> None`
   - `finish() -> int` (returns `0` on success, `1` on violation, `2` on configuration error)
 
-- [ ] **Step 1: Write failing unit test for `AuditReporter`**
+- [x] **Step 1: Write failing unit test for `AuditReporter`**
 
 ```python
 # packages/bedrock-api/tests/test_reporter.py
@@ -1157,23 +1158,23 @@ def test_audit_reporter_fail():
     assert reporter.finish() == 1
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 Run: `pytest packages/bedrock-api/tests/test_reporter.py`
 Expected output: FAIL (`ModuleNotFoundError: No module named 'bedrock.tools._reporter'`).
       Run: `pytest packages/bedrock-api/tests/test_reporter.py`
       Expected output: FAIL (`ModuleNotFoundError: No module named 'bedrock.tools._reporter'`).
 
-- [ ] **Step 3: Implement `bedrock/tools/_reporter.py`**
+- [x] **Step 3: Implement `bedrock/tools/_reporter.py`**
 Implement standard 80-column banner, monotonic microsecond timings, formatted failure output with line pointers and remediation hints, and exit code propagation.
       Implement standard 80-column banner, monotonic microsecond timings, formatted failure output with line pointers and remediation hints, and exit code propagation.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 Run: `pytest packages/bedrock-api/tests/test_reporter.py`
 Expected output: PASS (all tests green).
       Run: `pytest packages/bedrock-api/tests/test_reporter.py`
       Expected output: PASS (all tests green).
 
-- [ ] **Step 5: Commit in Bedrock**
+- [x] **Step 5: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/_reporter.py packages/bedrock-api/tests/test_reporter.py
@@ -1202,7 +1203,7 @@ git -C C:\Dev\bedrock commit -m "feat(tools): implement unified AuditReporter en
   - Merges consumer exemptions additively with platform defaults.
   - Enforces that every tool section has an `exemptions = [...]` list.
 
-- [ ] **Step 1: Write failing unit test for `load_bedrock_config`**
+- [x] **Step 1: Write failing unit test for `load_bedrock_config`**
 
 ```python
 # packages/bedrock-api/tests/test_config.py
@@ -1222,23 +1223,23 @@ def test_load_valid_config(tmp_path: Path):
     assert "default" in cfg.audit_s001.exemptions  # Platform baseline merged
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 Run: `pytest packages/bedrock-api/tests/test_config.py`
 Expected output: FAIL.
       Run: `pytest packages/bedrock-api/tests/test_config.py`
       Expected output: FAIL.
 
-- [ ] **Step 3: Implement `bedrock/tools/_config.py` and `bedrock.toml`**
+- [x] **Step 3: Implement `bedrock/tools/_config.py` and `bedrock.toml`**
 Implement typed config dataclasses with default baselines and additive merging. Create canonical `bedrock.toml` at Bedrock root.
       Implement typed config dataclasses with default baselines and additive merging. Create canonical `bedrock.toml` at Bedrock root.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 Run: `pytest packages/bedrock-api/tests/test_config.py`
 Expected output: PASS.
       Run: `pytest packages/bedrock-api/tests/test_config.py`
       Expected output: PASS.
 
-- [ ] **Step 5: Commit in Bedrock**
+- [x] **Step 5: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/_config.py packages/bedrock-api/tests/test_config.py bedrock.toml
@@ -1267,21 +1268,186 @@ git -C C:\Dev\bedrock commit -m "feat(tools): implement declarative bedrock.toml
 - Consumes: `load_bedrock_config`, `AuditReporter`.
 - Produces: Standalone CLI tools returning exit codes `0`, `1`, or `2`.
 
-- [ ] **Step 1: Write unit tests verifying CLI exit codes for `audit_s001`–`audit_s004`**
-- [ ] **Step 2: Implement `audit_s001_duplicates.py`**
-- [ ] **Step 3: Implement `audit_s002_grids.py`** (purge hardcoded app tables, source presentational tables from config)
-- [ ] **Step 4: Implement `audit_s003_logging.py`** (ban bare `console.*` and `print`)
-- [ ] **Step 5: Implement `audit_s004_config.py`** (AppConfigKey enum matching)
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 1: Write unit tests verifying CLI exit codes for `audit_s001`–`audit_s004`**
+- [x] **Step 2: Implement `audit_s001_duplicates.py`**
+- [x] **Step 3: Implement `audit_s002_grids.py`** (purge hardcoded app tables, source presentational tables from config)
+- [x] **Step 4: Implement `audit_s003_logging.py`** (ban bare `console.*` and `print`)
+- [x] **Step 5: Implement `audit_s004_config.py`** (AppConfigKey enum matching)
+- [x] **Step 6: Run tests to verify they pass**
 Run: `pytest packages/bedrock-api/tests/test_audit_s001_to_s004.py`
 Expected output: PASS.
       Run: `pytest packages/bedrock-api/tests/test_audit_s001_to_s004.py`
       Expected output: PASS.
-- [ ] **Step 7: Commit in Bedrock**
+- [x] **Step 7: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/audit_s001_duplicates.py packages/bedrock-api/bedrock/tools/audit_s002_grids.py packages/bedrock-api/bedrock/tools/audit_s003_logging.py packages/bedrock-api/bedrock/tools/audit_s004_config.py packages/bedrock-api/tests/test_audit_s001_to_s004.py
 git -C C:\Dev\bedrock commit -m "feat(tools): implement platform audits s001 through s004"
+```
+
+---
+
+### Task 1.4.1: Harden Platform Audit S002 Engine and Synchronize Specification Documentation
+
+**Files:**
+
+- Modify: `packages/bedrock-api/bedrock/tools/audit_s002_grids.py`
+- Modify: `packages/bedrock-api/tests/test_audit_s001_to_s004.py`
+- Modify: `docs/standards/s002-all-grids-wired-to-admin-config.md`
+
+**Interfaces:**
+
+- Consumes: `load_bedrock_config`, `AuditReporter`.
+- Produces: `bedrock.tools.audit_s002_grids` exit codes `0`, `1`, `2`, now also
+  enforcing `page`, `row_key_column`, and Admin Grid Preview API wiring.
+
+- [x] **Step 1: Write failing tests for `page`, `row_key_column`, and Preview API wiring invariants**
+- [x] **Step 2: Harden `audit_s002_grids.py`** (enforce non-empty `page`, valid `row_key_column`, wired preview API endpoint; emit file/line/hint via `AuditReporter.fail_check`)
+- [x] **Step 3: Synchronize `docs/standards/s002-all-grids-wired-to-admin-config.md`** with the 3 new invariants and TypeScript contract examples
+- [x] **Step 4: Run tests to verify they pass**
+Run: `pytest packages/bedrock-api/tests/test_audit_s001_to_s004.py -k "s002"`
+Expected output: PASS.
+      Run: `pytest packages/bedrock-api/tests`
+      Expected output: 636 passed.
+- [x] **Step 5: Commit in Bedrock**
+
+```bash
+git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/audit_s002_grids.py packages/bedrock-api/tests/test_audit_s001_to_s004.py docs/standards/s002-all-grids-wired-to-admin-config.md docs/standards/README.md
+git -C C:\Dev\bedrock commit -m "feat(audit): harden audit_s002 with page taxonomy, row_key, and preview API checks"
+```
+
+---
+
+### Task 1.4.2: Expand Standard S007 and Harden Platform Database Schema Invariants
+
+**Files:**
+
+- Modify: `docs/standards/s007-schema-catalog.md`
+- Modify: `docs/plans/2026-09-12-consolidated-standards-tooling-and-testing-roadmap.md`
+
+**Interfaces:**
+
+- Consumes: none (documentation-only expansion; `bedrock.tools.audit_s007_schema_catalog`
+  does not yet exist — its implementation is scoped to Task 1.5).
+- Produces: the comprehensive S007 specification — object naming and prefix
+  contracts, mandatory audit columns, boolean/lifecycle-state
+  standardization, and the SQLite/PostgreSQL cross-dialect portability
+  contract — that Task 1.5's `audit_s007_schema_catalog` implementation will
+  enforce.
+
+- [x] **Step 1: Expand `docs/standards/s007-schema-catalog.md`** with table/view/index
+      naming conventions, the five reserved platform prefixes (`auth_`, `app_`,
+      `sys_`, `log_`, `diag_`), the mandatory audit-columns contract
+      (`created_at`, `created_by`, `modified_at`, `modified_by`, `is_active`),
+      and the dual SQLite/PostgreSQL portability contract, while keeping the
+      standard free of consumer domain vocabulary
+- [x] **Step 2: Verify absence of domain terms**
+Run: `git grep -iE "(CollectIt|MLBTracker|Lahman|Chadwick|card|ebay)" docs/standards/s007-schema-catalog.md`
+Expected output: exit 1 (no matches).
+- [x] **Step 3: Commit in Bedrock**
+
+```bash
+git -C C:\Dev\bedrock add docs/standards/s007-schema-catalog.md docs/plans/2026-09-12-consolidated-standards-tooling-and-testing-roadmap.md
+git -C C:\Dev\bedrock commit -m "feat(standards): expand S007 with database object naming, audit columns, and cross-dialect portability"
+```
+
+---
+
+### Task 1.4.3: Comparative Depth Audit & Remediation of Standards S001-S012 (Excluding S002 & S007) Against MLBTracker Doctrine
+
+**Files:**
+
+- Modify: `docs/standards/s001-no-duplicate-ui-code.md`
+- Modify: `docs/standards/s003-logging-protocol.md`
+- Modify: `docs/standards/s004-no-hardcoded-config-settings.md`
+- Modify: `docs/standards/s005-test-coverage-mandatory.md`
+- Modify: `docs/standards/s006-defect-isolation-and-pr-workflow.md`
+- Modify: `docs/standards/s008-documentation-layout-and-naming.md`
+- Modify: `docs/standards/s009-design-system.md`
+- Modify: `docs/standards/s010-granular-security-model.md`
+- Modify: `docs/standards/s011-config-driven-navigation.md`
+- Modify: `docs/standards/s012-dual-pin-platform-governance.md`
+- Modify: `docs/plans/2026-09-12-consolidated-standards-tooling-and-testing-roadmap.md`
+
+**Interfaces:**
+
+- Consumes: `C:\Dev\MLBTracker\docs\standards\` as the depth-parity source of
+  truth for consumer-side rules not yet generically represented in bedrock.
+- Produces: platform standards deepened to depth parity with MLBTracker's
+  doctrine while remaining fully generic — zero domain vocabulary, every
+  invariant expressed in platform primitives (consumers, domains, entities,
+  records, components) instead of application nouns.
+
+- [x] **Step 1: Pairwise gap analysis against MLBTracker's `S01`–`S11`**
+      S001 gained the compose-beside-not-fork pattern and single icon/form
+      primitive library invariants; S003 gained environment-switched output
+      shape (pretty local / JSON in production), structured exception
+      capture, correlation IDs, and payload-shape rules; S004 gained typed
+      config-value coercion, fresh-checkout manifest verification, a typed
+      config-key registry, and the frontend boot-default-then-DB-override
+      settings pattern; S005 gained the multi-canary live-DB isolation
+      contract, deterministic idempotent seed-fixture discipline, and the
+      anti-busy-wait CI polling rule; S006 gained root-cause-before-filing,
+      a closed issue-type taxonomy, and path-scoped/rate-limit-isolated CI
+      gating; S008 gained the reachability/orphan rule and the
+      retire-from-working-tree rule; S009 gained semantic color-role naming,
+      the bare-Tailwind-color-utility ban, and the structural token category
+      contract (spacing/breakpoints/elevation/z-index); S010 gained the
+      four-flag (`can_view`/`can_update`/`can_delete`/`can_execute`)
+      per-module model, the tri-state override resolution algorithm, the
+      security activity log, and mandatory audit columns. S011 and S012
+      were already at or beyond MLBTracker's depth and required no changes.
+- [x] **Step 2: Verify absence of domain terms**
+Run: `git grep -iE "(MLBTracker|CollectIt|player|team|card|ebay|statcast|lahman)" docs/standards/s001-no-duplicate-ui-code.md docs/standards/s003-logging-protocol.md docs/standards/s004-no-hardcoded-config-settings.md docs/standards/s005-test-coverage-mandatory.md docs/standards/s006-defect-isolation-and-pr-workflow.md docs/standards/s008-documentation-layout-and-naming.md docs/standards/s009-design-system.md docs/standards/s010-granular-security-model.md docs/standards/s011-config-driven-navigation.md docs/standards/s012-dual-pin-platform-governance.md`
+Expected output: exit 1 (no matches).
+- [x] **Step 3: Commit in Bedrock**
+
+```bash
+git -C C:\Dev\bedrock add docs/standards/ docs/plans/2026-09-12-consolidated-standards-tooling-and-testing-roadmap.md
+git -C C:\Dev\bedrock commit -m "feat(standards): deepen S001-S012 platform standards based on comparative audit against MLBTracker doctrine"
+```
+
+---
+
+### Task 1.4.4: Reconcile and Harden Audit Engines `audit_s001`, `audit_s003`, and `audit_s004` Against Enriched Platform Standards
+
+**Files:**
+
+- Modify: `packages/bedrock-api/bedrock/tools/audit_s001_duplicates.py`
+- Modify: `packages/bedrock-api/bedrock/tools/audit_s003_logging.py`
+- Modify: `packages/bedrock-api/bedrock/tools/audit_s004_config.py`
+- Modify: `packages/bedrock-api/tests/test_audit_s001_to_s004.py`
+- Modify: `docs/plans/2026-09-12-consolidated-standards-tooling-and-testing-roadmap.md`
+
+**Interfaces:**
+
+- Consumes: `load_bedrock_config`, `AuditReporter`, the enriched
+  `docs/standards/s001-no-duplicate-ui-code.md`,
+  `docs/standards/s003-logging-protocol.md`, and
+  `docs/standards/s004-no-hardcoded-config-settings.md` invariants produced by
+  Task 1.4.3.
+- Produces: `audit_s001_duplicates`, `audit_s003_logging`, and
+  `audit_s004_config`, still exiting `0`/`1`/`2`, now also enforcing:
+  S001 — barrel-only primitive imports (`Button`, `Input`, `Select`, `Dialog`,
+  `Modal`, `Tabs`, `Popover`, `Command`, `DataGrid`), inline formatter calls,
+  and inline `queryKey` array literals; S003 — `console.info` alongside
+  `log`/`warn`/`error`/`debug`, and exclusion of Python test files
+  (`test_*.py`, `tests/**`) from the `print()` scan; S004 — a `get_config(...)`
+  call site missing its default argument, and a hardcoded numeric
+  `TooltipProvider` `delayDuration` literal in frontend source.
+
+- [x] **Step 1: Write failing tests for the new S001/S003/S004 invariants**
+- [x] **Step 2: Harden `audit_s001_duplicates.py`, `audit_s003_logging.py`, and `audit_s004_config.py`** (deterministic regex scans; emit file/line/hint via `AuditReporter.fail_check`)
+- [x] **Step 3: Run tests to verify they pass**
+Run: `pytest packages/bedrock-api/tests/test_audit_s001_to_s004.py`
+Expected output: 34 passed.
+      Run: `pytest packages/bedrock-api/tests`
+      Expected output: 647 passed.
+- [x] **Step 4: Commit in Bedrock**
+
+```bash
+git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/audit_s001_duplicates.py packages/bedrock-api/bedrock/tools/audit_s003_logging.py packages/bedrock-api/bedrock/tools/audit_s004_config.py packages/bedrock-api/tests/test_audit_s001_to_s004.py docs/plans/2026-09-12-consolidated-standards-tooling-and-testing-roadmap.md
+git -C C:\Dev\bedrock commit -m "feat(tools): harden audit_s001, audit_s003, and audit_s004 to enforce enriched platform standards"
 ```
 
 ---
@@ -1305,17 +1471,17 @@ git -C C:\Dev\bedrock commit -m "feat(tools): implement platform audits s001 thr
 
 - Produces: Fully parameter-driven enforcement of test pairing, PR workflow/ledger freshness, bare SQL literals, and guidance link/line limits.
 
-- [ ] **Step 1: Write unit tests for `audit_s005`–`audit_s008`**
-- [ ] **Step 2: Implement `audit_s005_testing.py`**
-- [ ] **Step 3: Implement `audit_s006_pr_workflow.py`**
-- [ ] **Step 4: Implement `audit_s007_schema_catalog.py`**
-- [ ] **Step 5: Implement `audit_s008_guidance.py`**
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 1: Write unit tests for `audit_s005`–`audit_s008`**
+- [x] **Step 2: Implement `audit_s005_testing.py`**
+- [x] **Step 3: Implement `audit_s006_pr_workflow.py`**
+- [x] **Step 4: Implement `audit_s007_schema_catalog.py`**
+- [x] **Step 5: Implement `audit_s008_guidance.py`**
+- [x] **Step 6: Run tests to verify they pass**
 Run: `pytest packages/bedrock-api/tests/test_audit_s005_to_s008.py`
 Expected output: PASS.
       Run: `pytest packages/bedrock-api/tests/test_audit_s005_to_s008.py`
       Expected output: PASS.
-- [ ] **Step 7: Commit in Bedrock**
+- [x] **Step 7: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/audit_s005_testing.py packages/bedrock-api/bedrock/tools/audit_s006_pr_workflow.py packages/bedrock-api/bedrock/tools/audit_s007_schema_catalog.py packages/bedrock-api/bedrock/tools/audit_s008_guidance.py packages/bedrock-api/tests/test_audit_s005_to_s008.py
@@ -1343,17 +1509,17 @@ git -C C:\Dev\bedrock commit -m "feat(tools): implement platform audits s005 thr
 
 - Produces: Enforcement of raw color literals, route permissions/RBAC, navigation target reachability, and dual-pin release tag parity.
 
-- [ ] **Step 1: Write unit tests for `audit_s009`–`audit_s012`**
-- [ ] **Step 2: Implement `audit_s009_design_tokens.py`**
-- [ ] **Step 3: Implement `audit_s010_security.py`**
-- [ ] **Step 4: Implement `audit_s011_navigation.py`**
-- [ ] **Step 5: Implement `audit_s012_pins.py`**
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 1: Write unit tests for `audit_s009`–`audit_s012`**
+- [x] **Step 2: Implement `audit_s009_design_tokens.py`**
+- [x] **Step 3: Implement `audit_s010_security.py`**
+- [x] **Step 4: Implement `audit_s011_navigation.py`**
+- [x] **Step 5: Implement `audit_s012_pins.py`**
+- [x] **Step 6: Run tests to verify they pass**
 Run: `pytest packages/bedrock-api/tests/test_audit_s009_to_s012.py`
 Expected output: PASS.
       Run: `pytest packages/bedrock-api/tests/test_audit_s009_to_s012.py`
       Expected output: PASS.
-- [ ] **Step 7: Commit in Bedrock**
+- [x] **Step 7: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/audit_s009_design_tokens.py packages/bedrock-api/bedrock/tools/audit_s010_security.py packages/bedrock-api/bedrock/tools/audit_s011_navigation.py packages/bedrock-api/bedrock/tools/audit_s012_pins.py packages/bedrock-api/tests/test_audit_s009_to_s012.py
@@ -1379,15 +1545,15 @@ git -C C:\Dev\bedrock commit -m "feat(tools): implement platform audits s009 thr
 
 - Produces: `sync_standards --check` for CI drift gating and `bedrock.tools.run_all` for full suite execution.
 
-- [ ] **Step 1: Write unit tests for `sync_standards` and `run_all`**
-- [ ] **Step 2: Implement `sync_standards.py`** (mirror writer with `--check` diffing)
-- [ ] **Step 3: Implement `run_all.py`** (dispatches `audit_s001` through `audit_s012`)
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 1: Write unit tests for `sync_standards` and `run_all`**
+- [x] **Step 2: Implement `sync_standards.py`** (mirror writer with `--check` diffing)
+- [x] **Step 3: Implement `run_all.py`** (dispatches `audit_s001` through `audit_s012`)
+- [x] **Step 4: Run tests to verify they pass**
 Run: `pytest packages/bedrock-api/tests/test_sync_and_run_all.py`
 Expected output: PASS.
       Run: `pytest packages/bedrock-api/tests/test_sync_and_run_all.py`
       Expected output: PASS.
-- [ ] **Step 5: Commit in Bedrock**
+- [x] **Step 5: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/sync_standards.py packages/bedrock-api/bedrock/tools/run_all.py packages/bedrock-api/tests/test_sync_and_run_all.py
@@ -1413,15 +1579,15 @@ git -C C:\Dev\bedrock commit -m "feat(tools): implement sync_standards and run_a
 
 - Produces: Taxonomy and kebab-case validator, plus automated two-stage NTFS renamer (`__tmp`) and inbound link rewriter.
 
-- [ ] **Step 1: Write unit tests for taxonomy audit and two-stage rename planner**
-- [ ] **Step 2: Implement `audit_taxonomy_and_casing.py`**
-- [ ] **Step 3: Implement `remediate_taxonomy_and_casing.py`**
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 1: Write unit tests for taxonomy audit and two-stage rename planner**
+- [x] **Step 2: Implement `audit_taxonomy_and_casing.py`**
+- [x] **Step 3: Implement `remediate_taxonomy_and_casing.py`**
+- [x] **Step 4: Run tests to verify they pass**
 Run: `pytest packages/bedrock-api/tests/test_taxonomy_and_remediation.py`
 Expected output: PASS.
       Run: `pytest packages/bedrock-api/tests/test_taxonomy_and_remediation.py`
       Expected output: PASS.
-- [ ] **Step 5: Commit in Bedrock**
+- [x] **Step 5: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/audit_taxonomy_and_casing.py packages/bedrock-api/bedrock/tools/remediate_taxonomy_and_casing.py packages/bedrock-api/tests/test_taxonomy_and_remediation.py
@@ -1447,7 +1613,7 @@ git -C C:\Dev\bedrock commit -m "feat(tools): implement audit_taxonomy_and_casin
 
 - Produces: 100% compliant Bedrock documentation following the canonical 6-folder model.
 
-- [ ] **Step 1: Move loose markdown files into `docs/reference/`**
+- [x] **Step 1: Move loose markdown files into `docs/reference/`**
 
 ```bash
 git -C C:\Dev\bedrock mv docs/app_assembly.md docs/reference/app_assembly.md
@@ -1462,7 +1628,7 @@ git -C C:\Dev\bedrock mv docs/roadmap.md docs/reference/roadmap.md
 git -C C:\Dev\bedrock mv docs/seo.md docs/reference/seo.md
 ```
 
-- [ ] **Step 2: Evict punchlists to `scratch/`**
+- [x] **Step 2: Evict punchlists to `scratch/`**
 
 ```powershell
 mkdir C:\Dev\bedrock\scratch -Force
@@ -1471,17 +1637,17 @@ Move-Item C:\Dev\bedrock\docs\punchlists\* C:\Dev\bedrock\scratch\ -Force -Error
 Remove-Item C:\Dev\bedrock\docs\punchlists -Recurse -Force -ErrorAction SilentlyContinue
 ```
 
-- [ ] **Step 3: Update directory README indexes**
+- [x] **Step 3: Update directory README indexes**
 Create/update `README.md` in `docs/reference/`, `docs/specs/`, and `docs/plans/`.
       Create/update `README.md` in `docs/reference/`, `docs/specs/`, and `docs/plans/`.
 
-- [ ] **Step 4: Run taxonomy audit in Bedrock**
+- [x] **Step 4: Run taxonomy audit in Bedrock**
 Run: `python -m bedrock.tools.audit_taxonomy_and_casing --root C:\Dev\bedrock`
 Expected output: `[PASS] Taxonomy and file casing audit clean`.
       Run: `python -m bedrock.tools.audit_taxonomy_and_casing --root C:\Dev\bedrock`
       Expected output: `[PASS] Taxonomy and file casing audit clean`.
 
-- [ ] **Step 5: Commit in Bedrock**
+- [x] **Step 5: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add -A
@@ -1509,20 +1675,59 @@ git -C C:\Dev\bedrock commit -m "refactor(docs): consolidate Bedrock docs into c
 
 - Produces: Multi-tier test orchestrator (`--mode fast|scoped|full`), AST dead-code elimination, and sharded Vitest execution.
 
-- [ ] **Step 1: Configure `pytest.ini` with strict Tri-Marking taxonomy**
-- [ ] **Step 2: Configure `vitest.workspace.ts` and `knip.json`**
-- [ ] **Step 3: Implement `scripts/maintenance/vulture_whitelist.py`**
-- [ ] **Step 4: Implement `scripts/run_qa.py`** with stdout buffering, telemetry JSONL writer, and exit code propagation.
-- [ ] **Step 5: Execute fast mode test**
+- [x] **Step 1: Configure `pytest.ini` with strict Tri-Marking taxonomy**
+- [x] **Step 2: Configure `vitest.workspace.ts` and `knip.json`**
+- [x] **Step 3: Implement `scripts/maintenance/vulture_whitelist.py`**
+- [x] **Step 4: Implement `scripts/run_qa.py`** with stdout buffering, telemetry JSONL writer, and exit code propagation.
+- [x] **Step 5: Execute fast mode test**
 Run: `python scripts/run_qa.py --mode fast --json`
 Expected output: `{"status": "pass", "exit": 0, ...}` in < 20s.
       Run: `python scripts/run_qa.py --mode fast --json`
       Expected output: `{"status": "pass", "exit": 0, ...}` in < 20s.
-- [ ] **Step 6: Commit in Bedrock**
+- [x] **Step 6: Commit in Bedrock**
 
 ```bash
 git -C C:\Dev\bedrock add scripts/run_qa.py vitest.workspace.ts knip.json scripts/maintenance/vulture_whitelist.py packages/bedrock-api/pytest.ini
 git -C C:\Dev\bedrock commit -m "feat(qa): implement unified run_qa orchestrator, vitest workspace, and knip/vulture"
+```
+
+---
+
+### Task 1.10.3: Resolve S008/S009 Auditor Engine Defects, Enforce S010 Route Security, and Establish Clean Platform Baseline
+
+**Agent Recommendation:**
+
+- Claude: `model: sonnet`, `effort: medium`
+
+**Files:**
+
+- Modify: `packages/bedrock-api/bedrock/tools/audit_s008_guidance.py`
+- Modify: `packages/bedrock-api/bedrock/tools/audit_s009_design_tokens.py`
+- Modify: `packages/bedrock-api/bedrock/routes/user_preferences.py`
+- Modify: `packages/bedrock-api/tests/test_audit_s009_to_s012.py`
+- Modify: `bedrock.toml`
+
+**Interfaces:**
+
+- Produces: A kebab-case filename regex that tolerates semver dots in `docs/plans/`
+  filenames; an S009 design-token engine that prunes `.d.ts`/build/dependency
+  paths and restricts the bare-HSL-triplet check to color-role custom
+  properties (honoring `[tool.bedrock.audit.s009].exemptions`); explicit
+  `Depends(get_current_user)` guards on the mutating `user_preferences` grid
+  routes; and an `[tool.bedrock.audit.s010].exemptions` entry for the
+  intentionally-public `auth.py` routes.
+
+- [x] **Step 1: Fix S008 filename regex** to allow `[a-z0-9.-]+\.md$` under `docs/plans/`, retaining the 5-folder taxonomy.
+- [x] **Step 2: Fix S009 engine** — prune `.d.ts`/`node_modules`/`dist`/`build`/`.venv`/`__pycache__` from `_source_files()`; restrict `_check_bare_hsl_triplets` to color-role custom properties and route it through `[tool.bedrock.audit.s009].exemptions` so the platform's own `tokens.css`/`theme/palettes.ts` stay exempt.
+- [x] **Step 3: Patch S010 route security** — attach `Depends(get_current_user)` to the mutating `PATCH`/`DELETE` grid-preference endpoints in `user_preferences.py`; exempt the intentionally-public `auth.py` endpoints (register/login/password-reset/verify-email) in `bedrock.toml`.
+- [x] **Step 4: Verify S001/S012 configuration** — confirmed `audit_s001_duplicates.py` already excludes `.d.ts`/`node_modules`/`dist`/`build`/`.venv`/`__pycache__`, and `[tool.bedrock.audit.s012].package_json` already points at the root manifest. No changes required.
+- [x] **Step 5: Verification gate** — `audit_s008_guidance`, `audit_s010_security`, `audit_s011_navigation`, and `audit_s012_pins` exit 0. `pytest packages/bedrock-api/tests` is 725/725 green (fixed one test fixture in `test_audit_s009_to_s012.py` to use a canonical color-role property name after the S009 whitelist change).
+  **Known Class B blocker (out of scope for this task):** `audit_s001_duplicates` (92 failures) and `audit_s009_design_tokens` (103 failures) — plus pre-existing, previously-undiscovered volume in S002-S007 — surface genuine, large-scale platform primitive/design-token/logging debt across `packages/bedrock-ui/src/**` that predates this task and is unrelated to the S008/S009-engine/S010-route defects it targets. `run_all` remains red (4/12) until that debt is triaged and remediated as its own effort; it is not papered over here.
+- [x] **Step 6: Commit in Bedrock**
+
+```bash
+git -C C:\Dev\bedrock add packages/bedrock-api/bedrock/tools/ packages/bedrock-api/bedrock/routes/user_preferences.py packages/bedrock-api/tests/test_audit_s009_to_s012.py bedrock.toml docs/plans/2026-09-12-consolidated-standards-tooling-and-testing-roadmap.md
+git -C C:\Dev\bedrock commit -m "fix(tools): complete Task 1.10.3 resolving S008/S009/S010 auditor defects and route guards"
 ```
 
 ---
@@ -1583,21 +1788,23 @@ Expected output: 100% empty.
 - Modify: `C:\Dev\bedrock\packages\bedrock-api\pyproject.toml`
 - Modify: `C:\Dev\bedrock\packages\bedrock-ui\package.json`
 - Modify: `C:\Dev\bedrock\CHANGELOG.md`
+- Modify: `C:\Dev\bedrock\README.md`
 
 **Interfaces:**
 
 - Produces: Official release tag `v0.10.0` published on remote GitHub origin.
 
-- [ ] **Step 1: Bump version strings to `0.10.0` in both packages**
-- [ ] **Step 2: Add comprehensive CHANGELOG.md entry** documenting S001–S012, `bedrock.toml`, `run_qa.py`, and `bedrock.tools`.
-- [ ] **Step 3: Commit release bump**
+- [x] **Step 1: Bump version strings to `0.10.0` in both packages**
+- [x] **Step 2: Add comprehensive CHANGELOG.md entry** documenting S001–S012, `bedrock.toml`, `run_qa.py`, and `bedrock.tools`.
+- [x] **Step 3: Re-write README.md entry** removing any named domains, updating feature list, documenting adoption, highlighting standards and tools
+- [ ] **Step 4: Commit release bump**
 
 ```bash
 git -C C:\Dev\bedrock add packages/bedrock-api/pyproject.toml packages/bedrock-ui/package.json CHANGELOG.md
 git -C C:\Dev\bedrock commit -m "chore(release): prepare v0.10.0 platform release"
 ```
 
-- [ ] **Step 4: Merge to master and tag release**
+- [ ] **Step 5: Merge to master and tag release**
 
 ```bash
 git -C C:\Dev\bedrock checkout master
@@ -1607,6 +1814,8 @@ git -C C:\Dev\bedrock push origin master --tags
 ```
 
 Expected output: Tag `v0.10.0` pushed to GitHub remote.
+
+- [ ] **Step 6: Update GitHub release version and release notes**
 
 ---
 

@@ -248,7 +248,7 @@ export default function UserOverridesDrawer({
                           {mod.module_label}
                         </span>
                         {Boolean(mod.is_core) && (
-                          <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 border-amber-500/40 text-amber-600 dark:text-amber-400">
+                          <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 border-warning/40 text-warning">
                             Core
                           </Badge>
                         )}
@@ -379,8 +379,8 @@ function TriStateActionControl({
           onClick={() => onChange(true)}
           className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
             isGrant
-              ? "bg-emerald-600 text-white shadow-2xs font-semibold"
-              : "text-muted-foreground hover:text-emerald-600"
+              ? "bg-positive text-primary-foreground shadow-2xs font-semibold"
+              : "text-muted-foreground hover:text-positive"
           }`}
           title="Force grant capability to this user"
         >
@@ -392,8 +392,8 @@ function TriStateActionControl({
           onClick={() => onChange(false)}
           className={`px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${
             isDeny
-              ? "bg-rose-600 text-white shadow-2xs font-semibold"
-              : "text-muted-foreground hover:text-rose-600"
+              ? "bg-negative text-primary-foreground shadow-2xs font-semibold"
+              : "text-muted-foreground hover:text-negative"
           }`}
           title="Force deny capability for this user"
         >
@@ -408,7 +408,7 @@ function CompiledCapBadge({ granted }: { granted: boolean }) {
   if (granted) {
     return (
       <span
-        className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 gap-1"
+        className="inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-positive/15 text-positive gap-1"
         title="Granted"
       >
         <Check className="h-3 w-3 stroke-[2.5]" />

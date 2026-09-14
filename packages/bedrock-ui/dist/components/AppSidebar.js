@@ -39,7 +39,7 @@ function AppSidebar({
 } = {}) {
   const location = useLocation();
   const [openSections, setOpenSections] = useState(/* @__PURE__ */ new Set());
-  const { system } = useAppSettings();
+  const { system, grid } = useAppSettings();
   const { hasModule } = useModules();
   const { can } = useSecurity();
   const { navItems } = useNavSettings();
@@ -247,7 +247,7 @@ function AppSidebar({
                   children: /* @__PURE__ */ jsx(Icon, { className: "shrink-0 h-[18px] w-[18px]" })
                 }
               );
-              return /* @__PURE__ */ jsxs(Tooltip, { delayDuration: 0, children: [
+              return /* @__PURE__ */ jsxs(Tooltip, { delayDuration: grid.tooltipDelayDuration, children: [
                 /* @__PURE__ */ jsx(TooltipTrigger, { asChild: true, children: iconLink }),
                 /* @__PURE__ */ jsxs(TooltipContent, { side: "right", className: "text-xs", children: [
                   disabled ? `${item.label} — not enabled for your account` : item.tooltip ? /* @__PURE__ */ jsxs("div", { children: [
@@ -272,7 +272,7 @@ function AppSidebar({
             }
             return /* @__PURE__ */ jsxs("div", { children: [
               /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1", children: [
-                disabled ? /* @__PURE__ */ jsxs(Tooltip, { delayDuration: 0, children: [
+                disabled ? /* @__PURE__ */ jsxs(Tooltip, { delayDuration: grid.tooltipDelayDuration, children: [
                   /* @__PURE__ */ jsx(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsxs(
                     "span",
                     {
@@ -370,7 +370,7 @@ function AppSidebar({
           }) }),
           /* @__PURE__ */ jsx("div", { className: "border-t border-border p-2 shrink-0", children: collapsed ? /* @__PURE__ */ jsxs("div", { className: "flex flex-col items-center gap-1", children: [
             user ? /* @__PURE__ */ jsxs(Fragment, { children: [
-              /* @__PURE__ */ jsxs(Tooltip, { delayDuration: 0, children: [
+              /* @__PURE__ */ jsxs(Tooltip, { delayDuration: grid.tooltipDelayDuration, children: [
                 /* @__PURE__ */ jsx(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsx(
                   ProfileTarget,
                   {
@@ -387,7 +387,7 @@ function AppSidebar({
                   user.display_name || user.email
                 ] })
               ] }),
-              /* @__PURE__ */ jsxs(Tooltip, { delayDuration: 0, children: [
+              /* @__PURE__ */ jsxs(Tooltip, { delayDuration: grid.tooltipDelayDuration, children: [
                 /* @__PURE__ */ jsx(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsx(
                   "button",
                   {
@@ -401,7 +401,7 @@ function AppSidebar({
                 ) }),
                 /* @__PURE__ */ jsx(TooltipContent, { side: "right", className: "text-xs", children: "Sign out" })
               ] })
-            ] }) : /* @__PURE__ */ jsxs(Tooltip, { delayDuration: 0, children: [
+            ] }) : /* @__PURE__ */ jsxs(Tooltip, { delayDuration: grid.tooltipDelayDuration, children: [
               /* @__PURE__ */ jsx(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsx(
                 Link,
                 {

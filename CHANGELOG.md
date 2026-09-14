@@ -16,6 +16,47 @@ When drafting a release body, write the section as `## For consumers`, not
 nested form — the cascade workflow's extractor matches `^## For consumers`
 literally and fails the release's cascade job on a mismatch.
 
+## v0.10.0 - 2026-09-14
+
+### Platform Standards Substrate
+
+Authored platform standards §S001–§S012 in `docs/standards/`, each paired 1:1 with an enforcement tool in `bedrock.tools` (`audit_s001_duplicates` through `audit_s012_pins`), run together via `bedrock.tools.run_all`. `audit_s007_schema_catalog` pins schema documentation to `core/schema_catalog.py` as the single source of truth rather than letting hand-written schema docs drift from the tables. `audit_s012_pins` enforces dual-pin lockstep governance — `bedrock-api` and `@djntechnic/bedrock-ui` must resolve to the same release tag — and is now also the release-time gate consumed by `audit_release_version`.
+
+### Declarative Configuration Substrate
+
+Added a `bedrock.toml` schema loader (`bedrock.tools._config`) that every `audit_s0*` module now sources exemptions and tunables from instead of hardcoding them. Consumer exemptions merge additively on top of a fixed platform baseline (`node_modules/`, `__pycache__/`, `.venv/`), so an application changes audit behavior by editing a settings file, not platform code.
+
+### Unified QA Engine
+
+Added `scripts/run_qa.py`, a tri-tier orchestrator (`fast` / `scoped` / `full`) that replaces the "which command before I commit / before a PR / before merge" question with three fixed answers: `fast` runs testmon-scoped Pytest and `vitest related` against changed files (< 20s), `scoped` runs everything touched since `master` diverged in full (< 60s), and `full` runs the entire Pytest and Vitest workspace suite plus every platform audit, optionally with `vulture` and `knip` dead-code checks (2–3m). Output is buffered and rendered once at the end, so a clean run costs a handful of summary lines instead of a full test transcript.
+
+### Documentation Taxonomy & Hygiene
+
+Consolidated `docs/` into the four-tier taxonomy defined by §S008 — `standards/` (non-negotiable contracts), `specs/` (in-flight design), `plans/` (step-by-step implementation), and loose `docs/<topic>.md` reference material — enforced by `audit_s008_guidance` and repaired automatically by `remediate_taxonomy_and_casing`, which stages Windows NTFS case-only renames through an intermediate path so a rename from `Foo.md` to `foo.md` doesn't collide with itself mid-operation.
+
+### Database & Runtime Hardening
+
+- **Path normalization on Windows**: `resolve_app_path` now runs `os.path.normpath` on all resolved paths, ensuring consistent path separators on Windows environments. The domain-specific fixture string in `test_paths.py` was purged and replaced with a domain-agnostic identifier (#51).
+- **SQLite concurrency and busy timeout**: Configured a default 30.0s SQLite busy timeout in `_create_sqlite_connection` and executed `PRAGMA busy_timeout = <ms>;` directly on connection establishment to eliminate writer contention across concurrent test suites (CollectIt #60).
+- **`safe_load_dotenv` injected database preservation**: `safe_load_dotenv()` captures explicit environment variables (`SQLITE_DB_PATH`, `DATABASE_URL`, `BEDROCK_DATA_DIR`) prior to invoking `load_dotenv(override=True)` and restores them if `.env` values would clobber injected paths. Consumed in `config.py`, `logging.py`, and `oauth_service.py` (#74).
+- **Platform config key seeding**: Seeded 11 system and diagnostic configuration keys into `app_config_settings` across `baseline.sql` and new migration `008_seed_platform_config_keys.sql`, ensuring every key read via `db.get_config` is discoverable and editable in the Admin Config Editor (#50).
+- **`auth_user_module_overrides` tri-state correction**: Fixed a schema/service discrepancy in `list_user_overrides` so the tri-state per-user capability override (`NULL` = inherit, `1` = grant, `0` = deny) reads back correctly instead of collapsing the inherit state.
+
+### Frontend Primitives & Harness
+
+- **DataGrid render-level test harness**: Established shared mock factories `makeGridConfig`, `makeColumnSetting` in `packages/bedrock-ui/src/test/gridMocks.ts` and `renderWithGridProviders` in `packages/bedrock-ui/src/test/test-utils.tsx`. Migrated the 588-line engine test suite from MLBTracker into Bedrock's `DataGrid.test.tsx` with domain-agnostic fixtures (#49, MLBTracker #387).
+- **GridHeader discard confirmation dialog**: Added `confirmBulkDiscard` (defaulting to true) and `onBeforeBulkDiscard` props to `<GridHeader>` and `<DataGrid>`, presenting an `AlertDialog` confirmation prompt prior to destroying staged edits. Consumers can supply custom discard handlers or guard routines (#55).
+- **Normalized semantic design tokens**: Remediated §S001/§S009 duplication between hardcoded design-token values and formatter utilities so both routes resolve through the same token/formatter surface.
+
+### For consumers
+
+- **CollectIt**:
+  - Remove local workarounds for Bedrock #55 (`confirmBulkDiscard`) and Bedrock #74 (`safe_load_dotenv`).
+  - Verify SQLite busy timeout resolves concurrent test runner flakes (`CollectIt#60`).
+- **MLBTracker**:
+  - Delete `MLBTracker/frontend/src/components/grids/DataGrid.test.tsx` (now covered upstream in Bedrock).
+  - Remove resolved entries 13, 14, 15 from `docs/reference/bedrock_issues_to_file.md`.
+
 ## v0.9.2
 
 ### Added — public grid layout and column metadata endpoints
@@ -174,7 +215,7 @@ tag push so this cannot recur silently.
 Carries Milestone 3 and Milestone 4 both. No `v0.7.0` tag exists: M3's last two
 items and all of M4 landed on one branch, and both consumers adopt them in a
 single pin bump, so cutting two tags would have filed two adoption issues for
-one piece of work. `docs/roadmap.md` records the deviation in place.
+one piece of work. `docs/reference/roadmap.md` records the deviation in place.
 
 ### For consumers
 
@@ -185,7 +226,7 @@ one piece of work. `docs/roadmap.md` records the deviation in place.
   `bedrock.routes.seo` unprefixed (`mount_seo=False` to opt out), and runs the
   boot sequence in lifespan with `before_migrations` / `after_bootstrap` /
   `on_shutdown` hooks. `PLATFORM_ROUTER_MOUNTS` is exported alongside it.
-  [`docs/app_assembly.md`](docs/app_assembly.md).
+  [`docs/reference/app-assembly.md`](docs/reference/app-assembly.md).
 
 - `bedrock.storage.ObjectStore` — the storage capability widened for
   applications that own their own key space: `put(key, ...)` with the caller's
@@ -196,7 +237,7 @@ one piece of work. `docs/roadmap.md` records the deviation in place.
   Cloudflare R2, MinIO and S3. `pip install 'bedrock-api[s3]'`; configured from
   `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_ENDPOINT_URL`,
   `S3_REGION` and `S3_PUBLIC_BASE_URL`.
-  [`docs/object_storage.md`](docs/object_storage.md).
+  [`docs/reference/object-storage.md`](docs/reference/object-storage.md).
 
 - `<DataGrid gridRef={…}>` — the grid's sorted, filtered row order, pulled on
   demand through a `DataGridHandle` (`getSortedRowKeys(): string[]`). A plain
@@ -214,7 +255,7 @@ one piece of work. `docs/roadmap.md` records the deviation in place.
   dialect — so that stack failed at the first `CREATE TABLE` and had never
   booted. The `db` service is kept behind a `postgres` profile, off by default.
   `POSTGRES_PASSWORD` is no longer required to start the stack.
-  [`docs/deployment.md`](docs/deployment.md).
+  [`docs/reference/deployment.md`](docs/reference/deployment.md).
 
 - **`registerDashboardPinHost()` — the pin controls are now hidden by default,
   and this is how an app turns them back on (#36).** *Behaviour change:* the
@@ -829,7 +870,7 @@ it is hosted.
   CVE surface to every deploy for a three-line request. Standard library only,
   no bedrock imports, because it must work in the states where the application
   cannot import.
-- **`docs/deployment.md`**, including why the stack runs one worker: the rate
+- **`docs/reference/deployment.md`**, including why the stack runs one worker: the rate
   limiter and the diagnostics scheduler both hold per-process state, so N
   workers means N× the configured limit and N runs of every scheduled job.
 - **`.env` is gitignored.** It was not, and F1 gave the file a `SMTP_PASSWORD`
@@ -882,7 +923,7 @@ unused constant and a string literal are invisible to both.
   logged and skipped rather than failing the file — a sitemap that 500s makes a
   crawler back off the whole site rather than one section — and an app that
   registers nothing gets a valid empty `<urlset>`.
-- **`docs/seo.md`**, including the nginx blocks these two paths need (they are
+- **`docs/reference/seo.md`**, including the nginx blocks these two paths need (they are
   only honoured at the root of a host, so mounting under `/api/v1` produces
   files no crawler will request) and what is still missing: a scraper that does
   not run JavaScript sees `index.html`'s static tags, which is a rendering
@@ -905,7 +946,7 @@ unused constant and a string literal are invisible to both.
 - **`media_assets`**, keyed by `(entity_type, entity_id)` with no foreign key
   to any application table — which is what lets one table serve a card's
   photos, a gallery's images and a post's attachments, and which means nothing
-  cascades. `docs/media.md` says so and names the call an app makes instead.
+  cascades. `docs/reference/media.md` says so and names the call an app makes instead.
 
 ### Added — F1, the pages the links land on
 
@@ -959,7 +1000,7 @@ with no route implementing either. This is that designed-but-unbuilt feature.
   application that already exists — `baseline.sql` only reaches databases
   created after the change, so every consumer would have had to hand-copy a
   migration for a table it does not own.
-- **`docs/mail.md`** — the operator's view: what to set, what the three flows
+- **`docs/reference/mail.md`** — the operator's view: what to set, what the three flows
   do, and what is deliberately not built yet.
 
 ### Fixed — F1
@@ -1004,7 +1045,7 @@ with no route implementing either. This is that designed-but-unbuilt feature.
   still boots. An unknown provider name logs once and degrades rather than
   raising, because the selecting value is admin-editable and a typo must not
   be able to halt the process.
-- **`docs/extension_points.md`.** Which kind to reach for, the naming
+- **`docs/reference/extension-points.md`.** Which kind to reach for, the naming
   convention, and why the failure policy deliberately differs per registry — a
   failing health counter is swallowed, a failing config section is not.
 - **A conformance test** (`test_extension_point_convention.py`) that asserts

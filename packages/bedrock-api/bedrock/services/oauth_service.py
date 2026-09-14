@@ -10,7 +10,7 @@ Desc:    Phase 5.3 — Google OAuth 2.0 integration.
            - `link_or_create_user(profile, tokens)` → resolve to UserRecord
 
          Configuration comes from environment first, then `db.get_config`
-         (§S4). Never hardcode client id / secret.
+         (§S004). Never hardcode client id / secret.
 
          The GoogleOAuth2 client is constructed lazily inside a helper so
          tests can monkeypatch `_google_client()` without needing real
@@ -35,13 +35,11 @@ GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
 _DEFAULT_SCOPES = ["openid", "email", "profile"]
 
 
-from dotenv import load_dotenv
-
-from bedrock.core.paths import app_path
+from bedrock.core.paths import app_path, safe_load_dotenv
 
 # OAuth client secrets live in the application's .env, not in a directory
 # derived from this file — see bedrock.core.paths for why.
-load_dotenv(app_path(".env"), override=True)
+safe_load_dotenv()
 
 
 def _cfg(key: str, default: str | None = None) -> str | None:

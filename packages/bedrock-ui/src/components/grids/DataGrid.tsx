@@ -18,7 +18,7 @@
  * The engine owns state (sorting, columnVisibility, globalFilter, density,
  * selection), column building, the cell pipeline (`customCells →
  * renderMediaCell → renderCell` with gradient handling), rank + selection column prepend,
- * rank-highlight row gating, and every GridConfig property from CLAUDE.md §S2. Pages
+ * rank-highlight row gating, and every GridConfig property from CLAUDE.md §S002. Pages
  * become dumb shells that fetch data and hand it off.
  */
 
@@ -106,6 +106,7 @@ import {
   computeAggValue,
   formatAggValue,
   hasAggregates,
+  resolveKpiGradientHexes,
 } from "../../utils/gridUtils";
 import type { SelectionColumnOptions } from "../../utils/gridUtils";
 import { getRankRowClass } from "../../utils/rankStyle";
@@ -358,6 +359,21 @@ export interface DataGridProps<T extends Record<string, any>> {
     drafts: Record<string, Record<string, unknown>>,
   ) => void | Promise<void>;
   /**
+   * Bedrock #55: Custom handler called when bulk drafts are discarded.
+   * When supplied, replaces the internal setBulkDrafts({}) action.
+   */
+  onBulkDiscard?: () => void | Promise<void>;
+  /**
+   * Bedrock #55: Whether to prompt for confirmation before discarding bulk drafts.
+   * Defaults to true to protect against accidental destruction of staged edits.
+   */
+  confirmBulkDiscard?: boolean;
+  /**
+   * Bedrock #55: Optional hook called prior to executing the discard action.
+   * If it resolves or returns false, the discard action is aborted.
+   */
+  onBeforeBulkDiscard?: () => boolean | Promise<boolean>;
+  /**
    * Phase 10 B3: force the Save/Discard bar visible even when the engine
    * draft store is empty. Use when the consumer maintains its own row-
    * level overlay (add/delete rows, cascading dropdowns) that the engine
@@ -483,6 +499,9 @@ export default function DataGrid<T extends Record<string, any>>({
   rowClassNameFor,
   onCellCommit,
   onBulkCommit,
+  onBulkDiscard,
+  confirmBulkDiscard,
+  onBeforeBulkDiscard,
   bulkDirtyOverride = false,
   draftsOverride,
   renderSubRow,
@@ -571,7 +590,13 @@ export default function DataGrid<T extends Record<string, any>>({
     },
     [setBulkDrafts],
   );
-  const discardBulkDrafts = useCallback(() => setBulkDrafts({}), [setBulkDrafts]);
+  const discardBulkDrafts = useCallback(async () => {
+    if (onBulkDiscard) {
+      await onBulkDiscard();
+    } else {
+      setBulkDrafts({});
+    }
+  }, [onBulkDiscard, setBulkDrafts]);
   const bulkDirtyEngine = isDirty(bulkDrafts);
   const bulkDirty = bulkDirtyEngine || bulkDirtyOverride;
   const saveBulkDrafts = useCallback(async () => {
@@ -589,12 +614,12 @@ export default function DataGrid<T extends Record<string, any>>({
     }
   }, [onBulkCommit, bulkDrafts, setBulkDrafts]);
 
-  // Phase 3 §S9: row accent tinting. The engine owns the mechanism (an inline
+  // Phase 3 §S009: row accent tinting. The engine owns the mechanism (an inline
   // style plus a left-border class); the host app supplies the row → color
   // policy via registerRowAccentResolver(). See ./rowAccentRegistry.
   const resolveRowAccent = useRowAccentResolver(config.rowAccentReactive);
 
-  // Phase 3 §S9: changed-cell "live pulse" detection. Snapshots the
+  // Phase 3 §S009: changed-cell "live pulse" detection. Snapshots the
   // previous `rows` (keyed by config.rowKeyColumn) and diffs on every
   // `rows` change; changed (rowKey, columnId) pairs flash
   // `.animate-live-pulse` for one animation cycle (1.1s, matching the
@@ -829,11 +854,7 @@ export default function DataGrid<T extends Record<string, any>>({
                   columnId,
                 );
                 if (minMax && typeof value === "number") {
-                  // Semantic palette: positive is emerald green, negative is red
-                  const positiveHex = "#16a34a";
-                  const negativeHex = "#dc2626";
-                  const fromColor = policy.lowerBetter ? positiveHex : negativeHex;
-                  const toColor = policy.lowerBetter ? negativeHex : positiveHex;
+                  const { fromColor, toColor } = resolveKpiGradientHexes(policy.lowerBetter);
                   gradientStyle = getGradientCellStyle(
                     value,
                     minMax.min,
@@ -1377,13 +1398,13 @@ export default function DataGrid<T extends Record<string, any>>({
               const isGroupedRow = row.getIsGrouped();
               const data = row.original as T;
               const dataRecord = data as unknown as Record<string, unknown>;
-              // Phase 3 §S9: live-pulse cell flashing keys off this row's
+              // Phase 3 §S009: live-pulse cell flashing keys off this row's
               // resolved row-key value (same field DataGrid's row-id / draft
               // store use elsewhere).
               const rowKeyForRow = config.rowKeyColumn
                 ? dataRecord[config.rowKeyColumn]
                 : undefined;
-              // Phase 3 §S9: row accent tint. Grouped rows are never tinted.
+              // Phase 3 §S009: row accent tint. Grouped rows are never tinted.
               // `resolveRowAccent` is a pure mapper, so this is one call per
               // row with no hook involved (rules-of-hooks safe).
               const rowAccentStyle = !isGroupedRow
@@ -1413,7 +1434,7 @@ export default function DataGrid<T extends Record<string, any>>({
                     // embedded consumers (e.g. career-total vs stint-child
                     // vs season-header row styling).
                     !isGroupedRow && rowClassNameFor?.(data, renderIndex),
-                    // Phase 3 §S9: row-accent left-border tint.
+                    // Phase 3 §S009: row-accent left-border tint.
                     rowAccentStyle && "border-l-2 border-l-[color:var(--team-accent)]",
                   )}
                   style={rowAccentStyle}
@@ -1460,7 +1481,7 @@ export default function DataGrid<T extends Record<string, any>>({
                         : !isGroupedRow && sortDir === "desc"
                         ? (colConfig?.sort_desc_color ?? config.sortDescColor ?? null)
                         : null;
-                    // Phase 3 §S9: live-pulse flash for a cell whose value
+                    // Phase 3 §S009: live-pulse flash for a cell whose value
                     // just changed (see the changed-cell effect above).
                     const isFlashing =
                       config.liveUpdateHighlight &&
@@ -1713,6 +1734,8 @@ export default function DataGrid<T extends Record<string, any>>({
           bulkSaving={bulkSaving}
           onBulkSave={bulkMode ? saveBulkDrafts : undefined}
           onBulkDiscard={bulkMode ? discardBulkDrafts : undefined}
+          confirmBulkDiscard={confirmBulkDiscard}
+          onBeforeBulkDiscard={onBeforeBulkDiscard}
           dashboardPin={showDashboardPinButton ? dashboardPin : undefined}
           onDashboardPinToggle={
             showDashboardPinButton ? () => setDashboardPin(!dashboardPin) : undefined
@@ -1814,6 +1837,8 @@ export default function DataGrid<T extends Record<string, any>>({
             bulkSaving={bulkSaving}
             onBulkSave={bulkMode ? saveBulkDrafts : undefined}
             onBulkDiscard={bulkMode ? discardBulkDrafts : undefined}
+            confirmBulkDiscard={confirmBulkDiscard}
+            onBeforeBulkDiscard={onBeforeBulkDiscard}
             dashboardPin={showDashboardPinButton ? dashboardPin : undefined}
             onDashboardPinToggle={
               showDashboardPinButton ? () => setDashboardPin(!dashboardPin) : undefined

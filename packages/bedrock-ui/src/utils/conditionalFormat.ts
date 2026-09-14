@@ -54,10 +54,10 @@ export function getConditionalClass(
 
       if (match) {
         switch (rule.color) {
-          case "emerald": return "text-teal-700 dark:text-teal-400 font-medium";
-          case "rose":    return "text-red-700 dark:text-red-400 font-medium";
-          case "amber":   return "text-orange-600 dark:text-orange-400 font-medium";
-          case "blue":    return "text-blue-700 dark:text-blue-400 font-medium";
+          case "emerald": return "text-positive font-medium";
+          case "rose":    return "text-negative font-medium";
+          case "amber":   return "text-warning font-medium";
+          case "blue":    return "text-info font-medium";
           default:        return "";
         }
       }

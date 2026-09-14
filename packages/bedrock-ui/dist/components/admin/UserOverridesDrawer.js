@@ -162,7 +162,7 @@ function UserOverridesDrawer({
               children: [
                 /* @__PURE__ */ jsx("div", { className: "flex items-center justify-between", children: /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
                   /* @__PURE__ */ jsx("span", { className: "font-medium text-sm text-foreground", children: mod.module_label }),
-                  Boolean(mod.is_core) && /* @__PURE__ */ jsx(Badge, { variant: "outline", className: "text-[10px] px-1 py-0 h-4 border-amber-500/40 text-amber-600 dark:text-amber-400", children: "Core" })
+                  Boolean(mod.is_core) && /* @__PURE__ */ jsx(Badge, { variant: "outline", className: "text-[10px] px-1 py-0 h-4 border-warning/40 text-warning", children: "Core" })
                 ] }) }),
                 /* @__PURE__ */ jsxs("div", { className: "grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1", children: [
                   /* @__PURE__ */ jsx(
@@ -259,7 +259,7 @@ function TriStateActionControl({
           type: "button",
           disabled,
           onClick: () => onChange(true),
-          className: `px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${isGrant ? "bg-emerald-600 text-white shadow-2xs font-semibold" : "text-muted-foreground hover:text-emerald-600"}`,
+          className: `px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${isGrant ? "bg-positive text-primary-foreground shadow-2xs font-semibold" : "text-muted-foreground hover:text-positive"}`,
           title: "Force grant capability to this user",
           children: "Grant"
         }
@@ -270,7 +270,7 @@ function TriStateActionControl({
           type: "button",
           disabled,
           onClick: () => onChange(false),
-          className: `px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${isDeny ? "bg-rose-600 text-white shadow-2xs font-semibold" : "text-muted-foreground hover:text-rose-600"}`,
+          className: `px-2 py-0.5 rounded text-[11px] font-medium transition-colors ${isDeny ? "bg-negative text-primary-foreground shadow-2xs font-semibold" : "text-muted-foreground hover:text-negative"}`,
           title: "Force deny capability for this user",
           children: "Deny"
         }
@@ -283,7 +283,7 @@ function CompiledCapBadge({ granted }) {
     return /* @__PURE__ */ jsxs(
       "span",
       {
-        className: "inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 gap-1",
+        className: "inline-flex items-center justify-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-positive/15 text-positive gap-1",
         title: "Granted",
         children: [
           /* @__PURE__ */ jsx(Check, { className: "h-3 w-3 stroke-[2.5]" }),

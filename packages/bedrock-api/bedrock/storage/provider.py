@@ -4,7 +4,7 @@ Layer:   bedrock/storage
 Desc:    The storage capability (plan F4). Where an uploaded file's bytes go.
 
          A provider rather than a registry, by the test in
-         `docs/extension_points.md`: two storage backends do not both hold the
+         `docs/reference/extension-points.md`: two storage backends do not both hold the
          file. One wins, and which one is deployment configuration — the same
          application code runs against local disk in development and a CDN in
          production.
@@ -45,7 +45,7 @@ from bedrock.core.config import config
 from bedrock.core.providers import ProviderRegistry
 
 #: `app_config_settings` key naming the active backend.
-STORAGE_PROVIDER_KEY = "storage_provider"
+STORAGE_PROVIDER_KEY: str = "storage_provider"
 
 #: Name of the backend that needs no configuration and is therefore the
 #: fallback. Callers compare against this to tell "stored locally" from

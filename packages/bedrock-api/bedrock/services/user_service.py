@@ -42,7 +42,7 @@ def _jwt_secret() -> str:
     2. db.get_config("jwt_secret") (admin-settable via app_config_settings).
     3. Auto-generated dev-only ephemeral secret (logged once as a warning).
 
-    Never hardcoded in the module. Follows §S4.
+    Never hardcoded in the module. Follows §S004.
     """
     env_secret = os.environ.get("JWT_SECRET")
     if env_secret:

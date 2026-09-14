@@ -184,8 +184,8 @@ function GridEditor({ initialGridId = null } = {}) {
             )
           ] }),
           /* @__PURE__ */ jsxs("div", { className: "ml-auto flex items-center gap-2", children: [
-            draft.isDirty && /* @__PURE__ */ jsxs(Badge, { variant: "outline", className: "gap-1.5 text-amber-600 dark:text-amber-400 border-amber-400/50", children: [
-              /* @__PURE__ */ jsx("span", { className: "h-1.5 w-1.5 rounded-full bg-amber-500" }),
+            draft.isDirty && /* @__PURE__ */ jsxs(Badge, { variant: "outline", className: "gap-1.5 text-warning border-warning/50", children: [
+              /* @__PURE__ */ jsx("span", { className: "h-1.5 w-1.5 rounded-full bg-warning" }),
               "Unsaved changes"
             ] }),
             /* @__PURE__ */ jsxs(

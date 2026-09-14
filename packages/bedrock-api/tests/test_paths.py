@@ -89,7 +89,7 @@ class TestAppRoot:
         paths, _ = _reload(monkeypatch, str(tmp_path))
         monkeypatch.chdir(pathlib.Path(__file__).parent)
         assert paths.resolve_app_path("data/app.db") == \
-            os.path.join(str(tmp_path), "data/app.db")
+            os.path.normpath(os.path.join(str(tmp_path), "data", "app.db"))
 
     def test_absolute_configured_path_is_left_alone(self, monkeypatch, tmp_path):
         paths, _ = _reload(monkeypatch, str(tmp_path))
@@ -105,17 +105,17 @@ class TestSqlitePath:
 
     def test_env_override_is_honoured(self, monkeypatch, tmp_path):
         _, config = _reload(monkeypatch, str(tmp_path),
-                            SQLITE_DB_PATH="data/mlbtracker.db")
+                            SQLITE_DB_PATH="data/test.db")
         assert config.config.SQLITE_DB_PATH == \
-            os.path.join(str(tmp_path), "data/mlbtracker.db")
+            os.path.normpath(os.path.join(str(tmp_path), "data", "test.db"))
 
 
     def test_data_dir_override_moves_the_default(self, monkeypatch, tmp_path):
         _, config = _reload(monkeypatch, str(tmp_path),
                             BEDROCK_DATA_DIR="var/state")
-        assert config.config.DATA_DIR == os.path.join(str(tmp_path), "var/state")
+        assert config.config.DATA_DIR == os.path.normpath(os.path.join(str(tmp_path), "var", "state"))
         assert config.config.SQLITE_DB_PATH == \
-            os.path.join(str(tmp_path), "var/state", "app.db")
+            os.path.normpath(os.path.join(str(tmp_path), "var", "state", "app.db"))
 
     def test_database_url_wins_over_the_sqlite_path(self, monkeypatch, tmp_path):
         monkeypatch.setenv("DATABASE_URL", "postgresql://host/db")
@@ -140,7 +140,7 @@ class TestMigrationsDir:
 
         migrations = importlib.reload(migrations)
         assert migrations.MIGRATIONS_DIR == \
-            os.path.join(str(tmp_path), "api/core/migrations")
+            os.path.normpath(os.path.join(str(tmp_path), "api", "core", "migrations"))
 
     def test_missing_directory_yields_no_files(self, monkeypatch, tmp_path):
         """An app with no on-disk migrations is valid, not an error."""

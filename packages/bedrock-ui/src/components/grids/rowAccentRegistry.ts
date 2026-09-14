@@ -1,7 +1,7 @@
 /**
  * @file rowAccentRegistry.ts
  * @module frontend/src/components/grids
- * @description Extension point for per-row accent tinting (§S9 Phase 3).
+ * @description Extension point for per-row accent tinting (§S009 Phase 3).
  *
  * The grid engine owns the *mechanism*: when `config.rowAccentReactive` is
  * on, each non-grouped data row may carry an inline style plus a

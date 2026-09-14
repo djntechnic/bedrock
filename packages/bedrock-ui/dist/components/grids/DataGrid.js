@@ -28,7 +28,7 @@ import { unwrapCellPayload, renderMediaCell, renderCell } from "./cellRenderers.
 import EditableCell from "./EditableCell.js";
 import useCellSelection from "./useCellSelection.js";
 import { cellPositionClasses } from "./cellPosition.js";
-import { applyColumnSizing, computeColumnMinMax, getGradientCellStyle, prependRankColumn, prependSelectionColumn, hasAggregates, computeAggValue, formatAggValue } from "../../utils/gridUtils.js";
+import { applyColumnSizing, computeColumnMinMax, getGradientCellStyle, resolveKpiGradientHexes, prependRankColumn, prependSelectionColumn, hasAggregates, computeAggValue, formatAggValue } from "../../utils/gridUtils.js";
 import { getRankRowClass } from "../../utils/rankStyle.js";
 import { applyDraft, isDirty } from "./bulkDraftStore.js";
 import { useRowClickHandler } from "../../hooks/useRowClickHandler.js";
@@ -72,6 +72,9 @@ function DataGrid({
   rowClassNameFor,
   onCellCommit,
   onBulkCommit,
+  onBulkDiscard,
+  confirmBulkDiscard,
+  onBeforeBulkDiscard,
   bulkDirtyOverride = false,
   draftsOverride,
   renderSubRow,
@@ -133,7 +136,13 @@ function DataGrid({
     },
     [setBulkDrafts]
   );
-  const discardBulkDrafts = useCallback(() => setBulkDrafts({}), [setBulkDrafts]);
+  const discardBulkDrafts = useCallback(async () => {
+    if (onBulkDiscard) {
+      await onBulkDiscard();
+    } else {
+      setBulkDrafts({});
+    }
+  }, [onBulkDiscard, setBulkDrafts]);
   const bulkDirtyEngine = isDirty(bulkDrafts);
   const bulkDirty = bulkDirtyEngine || bulkDirtyOverride;
   const saveBulkDrafts = useCallback(async () => {
@@ -311,10 +320,7 @@ function DataGrid({
                 columnId
               );
               if (minMax && typeof value === "number") {
-                const positiveHex = "#16a34a";
-                const negativeHex = "#dc2626";
-                const fromColor = policy.lowerBetter ? positiveHex : negativeHex;
-                const toColor = policy.lowerBetter ? negativeHex : positiveHex;
+                const { fromColor, toColor } = resolveKpiGradientHexes(policy.lowerBetter);
                 gradientStyle = getGradientCellStyle(
                   value,
                   minMax.min,
@@ -717,7 +723,7 @@ function DataGrid({
                   // embedded consumers (e.g. career-total vs stint-child
                   // vs season-header row styling).
                   !isGroupedRow && rowClassNameFor?.(data, renderIndex),
-                  // Phase 3 §S9: row-accent left-border tint.
+                  // Phase 3 §S009: row-accent left-border tint.
                   rowAccentStyle && "border-l-2 border-l-[color:var(--team-accent)]"
                 ),
                 style: rowAccentStyle,
@@ -905,6 +911,8 @@ function DataGrid({
           bulkSaving,
           onBulkSave: bulkMode ? saveBulkDrafts : void 0,
           onBulkDiscard: bulkMode ? discardBulkDrafts : void 0,
+          confirmBulkDiscard,
+          onBeforeBulkDiscard,
           dashboardPin: showDashboardPinButton ? dashboardPin : void 0,
           onDashboardPinToggle: showDashboardPinButton ? () => setDashboardPin(!dashboardPin) : void 0
         }
@@ -985,6 +993,8 @@ function DataGrid({
             bulkSaving,
             onBulkSave: bulkMode ? saveBulkDrafts : void 0,
             onBulkDiscard: bulkMode ? discardBulkDrafts : void 0,
+            confirmBulkDiscard,
+            onBeforeBulkDiscard,
             dashboardPin: showDashboardPinButton ? dashboardPin : void 0,
             onDashboardPinToggle: showDashboardPinButton ? () => setDashboardPin(!dashboardPin) : void 0
           }

@@ -12,7 +12,7 @@
  * also schedules a debounced persist. This is the single integration point
  * that gives every `<DataGrid>` consumer per-user sort/column persistence —
  * no per-grid wiring needed, the same "engine owns it once" pattern used for
- * the §S9 grid style tokens.
+ * the §S009 grid style tokens.
  */
 import type { SortingState, VisibilityState } from "@tanstack/react-table";
 import { type GridConfig } from "./useGridConfig";

@@ -144,7 +144,7 @@ function renderPreviewCell(
     else if (fmt === ".2f" || fmt === "0.00") display = n.toFixed(2);
     else if (fmt === ".3f" || fmt === "0.000") display = n.toFixed(3);
     else display = Math.round(n).toString();
-    // Phase 3 §S9: mirrors cellRenderers.renderCell() — tabular-nums only
+    // Phase 3 §S009: mirrors cellRenderers.renderCell() — tabular-nums only
     // when the grid opts into numeral_style="tabular".
     return (
       <span className={numeralStyle === "tabular" ? "tabular-nums" : undefined}>
@@ -242,12 +242,12 @@ export default function GridPreview({ config, onEnterFocus: _onEnterFocus, onCol
     });
   }, [effectiveRows, config.columns]);
 
-  // Phase 3 §S9: row accent tinting — resolved through the same registry
+  // Phase 3 §S009: row accent tinting — resolved through the same registry
   // <DataGrid> uses, so the preview stays honest about what saving yields
   // (I-GP parity, scripts/maintenance/audit_grids.py).
   const resolveRowAccent = useRowAccentResolver(config.rowAccentReactive);
 
-  // Phase 3 §S9: changed-cell "live pulse" — mirrors <DataGrid>'s detection,
+  // Phase 3 §S009: changed-cell "live pulse" — mirrors <DataGrid>'s detection,
   // diffed against stagedData so editing preview rows via "Manage data" (or
   // switching dataset/row-count) gives admins a live demo of the effect.
   const prevStagedRef = useRef<Record<string, Record<string, unknown>> | null>(null);
@@ -579,7 +579,7 @@ export default function GridPreview({ config, onEnterFocus: _onEnterFocus, onCol
                     const rank = idx + 1;
                     const isGroupedRow = row.getIsGrouped();
                     const previewRow = row.original as unknown as Record<string, unknown>;
-                    // Phase 3 §S9: same rowKeyForRow / teamForRow resolution DataGrid uses.
+                    // Phase 3 §S009: same rowKeyForRow / teamForRow resolution DataGrid uses.
                     const rowKeyForRow = config.rowKeyColumn
                       ? previewRow[config.rowKeyColumn]
                       : undefined;

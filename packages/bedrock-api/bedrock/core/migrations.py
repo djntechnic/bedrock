@@ -3,7 +3,7 @@ Module:  migrations.py
 Layer:   bedrock/core
 Desc:    Versioned schema migration runner. On startup it ensures a
          `sys_schema_migrations` ledger table exists (auto-renaming the
-         legacy `schema_migrations` table if found — §S7 PR-6), then applies
+         legacy `schema_migrations` table if found — §S007 PR-6), then applies
          every pending migration exactly once — recording each by a stable
          migration_id so re-running is fully idempotent.
 
@@ -112,7 +112,7 @@ _ADD_COLUMN_MIGRATIONS, _RAW_MIGRATIONS = _load_inline_migrations()
 def _ensure_ledger_table() -> None:
     """Ensure the `sys_schema_migrations` ledger exists.
 
-    §S7 PR-6 renamed the legacy `schema_migrations` table to
+    §S007 PR-6 renamed the legacy `schema_migrations` table to
     `sys_schema_migrations`. On DBs that predate the rename the legacy table
     is ALTERed in place (O(1) metadata) so applied migration IDs are
     preserved; fresh DBs get the new name directly.

@@ -51,7 +51,17 @@ interface GridHeaderProps<TData> {
     bulkDirty?: boolean;
     bulkSaving?: boolean;
     onBulkSave?: () => void | Promise<void>;
-    onBulkDiscard?: () => void;
+    onBulkDiscard?: () => void | Promise<void>;
+    /**
+     * Bedrock #55: Whether to prompt for confirmation before executing a bulk discard.
+     * Defaults to true to guard against accidental destruction of staged drafts.
+     */
+    confirmBulkDiscard?: boolean;
+    /**
+     * Bedrock #55: Optional hook called prior to executing the discard action.
+     * If it resolves or returns false, the discard action is aborted.
+     */
+    onBeforeBulkDiscard?: () => boolean | Promise<boolean>;
     /**
      * Per-user customization: whether the caller has pinned this grid as a
      * dashboard source. `undefined` (not `false`) hides the button entirely —
@@ -61,5 +71,5 @@ interface GridHeaderProps<TData> {
     dashboardPin?: boolean;
     onDashboardPinToggle?: () => void;
 }
-export default function GridHeader<TData>({ table, config, density, onDensityChange, onExport, search, onSearchChange, searchPlaceholder, filtersSlot, bulkDirty, bulkSaving, onBulkSave, onBulkDiscard, dashboardPin, onDashboardPinToggle, }: GridHeaderProps<TData>): import("react").JSX.Element;
+export default function GridHeader<TData>({ table, config, density, onDensityChange, onExport, search, onSearchChange, searchPlaceholder, filtersSlot, bulkDirty, bulkSaving, onBulkSave, onBulkDiscard, confirmBulkDiscard, onBeforeBulkDiscard, dashboardPin, onDashboardPinToggle, }: GridHeaderProps<TData>): import("react").JSX.Element;
 export {};

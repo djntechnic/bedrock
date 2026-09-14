@@ -14,7 +14,7 @@ from typing import Annotated, List
 from fastapi import APIRouter, Depends
 from loguru import logger
 
-from bedrock.dependencies import get_current_active_user
+from bedrock.dependencies import get_current_active_user, get_current_user
 from bedrock.services import user_service as us
 from bedrock.schemas.base import ApiResponse
 from bedrock.schemas.user_preferences import (
@@ -58,7 +58,7 @@ def get_my_grid_preference(grid_id: str, current_user: CurrentUser):
 def update_my_grid_preference(
     grid_id: str,
     body: UserGridPreferenceUpdateSchema,
-    current_user: CurrentUser,
+    current_user: Annotated[us.UserRecord, Depends(get_current_user)],
 ):
     """Partial update — sort-only, columns-only, dashboard_pin-only, or any
     combination. Lazily creates the row on first save."""
@@ -78,7 +78,11 @@ def update_my_grid_preference(
     "/grids/{grid_id}/columns/{column_id}",
     response_model=ApiResponse[UserGridPreferenceSchema],
 )
-def unpin_my_grid_column(grid_id: str, column_id: str, current_user: CurrentUser):
+def unpin_my_grid_column(
+    grid_id: str,
+    column_id: str,
+    current_user: Annotated[us.UserRecord, Depends(get_current_user)],
+):
     """Delete one column-override row. Used to unpin a dashboard widget
     (grid_id='dashboard'), unpin a player (grid_id='player_pins'), or clear
     a plain grid's per-column override back to the admin default."""

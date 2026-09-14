@@ -9,7 +9,7 @@ Desc:    The three transactional messages the platform sends: an invitation, a
          registry are all things this will plausibly want one day. None of them
          are things it needs to send three fixed messages, and a registry with
          one possible registration is the "pile of hooks" failure mode
-         `docs/extension_points.md` exists to prevent. Each message is a
+         `docs/reference/extension-points.md` exists to prevent. Each message is a
          function returning a fully-rendered `MailMessage`; an app that wants
          different copy today can write its own sender. When a *second*
          application actually needs different wording, that is the signal to

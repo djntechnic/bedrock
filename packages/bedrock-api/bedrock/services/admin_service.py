@@ -24,7 +24,7 @@ from typing import Any, Optional
 from loguru import logger
 
 from bedrock.core.database import db
-from bedrock.core.schema_catalog import Tables as T, Views as V
+from bedrock.core.schema_catalog import Tables as T
 from bedrock.core.config_constants import (
     CANONICAL_CATEGORIES,
     CANONICAL_VALUE_TYPES,
@@ -250,7 +250,7 @@ _GRID_SETTINGS_BOOL_COLS: tuple[str, ...] = (
     "allow_column_reorder",
     # Phase 10 B2
     "allow_expansion",
-    # Phase 3 §S9
+    # Phase 3 §S009
     "live_update_highlight", "row_accent_reactive",
 )
 
@@ -282,7 +282,7 @@ _GRID_SETTING_UPDATE_ALLOWED = frozenset({
     "allow_column_reorder",
     # Phase 10 B2
     "allow_expansion",
-    # Phase 3 §S9
+    # Phase 3 §S009
     "numeral_style", "live_update_highlight", "row_accent_reactive",
     "modified_by",
 })

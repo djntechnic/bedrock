@@ -2,17 +2,17 @@
 
 A reusable full-stack application platform, extracted from MLBTracker.
 
-Provides a config-driven grid backend, JWT auth with roles and per-user module
+Provides a config-driven grid backend and React DataGrid engine, JWT auth with roles and per-user module
 gating, DB-backed application config, a schema catalog with boot-time drift
-detection, a versioned migration runner, and the admin surfaces that drive all
+detection, a versioned migration runner, design tokens, platform audit tools, and the admin surfaces that drive all
 of it.
 
 ## Packages
 
-| Package | Status |
-| --- | --- |
-| `packages/bedrock-api` | v0.2.0 — 56 modules, 63 endpoints, mail + storage providers, imports and mounts standalone |
-| `packages/bedrock-ui` | v0.2.0 — grid engine, Grid Editor, auth flows, shell, ships TS source |
+| Package | Version | Scope |
+| --- | --- | --- |
+| `packages/bedrock-api` | v0.10.0 | FastAPI application platform: grid config, auth/RBAC, schema catalog, migrations, health, media, storage providers, ecosystem standards audits (`bedrock.tools`) |
+| `packages/bedrock-ui` | v0.10.0 | Reusable React UI platform: DataGrid engine, admin Grid Editor, auth shell, navigation rail, design tokens, command palette |
 
 ## Assembling an application
 
@@ -26,7 +26,7 @@ app = create_app(title="My App", routers=[RouterMount(r, prefix="/api/v1/app") f
 the platform's error handlers and rate limiter, and runs the database boot
 sequence in lifespan — with hooks for what a host has to do before migrations,
 after the database is healthy, and on the way down.
-See [`docs/app_assembly.md`](docs/app_assembly.md) and [`docs/platform_guide.md`](docs/platform_guide.md).
+See [`docs/reference/app-assembly.md`](docs/reference/app-assembly.md) and [`docs/reference/platform-guide.md`](docs/reference/platform-guide.md).
 
 ## The contract
 
@@ -60,10 +60,10 @@ Providers are declared with `core.providers.ProviderRegistry`.
 An application that owns its own object keys wants the wider `ObjectStore`
 protocol — caller-chosen keys, exhaustive prefix listing, batch deletes and
 public-URL verification — which `local` and `s3` implement and Cloudflare
-Images cannot. [`docs/object_storage.md`](docs/object_storage.md).
+Images cannot. [`docs/reference/object-storage.md`](docs/reference/object-storage.md).
 
 Error reporting is next. Mail is documented in
-[`docs/mail.md`](docs/mail.md): invitation, password reset and email
+[`docs/reference/mail.md`](docs/reference/mail.md): invitation, password reset and email
 verification, all of which degrade to a logged no-op when nothing is
 configured. `bedrock-ui` ships the three pages those links land on; mount them
 at `AUTH_FLOW_PATHS`, which is also what the backend builds the links from.
@@ -74,9 +74,9 @@ the package genuinely reusable rather than MLBTracker with the names filed off
 — and it is verified, not assumed.
 
 Full contract, including which kind to reach for and why the failure policy
-differs per registry: [`docs/extension_points.md`](docs/extension_points.md). For
+differs per registry: [`docs/reference/extension-points.md`](docs/reference/extension-points.md). For
 the complete cross-repository platform handbook, lifecycle model, and consumer invariants,
-see [`docs/platform_guide.md`](docs/platform_guide.md).
+see [`docs/reference/platform-guide.md`](docs/reference/platform-guide.md).
 
 ## Schema
 
@@ -90,30 +90,73 @@ A platform schema change is **both**: the baseline, for applications created
 from now on, and a migration, for the ones that already exist. Either one alone
 reaches half the databases.
 
+## Platform Standards & Audit Tooling
+
+Platform standards (§S001–§S012) are defined in [`docs/standards/`](docs/standards/) and enforced across repositories via 1:1 automated audit tooling:
+
+```bash
+# Run all platform audits
+python -m bedrock.tools.run_all --root .
+
+# Scoped individual audits
+python -m bedrock.tools.audit_s001_duplicates --root .
+python -m bedrock.tools.audit_s002_grids --root .
+python -m bedrock.tools.audit_s003_logging --root .
+python -m bedrock.tools.audit_s004_config --root .
+python -m bedrock.tools.audit_s005_testing --root .
+python -m bedrock.tools.audit_s006_pr_workflow --root .
+python -m bedrock.tools.audit_s007_schema_catalog --root .
+python -m bedrock.tools.audit_s008_guidance --root .
+python -m bedrock.tools.audit_s009_design_tokens --root .
+python -m bedrock.tools.audit_s010_security --root .
+python -m bedrock.tools.audit_s011_navigation --root .
+python -m bedrock.tools.audit_s012_pins --root .
+```
+
+Behavior for every audit is declared in `bedrock.toml`, not hardcoded — a
+consumer changes exemptions or tunables by editing that file, not platform
+code. Exemptions merge additively on top of a fixed platform baseline
+(`node_modules/`, `__pycache__/`, `.venv/`).
+
+`scripts/run_qa.py` is the unified pre-commit / pre-PR / pre-merge entry
+point, replacing per-command guessing with three fixed tiers:
+
+```bash
+python scripts/run_qa.py --mode fast    # delta only — before every commit
+python scripts/run_qa.py --mode scoped  # everything touched since master — before a PR
+python scripts/run_qa.py --mode full    # entire suite + every platform audit — pre-merge / CI
+```
+
 ## Deployment
 
 `deploy/` holds the image, compose and nginx templates an application copies,
 and `.env.example` is the environment contract. Point every healthcheck at
 `/api/v1/health/ready`, which answers 503 when the database is unreachable —
 `/health` is a diagnostic report and always answers 200.
-[`docs/deployment.md`](docs/deployment.md).
+[`docs/reference/deployment.md`](docs/reference/deployment.md).
 
 ## Verification
 
 ```bash
-cd packages/bedrock-api
-python -c "import bedrock.routes.admin_platform"   # no MLBTracker on the path
+# Backend test suite
+pytest packages/bedrock-api/tests/
+
+# Frontend test suite & type checking
+npm test
+npm run typecheck
+npm run build
 ```
 
 ## Consuming it
 
+Both packages move together in lockstep:
+
 ```
-bedrock-api @ git+https://github.com/djntechnic/bedrock@v0.2.0#subdirectory=packages/bedrock-api
+bedrock-api @ git+https://github.com/djntechnic/bedrock.git@v0.10.0#subdirectory=packages/bedrock-api
 ```
 
 ```json
-"@djntechnic/bedrock-ui": "github:djntechnic/bedrock#v0.2.0"
+"@djntechnic/bedrock-ui": "github:djntechnic/bedrock#v0.10.0"
 ```
 
-Git tags rather than a package registry: real version pinning, no publishing
-infrastructure.
+Git tags rather than a package registry: real version pinning, dual-pin lockstep governance (§S012), and zero publishing infrastructure.

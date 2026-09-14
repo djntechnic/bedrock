@@ -13,6 +13,7 @@ import sqlite3
 import traceback
 from datetime import datetime
 from abc import ABC, abstractmethod
+from loguru import logger
 from bedrock.core.database import db
 from bedrock.core.schema_catalog import Tables as T
 
@@ -165,7 +166,9 @@ class BaseImporter(ABC):
             # Skip processing if the file already exists in the complete/ folder.
             complete_path = os.path.join(complete_dir, os.path.basename(file_path))
             if os.path.exists(complete_path):
-                print(f"[SKIP] Already completed: {os.path.basename(file_path)}")
+                logger.bind(source=self.source_name, file=os.path.basename(file_path)).info(
+                    "Already completed, skipping"
+                )
                 db.log_activity("IMPORT_SKIP", f"Already completed: {os.path.basename(file_path)}")
                 return None
 
@@ -190,14 +193,18 @@ class BaseImporter(ABC):
         attempt = 0
         while True:
             try:
-                print(f"Starting import: {self.source_name} (Run ID: {self.import_run_id}, attempt {attempt + 1})")
+                logger.bind(
+                    source=self.source_name, run_id=self.import_run_id, attempt=attempt + 1
+                ).info("Starting import")
                 result = self.run(*args, **kwargs)
                 self.complete_run()
                 # Move file to complete/ on success.
                 if in_progress_path:
                     self.move_file(in_progress_path, complete_dir)
-                    print(f"[MOVED] {os.path.basename(in_progress_path)} -> complete/")
-                print(f"Import completed: {self.source_name}")
+                    logger.bind(source=self.source_name, file=os.path.basename(in_progress_path)).info(
+                        "Moved to complete/"
+                    )
+                logger.bind(source=self.source_name).info("Import completed")
                 return result
             except Exception as e:
                 transient = _is_transient_error(e)
@@ -215,7 +222,10 @@ class BaseImporter(ABC):
                         f"Retrying {self.source_name} import (attempt {attempt + 1}/{max_retries + 1})",
                         f"Transient error: {e}. Backing off {sleep_for:.2f}s.",
                     )
-                    print(f"Import transient failure: {self.source_name}. Retry {attempt}/{max_retries} in {sleep_for:.2f}s. Error: {e}")
+                    logger.bind(
+                        source=self.source_name, attempt=attempt, max_retries=max_retries,
+                        sleep_for=sleep_for,
+                    ).warning(f"Import transient failure, retrying: {e}")
                     time.sleep(sleep_for)
                     continue
 
@@ -224,6 +234,8 @@ class BaseImporter(ABC):
                 self.fail_run(error_msg)
                 if in_progress_path and os.path.exists(in_progress_path):
                     self.move_file(in_progress_path, error_dir)
-                    print(f"[MOVED] {os.path.basename(in_progress_path)} -> error/")
-                print(f"Import failed: {self.source_name}. Error: {e}")
+                    logger.bind(source=self.source_name, file=os.path.basename(in_progress_path)).info(
+                        "Moved to error/"
+                    )
+                logger.bind(source=self.source_name).error(f"Import failed: {e}")
                 raise

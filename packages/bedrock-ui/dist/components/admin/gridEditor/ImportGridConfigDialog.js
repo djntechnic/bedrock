@@ -165,7 +165,7 @@ function ImportGridConfigDialog({
                   ] }),
                   /* @__PURE__ */ jsxs("ul", { className: "grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground", children: [
                     /* @__PURE__ */ jsxs("li", { children: [
-                      /* @__PURE__ */ jsx("span", { className: "text-emerald-600", children: "+" }),
+                      /* @__PURE__ */ jsx("span", { className: "text-positive", children: "+" }),
                       " ",
                       summary.added.length,
                       " column",
@@ -181,7 +181,7 @@ function ImportGridConfigDialog({
                       " removed"
                     ] }),
                     /* @__PURE__ */ jsxs("li", { children: [
-                      /* @__PURE__ */ jsx("span", { className: "text-amber-600", children: "~" }),
+                      /* @__PURE__ */ jsx("span", { className: "text-warning", children: "~" }),
                       " ",
                       summary.changed.length,
                       " column",
@@ -199,7 +199,7 @@ function ImportGridConfigDialog({
                     "div",
                     {
                       className: cn(
-                        "flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-amber-900 dark:text-amber-200"
+                        "flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-2 py-1.5 text-warning"
                       ),
                       "data-testid": "grid-editor-import-warnings",
                       children: [

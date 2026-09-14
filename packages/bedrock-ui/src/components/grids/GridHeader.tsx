@@ -16,7 +16,7 @@
  *    export) emit structured Pino traces carrying { gridId, action, recordCount }.
  */
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Download, AlignJustify, Search, X, Printer, Save, Undo2, Pin, PinOff } from "lucide-react";
 import type { Table } from "@tanstack/react-table";
 import { Button } from "../ui/button";
@@ -27,6 +27,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../ui/alert-dialog";
 import ColumnToggle from "../ColumnToggle";
 import type { GridConfig } from "../../hooks/useGridConfig";
 import type { Density } from "../../hooks/useDensity";
@@ -66,7 +76,17 @@ interface GridHeaderProps<TData> {
   bulkDirty?: boolean;
   bulkSaving?: boolean;
   onBulkSave?: () => void | Promise<void>;
-  onBulkDiscard?: () => void;
+  onBulkDiscard?: () => void | Promise<void>;
+  /**
+   * Bedrock #55: Whether to prompt for confirmation before executing a bulk discard.
+   * Defaults to true to guard against accidental destruction of staged drafts.
+   */
+  confirmBulkDiscard?: boolean;
+  /**
+   * Bedrock #55: Optional hook called prior to executing the discard action.
+   * If it resolves or returns false, the discard action is aborted.
+   */
+  onBeforeBulkDiscard?: () => boolean | Promise<boolean>;
   /**
    * Per-user customization: whether the caller has pinned this grid as a
    * dashboard source. `undefined` (not `false`) hides the button entirely —
@@ -102,9 +122,12 @@ export default function GridHeader<TData>({
   bulkSaving = false,
   onBulkSave,
   onBulkDiscard,
+  confirmBulkDiscard = true,
+  onBeforeBulkDiscard,
   dashboardPin,
   onDashboardPinToggle,
 }: GridHeaderProps<TData>) {
+  const [isDiscardDialogOpen, setIsDiscardDialogOpen] = useState(false);
   const recordCount = useRecordCount(table);
   const tipDelay = config.tooltipDelayDuration ?? DEFAULT_TOOLTIP_DELAY;
 
@@ -159,6 +182,30 @@ export default function GridHeader<TData>({
     );
     if (typeof window !== "undefined" && typeof window.print === "function") {
       window.print();
+    }
+  }
+
+  async function handleConfirmDiscard() {
+    if (onBeforeBulkDiscard) {
+      const allowed = await onBeforeBulkDiscard();
+      if (allowed === false) {
+        setIsDiscardDialogOpen(false);
+        return;
+      }
+    }
+    setIsDiscardDialogOpen(false);
+    log.info(
+      { gridId: config.gridId, action: "bulk-discard", recordCount },
+      "GridHeader: bulk discard",
+    );
+    await onBulkDiscard?.();
+  }
+
+  function handleDiscardClick() {
+    if (confirmBulkDiscard !== false) {
+      setIsDiscardDialogOpen(true);
+    } else {
+      void handleConfirmDiscard();
     }
   }
 
@@ -230,13 +277,7 @@ export default function GridHeader<TData>({
                   className="gap-1.5"
                   aria-label="Discard unsaved edits"
                   disabled={bulkSaving}
-                  onClick={() => {
-                    log.info(
-                      { gridId: config.gridId, action: "bulk-discard", recordCount },
-                      "GridHeader: bulk discard",
-                    );
-                    onBulkDiscard();
-                  }}
+                  onClick={handleDiscardClick}
                 >
                   <Undo2 className="h-3.5 w-3.5" />
                   Discard
@@ -345,6 +386,24 @@ export default function GridHeader<TData>({
           )}
         </div>
       </div>
+      {confirmBulkDiscard !== false && (
+        <AlertDialog open={isDiscardDialogOpen} onOpenChange={setIsDiscardDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Discard unsaved changes?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to discard all unsaved edits in this table? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Keep editing</AlertDialogCancel>
+              <AlertDialogAction variant="destructive" onClick={() => void handleConfirmDiscard()}>
+                Discard changes
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </TooltipProvider>
   );
 }

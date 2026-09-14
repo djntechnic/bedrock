@@ -1,0 +1,151 @@
+[tool.bedrock]
+schema_catalog = "packages/bedrock-api/bedrock/core/schema_catalog.py"
+grids_dir = "packages/bedrock-ui/src/components/DataGrid"
+
+[tool.bedrock.audit.s001]
+exemptions = [
+  "dist/**",
+  "packages/bedrock-ui/dist/**",
+  # This repo is the platform source, not a consumer: everything under
+  # packages/bedrock-ui/src/ (including components/ui/) IS the barrel's
+  # implementation, so relative imports from it are not a local twin.
+  "packages/bedrock-ui/src/**",
+]
+
+[tool.bedrock.audit.s002]
+presentational_tables = [
+  "packages/bedrock-ui/src/components/admin/ConfigEditor.tsx",
+  "packages/bedrock-ui/src/components/admin/LogViewer.tsx",
+  "packages/bedrock-ui/src/components/admin/MenuNavEditorPanel.tsx",
+  "packages/bedrock-ui/src/components/admin/PlatformHealthPanel.tsx",
+  "packages/bedrock-ui/src/components/admin/RoleMatrixPanel.tsx",
+  "packages/bedrock-ui/src/components/admin/SecurityLogViewer.tsx",
+  "packages/bedrock-ui/src/components/admin/UserOverridesDrawer.tsx",
+  "packages/bedrock-ui/src/components/admin/UsersPanel.tsx",
+  "packages/bedrock-ui/src/components/grids/PresentationalTableChrome.tsx",
+  "packages/bedrock-ui/src/components/ui/table.tsx",
+]
+exemptions = []
+
+[tool.bedrock.audit.s003]
+exemptions = [
+  # Vendored dependencies are not source this repo owns.
+  "node_modules/**",
+  # These CLI tools' stdout is the functional contract (a rendered report
+  # consumed by CI logs, or machine-readable JSON) — not an incidental debug
+  # print. Same rationale as the scripts/** carve-out in the S003 doc.
+  "packages/bedrock-api/bedrock/tools/audit_*.py",
+  "packages/bedrock-api/bedrock/tools/remediate_taxonomy_and_casing.py",
+  "packages/bedrock-api/bedrock/tools/run_all.py",
+  "packages/bedrock-api/bedrock/tools/sync_standards.py",
+  # Dependency-free by design (see module docstring) so it can probe
+  # readiness before the app itself can import loguru.
+  "packages/bedrock-api/bedrock/tools/healthcheck.py",
+  "scripts/**",
+]
+
+[tool.bedrock.audit.s004]
+config_module = "bedrock.core.config"
+exemptions = [
+  # config.py IS the typed config surface the audit message points callers
+  # at — it cannot route its own env reads through itself. Same for the
+  # handful of bootstrap-time modules that must resolve before the database
+  # (and therefore db.get_config) exists: paths.py locates the .env before
+  # any .env is read, logging.py picks a log level before app_factory boots,
+  # migrations.py/db_health.py run ahead of/around schema setup, and
+  # app_factory's CORS read is explicitly documented as pre-DB-init.
+  "packages/bedrock-api/bedrock/core/config.py",
+  "packages/bedrock-api/bedrock/core/paths.py",
+  "packages/bedrock-api/bedrock/core/logging.py",
+  "packages/bedrock-api/bedrock/core/migrations.py",
+  "packages/bedrock-api/bedrock/core/db_health.py",
+  "packages/bedrock-api/bedrock/core/app_factory.py",
+  # Credential precedence helpers: env var wins (production canonical
+  # source), falling back to db.get_config, then a dev-only default. The
+  # secret must not live only in app_config_settings, which is admin-UI
+  # rendered and returned by the config export endpoint.
+  "packages/bedrock-api/bedrock/services/user_service.py",
+  "packages/bedrock-api/bedrock/services/oauth_service.py",
+  # Dependency-free by design (see module docstring) so it can probe
+  # readiness before the app itself can import the config/db stack.
+  "packages/bedrock-api/bedrock/tools/healthcheck.py",
+  # The audit source itself: its own regex patterns and diagnostic strings
+  # contain the literal text this audit scans for.
+  "packages/bedrock-api/bedrock/tools/audit_s004_config.py",
+  # Test fixtures intentionally write raw os.environ/get_config/secret-shaped
+  # literals as sample input and assertion text; s003 carries the same
+  # test-file carve-out structurally.
+  "packages/bedrock-api/tests/**",
+]
+
+[tool.bedrock.audit.s005]
+exemptions = [
+  # This file's own test bodies write a `@pytest.mark.skip(...)` decorator as
+  # literal string content — a deliberate violation fixture proving the audit
+  # catches it — not an actual skip applied in this suite. Same rationale as
+  # s004's audit_s004_config.py carve-out for self-referential pattern text.
+  "packages/bedrock-api/tests/test_audit_s005_to_s008.py",
+]
+
+[tool.bedrock.audit.s006]
+ledger_files = [
+  "docs/plans/2026-09-12-consolidated-standards-tooling-and-testing-roadmap.md",
+]
+exemptions = []
+
+[tool.bedrock.audit.s007]
+exemptions = [
+  # Test fixtures intentionally write raw table-name literals as sample
+  # input (migration-runner test scaffolding) and as deliberate violation
+  # fixtures for the audit's own self-tests; s004 carries the same
+  # test-file carve-out structurally.
+  "packages/bedrock-api/tests/**",
+]
+
+[tool.bedrock.audit.s008]
+guidance_docs = ["CLAUDE.md", "GEMINI.md"]
+max_lines = 200
+exemptions = []
+
+[tool.bedrock.audit.s009]
+theme_palettes = "packages/bedrock-ui/src/theme/palettes.ts"
+exemptions = [
+  "packages/bedrock-ui/src/styles/**",
+  "packages/bedrock-ui/src/theme/**",
+  # editorFields.tsx's ColorRow renders a native <input type="color">, which
+  # the HTML spec requires to receive a literal #rrggbb value — there is no
+  # token-driven way to seed a browser color-picker widget.
+  "packages/bedrock-ui/src/components/admin/gridEditor/editorFields.tsx",
+  # gridUtils.tsx is the KPI-gradient color-interpolation engine itself: it
+  # parses admin-configured hex strings (app_grid_column_settings.gradient_*)
+  # and computes an in-between rgb(...) at render time. Those are runtime
+  # arithmetic outputs, not hardcoded design choices, and the same role this
+  # audit already carves out for tokens.css/theme/palettes.ts as the one place
+  # raw color math is allowed to live.
+  "packages/bedrock-ui/src/utils/gridUtils.tsx",
+  # Palette-shaped test fixtures: ThemeContext.test.tsx builds ThemePalette
+  # objects (the same six raw hex fields as theme/palettes.ts) to exercise
+  # resolveSystemPalette, and useDocumentHead.test.ts fabricates a
+  # `<meta content="#000">` DOM node to assert cleanup() only removes tags it
+  # wrote. Both are fixture data mimicking real inputs, not UI styling.
+  "packages/bedrock-ui/src/context/ThemeContext.test.tsx",
+  "packages/bedrock-ui/src/hooks/useDocumentHead.test.ts",
+]
+
+[tool.bedrock.audit.s010]
+exemptions = [
+  "packages/bedrock-api/bedrock/routes/auth.py",
+  "packages/bedrock-api/bedrock/routes/health.py",
+  "packages/bedrock-api/bedrock/routes/diagnostics.py",
+]
+
+[tool.bedrock.audit.s011]
+nav_config = "packages/bedrock-ui/src/navigation/navConfig.ts"
+exemptions = [
+  "packages/bedrock-ui/src/**",
+]
+
+[tool.bedrock.audit.s012]
+requirements = "packages/bedrock-api/requirements.txt"
+package_json = "package.json"
+exemptions = []

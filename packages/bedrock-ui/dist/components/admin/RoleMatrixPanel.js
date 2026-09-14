@@ -209,7 +209,7 @@ function RoleMatrixPanel() {
           children: [
             /* @__PURE__ */ jsx("td", { className: "px-4 py-3 border-r border-border bg-card", children: /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2", children: [
               /* @__PURE__ */ jsx("span", { className: "font-medium text-foreground", children: mod.module_label }),
-              mod.is_core && /* @__PURE__ */ jsx(Badge, { variant: "outline", className: "text-[10px] px-1 py-0 h-4 border-amber-500/40 text-amber-600 dark:text-amber-400", children: "Core" })
+              mod.is_core && /* @__PURE__ */ jsx(Badge, { variant: "outline", className: "text-[10px] px-1 py-0 h-4 border-warning/40 text-warning", children: "Core" })
             ] }) }),
             roles.map((role) => {
               const caps = mod.roleCapabilities[role.role_id] || {

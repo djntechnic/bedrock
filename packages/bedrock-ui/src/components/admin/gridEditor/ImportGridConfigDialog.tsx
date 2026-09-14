@@ -205,7 +205,7 @@ export default function ImportGridConfigDialog({
               </div>
               <ul className="grid grid-cols-2 gap-x-4 gap-y-1 text-muted-foreground">
                 <li>
-                  <span className="text-emerald-600">+</span>{" "}
+                  <span className="text-positive">+</span>{" "}
                   {summary.added.length} column
                   {summary.added.length === 1 ? "" : "s"} added
                 </li>
@@ -215,7 +215,7 @@ export default function ImportGridConfigDialog({
                   {summary.removed.length === 1 ? "" : "s"} removed
                 </li>
                 <li>
-                  <span className="text-amber-600">~</span>{" "}
+                  <span className="text-warning">~</span>{" "}
                   {summary.changed.length} column
                   {summary.changed.length === 1 ? "" : "s"} changed
                 </li>
@@ -227,7 +227,7 @@ export default function ImportGridConfigDialog({
               {summary.warnings.length > 0 && (
                 <div
                   className={cn(
-                    "flex items-start gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1.5 text-amber-900 dark:text-amber-200",
+                    "flex items-start gap-2 rounded-md border border-warning/40 bg-warning/10 px-2 py-1.5 text-warning",
                   )}
                   data-testid="grid-editor-import-warnings"
                 >

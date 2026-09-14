@@ -209,7 +209,7 @@ def list_user_overrides(user_id: int, *, database: DatabaseManager | None = None
     d = database or db
     df = d.query(
         f"""
-        SELECT m.slug, umo.granted
+        SELECT m.slug, umo.can_view
           FROM {T.AUTH_USER_MODULE_OVERRIDES} umo
           JOIN {T.AUTH_MODULES} m ON m.module_id = umo.module_id
          WHERE umo.user_id = %s
@@ -218,7 +218,7 @@ def list_user_overrides(user_id: int, *, database: DatabaseManager | None = None
     )
     if df.empty:
         return {}
-    return {row.slug: bool(row.granted) for row in df.itertuples(index=False)}
+    return {row.slug: bool(row.can_view) for row in df.itertuples(index=False)}
 
 
 def list_role_module_defaults(*, database: DatabaseManager | None = None) -> dict[str, set[str]]:

@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-/* ── Self-hosted condensed/tabular numeral face (§S9 — Scoreboard) ──────────
+/* ── Self-hosted condensed/tabular numeral face (§S009 — Scoreboard) ──────────
  * Oswald ships via @fontsource (bundled at build time, no CDN request) and
  * backs the --font-condensed role used for scoreboard numerals, live stat
  * headlines, and section labels. */
@@ -37,10 +37,16 @@
     --warning: 38 92% 50%;
     --info: 217 91% 60%;
     --neutral: 215 16% 50%;
-    /* ── Scoreboard tokens (§S9) ── */
+    /* ── Scoreboard tokens (§S009) ── */
     --scoreboard-accent: 38 92% 55%;
     --live-pulse: 330 85% 55%;
-    /* ── Chart-role tokens (§S9) — aliased to existing semantic tokens rather
+    /* ── Rank-medal identity tokens (§S009) — gold/silver/bronze have no
+     * semantic-status equivalent (not positive/negative/warning/info/neutral);
+     * they identify a leaderboard position, so they get their own role. ── */
+    --rank-gold: 43 96% 56%;
+    --rank-silver: 215 20% 65%;
+    --rank-bronze: 27 96% 61%;
+    /* ── Chart-role tokens (§S009) — aliased to existing semantic tokens rather
      * than duplicated raw values, so per-theme distinctness comes for free. ── */
     --chart-1: var(--primary);
     --chart-2: var(--scoreboard-accent);
@@ -74,10 +80,14 @@
     --warning: 38 92% 60%;
     --info: 217 91% 70%;
     --neutral: 215 18% 62%;
-    /* ── Scoreboard tokens (§S9) ── */
+    /* ── Scoreboard tokens (§S009) ── */
     --scoreboard-accent: 38 92% 62%;
     --live-pulse: 330 88% 66%;
-    /* ── Chart-role tokens (§S9) — aliased, see :root above ── */
+    /* ── Rank-medal identity tokens (§S009, lighter for dark bg) ── */
+    --rank-gold: 43 96% 62%;
+    --rank-silver: 215 20% 72%;
+    --rank-bronze: 27 96% 66%;
+    /* ── Chart-role tokens (§S009) — aliased, see :root above ── */
     --chart-1: var(--primary);
     --chart-2: var(--scoreboard-accent);
     --chart-3: var(--positive);
@@ -112,11 +122,16 @@
   --color-info: hsl(var(--info));
   --color-neutral: hsl(var(--neutral));
 
-  /* ── Scoreboard tokens (§S9) ── */
+  /* ── Scoreboard tokens (§S009) ── */
   --color-scoreboard-accent: hsl(var(--scoreboard-accent));
   --color-live-pulse: hsl(var(--live-pulse));
 
-  /* ── Chart-role tokens (§S9) ── */
+  /* ── Rank-medal identity tokens (§S009) ── */
+  --color-rank-gold: hsl(var(--rank-gold));
+  --color-rank-silver: hsl(var(--rank-silver));
+  --color-rank-bronze: hsl(var(--rank-bronze));
+
+  /* ── Chart-role tokens (§S009) ── */
   --color-chart-1: hsl(var(--chart-1));
   --color-chart-2: hsl(var(--chart-2));
   --color-chart-3: hsl(var(--chart-3));
@@ -126,10 +141,10 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  /* ── Condensed/tabular numeral font role (§S9) — self-hosted via @fontsource/oswald ── */
+  /* ── Condensed/tabular numeral font role (§S009) — self-hosted via @fontsource/oswald ── */
   --font-condensed: "Oswald", "Arial Narrow", sans-serif;
 
-  /* ── Scoreboard breakpoints (§S9) — overrides Tailwind defaults to match the
+  /* ── Scoreboard breakpoints (§S009) — overrides Tailwind defaults to match the
    * redesign's tested widths (phone / tablet / sidebar-overlay / desktop / wide). ── */
   --breakpoint-sm: 390px;
   --breakpoint-md: 768px;
@@ -137,7 +152,7 @@
   --breakpoint-xl: 1440px;
   --breakpoint-2xl: 1920px;
 
-  /* ── Elevation levels (§S9) — e0 flush through e4 deepest-floating. ── */
+  /* ── Elevation levels (§S009) — e0 flush through e4 deepest-floating. ── */
   --shadow-e0: none;
   --shadow-e1: 0 1px 2px hsl(var(--foreground) / 0.06), 0 1px 1px hsl(var(--foreground) / 0.04);
   --shadow-e2: 0 2px 6px hsl(var(--foreground) / 0.08), 0 1px 2px hsl(var(--foreground) / 0.06);
@@ -147,7 +162,7 @@
 
 @variant dark (&:where(.dark, .dark *));
 
-/* ── Structural scale tokens (§S9) ────────────────────────────────────────────
+/* ── Structural scale tokens (§S009) ────────────────────────────────────────────
  * Spacing, z-index, and motion timing are theme-invariant — defined once here,
  * never mirrored into ThemeContext.tsx's per-theme cssVars (that mechanism is
  * for color only). Not Tailwind-namespaced (no auto-generated utilities);
@@ -177,7 +192,7 @@
   --z-tooltip: 1600;
 
   /* Motion — durations and easings, gated by prefers-reduced-motion at the
-   * point of use (see .animate-live-pulse below and §S9 Motion). */
+   * point of use (see .animate-live-pulse below and §S009 Motion). */
   --motion-fast: 120ms;
   --motion-base: 200ms;
   --motion-slow: 320ms;
@@ -219,7 +234,7 @@
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
- * Scoreboard numeral + live-cell motion mechanics (§S9)
+ * Scoreboard numeral + live-cell motion mechanics (§S009)
  *
  * `.tabular-nums` is intentionally unlayered (not inside @layer utilities) so
  * it always wins over Tailwind's own generated `tabular-nums` utility (which
@@ -254,7 +269,7 @@
   }
 }
 
-/* Page-load stagger (§S9 --motion-stagger) — sibling cards fade/slide in with
+/* Page-load stagger (§S009 --motion-stagger) — sibling cards fade/slide in with
  * an increasing per-item delay. Consumers only add this class when
  * `useMediaQuery("(prefers-reduced-motion: reduce)")` is false, so the gate
  * is a JS conditional (component-testable) rather than a CSS @media block —

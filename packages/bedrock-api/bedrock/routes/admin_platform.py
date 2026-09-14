@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, BackgroundTasks, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks, Request
 from typing import Annotated, List, Optional
 from pydantic import BaseModel, EmailStr, Field
 from bedrock.core.database import db as _db
@@ -12,7 +12,7 @@ from bedrock.schemas.admin import (
     DatabaseTableSchema, DatabaseSummarySchema,
     ConfigSettingSchema, ConfigCreateSchema, GridSettingSchema, GridColumnSettingSchema,
     ExportLogSchema, ExportRunSchema,
-    ActivityLogSchema, SyncRunSchema, SyncStatusSchema
+    SyncRunSchema, SyncStatusSchema
 )
 from bedrock.schemas.base import ApiResponse
 from bedrock.services.admin_service import (
@@ -42,7 +42,6 @@ from bedrock.services.admin_service import (
     AdminValidationError,
     AdminNotFoundError,
     AdminConflictError,
-    AdminForbiddenError,
 )
 import subprocess
 import sys

@@ -46,7 +46,7 @@ from bedrock.core.providers import ProviderRegistry
 #: `app_config_settings` key naming the active backend. Category-prefixed per
 #: the key-naming standard in `core.config_constants`, which is why the
 #: capability owns a `mail` category rather than borrowing `system`.
-MAIL_PROVIDER_KEY = "mail_provider"
+MAIL_PROVIDER_KEY: str = "mail_provider"
 
 
 @dataclass(frozen=True)

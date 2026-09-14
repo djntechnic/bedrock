@@ -284,8 +284,8 @@ export default function GridEditor({ initialGridId = null }: GridEditorProps = {
 
         <div className="ml-auto flex items-center gap-2">
           {draft.isDirty && (
-            <Badge variant="outline" className="gap-1.5 text-amber-600 dark:text-amber-400 border-amber-400/50">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+            <Badge variant="outline" className="gap-1.5 text-warning border-warning/50">
+              <span className="h-1.5 w-1.5 rounded-full bg-warning" />
               Unsaved changes
             </Badge>
           )}

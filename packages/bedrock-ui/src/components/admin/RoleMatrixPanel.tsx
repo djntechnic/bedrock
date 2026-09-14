@@ -296,7 +296,7 @@ export default function RoleMatrixPanel() {
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-foreground">{mod.module_label}</span>
                     {mod.is_core && (
-                      <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 border-amber-500/40 text-amber-600 dark:text-amber-400">
+                      <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 border-warning/40 text-warning">
                         Core
                       </Badge>
                     )}

@@ -137,18 +137,18 @@ export interface GridConfig {
      */
     allowExpansion: boolean;
     /**
-     * Phase 3 §S9: condensed tabular-numeral style for `cell_type: "number"`
+     * Phase 3 §S009: condensed tabular-numeral style for `cell_type: "number"`
      * cells. `"tabular"` applies the shared `.tabular-nums` utility class
      * (self-hosted Oswald + tabular-nums font-variant) via `renderCell()`.
      */
     numeralStyle: "default" | "tabular";
     /**
-     * Phase 3 §S9: flashes a cell with the `--live-pulse` token cue
+     * Phase 3 §S009: flashes a cell with the `--live-pulse` token cue
      * (`.animate-live-pulse`) when its value changes between renders.
      */
     liveUpdateHighlight: boolean;
     /**
-     * Phase 3 §S9: tints each data row with an accent color the row supplies,
+     * Phase 3 §S009: tints each data row with an accent color the row supplies,
      * resolved through the host application's `registerRowAccentResolver()`
      * (see `rowAccentRegistry.ts`).
      */

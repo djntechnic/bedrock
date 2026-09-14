@@ -94,7 +94,7 @@ def registered_current_season_resolver() -> tuple[Callable[[], int], ...]:
     """:returns: The registered resolver as a 0- or 1-tuple.
 
     A tuple rather than `Callable | None` so this reader matches the other
-    registries' shape (see `docs/extension_points.md`) — every `registered_*`
+    registries' shape (see `docs/reference/extension-points.md`) — every `registered_*`
     hands back an immutable snapshot, and callers test it the same way
     regardless of whether the registry holds one contribution or many.
     """
@@ -182,12 +182,15 @@ class DatabaseManager:
             TABLE commits on the spot and survives a later rollback — which for
             a schema migration is the entire failure mode being guarded against.
         """
+        timeout_sec = config.SQLITE_BUSY_TIMEOUT
         conn = sqlite3.connect(
             self.sqlite_path,
+            timeout=timeout_sec,
             isolation_level=None if explicit_transactions else "",
         )
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys = ON;")
+        conn.execute(f"PRAGMA busy_timeout = {int(timeout_sec * 1000)};")
         return conn
 
     def _get_sqlite_connection(self) -> sqlite3.Connection:
@@ -477,7 +480,7 @@ class DatabaseManager:
         `mlb_seasons` table — so it is supplied via
         `register_current_season_resolver()`. Caching, thread safety, error
         isolation and the calendar-year fallback stay here, which is why the
-        29 call sites and the §S4 contract are unchanged by the split.
+        29 call sites and the §S004 contract are unchanged by the split.
 
         With no resolver registered the calendar year is returned, which is a
         sane default for an application that has no season concept.

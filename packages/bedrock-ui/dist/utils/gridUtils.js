@@ -29,6 +29,27 @@ function getGradientCellStyle(value, colMin, colMax, fromColor, toColor) {
   const b = Math.round(from.b + t * (to.b - from.b));
   return { backgroundColor: `rgb(${r},${g},${b})` };
 }
+function hslTripletToHex(hslTriplet) {
+  const [h, s, l] = hslTriplet.trim().split(/\s+/).map((part) => parseFloat(part));
+  const sFrac = s / 100;
+  const lFrac = l / 100;
+  const k = (n) => (n + h / 30) % 12;
+  const a = sFrac * Math.min(lFrac, 1 - lFrac);
+  const f = (n) => lFrac - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+  const toHex = (n) => Math.round(f(n) * 255).toString(16).padStart(2, "0");
+  return `#${toHex(0)}${toHex(8)}${toHex(4)}`;
+}
+function resolveTokenHex(tokenName, fallback) {
+  if (typeof window === "undefined" || typeof document === "undefined") return fallback;
+  const raw = getComputedStyle(document.documentElement).getPropertyValue(tokenName).trim();
+  if (!raw) return fallback;
+  return hslTripletToHex(raw);
+}
+function resolveKpiGradientHexes(lowerBetter) {
+  const positive = resolveTokenHex("--positive", hslTripletToHex("142 76% 36%"));
+  const negative = resolveTokenHex("--negative", hslTripletToHex("0 72% 51%"));
+  return lowerBetter ? { fromColor: positive, toColor: negative } : { fromColor: negative, toColor: positive };
+}
 function computeColumnMinMax(rows, columnId) {
   const vals = rows.map((r) => r[columnId]).filter((v) => typeof v === "number");
   if (vals.length === 0) return null;
@@ -173,6 +194,7 @@ export {
   getGradientCellStyle,
   hasAggregates,
   prependRankColumn,
-  prependSelectionColumn
+  prependSelectionColumn,
+  resolveKpiGradientHexes
 };
 //# sourceMappingURL=gridUtils.js.map

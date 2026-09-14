@@ -31,7 +31,7 @@ function SimpleMarkdown({ content }) {
 }
 function HelpPopover({
   topic,
-  variant = "icon",
+  variant: _variant = "icon",
   align = "end",
   side = "bottom",
   className,
@@ -39,22 +39,18 @@ function HelpPopover({
 }) {
   const { helpEntry, isLoading, isError } = useHelpConfig(topic);
   return /* @__PURE__ */ jsxs(Popover, { children: [
-    /* @__PURE__ */ jsx(PopoverTrigger, { asChild: true, children: /* @__PURE__ */ jsxs(
+    /* @__PURE__ */ jsx(PopoverTrigger, { asChild: true, children: /* @__PURE__ */ jsx(
       Button,
       {
-        variant: variant === "subtle" ? "ghost" : variant === "button" ? "outline" : "ghost",
+        variant: "ghost",
         size: "sm",
         className: cn(
-          variant === "icon" && "h-6 w-6 p-0",
-          "text-muted-foreground hover:text-foreground",
+          "h-6 w-6 p-0 text-muted-foreground hover:text-foreground",
           triggerClassName
         ),
         "aria-label": `Help: ${topic}`,
         title: `Help: ${topic}`,
-        children: [
-          /* @__PURE__ */ jsx(HelpCircle, { className: "h-3.5 w-3.5" }),
-          variant === "button" && /* @__PURE__ */ jsx("span", { className: "ml-1.5 text-xs", children: "Help" })
-        ]
+        children: /* @__PURE__ */ jsx(HelpCircle, { className: "h-3.5 w-3.5" })
       }
     ) }),
     /* @__PURE__ */ jsx(

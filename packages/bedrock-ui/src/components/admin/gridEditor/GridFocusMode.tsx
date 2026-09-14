@@ -206,7 +206,7 @@ export default function GridFocusMode({
             </div>
           </div>
           {draft.isDirty && (
-            <span className="text-xs text-amber-600 dark:text-amber-400">
+            <span className="text-xs text-warning">
               Unsaved changes
             </span>
           )}

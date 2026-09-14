@@ -19,6 +19,15 @@ import type { GridColumnSetting } from "../hooks/useAdminPlatform";
  */
 export declare function getGradientCellStyle(value: number, colMin: number, colMax: number, fromColor: string, toColor: string): CSSProperties;
 /**
+ * Endpoint hex colors for the KPI directional gradient, resolved from the
+ * `--positive` / `--negative` semantic tokens so custom themes recolor the
+ * gradient automatically instead of freezing it to one palette.
+ */
+export declare function resolveKpiGradientHexes(lowerBetter: boolean): {
+    fromColor: string;
+    toColor: string;
+};
+/**
  * Computes the numeric min and max for a column across the provided rows.
  * Uses the current filtered/visible row set so gradients reflect the active view.
  * Returns null when no numeric values are present in the column.

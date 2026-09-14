@@ -173,11 +173,11 @@ export interface GridSetting {
   wrap_text: boolean;
   /** Minimum width in pixels for all columns. */
   min_column_width: number;
-  /** Optional CSS color for the sorted-ascending column header/cells (e.g. '#e0f2fe'). */
+  /** Optional CSS color for the sorted-ascending column header/cells (e.g. a light blue tint). */
   sort_asc_color?: string | null;
-  /** Optional CSS color for the sorted-descending column header/cells (e.g. '#fce7f3'). */
+  /** Optional CSS color for the sorted-descending column header/cells (e.g. a light pink tint). */
   sort_desc_color?: string | null;
-  /** Optional CSS background color for row hover (e.g. 'rgba(59,130,246,0.08)'). */
+  /** Optional CSS background color for row hover (e.g. a translucent blue tint). */
   hover_color?: string | null;
   /** Whether a compare-selection checkbox column is prepended. Replaces the prop-driven onSelectionChange pattern. */
   allow_selection?: boolean;
@@ -210,11 +210,11 @@ export interface GridSetting {
    * prepends a chevron cell that toggles a caller-owned detail row.
    */
   allow_expansion?: boolean;
-  /** Phase 3 §S9: condensed tabular-numeral style for `cell_type: "number"` cells. */
+  /** Phase 3 §S009: condensed tabular-numeral style for `cell_type: "number"` cells. */
   numeral_style?: "default" | "tabular" | string;
-  /** Phase 3 §S9: flash changed cells with the `--live-pulse` token cue. */
+  /** Phase 3 §S009: flash changed cells with the `--live-pulse` token cue. */
   live_update_highlight?: boolean;
-  /** Phase 3 §S9: tint each row with an accent color the row supplies. */
+  /** Phase 3 §S009: tint each row with an accent color the row supplies. */
   row_accent_reactive?: boolean;
 }
 
@@ -282,9 +282,9 @@ export interface GridColumnSetting {
   sort_asc_color?: string | null;
   /** CSS color for this column's header/cells when sorted descending. Overrides GridSetting.sort_desc_color. */
   sort_desc_color?: string | null;
-  /** Start CSS color for value-gradient coloring (e.g., '#22c55e' green = best). Null = no gradient. */
+  /** Start CSS color for value-gradient coloring (e.g., green = best). Null = no gradient. */
   gradient_from_color?: string | null;
-  /** End CSS color for value-gradient coloring (e.g., '#ef4444' red = worst). Null = no gradient. */
+  /** End CSS color for value-gradient coloring (e.g., red = worst). Null = no gradient. */
   gradient_to_color?: string | null;
   /**
    * Phase 8 H3: opt-in inline editing. `true` promotes the cell to the

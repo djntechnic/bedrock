@@ -254,7 +254,7 @@ def audit(
     collision_roots: list[pathlib.Path],
     package: str,
 ) -> list[str]:
-    """Run all three §S1 rules against one app's source tree.
+    """Run all three §S001 rules against one app's source tree.
 
     `source_root` is the whole app source tree (used for rules 2 and 3);
     `collision_roots` is the subset checked against the platform's export

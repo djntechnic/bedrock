@@ -96,12 +96,12 @@ class GridSettingSchema(BaseModel):
     # prepends a chevron cell that toggles a caller-owned detail row
     # beneath the expanded row.
     allow_expansion: bool = False
-    # Phase 3 §S9: condensed tabular-numeral style for cell_type="number"
+    # Phase 3 §S009: condensed tabular-numeral style for cell_type="number"
     # cells ('default' | 'tabular'). Consumed by cellRenderers.renderCell().
     numeral_style: str = "default"
-    # Phase 3 §S9: flash changed cells with the --live-pulse token cue.
+    # Phase 3 §S009: flash changed cells with the --live-pulse token cue.
     live_update_highlight: bool = False
-    # Phase 3 §S9: tint each row with an accent color the row supplies.
+    # Phase 3 §S009: tint each row with an accent color the row supplies.
     row_accent_reactive: bool = False
     model_config = {"from_attributes": True}
 

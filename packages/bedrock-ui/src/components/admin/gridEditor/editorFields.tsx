@@ -3,10 +3,11 @@
  * @module frontend/src/components/admin/gridEditor
  * @description Shared labelled field-row primitives for the Grid Editor panels
  *              (grid-level + column-level). Extracted so both panels render the
- *              same controls with zero duplication (§S1).
+ *              same controls with zero duplication (§S001).
  */
 
 import { HelpCircle } from "lucide-react";
+import { useAppSettings } from "../../../hooks/useAppSettings";
 import { Input } from "../../ui/input";
 import { Switch } from "../../ui/switch";
 import { Label } from "../../ui/label";
@@ -30,12 +31,13 @@ export const NONE = "__none__";
 export function Row({ label, help, children }: {
   label: string; help?: React.ReactNode; children: React.ReactNode;
 }) {
+  const { grid } = useAppSettings();
   return (
     <div className="flex items-center justify-between gap-3">
       <Label className="text-xs text-muted-foreground font-normal flex items-center gap-1">
         {label}
         {help && (
-          <TooltipProvider delayDuration={200}>
+          <TooltipProvider delayDuration={grid.tooltipDelayDuration}>
             <Tooltip>
               <TooltipTrigger asChild>
                 <HelpCircle className="h-3 w-3 cursor-help shrink-0" />

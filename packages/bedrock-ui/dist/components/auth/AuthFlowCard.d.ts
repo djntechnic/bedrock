@@ -4,7 +4,7 @@
  * @description Centred card shell shared by the mail-flow pages (F1).
  *
  * Exists because the three pages are the same page with different copy, and
- * §S1 says repeated UI becomes a component the second time it is written, not
+ * §S001 says repeated UI becomes a component the second time it is written, not
  * the fourth. It is layout only — no state, no data — so a page keeps its own
  * behaviour and only borrows the frame.
  */
@@ -18,7 +18,7 @@ export interface AuthFlowCardProps {
     children?: ReactNode;
     /**
      * Tints the icon. `destructive` for a dead link, `success` for a completed
-     * flow. Both resolve through tokens; §S9 forbids a literal colour here.
+     * flow. Both resolve through tokens; §S009 forbids a literal colour here.
      */
     tone?: "default" | "success" | "destructive";
     /** Extra classes on the icon itself — `animate-spin` for a pending state. */

@@ -116,7 +116,7 @@ describe("Admin UI Copy Standards Check", () => {
     const textContent = container.textContent || "";
     const innerHTML = container.innerHTML || "";
 
-    // Check for developer standard codes like §S1, §S2, §S9, Standard 9, etc.
+    // Check for developer standard codes like §S001, §S002, §S009, Standard 9, etc.
     expect(textContent).not.toMatch(/§S\d+/i);
     expect(textContent).not.toMatch(/Standard\s+9/i);
     expect(innerHTML).not.toMatch(/§S\d+/i);

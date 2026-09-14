@@ -641,5 +641,3 @@ export function useCellSelection({
     clear,
   };
 }
-
-export default useCellSelection;

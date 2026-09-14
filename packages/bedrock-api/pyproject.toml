@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bedrock-api"
-version = "0.9.2"
+version = "0.10.0"
 description = "Reusable FastAPI application platform: grid config, auth, app config, schema catalog"
 requires-python = ">=3.11"
 dependencies = [
@@ -35,12 +35,16 @@ postgres = ["psycopg2-binary"]
 # boto3 backs bedrock.storage.s3 (R2, MinIO, S3). Optional because an app that
 # never selects that backend never talks to one, and boto3 is a large install.
 s3 = ["boto3"]
+# Pillow extracts image dimensions in bedrock.services.media_service. Optional
+# because dimensions are metadata and non-image media uploads do not require it.
+pillow = ["Pillow"]
 # pyyaml parses deploy/docker-compose.yml in test_deployment.py — the
 # manifests are checked for the invariants that break a deploy silently.
-dev = ["pytest", "pytest-asyncio", "httpx", "pyyaml"]
+# Pillow exercises real image dimension extraction in test_media_service.py.
+dev = ["pytest", "pytest-asyncio", "httpx", "pyyaml", "Pillow"]
 
 # Operational entry points. `bedrock-healthcheck` is what a container's
-# HEALTHCHECK runs — see deploy/Dockerfile.api and docs/deployment.md.
+# HEALTHCHECK runs — see deploy/Dockerfile.api and docs/reference/deployment.md.
 [project.scripts]
 bedrock-healthcheck = "bedrock.tools.healthcheck:main"
 

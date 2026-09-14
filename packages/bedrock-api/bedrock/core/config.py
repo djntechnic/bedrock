@@ -14,14 +14,11 @@ Desc:    Environment and filesystem configuration for a bedrock application.
 """
 import os
 
-from dotenv import load_dotenv
+from bedrock.core.paths import APP_ROOT, app_path, resolve_app_path, safe_load_dotenv
 
-from bedrock.core.paths import APP_ROOT, app_path, resolve_app_path
-
-# Load the application's .env before any setting below is read. `override=True`
-# means the file wins over an inherited environment, which is what makes a
-# checkout's .env authoritative during local development.
-load_dotenv(app_path(".env"), override=True)
+# Load the application's .env before any setting below is read, while
+# preserving explicitly injected database target settings.
+safe_load_dotenv()
 
 _DATA_DIR = resolve_app_path(os.environ.get("BEDROCK_DATA_DIR"), "data")
 _SQLITE_ENV = os.environ.get("SQLITE_DB_PATH")
@@ -46,6 +43,18 @@ class Config:
     #: which directory the process was started from.
     SQLITE_DB_PATH = (resolve_app_path(_SQLITE_ENV) if _SQLITE_ENV
                       else os.path.join(_DATA_DIR, "app.db"))
+
+    @property
+    def SQLITE_BUSY_TIMEOUT(self) -> float:
+        """Busy timeout for SQLite connections in seconds.
+
+        Defaults to 30.0s to avoid writer lock contention across concurrent test
+        runners or background tasks.
+        """
+        try:
+            return float(os.environ.get("SQLITE_BUSY_TIMEOUT", 30.0))
+        except (ValueError, TypeError):
+            return 30.0
 
     CACHE_DIR = os.path.join(_DATA_DIR, ".cache")
 
@@ -73,7 +82,7 @@ class Config:
     # SMTP relay — read by bedrock.mail.smtp when `mail_provider` is "smtp".
     #
     # These are environment settings rather than `app_config_settings` rows,
-    # which is a deliberate departure from §S4: SMTP_PASSWORD is a credential,
+    # which is a deliberate departure from §S004: SMTP_PASSWORD is a credential,
     # and app config is rendered in an admin UI and returned by the config
     # export endpoint. The Cloudflare token above draws the same line. What is
     # admin-editable — which provider is active, the From address and display

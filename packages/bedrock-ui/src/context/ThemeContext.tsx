@@ -6,6 +6,9 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 import { Toaster } from "../components/ui/sonner";
+import { BUILT_IN_THEMES, DEFAULT_THEME_SEED } from "../theme/palettes";
+
+export { BUILT_IN_THEMES, DEFAULT_THEME_SEED };
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -129,11 +132,16 @@ function buildCssVars(palette: ThemePalette): Record<string, string> {
     "--border": hexToHsl(palette.colorBorder),
     "--input": hexToHsl(palette.colorBorder),
     "--ring": hexToHsl(palette.colorPrimary),
-    // Scoreboard tokens (§S9) — theme-invariant identity colors, bumped
+    // Scoreboard tokens (§S009) — theme-invariant identity colors, bumped
     // lighter for dark backgrounds to match the built-in themes' pattern.
     "--scoreboard-accent": bgDark ? "38 92% 62%" : "38 92% 55%",
     "--live-pulse": bgDark ? "330 88% 66%" : "330 85% 55%",
-    // Chart-role tokens (§S9) — aliased to existing semantic tokens so each
+    // Rank-medal identity tokens (§S009) — same theme-invariant treatment as
+    // the scoreboard tokens above; gold/silver/bronze have no status meaning.
+    "--rank-gold": bgDark ? "43 96% 62%" : "43 96% 56%",
+    "--rank-silver": bgDark ? "215 20% 72%" : "215 20% 65%",
+    "--rank-bronze": bgDark ? "27 96% 66%" : "27 96% 61%",
+    // Chart-role tokens (§S009) — aliased to existing semantic tokens so each
     // theme's chart colors track its own identity automatically.
     "--chart-1": "var(--primary)",
     "--chart-2": "var(--scoreboard-accent)",
@@ -141,14 +149,17 @@ function buildCssVars(palette: ThemePalette): Record<string, string> {
   };
 }
 
-/** The full set of §S9 scoreboard token keys every theme surface must define. */
+/** The full set of §S009 scoreboard token keys every theme surface must define. */
 const SCOREBOARD_TOKEN_KEYS = ["--scoreboard-accent", "--live-pulse"] as const;
 
-/** The full set of §S9 chart-role token keys every theme surface must define. */
+/** The full set of §S009 chart-role token keys every theme surface must define. */
 const CHART_TOKEN_KEYS = ["--chart-1", "--chart-2", "--chart-3"] as const;
 
+/** The full set of §S009 rank-medal token keys every theme surface must define. */
+const RANK_TOKEN_KEYS = ["--rank-gold", "--rank-silver", "--rank-bronze"] as const;
+
 /**
- * One-shot migration: a custom theme created before §S9 may carry a frozen
+ * One-shot migration: a custom theme created before §S009 may carry a frozen
  * `cssVars` snapshot (e.g. imported/patched by a future admin flow) missing
  * the newer scoreboard tokens. Patches them in using the same light/dark
  * defaults as {@link buildCssVars}, leaving themes that already have them —
@@ -158,12 +169,16 @@ function patchLegacyCssVars(palette: ThemePalette): ThemePalette {
   if (!palette.cssVars) return palette;
   const missingScoreboard = SCOREBOARD_TOKEN_KEYS.some((key) => !(key in palette.cssVars!));
   const missingChart = CHART_TOKEN_KEYS.some((key) => !(key in palette.cssVars!));
-  if (!missingScoreboard && !missingChart) return palette;
+  const missingRank = RANK_TOKEN_KEYS.some((key) => !(key in palette.cssVars!));
+  if (!missingScoreboard && !missingChart && !missingRank) return palette;
   return {
     ...palette,
     cssVars: {
       "--scoreboard-accent": palette.isDark ? "38 92% 62%" : "38 92% 55%",
       "--live-pulse": palette.isDark ? "330 88% 66%" : "330 85% 55%",
+      "--rank-gold": palette.isDark ? "43 96% 62%" : "43 96% 56%",
+      "--rank-silver": palette.isDark ? "215 20% 72%" : "215 20% 65%",
+      "--rank-bronze": palette.isDark ? "27 96% 66%" : "27 96% 61%",
       "--chart-1": "var(--primary)",
       "--chart-2": "var(--scoreboard-accent)",
       "--chart-3": "var(--positive)",
@@ -171,195 +186,6 @@ function patchLegacyCssVars(palette: ThemePalette): ThemePalette {
     },
   };
 }
-
-// ─── Built-in Themes ──────────────────────────────────────────────────────────
-
-/**
- * MLB Classic's 6 raw color fields, shared with `AdminPage.tsx`'s blank
- * custom-theme form default (§S9 §5.2) — a single source so the two never
- * drift out of sync again.
- */
-export const DEFAULT_THEME_SEED: Pick<
-  ThemePalette,
-  "colorPrimary" | "colorSecondary" | "colorBackground" | "colorAccent" | "colorDestructive" | "colorBorder"
-> = {
-  colorPrimary: "#1e3a82",
-  colorSecondary: "#d8e4f0",
-  colorBackground: "#f5f8fa",
-  colorAccent: "#1d5ab5",
-  colorDestructive: "#d42222",
-  colorBorder: "#d4dce8",
-};
-
-export const BUILT_IN_THEMES: ThemePalette[] = [
-  {
-    id: "mlb-classic",
-    name: "MLB Classic",
-    builtIn: true,
-    isDark: false,
-    ...DEFAULT_THEME_SEED,
-    cssVars: {
-      "--background": "210 20% 97%",
-      "--foreground": "222 47% 11%",
-      "--card": "0 0% 100%",
-      "--card-foreground": "222 47% 11%",
-      "--popover": "0 0% 100%",
-      "--popover-foreground": "222 47% 11%",
-      "--primary": "220 65% 25%",
-      "--primary-foreground": "0 0% 100%",
-      "--secondary": "214 32% 91%",
-      "--secondary-foreground": "222 47% 11%",
-      "--muted": "214 25% 93%",
-      "--muted-foreground": "215 16% 50%",
-      "--accent": "217 85% 46%",
-      "--accent-foreground": "0 0% 100%",
-      "--destructive": "0 76% 52%",
-      "--destructive-foreground": "0 0% 100%",
-      "--border": "214 22% 88%",
-      "--input": "214 22% 88%",
-      "--ring": "220 65% 25%",
-      "--positive": "142 76% 36%",
-      "--negative": "0 72% 51%",
-      "--warning": "38 92% 50%",
-      "--info": "217 91% 60%",
-      "--neutral": "215 16% 50%",
-      "--scoreboard-accent": "38 92% 55%",
-      "--live-pulse": "330 85% 55%",
-      "--chart-1": "var(--primary)",
-      "--chart-2": "var(--scoreboard-accent)",
-      "--chart-3": "var(--positive)",
-    },
-  },
-  {
-    id: "night-game",
-    name: "Night Game",
-    builtIn: true,
-    isDark: true,
-    colorPrimary: "#3a8ef5",
-    colorSecondary: "#1e2d40",
-    colorBackground: "#0d1724",
-    colorAccent: "#5aa4ff",
-    colorDestructive: "#e05252",
-    colorBorder: "#1f2f45",
-    cssVars: {
-      "--background": "220 40% 8%",
-      "--foreground": "210 35% 94%",
-      "--card": "220 35% 12%",
-      "--card-foreground": "210 35% 94%",
-      "--popover": "220 35% 12%",
-      "--popover-foreground": "210 35% 94%",
-      "--primary": "214 82% 56%",
-      "--primary-foreground": "220 40% 8%",
-      "--secondary": "220 28% 18%",
-      "--secondary-foreground": "210 35% 94%",
-      "--muted": "220 26% 16%",
-      "--muted-foreground": "215 18% 62%",
-      "--accent": "216 85% 60%",
-      "--accent-foreground": "220 40% 8%",
-      "--destructive": "0 60% 44%",
-      "--destructive-foreground": "210 35% 94%",
-      "--border": "220 26% 22%",
-      "--input": "220 26% 22%",
-      "--ring": "214 82% 56%",
-      "--positive": "142 71% 45%",
-      "--negative": "0 91% 71%",
-      "--warning": "38 92% 60%",
-      "--info": "217 91% 70%",
-      "--neutral": "215 18% 62%",
-      "--scoreboard-accent": "38 92% 62%",
-      "--live-pulse": "330 88% 66%",
-      "--chart-1": "var(--primary)",
-      "--chart-2": "var(--scoreboard-accent)",
-      "--chart-3": "var(--positive)",
-    },
-  },
-  {
-    id: "emerald-diamond",
-    name: "Emerald Diamond",
-    builtIn: true,
-    isDark: false,
-    colorPrimary: "#1a5c3a",
-    colorSecondary: "#d4eee0",
-    colorBackground: "#f3faf6",
-    colorAccent: "#287a4d",
-    colorDestructive: "#d42222",
-    colorBorder: "#cde4d8",
-    cssVars: {
-      "--background": "140 30% 97%",
-      "--foreground": "160 40% 10%",
-      "--card": "0 0% 100%",
-      "--card-foreground": "160 40% 10%",
-      "--popover": "0 0% 100%",
-      "--popover-foreground": "160 40% 10%",
-      "--primary": "155 55% 22%",
-      "--primary-foreground": "0 0% 100%",
-      "--secondary": "145 30% 90%",
-      "--secondary-foreground": "160 40% 10%",
-      "--muted": "145 20% 93%",
-      "--muted-foreground": "155 15% 50%",
-      "--accent": "152 55% 35%",
-      "--accent-foreground": "0 0% 100%",
-      "--destructive": "0 76% 52%",
-      "--destructive-foreground": "0 0% 100%",
-      "--border": "145 20% 87%",
-      "--input": "145 20% 87%",
-      "--ring": "155 55% 22%",
-      "--positive": "152 55% 35%",
-      "--negative": "0 76% 52%",
-      "--warning": "38 92% 50%",
-      "--info": "217 91% 60%",
-      "--neutral": "155 15% 50%",
-      "--scoreboard-accent": "36 88% 50%",
-      "--live-pulse": "315 75% 50%",
-      "--chart-1": "var(--primary)",
-      "--chart-2": "var(--scoreboard-accent)",
-      "--chart-3": "var(--positive)",
-    },
-  },
-  {
-    id: "cardinal-red",
-    name: "Cardinal Red",
-    builtIn: true,
-    isDark: false,
-    colorPrimary: "#8b1515",
-    colorSecondary: "#f5e8e8",
-    colorBackground: "#fdf5f5",
-    colorAccent: "#b81e1e",
-    colorDestructive: "#c85018",
-    colorBorder: "#e8d0d0",
-    cssVars: {
-      "--background": "0 30% 98%",
-      "--foreground": "0 40% 10%",
-      "--card": "0 0% 100%",
-      "--card-foreground": "0 40% 10%",
-      "--popover": "0 0% 100%",
-      "--popover-foreground": "0 40% 10%",
-      "--primary": "355 74% 30%",
-      "--primary-foreground": "0 0% 100%",
-      "--secondary": "0 30% 93%",
-      "--secondary-foreground": "0 40% 10%",
-      "--muted": "0 22% 95%",
-      "--muted-foreground": "0 15% 50%",
-      "--accent": "355 74% 38%",
-      "--accent-foreground": "0 0% 100%",
-      "--destructive": "25 78% 46%",
-      "--destructive-foreground": "0 0% 100%",
-      "--border": "0 22% 88%",
-      "--input": "0 22% 88%",
-      "--ring": "355 74% 30%",
-      "--positive": "142 76% 36%",
-      "--negative": "355 74% 38%",
-      "--warning": "38 92% 50%",
-      "--info": "217 91% 60%",
-      "--neutral": "0 15% 50%",
-      "--scoreboard-accent": "34 90% 52%",
-      "--live-pulse": "285 70% 58%",
-      "--chart-1": "var(--primary)",
-      "--chart-2": "var(--scoreboard-accent)",
-      "--chart-3": "var(--positive)",
-    },
-  },
-];
 
 // ─── Context & Provider ───────────────────────────────────────────────────────
 
@@ -388,7 +214,7 @@ function applyTheme(palette: ThemePalette) {
  * Pure and exported so the rule can be tested without a `matchMedia` stub, and
  * so a host can ask the same question the provider asks.
  *
- * §S9 note: this only ever *selects* a registered palette. It defines no
+ * §S009 note: this only ever *selects* a registered palette. It defines no
  * colour of its own — a system mode that invented a light theme for a host
  * that ships only dark ones would be exactly the `:root` block the standard
  * forbids, arrived at by another route.
@@ -468,7 +294,7 @@ export function ThemeProvider({
     } catch {
       return [];
     }
-    // One-shot §S9 migration — patch any frozen custom-theme cssVars missing
+    // One-shot §S009 migration — patch any frozen custom-theme cssVars missing
     // the newer scoreboard tokens, then persist so this only runs once.
     const patched = stored.map(patchLegacyCssVars);
     if (patched.some((p, i) => p !== stored[i])) {
