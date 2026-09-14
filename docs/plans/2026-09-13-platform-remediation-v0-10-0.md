@@ -513,22 +513,25 @@ git add package.json packages/bedrock-api/pyproject.toml
 git commit -m "chore(release): bump bedrock packages to v0.10.0 for platform remediation"
 ```
 
-- [ ] **Step 4: Push branch and create Pull Request**
+- [x] **Step 4: Push branch and create Pull Request**
 
 Push the feature branch and open a GitHub PR against `master`:
 ```bash
 git push -u origin feat/v0.10.0-platform-remediation
-gh pr create --title "feat: platform remediation v0.10.0" --body "Consolidates and resolves bedrock issues #49, #50, #51, #55, #74, CollectIt #60, and MLBTracker #387."
+gh pr create --draft --title "feat: platform remediation v0.10.0" ...
 ```
+PR created: https://github.com/djntechnic/bedrock/pull/79
 
-- [ ] **Step 5: Create adoption issues in CollectIt and MLBTracker**
+- [x] **Step 5: Create adoption issues in CollectIt and MLBTracker**
 
 Create adoption tracking issue in `djntechnic/CollectIt`:
 ```bash
-gh issue create --repo djntechnic/CollectIt --title "[Adoption] Adopt bedrock v0.10.0: resolve entry 13 (GridHeader discard) and entry 15 (load_dotenv override)" --body "Adopt bedrock v0.10.0 to eliminate local workarounds for Bedrock #55 and Bedrock #74, and verify SQLite busy timeout resolves test_reserve_seq flakes (CollectIt #60)."
+gh issue create --repo djntechnic/CollectIt --title "[Adoption] Adopt bedrock v0.10.0: resolve entry 13 (GridHeader discard) and entry 15 (load_dotenv override)" --body "..."
 ```
+Issue created: https://github.com/djntechnic/CollectIt/issues/94
 
 Create adoption tracking issue in `djntechnic/MLBTracker`:
 ```bash
-gh issue create --repo djntechnic/MLBTracker --title "[Adoption] Adopt bedrock v0.10.0: retire in-tree DataGrid tests and adopt config seeds" --body "Adopt bedrock v0.10.0 to delete in-tree DataGrid.test.tsx (Bedrock #49), resolve MLBTracker #387, and delete resolved entries from bedrock_issues_to_file.md."
+gh issue create --repo djntechnic/MLBTracker --title "[Adoption] Adopt bedrock v0.10.0: retire in-tree DataGrid tests and adopt config seeds" --body "..."
 ```
+Issue created: https://github.com/djntechnic/MLBTracker/issues/415
