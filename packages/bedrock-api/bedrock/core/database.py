@@ -182,12 +182,15 @@ class DatabaseManager:
             TABLE commits on the spot and survives a later rollback — which for
             a schema migration is the entire failure mode being guarded against.
         """
+        timeout_sec = float(os.environ.get("SQLITE_BUSY_TIMEOUT", 30.0))
         conn = sqlite3.connect(
             self.sqlite_path,
+            timeout=timeout_sec,
             isolation_level=None if explicit_transactions else "",
         )
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys = ON;")
+        conn.execute(f"PRAGMA busy_timeout = {int(timeout_sec * 1000)};")
         return conn
 
     def _get_sqlite_connection(self) -> sqlite3.Connection:

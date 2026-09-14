@@ -167,30 +167,26 @@ git commit -m "fix(config): preserve injected db environment variables across lo
 - Consumes: `os.environ.get("SQLITE_BUSY_TIMEOUT", "30.0")`
 - Produces: SQLite connections configured with timeout and `PRAGMA busy_timeout = <ms>`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
-Create `packages/bedrock-api/tests/test_sqlite_busy_timeout.py`:
+Create `packages/bedrock-api/tests/test_database.py`:
 
 ```python
 from __future__ import annotations
 import sqlite3
-from bedrock.core.database import db
+from bedrock.core.database import DatabaseManager
 
-def test_sqlite_connection_has_busy_timeout_configured():
-    with db.get_connection() as conn:
-        if isinstance(conn, sqlite3.Connection):
-            cur = conn.execute("PRAGMA busy_timeout;")
-            row = cur.fetchone()
-            # Default busy_timeout should be at least 30000 ms (30s)
-            assert row[0] >= 30000
+def test_sqlite_busy_timeout(tmp_path, monkeypatch):
+    """Verify that SQLite connections are initialized with PRAGMA busy_timeout set."""
+    ...
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
-Run: `pytest packages/bedrock-api/tests/test_sqlite_busy_timeout.py -v`
+Run: `pytest packages/bedrock-api/tests/test_database.py -k "test_sqlite_busy_timeout" -q`
 Expected: FAIL (default SQLite PRAGMA busy_timeout is 0 or 5000).
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 In `packages/bedrock-api/bedrock/core/database.py`, update `_create_sqlite_connection`:
 
@@ -209,12 +205,12 @@ In `packages/bedrock-api/bedrock/core/database.py`, update `_create_sqlite_conne
         return conn
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
-Run: `pytest packages/bedrock-api/tests/test_sqlite_busy_timeout.py -v`
+Run: `pytest packages/bedrock-api/tests/test_database.py -k "test_sqlite_busy_timeout" -q`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/bedrock-api/bedrock/core/database.py packages/bedrock-api/tests/test_sqlite_busy_timeout.py
