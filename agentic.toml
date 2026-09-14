@@ -2,17 +2,28 @@
 name = "bedrock"
 
 rules = [
-  "s01-ui-primitives",
-  "s03-logging-standards",
-  "s05-zero-broken-tests",
+  "s001-no-duplicate-ui-code",
+  "s002-all-grids-wired-to-admin-config",
+  "s003-logging-protocol",
+  "s004-no-hardcoded-config-settings",
+  "s005-test-coverage-mandatory",
+  "s006-defect-isolation-and-pr-workflow",
+  "s007-schema-catalog",
+  "s008-documentation-layout-and-naming",
+  "s009-design-system",
+  "s010-granular-security-model",
+  "s011-config-driven-navigation",
+  "s012-dual-pin-platform-governance",
 ]
 
 skills = [
   "anti-ui-slop",
   "bump-bedrock-pin",
-  "compact-test-runner",
   "cut-release",
+  "deliver-task",
+  "grid-guru",
   "react-best-practices",
+  "run-tests",
   "sql-sentinel",
   "triage-plan",
 ]
