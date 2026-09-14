@@ -20,7 +20,7 @@ This specification consolidates and resolves all 5 open issues in `djntechnic/be
 6. **Bedrock #49**: The core `<DataGrid>` component lacks a dedicated render-level test harness in `bedrock-ui`, forcing consumer repositories (MLBTracker) to maintain 588 lines of platform engine tests.
 7. **MLBTracker #387**: MLBTracker carries 15 in-tree platform-destined files and orphaned tests that belong upstream in Bedrock.
 
-Following implementation, Bedrock will be released as `v0.10.0`, followed by issue creation in CollectIt and MLBTracker to track their respective adoption and local clean-up.
+Following implementation, Bedrock will be released in `v0.10.0`, followed by issue creation in CollectIt and MLBTracker to track their respective adoption and local clean-up.
 
 ---
 
@@ -29,6 +29,7 @@ Following implementation, Bedrock will be released as `v0.10.0`, followed by iss
 ### 2.1 Backend Foundations (`packages/bedrock-api`)
 
 #### 2.1.1 Environment Precedence & Injected DB Protection (Bedrock #74)
+
 - **Problem:** `config.py`, `logging.py`, and `oauth_service.py` invoke `load_dotenv(..., override=True)`. This discards explicit caller injections such as `SQLITE_DB_PATH=/tmp/scratch.db`, causing alternate-DB boots or tests to silently execute against production databases.
 - **Solution:**
   - Before invoking `load_dotenv`, snapshot critical database environment variables:
@@ -42,6 +43,7 @@ Following implementation, Bedrock will be released as `v0.10.0`, followed by iss
   - This preserves developer convenience for local `.env` authoring while guaranteeing that explicit process-level overrides are never silently clobbered.
 
 #### 2.1.2 SQLite Concurrency & Busy Timeout (CollectIt #60)
+
 - **Problem:** Multi-threaded test runs (e.g., CollectIt's `test_reserve_seq`) contend on SQLite file locks. Because Python's `sqlite3.connect` defaults to a 5.0-second timeout and does not configure `PRAGMA busy_timeout`, worker threads fail with `sqlite3.OperationalError: database is locked`.
 - **Solution:**
   - In `DatabaseManager._create_sqlite_connection`:
@@ -51,6 +53,7 @@ Following implementation, Bedrock will be released as `v0.10.0`, followed by iss
   - Transaction connections created via `transaction()` inherit this configuration, eliminating writer lock flakes across all consumer concurrency suites.
 
 #### 2.1.3 Path Normalization & Domain Sanitization (Bedrock #51)
+
 - **Problem:** `resolve_app_path(value)` joins `APP_ROOT` with relative paths without normalization. On Windows, this creates mixed-separator paths (`C:\repo/data/app.db`). `test_paths.py` also hardcodes `data/mlbtracker.db`.
 - **Solution:**
   - In `bedrock/core/paths.py`:
@@ -65,6 +68,7 @@ Following implementation, Bedrock will be released as `v0.10.0`, followed by iss
     - Use `os.path.normpath` in test assertions to ensure platform-independent comparisons.
 
 #### 2.1.4 Platform Config Keys Seeding (Bedrock #50)
+
 - **Problem:** 11 keys read by `bedrock-api` are absent from `app_config_settings` seeds:
   - `rate_limit_login` (`10/minute`, system)
   - `rate_limit_register` (`5/minute`, system)
@@ -87,6 +91,7 @@ Following implementation, Bedrock will be released as `v0.10.0`, followed by iss
 ## 2.2 Frontend Grid Engine & UI (`packages/bedrock-ui`)
 
 #### 2.2.1 Guarded Discard & Custom Interception (Bedrock #55)
+
 - **Problem:** `<GridHeader>` renders "Discard unsaved edits" as a plain button calling `discardBulkDrafts` directly. Supplying `draftsOverride` forces this button to appear without confirmation or interception, risking immediate loss of hundreds of staged draft rows.
 - **Solution:**
   - Extend `DataGridProps` and `GridHeaderProps`:
@@ -102,6 +107,7 @@ Following implementation, Bedrock will be released as `v0.10.0`, followed by iss
     - If `confirmBulkDiscard` is explicitly false: bypass the dialog and execute immediately.
 
 #### 2.2.2 DataGrid Render-Level Test Harness & Test Migration (Bedrock #49 / MLBTracker #387)
+
 - **Problem:** Bedrock's unit suite only tested grid utility helpers and the `gridRef` handle, leaving `<DataGrid>`'s rendering, selection, pagination, and bulk wiring unverified upstream. MLBTracker maintained a 588-line test file (`DataGrid.test.tsx`) asserting platform behavior.
 - **Solution:**
   - Create `packages/bedrock-ui/src/test/gridMocks.ts` and `renderWithGridProviders` in `packages/bedrock-ui/src/test/test-utils.tsx`.
@@ -114,30 +120,89 @@ Following implementation, Bedrock will be released as `v0.10.0`, followed by iss
 
 ---
 
-## 3. Verification Plan
+## 3. Tiered Verification & Quality Gate Plan
 
-### Automated Tests
-1. **Backend (`packages/bedrock-api`):**
-   ```bash
-   pytest packages/bedrock-api/tests/test_paths.py
-   pytest packages/bedrock-api/tests/test_admin_config_service.py
-   pytest packages/bedrock-api/tests/
-   python -m bedrock.tools.run_all
-   ```
-2. **Frontend (`packages/bedrock-ui`):**
-   ```bash
-   cd packages/bedrock-ui
-   npm run test:run
-   npm run build
-   ```
+Test execution is governed by the two-tier verification model: Tier 1 lean delta testing during iterative implementation, and Tier 2 quality gating prior to commit and release tagging.
+
+### 3.1 Tier 1: Lean Delta Verification (Task Iteration)
+Implementers must run targeted, atomic verification commands after each discrete component change. Execution time must remain under 15 seconds. Full sweeps and multi-audit executions are prohibited during this cycle.
+
+#### Component-Level Delta Commands
+
+- **Backend: Environment Precedence & Injected DB (Bedrock #74)**
+```
+$env:PYTHONPATH = "packages/bedrock-api"
+pytest packages/bedrock-api/tests/test_config.py -k "test_dotenv_preserves_injected_db" -q; echo "exit=$LASTEXITCODE"
+```
+
+- **Backend: SQLite Concurrency & Busy Timeout (CollectIt #60)** 
+```
+$env:PYTHONPATH = "packages/bedrock-api" pytest packages/bedrock-api/tests/test_database.py -k "test_sqlite_busy_timeout" -q; echo "exit=$LASTEXITCODE" 
+```
+
+- **Backend: Path Normalization & Domain Sanitization (Bedrock #51)** 
+```
+$env:PYTHONPATH = "packages/bedrock-api" pytest packages/bedrock-api/tests/test_paths.py -q; echo "exit=$LASTEXITCODE" 
+```
+
+- **Backend: Platform Config Keys Seeding (Bedrock #50)** 
+```
+$env:PYTHONPATH = "packages/bedrock-api" pytest packages/bedrock-api/tests/test_admin_config_service.py -k "test_platform_config_keys_seeded" -q; echo "exit=$LASTEXITCODE"
+```
+
+- **Frontend: Guarded Discard & Custom Interception (Bedrock #55)** 
+```
+npx vitest related --run packages/bedrock-ui/src/components/grids/GridHeader.tsx
+```
+
+- **Frontend: DataGrid Render Harness & Ported Engine Tests (Bedrock #49 / MLBTracker #387)** 
+```
+npx vitest related --run packages/bedrock-ui/src/components/grids/DataGrid.tsx packages/bedrock-ui/src/components/grids/DataGrid.test.tsx 
+```
+
+- **Dynamic Working Tree Delta (Unified QA Runner)** 
+```
+python scripts/run_qa.py --mode fast --json 
+```
+
+### 3.2 Tier 2: Comprehensive Quality Gate (Pre-Commit & Release Tagging)
+
+Before finalizing `bedrock v0.10.0`, the complete suite must pass with exit code `0`. Any adjacent defect must not be patched inline; it must be documented in `.gemini/tracking/OUT_OF_SCOPE_BUGS.md` in accordance with defect quarantine protocols.
+
+
+# 1. Environment context setup
+```
+Set-Location -LiteralPath "C:\Dev\bedrock"
+$env:PYTHONPATH = "$((Get-Location).Path)\packages\bedrock-api"
+```
+
+# 2. Master Platform Standards Audit (S001 - S012)
+```
+python -m bedrock.tools.run_all --root .
+if ($LASTEXITCODE -ne 0) { Write-Error "Audit Suite Failed"; exit 1 }
+```
+
+# 3. Full Multi-Tier QA Engine (Pytest + Vitest + Dead-Code Scans)
+```
+python scripts/run_qa.py --mode full --json
+if ($LASTEXITCODE -ne 0) { Write-Error "Unified QA Suite Failed"; exit 1 }
+```
+
+# 4. Workspace Cleanliness & Manifest Parity
+```
+git status --porcelain
+python -m bedrock.tools.audit_s012_pins --root .
+if ($LASTEXITCODE -ne 0) { Write-Error "Manifest Pin Parity Failed"; exit 1 }
+```
 
 ---
 
 ## 4. Post-Release Consumer Action Items
 
-Following the merge of this PR in `bedrock` and tag release (`v0.10.0`), open dedicated GitHub tracking issues in consumer repos:
+Following the merge of this PR in `bedrock`, open dedicated GitHub tracking issues in consumer repos:
 
 ### CollectIt Issue
+
 - **Title:** `[Adoption] Adopt bedrock v0.10.0: resolve entry 13 (GridHeader discard) and entry 15 (load_dotenv override)`
 - **Scope:**
   - Bump `@djntechnic/bedrock-ui` and `bedrock-api` to `v0.10.0`.
@@ -146,6 +211,7 @@ Following the merge of this PR in `bedrock` and tag release (`v0.10.0`), open de
   - Delete entries 13 and 15 from `docs/reference/bedrock_issues_to_file.md`.
 
 ### MLBTracker Issue
+
 - **Title:** `[Adoption] Adopt bedrock v0.10.0: retire in-tree DataGrid tests and adopt config seeds`
 - **Scope:**
   - Bump `@djntechnic/bedrock-ui` and `bedrock-api` to `v0.10.0`.
