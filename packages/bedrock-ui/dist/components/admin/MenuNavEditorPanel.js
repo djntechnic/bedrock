@@ -465,7 +465,7 @@ function MenuNavEditorPanel() {
                 {
                   className: `flex items-center gap-2 ${Boolean(draft.parent_key) ? "pl-5" : ""}`,
                   children: [
-                    isSpacer ? /* @__PURE__ */ jsx(Layers, { className: "h-3.5 w-3.5 text-amber-600 dark:text-amber-400 shrink-0" }) : Boolean(draft.parent_key) ? /* @__PURE__ */ jsx(CornerDownRight, { className: "h-3.5 w-3.5 text-muted-foreground/60 shrink-0" }) : PreviewIcon && /* @__PURE__ */ jsx(PreviewIcon, { className: "h-4 w-4 text-primary shrink-0" }),
+                    isSpacer ? /* @__PURE__ */ jsx(Layers, { className: "h-3.5 w-3.5 text-warning shrink-0" }) : Boolean(draft.parent_key) ? /* @__PURE__ */ jsx(CornerDownRight, { className: "h-3.5 w-3.5 text-muted-foreground/60 shrink-0" }) : PreviewIcon && /* @__PURE__ */ jsx(PreviewIcon, { className: "h-4 w-4 text-primary shrink-0" }),
                     /* @__PURE__ */ jsxs("div", { className: "flex flex-col", children: [
                       /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1.5", children: [
                         Boolean(draft.parent_key) && /* @__PURE__ */ jsxs("span", { className: "text-[11px] font-mono text-muted-foreground/60", children: [
@@ -486,7 +486,7 @@ function MenuNavEditorPanel() {
                           Badge,
                           {
                             variant: "outline",
-                            className: "text-[9px] px-1 py-0 h-3.5 border-amber-500/40 text-amber-600 dark:text-amber-400",
+                            className: "text-[9px] px-1 py-0 h-3.5 border-warning/40 text-warning",
                             children: "Section Header"
                           }
                         ),

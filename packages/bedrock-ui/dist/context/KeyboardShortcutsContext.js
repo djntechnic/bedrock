@@ -1,9 +1,10 @@
 import { jsx } from "react/jsx-runtime";
 import { createContext, useContext, useMemo, useState, useRef, useCallback, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useTheme, BUILT_IN_THEMES } from "./ThemeContext.js";
+import { useTheme } from "./ThemeContext.js";
 import { logger } from "../lib/logger.js";
 import { resolveShortcutsConfig, buildShortcutGroups } from "../lib/shortcuts.js";
+import { BUILT_IN_THEMES } from "../theme/palettes.js";
 const KeyboardShortcutsContext = createContext(null);
 const SEQUENCE_ROUTES = {
   d: "/",

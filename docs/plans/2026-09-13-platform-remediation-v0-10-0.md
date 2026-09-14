@@ -32,6 +32,7 @@
 - Consumes: `bedrock.core.paths.resolve_app_path(value, *default_parts)`
 - Produces: Normalized absolute path string with OS-native path separators (`\` on Windows, `/` on POSIX).
 
+- [ ] **Step 1: Write the failing test**
 - [x] **Step 1: Write the failing test**
 
 Update `packages/bedrock-api/tests/test_paths.py` to assert that `resolve_app_path` yields normalized OS separators on relative paths containing forward slashes, and replace `"data/mlbtracker.db"` with `"data/test.db"`:
@@ -44,11 +45,13 @@ Update `packages/bedrock-api/tests/test_paths.py` to assert that `resolve_app_pa
         assert config.config.SQLITE_DB_PATH == expected
 ```
 
+- [ ] **Step 2: Run test to verify failure / separator behavior**
 - [x] **Step 2: Run test to verify failure / separator behavior**
 
 Run: `pytest packages/bedrock-api/tests/test_paths.py::TestSqlitePath::test_env_override_is_honoured -v`
 Expected: Passes or fails depending on slash matching, but confirms whether forward slashes survive unnormalized.
 
+- [ ] **Step 3: Write minimal implementation**
 - [x] **Step 3: Write minimal implementation**
 
 In `packages/bedrock-api/bedrock/core/paths.py`, wrap `resolve_app_path` in `os.path.normpath`:
@@ -72,11 +75,13 @@ def resolve_app_path(value: str | None, *default_parts: str) -> str:
     return os.path.normpath(value if os.path.isabs(value) else app_path(value))
 ```
 
+- [ ] **Step 4: Run tests to verify they pass**
 - [x] **Step 4: Run tests to verify they pass**
 
 Run: `pytest packages/bedrock-api/tests/test_paths.py -v`
 Expected: 18 passed.
 
+- [ ] **Step 5: Commit**
 - [x] **Step 5: Commit**
 
 ```bash
@@ -98,6 +103,7 @@ git commit -m "fix(paths): normalize separators on Windows and purge domain fixt
 - Consumes: `os.environ.get("SQLITE_DB_PATH")`, `os.environ.get("DATABASE_URL")`, `os.environ.get("BEDROCK_DATA_DIR")`
 - Produces: Guaranteed retention of command-line/test-injected database target over `.env` default.
 
+- [ ] **Step 1: Write the failing test**
 - [x] **Step 1: Write the failing test**
 
 Add `test_injected_sqlite_path_survives_dotenv_override` in `packages/bedrock-api/tests/test_paths.py`:
@@ -117,11 +123,13 @@ Add `test_injected_sqlite_path_survives_dotenv_override` in `packages/bedrock-ap
         assert config.config.SQLITE_DB_PATH == expected
 ```
 
+- [ ] **Step 2: Run test to verify it fails**
 - [x] **Step 2: Run test to verify it fails**
 
 Run: `pytest packages/bedrock-api/tests/test_paths.py::TestSqlitePath::test_injected_sqlite_path_survives_dotenv_override -v`
 Expected: FAIL with `AssertionError: .../data/production_app.db != .../data/test_injected.db`
 
+- [ ] **Step 3: Write minimal implementation**
 - [x] **Step 3: Write minimal implementation**
 
 In `packages/bedrock-api/bedrock/core/config.py`:
@@ -143,11 +151,13 @@ _SQLITE_ENV = os.environ.get("SQLITE_DB_PATH")
 
 Apply the same environment protection in `packages/bedrock-api/bedrock/core/logging.py` and `packages/bedrock-api/bedrock/services/oauth_service.py`.
 
+- [ ] **Step 4: Run test to verify it passes**
 - [x] **Step 4: Run test to verify it passes**
 
 Run: `pytest packages/bedrock-api/tests/test_paths.py::TestSqlitePath::test_injected_sqlite_path_survives_dotenv_override -v`
 Expected: PASS.
 
+- [ ] **Step 5: Commit**
 - [x] **Step 5: Commit**
 
 ```bash
@@ -167,25 +177,38 @@ git commit -m "fix(config): preserve injected db environment variables across lo
 - Consumes: `os.environ.get("SQLITE_BUSY_TIMEOUT", "30.0")`
 - Produces: SQLite connections configured with timeout and `PRAGMA busy_timeout = <ms>`.
 
+- [ ] **Step 1: Write the failing test**
 - [x] **Step 1: Write the failing test**
 
+Create `packages/bedrock-api/tests/test_sqlite_busy_timeout.py`:
 Create `packages/bedrock-api/tests/test_database.py`:
 
 ```python
 from __future__ import annotations
 import sqlite3
+from bedrock.core.database import db
 from bedrock.core.database import DatabaseManager
 
+def test_sqlite_connection_has_busy_timeout_configured():
+    with db.get_connection() as conn:
+        if isinstance(conn, sqlite3.Connection):
+            cur = conn.execute("PRAGMA busy_timeout;")
+            row = cur.fetchone()
+            # Default busy_timeout should be at least 30000 ms (30s)
+            assert row[0] >= 30000
 def test_sqlite_busy_timeout(tmp_path, monkeypatch):
     """Verify that SQLite connections are initialized with PRAGMA busy_timeout set."""
     ...
 ```
 
+- [ ] **Step 2: Run test to verify it fails**
 - [x] **Step 2: Run test to verify it fails**
 
+Run: `pytest packages/bedrock-api/tests/test_sqlite_busy_timeout.py -v`
 Run: `pytest packages/bedrock-api/tests/test_database.py -k "test_sqlite_busy_timeout" -q`
 Expected: FAIL (default SQLite PRAGMA busy_timeout is 0 or 5000).
 
+- [ ] **Step 3: Write minimal implementation**
 - [x] **Step 3: Write minimal implementation**
 
 In `packages/bedrock-api/bedrock/core/database.py`, update `_create_sqlite_connection`:
@@ -205,11 +228,14 @@ In `packages/bedrock-api/bedrock/core/database.py`, update `_create_sqlite_conne
         return conn
 ```
 
+- [ ] **Step 4: Run test to verify it passes**
 - [x] **Step 4: Run test to verify it passes**
 
+Run: `pytest packages/bedrock-api/tests/test_sqlite_busy_timeout.py -v`
 Run: `pytest packages/bedrock-api/tests/test_database.py -k "test_sqlite_busy_timeout" -q`
 Expected: PASS.
 
+- [ ] **Step 5: Commit**
 - [x] **Step 5: Commit**
 
 ```bash
@@ -230,6 +256,7 @@ git commit -m "fix(database): configure sqlite busy timeout to eliminate concurr
 - Consumes: `app_config_settings` table
 - Produces: 11 seeded platform settings rows discoverable in Admin UI (`category='system'`, `'diagnostics'`).
 
+- [ ] **Step 1: Write the failing test**
 - [x] **Step 1: Write the failing test**
 
 In `packages/bedrock-api/tests/test_admin_config_service.py`, add a test verifying platform config keys exist:
@@ -238,16 +265,32 @@ In `packages/bedrock-api/tests/test_admin_config_service.py`, add a test verifyi
 def test_platform_default_config_keys_are_seeded():
     expected_keys = [
         "rate_limit_login",
+        "rate_limit_register",
+        "rate_limit_oauth_callback",
+        "rate_limit_password_reset",
+        "mail_from_address",
+        "mail_from_name",
+        "system_base_url",
+        "seo_allow_indexing",
+        "diagnostics_retention_days",
+        "diagnostics_schedule_enabled",
+        "diagnostics_schedule_time",
         ...
     ]
+    df = db.query("SELECT key FROM app_config_settings WHERE key IN (" + ",".join([f"'{k}'" for k in expected_keys]) + ")")
+    found = set(df["key"].tolist()) if not df.empty else set()
+    missing = set(expected_keys) - found
+    assert not missing, f"Missing seeded config keys: {missing}"
     ...
 ```
 
+- [ ] **Step 2: Run test to verify it fails**
 - [x] **Step 2: Run test to verify it fails**
 
 Run: `pytest packages/bedrock-api/tests/test_admin_config_service.py -k test_platform_default_config_keys_are_seeded -v`
 Expected: FAIL with missing seeded keys.
 
+- [ ] **Step 3: Write minimal implementation**
 - [x] **Step 3: Write minimal implementation**
 
 Create `packages/bedrock-api/bedrock/schema/migrations/008_seed_platform_config_keys.sql`:
@@ -258,16 +301,28 @@ Create `packages/bedrock-api/bedrock/schema/migrations/008_seed_platform_config_
 
 INSERT OR IGNORE INTO app_config_settings (key, value, value_type, description, category) VALUES
     ('rate_limit_login', '10/minute', 'string', 'Rate limit for user login attempts', 'system'),
+    ('rate_limit_register', '5/minute', 'string', 'Rate limit for account registration', 'system'),
+    ('rate_limit_oauth_callback', '10/minute', 'string', 'Rate limit for OAuth callback handshakes', 'system'),
+    ('rate_limit_password_reset', '5/hour', 'string', 'Rate limit for password reset requests', 'system'),
+    ('mail_from_address', '', 'string', 'Default From email address for transactional emails', 'system'),
+    ('mail_from_name', '', 'string', 'Default From display name for transactional emails', 'system'),
+    ('system_base_url', '', 'string', 'Public base URL of the application for link generation', 'system'),
+    ('seo_allow_indexing', 'true', 'boolean', 'Allow search engine web crawlers to index public pages', 'system'),
+    ('diagnostics_retention_days', '60', 'integer', 'Number of days to retain diagnostic test execution history', 'diagnostics'),
+    ('diagnostics_schedule_enabled', 'false', 'boolean', 'Whether daily automated diagnostic checks are enabled', 'diagnostics'),
+    ('diagnostics_schedule_time', '02:00', 'string', 'Daily scheduled time (HH:MM UTC) for automated diagnostic checks', 'diagnostics');
     ...
 ```
 
 Add these same `INSERT OR IGNORE` seed rows to `packages/bedrock-api/bedrock/schema/baseline.sql` right after `CREATE TABLE IF NOT EXISTS app_config_settings`.
 
+- [ ] **Step 4: Run test to verify it passes**
 - [x] **Step 4: Run test to verify it passes**
 
 Run: `pytest packages/bedrock-api/tests/test_admin_config_service.py -k test_platform_default_config_keys_are_seeded -v`
 Expected: PASS.
 
+- [ ] **Step 5: Commit**
 - [x] **Step 5: Commit**
 
 ```bash
@@ -288,6 +343,7 @@ git commit -m "feat(schema): seed platform config keys in baseline and migration
 - Consumes: `onBulkDiscard?: () => void | Promise<void>`, `confirmBulkDiscard?: boolean`, `onBeforeBulkDiscard?: () => boolean | Promise<boolean>`
 - Produces: Guarded Discard button in `<GridHeader>` opening an `AlertDialog` before destroying staged edits.
 
+- [ ] **Step 1: Write the failing test**
 - [x] **Step 1: Write the failing test**
 
 Create `packages/bedrock-ui/src/components/grids/GridHeaderDiscard.test.tsx`:
@@ -343,11 +399,13 @@ describe("GridHeader Discard Guarding", () => {
 });
 ```
 
+- [ ] **Step 2: Run test to verify it fails**
 - [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/bedrock-ui/src/components/grids/GridHeaderDiscard.test.tsx`
 Expected: FAIL (`confirmBulkDiscard` prop not implemented and dialog does not open).
 
+- [ ] **Step 3: Write minimal implementation**
 - [x] **Step 3: Write minimal implementation**
 
 1. In `packages/bedrock-ui/src/components/grids/GridHeader.tsx`:
@@ -363,11 +421,13 @@ Expected: FAIL (`confirmBulkDiscard` prop not implemented and dialog does not op
    - Forward `confirmBulkDiscard={props.confirmBulkDiscard ?? true}`.
    - Forward `onBeforeBulkDiscard={props.onBeforeBulkDiscard}`.
 
+- [ ] **Step 4: Run test to verify it passes**
 - [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run packages/bedrock-ui/src/components/grids/GridHeaderDiscard.test.tsx`
 Expected: 2 passed.
 
+- [ ] **Step 5: Commit**
 - [x] **Step 5: Commit**
 
 ```bash
@@ -388,6 +448,7 @@ git commit -m "feat(grids): add discard confirmation dialog and custom intercept
 - Consumes: `DataGrid`, `useGridConfig`, `buildGridConfig`
 - Produces: Complete upstream test coverage for `<DataGrid>` rendering, row key enforcement, column selection, pagination, and sorting.
 
+- [ ] **Step 1: Create test utilities and mock factories**
 - [x] **Step 1: Create test utilities and mock factories**
 
 In `packages/bedrock-ui/src/test/gridMocks.ts`:
@@ -397,6 +458,7 @@ In `packages/bedrock-ui/src/test/gridMocks.ts`:
 In `packages/bedrock-ui/src/test/test-utils.tsx`:
 - Create `renderWithGridProviders(ui: React.ReactElement)` wrapping `QueryClientProvider` and `MemoryRouter`, and polyfilling `ResizeObserver`, `offsetHeight`, `offsetWidth`.
 
+- [ ] **Step 2: Add engine tests to `DataGrid.test.tsx`**
 - [x] **Step 2: Add engine tests to `DataGrid.test.tsx`**
 
 Port the engine test suites from MLBTracker into `packages/bedrock-ui/src/components/grids/DataGrid.test.tsx`:
@@ -407,14 +469,17 @@ Port the engine test suites from MLBTracker into `packages/bedrock-ui/src/compon
 - Density toggle switches table padding.
 - Column visibility toggling hides/shows headers and cells.
 
+- [ ] **Step 3: Run tests to verify they pass**
 - [x] **Step 3: Run tests to verify they pass**
 
 Run: `npx vitest run packages/bedrock-ui/src/components/grids/DataGrid.test.tsx`
 Expected: All tests pass.
 
+- [ ] **Step 4: Commit**
 - [x] **Step 4: Commit**
 
 ```bash
+git add packages/bedrock-ui/src/test/gridMocks.ts packages/bedrock-ui/src/test/test-utils.tsx packages/bedrock-ui/src/components/grids/DataGrid.test.tsx
 git add packages/bedrock-ui/src/test/gridMocks.ts packages/bedrock-ui/src/test/test-utils.tsx packages/bedrock-ui/src/components/grids/DataGrid.test.tsx docs/plans/2026-09-13-platform-remediation-v0-10-0.md
 git commit -m "test(grids): establish DataGrid render-level test harness and migrate engine test suite (bedrock#49)"
 ```
@@ -427,11 +492,11 @@ git commit -m "test(grids): establish DataGrid render-level test harness and mig
 - Modify: `package.json` (version `0.9.2` -> `0.10.0`)
 - Modify: `packages/bedrock-api/pyproject.toml` (version `0.9.2` -> `0.10.0`)
 
-- [ ] **Step 1: Bump version numbers**
+- [x] **Step 1: Bump version numbers**
 
 Update `version` to `"0.10.0"` in `package.json` and `packages/bedrock-api/pyproject.toml`.
 
-- [ ] **Step 2: Run full verification suites**
+- [x] **Step 2: Run full verification suites**
 
 Run:
 ```bash
@@ -441,7 +506,7 @@ npm run test:run
 ```
 Confirm all pass with exit code 0.
 
-- [ ] **Step 3: Commit version bump**
+- [x] **Step 3: Commit version bump**
 
 ```bash
 git add package.json packages/bedrock-api/pyproject.toml

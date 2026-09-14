@@ -72,7 +72,7 @@ export declare function renderMediaCell(cellType: string | null | undefined, val
  * @param navigate   - Optional router navigate function (required for link_target).
  * @param playerId   - Optional player_id for link_target="player_page".
  * @param linkCtx    - Meta/row context for config-driven link_target resolution.
- * @param numeralStyle - Grid-level `config.numeralStyle` (§S9 Phase 3). `"tabular"`
+ * @param numeralStyle - Grid-level `config.numeralStyle` (§S009 Phase 3). `"tabular"`
  *                       applies the shared `.tabular-nums` utility to numeric cells.
  */
 export declare function renderCell(value: unknown, col: Pick<GridColumnSetting, "null_display" | "cell_type" | "format_string" | "conditional_format" | "link_target" | "wrap_text"> & {

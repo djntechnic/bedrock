@@ -1,5 +1,6 @@
 import { jsx, jsxs } from "react/jsx-runtime";
 import { HelpCircle } from "lucide-react";
+import { useAppSettings } from "../../../hooks/useAppSettings.js";
 import { Input } from "../../ui/input.js";
 import { Switch } from "../../ui/switch.js";
 import { Label } from "../../ui/label.js";
@@ -7,10 +8,11 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from ".
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "../../ui/tooltip.js";
 const NONE = "__none__";
 function Row({ label, help, children }) {
+  const { grid } = useAppSettings();
   return /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between gap-3", children: [
     /* @__PURE__ */ jsxs(Label, { className: "text-xs text-muted-foreground font-normal flex items-center gap-1", children: [
       label,
-      help && /* @__PURE__ */ jsx(TooltipProvider, { delayDuration: 200, children: /* @__PURE__ */ jsxs(Tooltip, { children: [
+      help && /* @__PURE__ */ jsx(TooltipProvider, { delayDuration: grid.tooltipDelayDuration, children: /* @__PURE__ */ jsxs(Tooltip, { children: [
         /* @__PURE__ */ jsx(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsx(HelpCircle, { className: "h-3 w-3 cursor-help shrink-0" }) }),
         /* @__PURE__ */ jsx(TooltipContent, { side: "top", className: "text-xs max-w-64", children: help })
       ] }) })

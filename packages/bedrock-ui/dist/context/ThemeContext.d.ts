@@ -4,6 +4,8 @@
  * @description React context and provider for light/dark theme state.
  */
 import { type ReactNode } from "react";
+import { BUILT_IN_THEMES, DEFAULT_THEME_SEED } from "../theme/palettes";
+export { BUILT_IN_THEMES, DEFAULT_THEME_SEED };
 export interface ThemePalette {
     id: string;
     name: string;
@@ -40,19 +42,12 @@ interface ThemeContextType {
     removePalette: (id: string) => void;
 }
 /**
- * MLB Classic's 6 raw color fields, shared with `AdminPage.tsx`'s blank
- * custom-theme form default (§S9 §5.2) — a single source so the two never
- * drift out of sync again.
- */
-export declare const DEFAULT_THEME_SEED: Pick<ThemePalette, "colorPrimary" | "colorSecondary" | "colorBackground" | "colorAccent" | "colorDestructive" | "colorBorder">;
-export declare const BUILT_IN_THEMES: ThemePalette[];
-/**
  * Which palette "system" means, given the OS preference of the moment.
  *
  * Pure and exported so the rule can be tested without a `matchMedia` stub, and
  * so a host can ask the same question the provider asks.
  *
- * §S9 note: this only ever *selects* a registered palette. It defines no
+ * §S009 note: this only ever *selects* a registered palette. It defines no
  * colour of its own — a system mode that invented a light theme for a host
  * that ships only dark ones would be exactly the `:root` block the standard
  * forbids, arrived at by another route.
@@ -86,4 +81,3 @@ interface ThemeProviderProps {
 }
 export declare function ThemeProvider({ children, systemLight, systemDark, toaster, }: ThemeProviderProps): import("react").JSX.Element;
 export declare function useTheme(): ThemeContextType;
-export {};

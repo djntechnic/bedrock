@@ -26,7 +26,7 @@ from typing import Any, Iterable
 import httpx
 from loguru import logger
 
-from bedrock.core.config import config
+import bedrock.core.config as core_config
 from bedrock.storage.object_store import (
     ListedObject,
     PublicCheck,
@@ -46,9 +46,9 @@ _DEFAULT_CONTENT_TYPE = "application/octet-stream"
 def is_configured() -> bool:
     """A bucket and a credential pair. The endpoint is empty for AWS itself."""
     return bool(
-        config.S3_BUCKET
-        and config.S3_ACCESS_KEY_ID
-        and config.S3_SECRET_ACCESS_KEY
+        core_config.config.S3_BUCKET
+        and core_config.config.S3_ACCESS_KEY_ID
+        and core_config.config.S3_SECRET_ACCESS_KEY
     )
 
 
@@ -73,8 +73,8 @@ class S3StorageProvider:
                 "S3_ACCESS_KEY_ID and S3_SECRET_ACCESS_KEY (plus "
                 "S3_ENDPOINT_URL for R2 or MinIO)"
             )
-        self.bucket = config.S3_BUCKET
-        self.public_base_url = config.S3_PUBLIC_BASE_URL.rstrip("/")
+        self.bucket = core_config.config.S3_BUCKET
+        self.public_base_url = core_config.config.S3_PUBLIC_BASE_URL.rstrip("/")
         #: Requests made this process, by billed class. S3-compatible providers
         #: price per request, not only per byte, and the operation that
         #: surprises an operator is always a listing loop nobody counted.
@@ -92,10 +92,10 @@ class S3StorageProvider:
 
         return boto3.client(
             "s3",
-            endpoint_url=config.S3_ENDPOINT_URL or None,
-            aws_access_key_id=config.S3_ACCESS_KEY_ID,
-            aws_secret_access_key=config.S3_SECRET_ACCESS_KEY,
-            region_name=config.S3_REGION or "auto",
+            endpoint_url=core_config.config.S3_ENDPOINT_URL or None,
+            aws_access_key_id=core_config.config.S3_ACCESS_KEY_ID,
+            aws_secret_access_key=core_config.config.S3_SECRET_ACCESS_KEY,
+            region_name=core_config.config.S3_REGION or "auto",
         )
 
     # --- StorageProvider -------------------------------------------------

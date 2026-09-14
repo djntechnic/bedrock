@@ -80,7 +80,7 @@ import { queryKeys } from "./hooks/queryKeys.js";
 import { useHelpConfig } from "./hooks/useHelpConfig.js";
 import { clearDocumentHead, documentHeadTags, useDocumentHead } from "./hooks/useDocumentHead.js";
 import { AppConfigContext, useAppConfigContext } from "./context/AppConfigContext.js";
-import { BUILT_IN_THEMES, DEFAULT_THEME_SEED, SYSTEM_THEME_ID, ThemeProvider, resolveSystemPalette, useTheme } from "./context/ThemeContext.js";
+import { SYSTEM_THEME_ID, ThemeProvider, resolveSystemPalette, useTheme } from "./context/ThemeContext.js";
 import { KeyboardShortcutsProvider, isEditableTarget, useKeyboardShortcuts } from "./context/KeyboardShortcutsContext.js";
 import { useCommandPaletteStore } from "./store/commandPaletteStore.js";
 import { useSelectionStore } from "./store/selectionStore.js";
@@ -109,13 +109,14 @@ import { fuzzyFilter, fuzzyScore } from "./lib/fuzzyMatch.js";
 import { buildShortcutGroups, isMacPlatform, primaryModifierLabel, resolveShortcutsConfig } from "./lib/shortcuts.js";
 import { getConditionalClass, getConditionalVariant } from "./utils/conditionalFormat.js";
 import { getRankIcon, getRankRowClass } from "./utils/rankStyle.js";
-import { applyColumnSizing, computeAggValue, computeColumnMinMax, formatAggValue, getGradientCellStyle, hasAggregates, prependRankColumn, prependSelectionColumn } from "./utils/gridUtils.js";
+import { applyColumnSizing, computeAggValue, computeColumnMinMax, formatAggValue, getGradientCellStyle, hasAggregates, prependRankColumn, prependSelectionColumn, resolveKpiGradientHexes } from "./utils/gridUtils.js";
 import { DEFAULT_GRID_HEADER_CONFIG, DEFAULT_SHORTCUTS_CONFIG, DEFAULT_TOOLTIP_DELAY } from "./types/grid.js";
 import { apiClient, getAuthToken, setAuthToken } from "./api/client.js";
 import { API_ROUTES } from "./api/routes.js";
 import { logger } from "./lib/logger.js";
 import { log } from "./utils/logger.js";
 import { appSettings, resolveAppName } from "./config/index.js";
+import { BUILT_IN_THEMES, DEFAULT_THEME_SEED } from "./theme/palettes.js";
 export {
   API_ROUTES,
   AUTH_FLOW_PATHS,
@@ -352,6 +353,7 @@ export {
   requestPasswordReset,
   resolveAppName,
   resolveColumnRenderer,
+  resolveKpiGradientHexes,
   resolveKpiGradientPolicy,
   resolveMediaRenderer,
   resolveShortcutsConfig,

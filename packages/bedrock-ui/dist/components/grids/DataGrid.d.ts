@@ -18,7 +18,7 @@
  * The engine owns state (sorting, columnVisibility, globalFilter, density,
  * selection), column building, the cell pipeline (`customCells →
  * renderMediaCell → renderCell` with gradient handling), rank + selection column prepend,
- * rank-highlight row gating, and every GridConfig property from CLAUDE.md §S2. Pages
+ * rank-highlight row gating, and every GridConfig property from CLAUDE.md §S002. Pages
  * become dumb shells that fetch data and hand it off.
  */
 import { type ReactNode, type CSSProperties, type Ref } from "react";
@@ -258,6 +258,21 @@ export interface DataGridProps<T extends Record<string, any>> {
      */
     onBulkCommit?: (drafts: Record<string, Record<string, unknown>>) => void | Promise<void>;
     /**
+     * Bedrock #55: Custom handler called when bulk drafts are discarded.
+     * When supplied, replaces the internal setBulkDrafts({}) action.
+     */
+    onBulkDiscard?: () => void | Promise<void>;
+    /**
+     * Bedrock #55: Whether to prompt for confirmation before discarding bulk drafts.
+     * Defaults to true to protect against accidental destruction of staged edits.
+     */
+    confirmBulkDiscard?: boolean;
+    /**
+     * Bedrock #55: Optional hook called prior to executing the discard action.
+     * If it resolves or returns false, the discard action is aborted.
+     */
+    onBeforeBulkDiscard?: () => boolean | Promise<boolean>;
+    /**
      * Phase 10 B3: force the Save/Discard bar visible even when the engine
      * draft store is empty. Use when the consumer maintains its own row-
      * level overlay (add/delete rows, cascading dropdowns) that the engine
@@ -325,5 +340,5 @@ export interface DataGridProps<T extends Record<string, any>> {
     /** A fill-handle drag: repeat `source`'s values over `target`'s rows. */
     onRangeFill?: (fill: CellRangeFill) => void;
 }
-export default function DataGrid<T extends Record<string, any>>({ gridId, gridRef, rows, isLoading, filtersSlot, onRowClick, onExport, customCells, customHeaders, headerTooltips, emptyMessage, searchPlaceholder, loadingMessage, accessorFor, selectionOverride, selectionOptions, onReorderColumns, isEmbedded, customToolbar, columnVisibilityOverride, variant, overscan, virtualizedMaxHeightClass, prependColumns, rowClassNameFor, onCellCommit, onBulkCommit, bulkDirtyOverride, draftsOverride, renderSubRow, cellSelection, onRangeCopy, onRangePaste, onRangeFill, }: DataGridProps<T>): import("react").JSX.Element;
+export default function DataGrid<T extends Record<string, any>>({ gridId, gridRef, rows, isLoading, filtersSlot, onRowClick, onExport, customCells, customHeaders, headerTooltips, emptyMessage, searchPlaceholder, loadingMessage, accessorFor, selectionOverride, selectionOptions, onReorderColumns, isEmbedded, customToolbar, columnVisibilityOverride, variant, overscan, virtualizedMaxHeightClass, prependColumns, rowClassNameFor, onCellCommit, onBulkCommit, onBulkDiscard, confirmBulkDiscard, onBeforeBulkDiscard, bulkDirtyOverride, draftsOverride, renderSubRow, cellSelection, onRangeCopy, onRangePaste, onRangeFill, }: DataGridProps<T>): import("react").JSX.Element;
 export { useRowClickHandler } from "../../hooks/useRowClickHandler";

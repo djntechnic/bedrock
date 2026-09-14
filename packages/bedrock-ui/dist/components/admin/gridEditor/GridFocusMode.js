@@ -137,7 +137,7 @@ function GridFocusMode({
             /* @__PURE__ */ jsx("div", { className: "text-xs uppercase tracking-wide text-muted-foreground", children: "Focus mode" }),
             /* @__PURE__ */ jsx("div", { className: "truncate text-sm font-semibold", children: gridLabel ?? gridId })
           ] }),
-          draft.isDirty && /* @__PURE__ */ jsx("span", { className: "text-xs text-amber-600 dark:text-amber-400", children: "Unsaved changes" }),
+          draft.isDirty && /* @__PURE__ */ jsx("span", { className: "text-xs text-warning", children: "Unsaved changes" }),
           /* @__PURE__ */ jsxs(
             Button,
             {

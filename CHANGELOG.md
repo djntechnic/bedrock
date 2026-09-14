@@ -16,6 +16,41 @@ When drafting a release body, write the section as `## For consumers`, not
 nested form — the cascade workflow's extractor matches `^## For consumers`
 literally and fails the release's cascade job on a mismatch.
 
+## v0.10.0
+
+### Fixed — path normalization on Windows and domain vocabulary sanitization (#51)
+
+`resolve_app_path` now runs `os.path.normpath` on all resolved paths, ensuring consistent path separators on Windows environments. The domain-specific fixture string in `test_paths.py` was purged and replaced with a domain-agnostic identifier.
+
+### Fixed — preserve injected database environment variables across load_dotenv (#74)
+
+`safe_load_dotenv()` captures explicit environment variables (`SQLITE_DB_PATH`, `DATABASE_URL`, `BEDROCK_DATA_DIR`) prior to invoking `load_dotenv(override=True)` and restores them if `.env` values would clobber injected paths. Consumed in `config.py`, `logging.py`, and `oauth_service.py`.
+
+### Fixed — SQLite connection concurrency and busy timeout (CollectIt #60)
+
+Configured default 30.0s SQLite busy timeout in `_create_sqlite_connection` and executed `PRAGMA busy_timeout = <ms>;` directly on connection establishment to eliminate writer contention across concurrent test suites.
+
+### Fixed — seed platform configuration keys in baseline and migration 008 (#50)
+
+Seeded 11 system and diagnostic configuration keys into `app_config_settings` across `baseline.sql` and new migration `008_seed_platform_config_keys.sql`, ensuring all keys read via `db.get_config` are discoverable and editable in the Admin Config Editor.
+
+### Added — guarded discard dialog and custom interception to GridHeader (#55)
+
+Added `confirmBulkDiscard` (defaulting to true) and `onBeforeBulkDiscard` props to `<GridHeader>` and `<DataGrid>`, presenting an `AlertDialog` confirmation prompt prior to destroying staged edits. Consumers can supply custom discard handlers or guard routines.
+
+### Added — DataGrid render-level test harness and engine test migration (#49, MLBTracker #387)
+
+Established shared mock factories `makeGridConfig`, `makeColumnSetting` in `packages/bedrock-ui/src/test/gridMocks.ts` and `renderWithGridProviders` in `packages/bedrock-ui/src/test/test-utils.tsx`. Migrated the 588-line engine test suite from MLBTracker into Bedrock's `DataGrid.test.tsx` with domain-agnostic fixtures.
+
+### For consumers
+
+- **CollectIt**:
+  - Remove local workarounds for Bedrock #55 (`confirmBulkDiscard`) and Bedrock #74 (`safe_load_dotenv`).
+  - Verify SQLite busy timeout resolves concurrent test runner flakes (`CollectIt#60`).
+- **MLBTracker**:
+  - Delete `MLBTracker/frontend/src/components/grids/DataGrid.test.tsx` (now covered upstream in Bedrock).
+  - Remove resolved entries 13, 14, 15 from `docs/reference/bedrock_issues_to_file.md`.
+
 ## v0.9.2
 
 ### Added — public grid layout and column metadata endpoints
