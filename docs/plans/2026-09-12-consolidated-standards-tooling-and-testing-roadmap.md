@@ -1911,9 +1911,15 @@ Remove-Item C:\Dev\CollectIt\docs\ebay_templates_csv -Force -ErrorAction Silentl
 
 - [ ] **Step 3: Relocate eBay import CSVs**
 
-Update hard-coded references to `\Templates` and `\Export` folders. Move to a configurable App Setting as defined in S004.
+Update hard-coded references to `\Templates`, `\Export`, and `docs\ebay_templates_csv` folders. Move to a configurable App Settings as defined in S004.
 
-Validate that `\ebay_templates_csv` is not referenced directly in CollectIt. If so, move to a configurable App Setting.
+Update `api/services/exporter/output.py` -> `exports_dir()`
+Update `api/services/listings/templates/py` -> `templates_dir()`
+Update `.gitattributes`
+Update `.github/workflows/ci.yml` -> `Templates` and `docs\ebay_templates_csv`
+Update `scripts/maintenance/generate_ebay_specs.py` -> `CSV_DIR = REPO_ROOT / "docs" / "ebay_templates_csv"`
+
+Validate no other hard-coded references to these paths.
 
 - [ ] **Step 4: Evict punchlists and archive to `scratch/`**
 
