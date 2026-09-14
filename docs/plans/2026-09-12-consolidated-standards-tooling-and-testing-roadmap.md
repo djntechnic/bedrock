@@ -1788,6 +1788,7 @@ Expected output: 100% empty.
 - Modify: `C:\Dev\bedrock\packages\bedrock-api\pyproject.toml`
 - Modify: `C:\Dev\bedrock\packages\bedrock-ui\package.json`
 - Modify: `C:\Dev\bedrock\CHANGELOG.md`
+- Modify: `C:\Dev\bedrock\README.md`
 
 **Interfaces:**
 
@@ -1795,14 +1796,15 @@ Expected output: 100% empty.
 
 - [ ] **Step 1: Bump version strings to `0.10.0` in both packages**
 - [ ] **Step 2: Add comprehensive CHANGELOG.md entry** documenting S001–S012, `bedrock.toml`, `run_qa.py`, and `bedrock.tools`.
-- [ ] **Step 3: Commit release bump**
+- [ ] **Step 3: Re-write README.md entry** removing any named domains, updating feature list, documenting adoption, highlighting standards and tools
+- [ ] **Step 4: Commit release bump**
 
 ```bash
 git -C C:\Dev\bedrock add packages/bedrock-api/pyproject.toml packages/bedrock-ui/package.json CHANGELOG.md
 git -C C:\Dev\bedrock commit -m "chore(release): prepare v0.10.0 platform release"
 ```
 
-- [ ] **Step 4: Merge to master and tag release**
+- [ ] **Step 5: Merge to master and tag release**
 
 ```bash
 git -C C:\Dev\bedrock checkout master
@@ -1812,6 +1814,8 @@ git -C C:\Dev\bedrock push origin master --tags
 ```
 
 Expected output: Tag `v0.10.0` pushed to GitHub remote.
+
+- [ ] **Step 6: Update GitHub release version and release notes**
 
 ---
 

@@ -16,7 +16,7 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException
 from pydantic import BaseModel
 
 from bedrock.core.database import db
-from bedrock.core.schema_catalog import Tables as T, Views as V
+from bedrock.core.schema_catalog import Tables as T
 from bedrock.core.diagnostics_registry import registered_checks
 from bedrock.schemas.base import ApiResponse
 from bedrock.dependencies import require_role

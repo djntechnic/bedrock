@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal, Any
 
-from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 
 from bedrock.dependencies import (

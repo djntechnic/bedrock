@@ -1,6 +1,12 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["packages/bedrock-ui/src/index.ts", "packages/bedrock-ui/src/styles/tokens.css"],
+  "entry": [
+    "packages/bedrock-ui/src/index.ts",
+    "packages/bedrock-ui/src/styles/tokens.css",
+    "packages/bedrock-ui/src/components/grids/cellRenderers.tsx",
+    "packages/bedrock-ui/src/components/grids/DataGrid.tsx",
+    "packages/bedrock-ui/src/hooks/useRowClickHandler.ts"
+  ],
   "project": ["packages/bedrock-ui/src/**/*.{ts,tsx}"],
   "ignore": ["packages/bedrock-ui/dist/**"],
   "ignoreExportsUsedInFile": true
