@@ -16,31 +16,37 @@ When drafting a release body, write the section as `## For consumers`, not
 nested form — the cascade workflow's extractor matches `^## For consumers`
 literally and fails the release's cascade job on a mismatch.
 
-## v0.10.0
+## v0.10.0 - 2026-09-14
 
-### Fixed — path normalization on Windows and domain vocabulary sanitization (#51)
+### Platform Standards Substrate
 
-`resolve_app_path` now runs `os.path.normpath` on all resolved paths, ensuring consistent path separators on Windows environments. The domain-specific fixture string in `test_paths.py` was purged and replaced with a domain-agnostic identifier.
+Authored platform standards §S001–§S012 in `docs/standards/`, each paired 1:1 with an enforcement tool in `bedrock.tools` (`audit_s001_duplicates` through `audit_s012_pins`), run together via `bedrock.tools.run_all`. `audit_s007_schema_catalog` pins schema documentation to `core/schema_catalog.py` as the single source of truth rather than letting hand-written schema docs drift from the tables. `audit_s012_pins` enforces dual-pin lockstep governance — `bedrock-api` and `@djntechnic/bedrock-ui` must resolve to the same release tag — and is now also the release-time gate consumed by `audit_release_version`.
 
-### Fixed — preserve injected database environment variables across load_dotenv (#74)
+### Declarative Configuration Substrate
 
-`safe_load_dotenv()` captures explicit environment variables (`SQLITE_DB_PATH`, `DATABASE_URL`, `BEDROCK_DATA_DIR`) prior to invoking `load_dotenv(override=True)` and restores them if `.env` values would clobber injected paths. Consumed in `config.py`, `logging.py`, and `oauth_service.py`.
+Added a `bedrock.toml` schema loader (`bedrock.tools._config`) that every `audit_s0*` module now sources exemptions and tunables from instead of hardcoding them. Consumer exemptions merge additively on top of a fixed platform baseline (`node_modules/`, `__pycache__/`, `.venv/`), so an application changes audit behavior by editing a settings file, not platform code.
 
-### Fixed — SQLite connection concurrency and busy timeout (CollectIt #60)
+### Unified QA Engine
 
-Configured default 30.0s SQLite busy timeout in `_create_sqlite_connection` and executed `PRAGMA busy_timeout = <ms>;` directly on connection establishment to eliminate writer contention across concurrent test suites.
+Added `scripts/run_qa.py`, a tri-tier orchestrator (`fast` / `scoped` / `full`) that replaces the "which command before I commit / before a PR / before merge" question with three fixed answers: `fast` runs testmon-scoped Pytest and `vitest related` against changed files (< 20s), `scoped` runs everything touched since `master` diverged in full (< 60s), and `full` runs the entire Pytest and Vitest workspace suite plus every platform audit, optionally with `vulture` and `knip` dead-code checks (2–3m). Output is buffered and rendered once at the end, so a clean run costs a handful of summary lines instead of a full test transcript.
 
-### Fixed — seed platform configuration keys in baseline and migration 008 (#50)
+### Documentation Taxonomy & Hygiene
 
-Seeded 11 system and diagnostic configuration keys into `app_config_settings` across `baseline.sql` and new migration `008_seed_platform_config_keys.sql`, ensuring all keys read via `db.get_config` are discoverable and editable in the Admin Config Editor.
+Consolidated `docs/` into the four-tier taxonomy defined by §S008 — `standards/` (non-negotiable contracts), `specs/` (in-flight design), `plans/` (step-by-step implementation), and loose `docs/<topic>.md` reference material — enforced by `audit_s008_guidance` and repaired automatically by `remediate_taxonomy_and_casing`, which stages Windows NTFS case-only renames through an intermediate path so a rename from `Foo.md` to `foo.md` doesn't collide with itself mid-operation.
 
-### Added — guarded discard dialog and custom interception to GridHeader (#55)
+### Database & Runtime Hardening
 
-Added `confirmBulkDiscard` (defaulting to true) and `onBeforeBulkDiscard` props to `<GridHeader>` and `<DataGrid>`, presenting an `AlertDialog` confirmation prompt prior to destroying staged edits. Consumers can supply custom discard handlers or guard routines.
+- **Path normalization on Windows**: `resolve_app_path` now runs `os.path.normpath` on all resolved paths, ensuring consistent path separators on Windows environments. The domain-specific fixture string in `test_paths.py` was purged and replaced with a domain-agnostic identifier (#51).
+- **SQLite concurrency and busy timeout**: Configured a default 30.0s SQLite busy timeout in `_create_sqlite_connection` and executed `PRAGMA busy_timeout = <ms>;` directly on connection establishment to eliminate writer contention across concurrent test suites (CollectIt #60).
+- **`safe_load_dotenv` injected database preservation**: `safe_load_dotenv()` captures explicit environment variables (`SQLITE_DB_PATH`, `DATABASE_URL`, `BEDROCK_DATA_DIR`) prior to invoking `load_dotenv(override=True)` and restores them if `.env` values would clobber injected paths. Consumed in `config.py`, `logging.py`, and `oauth_service.py` (#74).
+- **Platform config key seeding**: Seeded 11 system and diagnostic configuration keys into `app_config_settings` across `baseline.sql` and new migration `008_seed_platform_config_keys.sql`, ensuring every key read via `db.get_config` is discoverable and editable in the Admin Config Editor (#50).
+- **`auth_user_module_overrides` tri-state correction**: Fixed a schema/service discrepancy in `list_user_overrides` so the tri-state per-user capability override (`NULL` = inherit, `1` = grant, `0` = deny) reads back correctly instead of collapsing the inherit state.
 
-### Added — DataGrid render-level test harness and engine test migration (#49, MLBTracker #387)
+### Frontend Primitives & Harness
 
-Established shared mock factories `makeGridConfig`, `makeColumnSetting` in `packages/bedrock-ui/src/test/gridMocks.ts` and `renderWithGridProviders` in `packages/bedrock-ui/src/test/test-utils.tsx`. Migrated the 588-line engine test suite from MLBTracker into Bedrock's `DataGrid.test.tsx` with domain-agnostic fixtures.
+- **DataGrid render-level test harness**: Established shared mock factories `makeGridConfig`, `makeColumnSetting` in `packages/bedrock-ui/src/test/gridMocks.ts` and `renderWithGridProviders` in `packages/bedrock-ui/src/test/test-utils.tsx`. Migrated the 588-line engine test suite from MLBTracker into Bedrock's `DataGrid.test.tsx` with domain-agnostic fixtures (#49, MLBTracker #387).
+- **GridHeader discard confirmation dialog**: Added `confirmBulkDiscard` (defaulting to true) and `onBeforeBulkDiscard` props to `<GridHeader>` and `<DataGrid>`, presenting an `AlertDialog` confirmation prompt prior to destroying staged edits. Consumers can supply custom discard handlers or guard routines (#55).
+- **Normalized semantic design tokens**: Remediated §S001/§S009 duplication between hardcoded design-token values and formatter utilities so both routes resolve through the same token/formatter surface.
 
 ### For consumers
 

@@ -11,8 +11,8 @@ of it.
 
 | Package | Version | Scope |
 | --- | --- | --- |
-| `packages/bedrock-api` | v0.9.2 | FastAPI application platform: grid config, auth/RBAC, schema catalog, migrations, health, media, storage providers, ecosystem standards audits (`bedrock.tools`) |
-| `packages/bedrock-ui` | v0.9.2 | Reusable React UI platform: DataGrid engine, admin Grid Editor, auth shell, navigation rail, design tokens, command palette |
+| `packages/bedrock-api` | v0.10.0 | FastAPI application platform: grid config, auth/RBAC, schema catalog, migrations, health, media, storage providers, ecosystem standards audits (`bedrock.tools`) |
+| `packages/bedrock-ui` | v0.10.0 | Reusable React UI platform: DataGrid engine, admin Grid Editor, auth shell, navigation rail, design tokens, command palette |
 
 ## Assembling an application
 
@@ -113,6 +113,20 @@ python -m bedrock.tools.audit_s011_navigation --root .
 python -m bedrock.tools.audit_s012_pins --root .
 ```
 
+Behavior for every audit is declared in `bedrock.toml`, not hardcoded — a
+consumer changes exemptions or tunables by editing that file, not platform
+code. Exemptions merge additively on top of a fixed platform baseline
+(`node_modules/`, `__pycache__/`, `.venv/`).
+
+`scripts/run_qa.py` is the unified pre-commit / pre-PR / pre-merge entry
+point, replacing per-command guessing with three fixed tiers:
+
+```bash
+python scripts/run_qa.py --mode fast    # delta only — before every commit
+python scripts/run_qa.py --mode scoped  # everything touched since master — before a PR
+python scripts/run_qa.py --mode full    # entire suite + every platform audit — pre-merge / CI
+```
+
 ## Deployment
 
 `deploy/` holds the image, compose and nginx templates an application copies,
@@ -138,11 +152,11 @@ npm run build
 Both packages move together in lockstep:
 
 ```
-bedrock-api @ git+https://github.com/djntechnic/bedrock.git@v0.9.2#subdirectory=packages/bedrock-api
+bedrock-api @ git+https://github.com/djntechnic/bedrock.git@v0.10.0#subdirectory=packages/bedrock-api
 ```
 
 ```json
-"@djntechnic/bedrock-ui": "github:djntechnic/bedrock#v0.9.2"
+"@djntechnic/bedrock-ui": "github:djntechnic/bedrock#v0.10.0"
 ```
 
 Git tags rather than a package registry: real version pinning, dual-pin lockstep governance (§S012), and zero publishing infrastructure.

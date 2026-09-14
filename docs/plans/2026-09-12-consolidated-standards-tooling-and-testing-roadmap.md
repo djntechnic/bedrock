@@ -1794,9 +1794,9 @@ Expected output: 100% empty.
 
 - Produces: Official release tag `v0.10.0` published on remote GitHub origin.
 
-- [ ] **Step 1: Bump version strings to `0.10.0` in both packages**
-- [ ] **Step 2: Add comprehensive CHANGELOG.md entry** documenting S001–S012, `bedrock.toml`, `run_qa.py`, and `bedrock.tools`.
-- [ ] **Step 3: Re-write README.md entry** removing any named domains, updating feature list, documenting adoption, highlighting standards and tools
+- [x] **Step 1: Bump version strings to `0.10.0` in both packages**
+- [x] **Step 2: Add comprehensive CHANGELOG.md entry** documenting S001–S012, `bedrock.toml`, `run_qa.py`, and `bedrock.tools`.
+- [x] **Step 3: Re-write README.md entry** removing any named domains, updating feature list, documenting adoption, highlighting standards and tools
 - [ ] **Step 4: Commit release bump**
 
 ```bash
