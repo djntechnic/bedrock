@@ -388,7 +388,7 @@ git commit -m "feat(grids): add discard confirmation dialog and custom intercept
 - Consumes: `DataGrid`, `useGridConfig`, `buildGridConfig`
 - Produces: Complete upstream test coverage for `<DataGrid>` rendering, row key enforcement, column selection, pagination, and sorting.
 
-- [ ] **Step 1: Create test utilities and mock factories**
+- [x] **Step 1: Create test utilities and mock factories**
 
 In `packages/bedrock-ui/src/test/gridMocks.ts`:
 - Create `makeGridConfig(overrides: Partial<GridConfig>): GridConfig`
@@ -397,7 +397,7 @@ In `packages/bedrock-ui/src/test/gridMocks.ts`:
 In `packages/bedrock-ui/src/test/test-utils.tsx`:
 - Create `renderWithGridProviders(ui: React.ReactElement)` wrapping `QueryClientProvider` and `MemoryRouter`, and polyfilling `ResizeObserver`, `offsetHeight`, `offsetWidth`.
 
-- [ ] **Step 2: Add engine tests to `DataGrid.test.tsx`**
+- [x] **Step 2: Add engine tests to `DataGrid.test.tsx`**
 
 Port the engine test suites from MLBTracker into `packages/bedrock-ui/src/components/grids/DataGrid.test.tsx`:
 - Throws error if `rowKeyColumn` is missing/null.
@@ -407,15 +407,15 @@ Port the engine test suites from MLBTracker into `packages/bedrock-ui/src/compon
 - Density toggle switches table padding.
 - Column visibility toggling hides/shows headers and cells.
 
-- [ ] **Step 3: Run tests to verify they pass**
+- [x] **Step 3: Run tests to verify they pass**
 
 Run: `npx vitest run packages/bedrock-ui/src/components/grids/DataGrid.test.tsx`
 Expected: All tests pass.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
-git add packages/bedrock-ui/src/test/gridMocks.ts packages/bedrock-ui/src/test/test-utils.tsx packages/bedrock-ui/src/components/grids/DataGrid.test.tsx
+git add packages/bedrock-ui/src/test/gridMocks.ts packages/bedrock-ui/src/test/test-utils.tsx packages/bedrock-ui/src/components/grids/DataGrid.test.tsx docs/plans/2026-09-13-platform-remediation-v0-10-0.md
 git commit -m "test(grids): establish DataGrid render-level test harness and migrate engine test suite (bedrock#49)"
 ```
 
