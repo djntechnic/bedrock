@@ -359,6 +359,21 @@ export interface DataGridProps<T extends Record<string, any>> {
     drafts: Record<string, Record<string, unknown>>,
   ) => void | Promise<void>;
   /**
+   * Bedrock #55: Custom handler called when bulk drafts are discarded.
+   * When supplied, replaces the internal setBulkDrafts({}) action.
+   */
+  onBulkDiscard?: () => void | Promise<void>;
+  /**
+   * Bedrock #55: Whether to prompt for confirmation before discarding bulk drafts.
+   * Defaults to true to protect against accidental destruction of staged edits.
+   */
+  confirmBulkDiscard?: boolean;
+  /**
+   * Bedrock #55: Optional hook called prior to executing the discard action.
+   * If it resolves or returns false, the discard action is aborted.
+   */
+  onBeforeBulkDiscard?: () => boolean | Promise<boolean>;
+  /**
    * Phase 10 B3: force the Save/Discard bar visible even when the engine
    * draft store is empty. Use when the consumer maintains its own row-
    * level overlay (add/delete rows, cascading dropdowns) that the engine
@@ -484,6 +499,9 @@ export default function DataGrid<T extends Record<string, any>>({
   rowClassNameFor,
   onCellCommit,
   onBulkCommit,
+  onBulkDiscard,
+  confirmBulkDiscard,
+  onBeforeBulkDiscard,
   bulkDirtyOverride = false,
   draftsOverride,
   renderSubRow,
@@ -572,7 +590,13 @@ export default function DataGrid<T extends Record<string, any>>({
     },
     [setBulkDrafts],
   );
-  const discardBulkDrafts = useCallback(() => setBulkDrafts({}), [setBulkDrafts]);
+  const discardBulkDrafts = useCallback(async () => {
+    if (onBulkDiscard) {
+      await onBulkDiscard();
+    } else {
+      setBulkDrafts({});
+    }
+  }, [onBulkDiscard, setBulkDrafts]);
   const bulkDirtyEngine = isDirty(bulkDrafts);
   const bulkDirty = bulkDirtyEngine || bulkDirtyOverride;
   const saveBulkDrafts = useCallback(async () => {
@@ -1710,6 +1734,8 @@ export default function DataGrid<T extends Record<string, any>>({
           bulkSaving={bulkSaving}
           onBulkSave={bulkMode ? saveBulkDrafts : undefined}
           onBulkDiscard={bulkMode ? discardBulkDrafts : undefined}
+          confirmBulkDiscard={confirmBulkDiscard}
+          onBeforeBulkDiscard={onBeforeBulkDiscard}
           dashboardPin={showDashboardPinButton ? dashboardPin : undefined}
           onDashboardPinToggle={
             showDashboardPinButton ? () => setDashboardPin(!dashboardPin) : undefined
@@ -1811,6 +1837,8 @@ export default function DataGrid<T extends Record<string, any>>({
             bulkSaving={bulkSaving}
             onBulkSave={bulkMode ? saveBulkDrafts : undefined}
             onBulkDiscard={bulkMode ? discardBulkDrafts : undefined}
+            confirmBulkDiscard={confirmBulkDiscard}
+            onBeforeBulkDiscard={onBeforeBulkDiscard}
             dashboardPin={showDashboardPinButton ? dashboardPin : undefined}
             onDashboardPinToggle={
               showDashboardPinButton ? () => setDashboardPin(!dashboardPin) : undefined

@@ -288,7 +288,7 @@ git commit -m "feat(schema): seed platform config keys in baseline and migration
 - Consumes: `onBulkDiscard?: () => void | Promise<void>`, `confirmBulkDiscard?: boolean`, `onBeforeBulkDiscard?: () => boolean | Promise<boolean>`
 - Produces: Guarded Discard button in `<GridHeader>` opening an `AlertDialog` before destroying staged edits.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `packages/bedrock-ui/src/components/grids/GridHeaderDiscard.test.tsx`:
 
@@ -343,12 +343,12 @@ describe("GridHeader Discard Guarding", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `npx vitest run packages/bedrock-ui/src/components/grids/GridHeaderDiscard.test.tsx`
 Expected: FAIL (`confirmBulkDiscard` prop not implemented and dialog does not open).
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 1. In `packages/bedrock-ui/src/components/grids/GridHeader.tsx`:
    - Import `AlertDialog`, `AlertDialogContent`, `AlertDialogHeader`, `AlertDialogTitle`, `AlertDialogDescription`, `AlertDialogFooter`, `AlertDialogCancel`, `AlertDialogAction` from `../ui/alert-dialog`.
@@ -363,12 +363,12 @@ Expected: FAIL (`confirmBulkDiscard` prop not implemented and dialog does not op
    - Forward `confirmBulkDiscard={props.confirmBulkDiscard ?? true}`.
    - Forward `onBeforeBulkDiscard={props.onBeforeBulkDiscard}`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `npx vitest run packages/bedrock-ui/src/components/grids/GridHeaderDiscard.test.tsx`
 Expected: 2 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/bedrock-ui/src/components/grids/GridHeader.tsx packages/bedrock-ui/src/components/grids/DataGrid.tsx packages/bedrock-ui/src/components/grids/GridHeaderDiscard.test.tsx
