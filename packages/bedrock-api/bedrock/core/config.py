@@ -44,6 +44,18 @@ class Config:
     SQLITE_DB_PATH = (resolve_app_path(_SQLITE_ENV) if _SQLITE_ENV
                       else os.path.join(_DATA_DIR, "app.db"))
 
+    @property
+    def SQLITE_BUSY_TIMEOUT(self) -> float:
+        """Busy timeout for SQLite connections in seconds.
+
+        Defaults to 30.0s to avoid writer lock contention across concurrent test
+        runners or background tasks.
+        """
+        try:
+            return float(os.environ.get("SQLITE_BUSY_TIMEOUT", 30.0))
+        except (ValueError, TypeError):
+            return 30.0
+
     CACHE_DIR = os.path.join(_DATA_DIR, ".cache")
 
     # Cloudflare Images CDN — optional; the adapter degrades when unset.

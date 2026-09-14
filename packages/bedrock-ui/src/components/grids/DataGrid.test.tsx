@@ -790,7 +790,7 @@ describe("DataGrid — Phase 3 §S9 grid style tokens", () => {
   it("tints a row with accent border when rowAccentReactive is on and resolver matches", () => {
     registerRowAccentResolver(() => (row) => {
       if (row.category === "special") {
-        return { borderLeftColor: "#ff0000" };
+        return { borderLeftColor: "var(--primary)" };
       }
       return undefined;
     });
@@ -806,7 +806,7 @@ describe("DataGrid — Phase 3 §S9 grid style tokens", () => {
   });
 
   it("does not tint a row when rowAccentReactive is off", () => {
-    registerRowAccentResolver(() => () => ({ borderLeftColor: "#ff0000" }));
+    registerRowAccentResolver(() => () => ({ borderLeftColor: "var(--primary)" }));
     seedConfig({ rowAccentReactive: false });
     const { container } = renderWithGridProviders(
       <DataGrid gridId="grid_accent_off" rows={[{ id: 1, name: "A" }]} />,

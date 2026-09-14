@@ -182,7 +182,7 @@ class DatabaseManager:
             TABLE commits on the spot and survives a later rollback — which for
             a schema migration is the entire failure mode being guarded against.
         """
-        timeout_sec = float(os.environ.get("SQLITE_BUSY_TIMEOUT", 30.0))
+        timeout_sec = config.SQLITE_BUSY_TIMEOUT
         conn = sqlite3.connect(
             self.sqlite_path,
             timeout=timeout_sec,
