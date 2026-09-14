@@ -192,3 +192,28 @@ def test_sanitize_replaces_nan_and_inf_with_none():
     rows = [{"a": float("nan"), "b": float("inf"), "c": 1.5, "d": "keep"}]
     out = _sanitize(rows)
     assert out == [{"a": None, "b": None, "c": 1.5, "d": "keep"}]
+
+
+def test_platform_config_keys_seeded():
+    """Bedrock #50: Platform config keys must be seeded and visible in admin console."""
+    expected_keys = [
+        "rate_limit_login",
+        "rate_limit_register",
+        "rate_limit_oauth_callback",
+        "rate_limit_password_reset",
+        "mail_from_address",
+        "mail_from_name",
+        "system_base_url",
+        "seo_allow_indexing",
+        "diagnostics_retention_days",
+        "diagnostics_schedule_enabled",
+        "diagnostics_schedule_time",
+    ]
+    df = db.query(
+        f"SELECT key FROM app_config_settings WHERE key IN ({','.join(['%s']*len(expected_keys))})",
+        tuple(expected_keys),
+    )
+    found = set(df["key"].tolist()) if not df.empty else set()
+    missing = set(expected_keys) - found
+    assert not missing, f"Missing seeded platform config keys: {missing}"
+

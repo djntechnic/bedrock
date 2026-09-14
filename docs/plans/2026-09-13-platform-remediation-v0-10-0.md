@@ -230,7 +230,7 @@ git commit -m "fix(database): configure sqlite busy timeout to eliminate concurr
 - Consumes: `app_config_settings` table
 - Produces: 11 seeded platform settings rows discoverable in Admin UI (`category='system'`, `'diagnostics'`).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 In `packages/bedrock-api/tests/test_admin_config_service.py`, add a test verifying platform config keys exist:
 
@@ -238,29 +238,17 @@ In `packages/bedrock-api/tests/test_admin_config_service.py`, add a test verifyi
 def test_platform_default_config_keys_are_seeded():
     expected_keys = [
         "rate_limit_login",
-        "rate_limit_register",
-        "rate_limit_oauth_callback",
-        "rate_limit_password_reset",
-        "mail_from_address",
-        "mail_from_name",
-        "system_base_url",
-        "seo_allow_indexing",
-        "diagnostics_retention_days",
-        "diagnostics_schedule_enabled",
-        "diagnostics_schedule_time",
+        ...
     ]
-    df = db.query("SELECT key FROM app_config_settings WHERE key IN (" + ",".join([f"'{k}'" for k in expected_keys]) + ")")
-    found = set(df["key"].tolist()) if not df.empty else set()
-    missing = set(expected_keys) - found
-    assert not missing, f"Missing seeded config keys: {missing}"
+    ...
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pytest packages/bedrock-api/tests/test_admin_config_service.py -k test_platform_default_config_keys_are_seeded -v`
 Expected: FAIL with missing seeded keys.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Create `packages/bedrock-api/bedrock/schema/migrations/008_seed_platform_config_keys.sql`:
 
@@ -270,26 +258,17 @@ Create `packages/bedrock-api/bedrock/schema/migrations/008_seed_platform_config_
 
 INSERT OR IGNORE INTO app_config_settings (key, value, value_type, description, category) VALUES
     ('rate_limit_login', '10/minute', 'string', 'Rate limit for user login attempts', 'system'),
-    ('rate_limit_register', '5/minute', 'string', 'Rate limit for account registration', 'system'),
-    ('rate_limit_oauth_callback', '10/minute', 'string', 'Rate limit for OAuth callback handshakes', 'system'),
-    ('rate_limit_password_reset', '5/hour', 'string', 'Rate limit for password reset requests', 'system'),
-    ('mail_from_address', '', 'string', 'Default From email address for transactional emails', 'system'),
-    ('mail_from_name', '', 'string', 'Default From display name for transactional emails', 'system'),
-    ('system_base_url', '', 'string', 'Public base URL of the application for link generation', 'system'),
-    ('seo_allow_indexing', 'true', 'boolean', 'Allow search engine web crawlers to index public pages', 'system'),
-    ('diagnostics_retention_days', '60', 'integer', 'Number of days to retain diagnostic test execution history', 'diagnostics'),
-    ('diagnostics_schedule_enabled', 'false', 'boolean', 'Whether daily automated diagnostic checks are enabled', 'diagnostics'),
-    ('diagnostics_schedule_time', '02:00', 'string', 'Daily scheduled time (HH:MM UTC) for automated diagnostic checks', 'diagnostics');
+    ...
 ```
 
 Add these same `INSERT OR IGNORE` seed rows to `packages/bedrock-api/bedrock/schema/baseline.sql` right after `CREATE TABLE IF NOT EXISTS app_config_settings`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pytest packages/bedrock-api/tests/test_admin_config_service.py -k test_platform_default_config_keys_are_seeded -v`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/bedrock-api/bedrock/schema/baseline.sql packages/bedrock-api/bedrock/schema/migrations/008_seed_platform_config_keys.sql packages/bedrock-api/tests/test_admin_config_service.py
