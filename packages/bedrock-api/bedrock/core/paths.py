@@ -22,6 +22,26 @@ from __future__ import annotations
 
 import os
 from typing import Final
+from dotenv import load_dotenv
+
+_PRESERVED_ENV_KEYS: Final = ("SQLITE_DB_PATH", "DATABASE_URL", "BEDROCK_DATA_DIR")
+
+
+def safe_load_dotenv(dotenv_path: str | None = None) -> None:
+    """Load .env while preserving explicitly injected database target settings.
+
+    `override=True` ensures local checkout .env values override ambient shell
+    variables. However, if a caller (test harness or CLI override) explicitly set
+    SQLITE_DB_PATH, DATABASE_URL, or BEDROCK_DATA_DIR beforehand, those specific
+    injected values are preserved.
+    """
+    target = dotenv_path or app_path(".env")
+    pre = {k: os.environ[k] for k in _PRESERVED_ENV_KEYS if k in os.environ}
+    load_dotenv(target, override=True)
+    for k, original in pre.items():
+        if os.environ.get(k) != original:
+            os.environ[k] = original
+
 
 #: Absolute path to the consuming application's root directory.
 APP_ROOT: Final[str] = os.path.abspath(

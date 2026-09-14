@@ -35,13 +35,11 @@ GOOGLE_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
 _DEFAULT_SCOPES = ["openid", "email", "profile"]
 
 
-from dotenv import load_dotenv
-
-from bedrock.core.paths import app_path
+from bedrock.core.paths import app_path, safe_load_dotenv
 
 # OAuth client secrets live in the application's .env, not in a directory
 # derived from this file — see bedrock.core.paths for why.
-load_dotenv(app_path(".env"), override=True)
+safe_load_dotenv()
 
 
 def _cfg(key: str, default: str | None = None) -> str | None:

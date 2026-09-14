@@ -157,3 +157,23 @@ def test_explicit_repo_root_overrides_auto_detection(tmp_path: Path):
     )
     cfg = load_bedrock_config(tmp_path)
     assert cfg.schema_catalog == Path("custom/path.py")
+
+
+def test_dotenv_preserves_injected_db(monkeypatch, tmp_path):
+    """Bedrock #74: load_dotenv must not overwrite an explicitly injected SQLITE_DB_PATH."""
+    import importlib
+    import os
+    env_file = tmp_path / ".env"
+    env_file.write_text("SQLITE_DB_PATH=data/production.db\n", encoding="utf-8")
+
+    monkeypatch.setenv("BEDROCK_APP_ROOT", str(tmp_path))
+    monkeypatch.setenv("SQLITE_DB_PATH", "data/scratch.db")
+
+    import bedrock.core.paths as paths
+    import bedrock.core.config as config
+    paths = importlib.reload(paths)
+    config = importlib.reload(config)
+
+    expected = os.path.normpath(os.path.join(str(tmp_path), "data", "scratch.db"))
+    assert config.config.SQLITE_DB_PATH == expected
+

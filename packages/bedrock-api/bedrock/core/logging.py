@@ -7,16 +7,14 @@ import os
 import sys
 import logging
 from loguru import logger
-from dotenv import load_dotenv
-
-from bedrock.core.paths import APP_ROOT, app_path
+from bedrock.core.paths import APP_ROOT, app_path, safe_load_dotenv
 
 # Ensure environment variables from .env are loaded before initialization.
 # `bedrock.core.config` does this too, but logging is deliberately importable
 # without pulling in the database layer, so it repeats the load rather than
 # depending on import order.
 project_root = APP_ROOT
-load_dotenv(app_path(".env"), override=True)
+safe_load_dotenv()
 
 def _backend_log_format(show_source: bool) -> str:
     """

@@ -14,14 +14,11 @@ Desc:    Environment and filesystem configuration for a bedrock application.
 """
 import os
 
-from dotenv import load_dotenv
+from bedrock.core.paths import APP_ROOT, app_path, resolve_app_path, safe_load_dotenv
 
-from bedrock.core.paths import APP_ROOT, app_path, resolve_app_path
-
-# Load the application's .env before any setting below is read. `override=True`
-# means the file wins over an inherited environment, which is what makes a
-# checkout's .env authoritative during local development.
-load_dotenv(app_path(".env"), override=True)
+# Load the application's .env before any setting below is read, while
+# preserving explicitly injected database target settings.
+safe_load_dotenv()
 
 _DATA_DIR = resolve_app_path(os.environ.get("BEDROCK_DATA_DIR"), "data")
 _SQLITE_ENV = os.environ.get("SQLITE_DB_PATH")

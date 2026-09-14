@@ -98,7 +98,7 @@ git commit -m "fix(paths): normalize separators on Windows and purge domain fixt
 - Consumes: `os.environ.get("SQLITE_DB_PATH")`, `os.environ.get("DATABASE_URL")`, `os.environ.get("BEDROCK_DATA_DIR")`
 - Produces: Guaranteed retention of command-line/test-injected database target over `.env` default.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add `test_injected_sqlite_path_survives_dotenv_override` in `packages/bedrock-api/tests/test_paths.py`:
 
@@ -117,12 +117,12 @@ Add `test_injected_sqlite_path_survives_dotenv_override` in `packages/bedrock-ap
         assert config.config.SQLITE_DB_PATH == expected
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pytest packages/bedrock-api/tests/test_paths.py::TestSqlitePath::test_injected_sqlite_path_survives_dotenv_override -v`
 Expected: FAIL with `AssertionError: .../data/production_app.db != .../data/test_injected.db`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 In `packages/bedrock-api/bedrock/core/config.py`:
 Capture injected variables before `load_dotenv(override=True)` and restore if overridden:
@@ -143,12 +143,12 @@ _SQLITE_ENV = os.environ.get("SQLITE_DB_PATH")
 
 Apply the same environment protection in `packages/bedrock-api/bedrock/core/logging.py` and `packages/bedrock-api/bedrock/services/oauth_service.py`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pytest packages/bedrock-api/tests/test_paths.py::TestSqlitePath::test_injected_sqlite_path_survives_dotenv_override -v`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/bedrock-api/bedrock/core/config.py packages/bedrock-api/bedrock/core/logging.py packages/bedrock-api/bedrock/services/oauth_service.py packages/bedrock-api/tests/test_paths.py
