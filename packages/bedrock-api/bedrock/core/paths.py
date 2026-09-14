@@ -52,5 +52,5 @@ def resolve_app_path(value: str | None, *default_parts: str) -> str:
     :returns: An absolute path.
     """
     if not value:
-        return app_path(*default_parts)
-    return value if os.path.isabs(value) else app_path(value)
+        return os.path.normpath(app_path(*default_parts))
+    return os.path.normpath(value if os.path.isabs(value) else app_path(value))

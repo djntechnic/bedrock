@@ -32,7 +32,7 @@
 - Consumes: `bedrock.core.paths.resolve_app_path(value, *default_parts)`
 - Produces: Normalized absolute path string with OS-native path separators (`\` on Windows, `/` on POSIX).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Update `packages/bedrock-api/tests/test_paths.py` to assert that `resolve_app_path` yields normalized OS separators on relative paths containing forward slashes, and replace `"data/mlbtracker.db"` with `"data/test.db"`:
 
@@ -44,12 +44,12 @@ Update `packages/bedrock-api/tests/test_paths.py` to assert that `resolve_app_pa
         assert config.config.SQLITE_DB_PATH == expected
 ```
 
-- [ ] **Step 2: Run test to verify failure / separator behavior**
+- [x] **Step 2: Run test to verify failure / separator behavior**
 
 Run: `pytest packages/bedrock-api/tests/test_paths.py::TestSqlitePath::test_env_override_is_honoured -v`
 Expected: Passes or fails depending on slash matching, but confirms whether forward slashes survive unnormalized.
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 In `packages/bedrock-api/bedrock/core/paths.py`, wrap `resolve_app_path` in `os.path.normpath`:
 
@@ -72,12 +72,12 @@ def resolve_app_path(value: str | None, *default_parts: str) -> str:
     return os.path.normpath(value if os.path.isabs(value) else app_path(value))
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pytest packages/bedrock-api/tests/test_paths.py -v`
 Expected: 18 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/bedrock-api/bedrock/core/paths.py packages/bedrock-api/tests/test_paths.py
