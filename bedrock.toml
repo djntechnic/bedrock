@@ -4,6 +4,8 @@ grids_dir = "packages/bedrock-ui/src/components/DataGrid"
 
 [tool.bedrock.audit.s001]
 exemptions = [
+    ".agents/**",
+    ".claude/**",
   "dist/**",
   "packages/bedrock-ui/dist/**",
   # This repo is the platform source, not a consumer: everything under
