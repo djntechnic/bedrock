@@ -84,6 +84,27 @@ def test_s005_returns_two_on_missing_bedrock_toml(tmp_path: Path):
     assert audit_s005_testing.main(["--root", str(tmp_path)]) == 2
 
 
+def test_s005_ignores_venv_and_site_packages(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s005]\nexemptions = []\n")
+    # Synthetic route under .venv/site-packages should not trigger missing paired test
+    _write(
+        tmp_path / ".venv" / "lib" / "site-packages" / "routes" / "third_party.py",
+        "def get(): ...\n",
+    )
+    # Synthetic test with skip under .venv should not trigger unexempted skip
+    _write(
+        tmp_path / ".venv" / "lib" / "site-packages" / "tests" / "test_pkg.py",
+        "import pytest\n@pytest.mark.skip(reason='dep')\ndef test_pkg(): ...\n",
+    )
+    # Synthetic test with live db name under node_modules or .venv should not trigger live db violation
+    _write(
+        tmp_path / ".venv" / "lib" / "site-packages" / "tests" / "test_db.py",
+        "def test_db(): connect('app.db')\n",
+    )
+
+    assert audit_s005_testing.main(["--root", str(tmp_path)]) == 0
+
+
 # ---------------------------------------------------------------------------
 # audit_s006_pr_workflow
 # ---------------------------------------------------------------------------

@@ -23,11 +23,23 @@ if sys.version_info >= (3, 11):
 else:  # pragma: no cover - project requires Python 3.11+
     import tomli as tomllib
 
+DEFAULT_IGNORED_DIRS: frozenset[str] = frozenset(
+    {
+        ".venv",
+        "node_modules",
+        "dist",
+        "build",
+        "__pycache__",
+        ".git",
+        ".pytest_cache",
+        ".agents",
+        ".claude",
+    }
+)
+
 # Paths every audit tool ignores regardless of what a consumer declares.
-_PLATFORM_BASELINE_EXEMPTIONS: tuple[str, ...] = (
-    "**/node_modules/**",
-    "**/__pycache__/**",
-    "**/.venv/**",
+_PLATFORM_BASELINE_EXEMPTIONS: tuple[str, ...] = tuple(
+    f"**/{d}/**" for d in sorted(DEFAULT_IGNORED_DIRS)
 )
 
 _AUDIT_SECTIONS: tuple[str, ...] = tuple(f"s{i:03d}" for i in range(1, 13))

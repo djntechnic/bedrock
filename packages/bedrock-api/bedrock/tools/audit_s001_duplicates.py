@@ -23,7 +23,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from bedrock.tools._config import load_bedrock_config
+from bedrock.tools._config import DEFAULT_IGNORED_DIRS, load_bedrock_config
 from bedrock.tools._reporter import AuditReporter
 
 #: Tests compose the very names they exercise; a fixture named `Button`
@@ -120,10 +120,9 @@ def find_primitive_violations(root: Path, exemptions: list[str]) -> list[Primiti
     return violations
 
 
-_EXCLUDED_DIR_NAMES = frozenset({"node_modules", "dist", "build", ".venv", "__pycache__"})
-
-
 def _is_exempt(rel_path: str, exemptions: list[str]) -> bool:
+    if any(part in DEFAULT_IGNORED_DIRS for part in Path(rel_path).parts):
+        return True
     if any(fnmatch.fnmatch(rel_path, pattern) for pattern in exemptions):
         return True
     return any(part in exemptions for part in Path(rel_path).parts)
@@ -138,7 +137,7 @@ def _source_files(root: Path) -> list[Path]:
         if path.suffix in {".ts", ".tsx"}
         and not path.name.endswith(_TEST_SUFFIXES)
         and not path.name.endswith(".d.ts")
-        and not any(part in _EXCLUDED_DIR_NAMES for part in path.parts)
+        and not any(part in DEFAULT_IGNORED_DIRS for part in path.parts)
     )
 
 

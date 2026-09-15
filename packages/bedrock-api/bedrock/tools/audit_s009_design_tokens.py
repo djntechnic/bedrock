@@ -27,7 +27,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from bedrock.tools._config import load_bedrock_config
+from bedrock.tools._config import DEFAULT_IGNORED_DIRS, load_bedrock_config
 from bedrock.tools._reporter import AuditReporter
 
 _HEX_LITERAL = re.compile(r"#(?:[0-9a-fA-F]{3,4}){1,2}\b")
@@ -56,7 +56,6 @@ _COLOR_VAR_NAME = re.compile(
 )
 
 _SOURCE_SUFFIXES = {".ts", ".tsx", ".css"}
-_EXCLUDED_DIR_NAMES = frozenset({"node_modules", "dist", "build", ".venv", "__pycache__"})
 
 
 @dataclass
@@ -67,6 +66,8 @@ class TokenViolation:
 
 
 def _is_exempt(value: str, exemptions: list[str]) -> bool:
+    if any(part in DEFAULT_IGNORED_DIRS for part in Path(value).parts):
+        return True
     return any(fnmatch.fnmatch(value, pattern) for pattern in exemptions)
 
 
@@ -78,7 +79,7 @@ def _source_files(root: Path) -> list[Path]:
         for path in root.rglob("*")
         if path.suffix in _SOURCE_SUFFIXES
         and not path.name.endswith(".d.ts")
-        and not any(part in _EXCLUDED_DIR_NAMES for part in path.parts)
+        and not any(part in DEFAULT_IGNORED_DIRS for part in path.parts)
     )
 
 
@@ -169,7 +170,9 @@ def audit(
     root: Path, theme_palette: str, exemptions: list[str]
 ) -> list[TokenViolation]:
     tokens_css_paths = {
-        p.relative_to(root).as_posix() for p in root.rglob("tokens.css")
+        p.relative_to(root).as_posix()
+        for p in root.rglob("tokens.css")
+        if not any(part in DEFAULT_IGNORED_DIRS for part in p.parts)
     }
     return (
         _check_raw_literals(root, tokens_css_paths, theme_palette, exemptions)

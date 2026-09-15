@@ -22,7 +22,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from bedrock.tools._config import load_bedrock_config
+from bedrock.tools._config import DEFAULT_IGNORED_DIRS, load_bedrock_config
 from bedrock.tools._reporter import AuditReporter
 
 _TEST_SUFFIXES = (".test.ts", ".test.tsx", ".spec.ts", ".spec.tsx")
@@ -156,6 +156,8 @@ def _top_level_array_keys(obj_text: str) -> dict[str, bool]:
 
 
 def _is_exempt(rel_path: str, exemptions: list[str]) -> bool:
+    if any(part in DEFAULT_IGNORED_DIRS for part in Path(rel_path).parts):
+        return True
     return any(fnmatch.fnmatch(rel_path, pattern) for pattern in exemptions)
 
 
@@ -165,7 +167,9 @@ def _source_files(root: Path) -> list[Path]:
     return sorted(
         path
         for path in root.rglob("*")
-        if path.suffix in {".tsx"} and not path.name.endswith(_TEST_SUFFIXES)
+        if path.suffix in {".tsx"}
+        and not path.name.endswith(_TEST_SUFFIXES)
+        and not any(part in DEFAULT_IGNORED_DIRS for part in path.parts)
     )
 
 
@@ -175,14 +179,20 @@ def _ts_files(root: Path) -> list[Path]:
     return sorted(
         path
         for path in root.rglob("*")
-        if path.suffix in {".ts", ".tsx"} and not path.name.endswith(_TEST_SUFFIXES)
+        if path.suffix in {".ts", ".tsx"}
+        and not path.name.endswith(_TEST_SUFFIXES)
+        and not any(part in DEFAULT_IGNORED_DIRS for part in path.parts)
     )
 
 
 def _sql_files(root: Path) -> list[Path]:
     if not root.is_dir():
         return []
-    return sorted(path for path in root.rglob("*.sql"))
+    return sorted(
+        path
+        for path in root.rglob("*.sql")
+        if not any(part in DEFAULT_IGNORED_DIRS for part in path.parts)
+    )
 
 
 def _collect_wired_preview_grid_ids(root: Path, exemptions: list[str]) -> dict[str, bool]:

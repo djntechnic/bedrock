@@ -25,7 +25,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from bedrock.tools._config import load_bedrock_config
+from bedrock.tools._config import DEFAULT_IGNORED_DIRS, load_bedrock_config
 from bedrock.tools._reporter import AuditReporter
 
 _ALLOWED_DOC_FOLDERS = {"standards", "specs", "plans", "reference", "archive"}
@@ -42,6 +42,8 @@ class GuidanceViolation:
 
 
 def _is_exempt(rel_path: str, exemptions: list[str]) -> bool:
+    if any(part in DEFAULT_IGNORED_DIRS for part in Path(rel_path).parts):
+        return True
     return any(fnmatch.fnmatch(rel_path, pattern) for pattern in exemptions)
 
 
@@ -120,6 +122,8 @@ def _check_filename_convention(root: Path, exemptions: list[str]) -> list[Guidan
         return violations
 
     for path in sorted(docs_root.rglob("*.md")):
+        if any(part in DEFAULT_IGNORED_DIRS for part in path.parts):
+            continue
         rel = path.relative_to(root).as_posix()
         if _is_exempt(rel, exemptions):
             continue

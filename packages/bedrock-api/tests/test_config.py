@@ -3,7 +3,11 @@ from pathlib import Path
 
 import pytest
 
-from bedrock.tools._config import BedrockConfig, load_bedrock_config
+from bedrock.tools._config import (
+    DEFAULT_IGNORED_DIRS,
+    BedrockConfig,
+    load_bedrock_config,
+)
 
 
 def _write_toml(tmp_path: Path, content: str) -> Path:
@@ -31,6 +35,21 @@ def test_load_valid_config(tmp_path: Path):
     assert "TwinComponent" in cfg.audit_s001.exemptions
 
 
+def test_default_ignored_dirs_constant():
+    expected = {
+        ".venv",
+        "node_modules",
+        "dist",
+        "build",
+        "__pycache__",
+        ".git",
+        ".pytest_cache",
+        ".agents",
+        ".claude",
+    }
+    assert DEFAULT_IGNORED_DIRS == expected
+
+
 def test_consumer_exemptions_merge_additively_with_platform_baseline(tmp_path: Path):
     _write_toml(
         tmp_path,
@@ -45,6 +64,7 @@ def test_consumer_exemptions_merge_additively_with_platform_baseline(tmp_path: P
     # Platform baseline exemptions (e.g. vendored/generated paths) always apply,
     # regardless of what the consumer declares.
     assert "**/node_modules/**" in cfg.audit_s001.exemptions
+    assert "**/.venv/**" in cfg.audit_s001.exemptions
     assert "TwinComponent" in cfg.audit_s001.exemptions
 
 
