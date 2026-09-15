@@ -455,5 +455,29 @@ def test_s004_returns_zero_for_tooltip_delay_from_settings(tmp_path: Path):
     assert audit_s004_config.main(["--root", str(tmp_path)]) == 0
 
 
+def test_s003_ignores_default_ignored_dirs(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s003]\nexemptions = []\n")
+    _write(tmp_path / ".venv" / "lib" / "site-packages" / "pkg.py", "print('debug in venv')\n")
+    _write(tmp_path / "node_modules" / "pkg" / "index.ts", "console.log('debug in node_modules');\n")
+    _write(tmp_path / "dist" / "bundle.ts", "console.log('debug in dist');\n")
+    _write(tmp_path / "build" / "out.ts", "console.log('debug in build');\n")
+
+    assert audit_s003_logging.main(["--root", str(tmp_path)]) == 0
+
+
 def test_s004_returns_two_on_missing_bedrock_toml(tmp_path: Path):
     assert audit_s004_config.main(["--root", str(tmp_path)]) == 2
+
+
+def test_s004_ignores_default_ignored_dirs(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s004]\nexemptions = []\n")
+    _write(
+        tmp_path / ".venv" / "lib" / "site-packages" / "pkg.py",
+        "import os\nval = os.environ['SECRET']\nAPI_KEY = 'secret'\n",
+    )
+    _write(
+        tmp_path / "node_modules" / "pkg" / "index.tsx",
+        "<TooltipProvider delayDuration={150}>{children}</TooltipProvider>",
+    )
+
+    assert audit_s004_config.main(["--root", str(tmp_path)]) == 0

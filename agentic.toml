@@ -2,20 +2,50 @@
 name = "bedrock"
 
 rules = [
-  "s01-ui-primitives",
-  "s03-logging-standards",
-  "s05-zero-broken-tests",
+  "s001-no-duplicate-ui-code",
+  "s002-all-grids-wired-to-admin-config",
+  "s003-logging-protocol",
+  "s004-no-hardcoded-config-settings",
+  "s005-test-coverage-mandatory",
+  "s006-defect-isolation-and-pr-workflow",
+  "s007-schema-catalog",
+  "s008-documentation-layout-and-naming",
+  "s009-design-system",
+  "s010-granular-security-model",
+  "s011-config-driven-navigation",
+  "s012-dual-pin-platform-governance",
 ]
 
 skills = [
   "anti-ui-slop",
+  "audit-ui-runtime",
+  "brainstorming",
   "bump-bedrock-pin",
-  "compact-test-runner",
   "cut-release",
+  "deliver-task",
+  "dispatching-parallel-agents",
+  "executing-plans",
+  "finishing-a-development-branch",
+  "grid-guru",
+  "impeccable",
+  "issue-triage",
   "react-best-practices",
+  "receiving-code-review",
+  "requesting-code-review",
+  "run-tests",
   "sql-sentinel",
+  "subagent-driven-development",
+  "systematic-debugging",
+  "tanstack-intent",
+  "test-driven-development",
   "triage-plan",
+  "using-git-worktrees",
+  "using-superpowers",
+  "verification-before-completion",
+  "writing-plans",
+  "writing-skills",
 ]
+
 
 agents = [
   "backend-api-engineer",

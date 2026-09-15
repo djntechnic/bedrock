@@ -27,7 +27,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from bedrock.tools._config import load_bedrock_config
+from bedrock.tools._config import DEFAULT_IGNORED_DIRS, load_bedrock_config
 from bedrock.tools._reporter import AuditReporter
 
 _PLATFORM_PREFIXES = ("auth_", "app_", "sys_", "log_", "diag_")
@@ -63,6 +63,8 @@ class SchemaViolation:
 
 
 def _is_exempt(rel_path: str, exemptions: list[str]) -> bool:
+    if any(part in DEFAULT_IGNORED_DIRS for part in Path(rel_path).parts):
+        return True
     return any(fnmatch.fnmatch(rel_path, pattern) for pattern in exemptions)
 
 
@@ -100,6 +102,8 @@ def _check_bare_literals(
     allowed_prefixes = _allowed_prefixes(domain_prefixes)
 
     for path in sorted(root.rglob("*.py")):
+        if any(part in DEFAULT_IGNORED_DIRS for part in path.parts):
+            continue
         rel = path.relative_to(root).as_posix()
         if path.name == "schema_catalog.py" or _is_exempt(rel, exemptions):
             continue

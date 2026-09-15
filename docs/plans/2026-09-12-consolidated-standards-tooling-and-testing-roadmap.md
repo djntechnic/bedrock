@@ -1893,7 +1893,7 @@ git -C C:\Dev\CollectIt commit -m "chore(deps): bump bedrock dual pins to v0.10.
 
 - [ ] **Step 1: Run automated remediation engine**
 Run:
-      Run:
+
 
 ```powershell
 python -m bedrock.tools.remediate_taxonomy_and_casing --root C:\Dev\CollectIt
@@ -1909,7 +1909,19 @@ git -C C:\Dev\CollectIt mv docs/ebay_templates_csv/* templates/ebay-import-csv/ 
 Remove-Item C:\Dev\CollectIt\docs\ebay_templates_csv -Force -ErrorAction SilentlyContinue
 ```
 
-- [ ] **Step 3: Evict punchlists and archive to `scratch/`**
+- [ ] **Step 3: Relocate eBay import CSVs**
+
+Update hard-coded references to `\Templates`, `\Export`, and `docs\ebay_templates_csv` folders. Move to a configurable App Settings as defined in S004.
+
+Update `api/services/exporter/output.py` -> `exports_dir()`
+Update `api/services/listings/templates/py` -> `templates_dir()`
+Update `.gitattributes`
+Update `.github/workflows/ci.yml` -> `Templates` and `docs\ebay_templates_csv`
+Update `scripts/maintenance/generate_ebay_specs.py` -> `CSV_DIR = REPO_ROOT / "docs" / "ebay_templates_csv"`
+
+Validate no other hard-coded references to these paths.
+
+- [ ] **Step 4: Evict punchlists and archive to `scratch/`**
 
 ```powershell
 mkdir C:\Dev\CollectIt\scratch -Force
@@ -1920,7 +1932,7 @@ Move-Item C:\Dev\CollectIt\docs\design\* C:\Dev\CollectIt\scratch\ -Force -Error
 Remove-Item C:\Dev\CollectIt\docs\punchlists, C:\Dev\CollectIt\docs\archive, C:\Dev\CollectIt\docs\design -Recurse -Force -ErrorAction SilentlyContinue
 ```
 
-- [ ] **Step 4: Commit in CollectIt**
+- [ ] **Step 5: Commit in CollectIt**
 
 ```bash
 git -C C:\Dev\CollectIt add -A

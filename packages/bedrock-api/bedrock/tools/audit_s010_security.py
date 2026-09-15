@@ -22,7 +22,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from bedrock.tools._config import load_bedrock_config
+from bedrock.tools._config import DEFAULT_IGNORED_DIRS, load_bedrock_config
 from bedrock.tools._reporter import AuditReporter
 
 _ROUTE_BLOCK = re.compile(
@@ -46,6 +46,8 @@ class SecurityViolation:
 
 
 def _is_exempt(rel_path: str, exemptions: list[str]) -> bool:
+    if any(part in DEFAULT_IGNORED_DIRS for part in Path(rel_path).parts):
+        return True
     return any(fnmatch.fnmatch(rel_path, pattern) for pattern in exemptions)
 
 
@@ -53,8 +55,14 @@ def _route_files(root: Path) -> list[Path]:
     candidates: list[Path] = []
     for base_name in ("routes", "api"):
         for base in root.rglob(base_name):
+            if any(part in DEFAULT_IGNORED_DIRS for part in base.parts):
+                continue
             if base.is_dir():
-                candidates.extend(base.glob("*.py"))
+                candidates.extend(
+                    p
+                    for p in base.glob("*.py")
+                    if not any(part in DEFAULT_IGNORED_DIRS for part in p.parts)
+                )
     return sorted(set(candidates))
 
 

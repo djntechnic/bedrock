@@ -24,7 +24,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from bedrock.tools._config import load_bedrock_config
+from bedrock.tools._config import DEFAULT_IGNORED_DIRS, load_bedrock_config
 from bedrock.tools._reporter import AuditReporter
 
 _REQUIRED_NAV_FIELDS = ("id", "label", "path", "icon", "permission")
@@ -49,6 +49,8 @@ class NavViolation:
 
 
 def _is_exempt(rel_path: str, exemptions: list[str]) -> bool:
+    if any(part in DEFAULT_IGNORED_DIRS for part in Path(rel_path).parts):
+        return True
     return any(fnmatch.fnmatch(rel_path, pattern) for pattern in exemptions)
 
 
@@ -92,6 +94,8 @@ def _check_hardcoded_nav_trees(root: Path, exemptions: list[str]) -> list[NavVio
         return violations
 
     for path in sorted(root.rglob("*.tsx")):
+        if any(part in DEFAULT_IGNORED_DIRS for part in path.parts):
+            continue
         if path.stem not in _NAV_COMPONENT_NAMES:
             continue
         rel = path.relative_to(root).as_posix()
