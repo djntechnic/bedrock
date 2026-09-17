@@ -3,10 +3,10 @@
  * @description Tests for the Admin → Health → API Routes Explorer panel.
  */
 
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
-import ApiRoutesPanel, { methodColor } from "./ApiRoutesPanel";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import type { ApiHealthEntry } from "../../hooks/useAdminPlatform";
+import ApiRoutesPanel, { methodColor } from "./ApiRoutesPanel";
 
 const mockRoutes: ApiHealthEntry[] = [
   {
@@ -63,7 +63,8 @@ const mockRoutes: ApiHealthEntry[] = [
 ];
 
 vi.mock("../../hooks/useAdminPlatform", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../../hooks/useAdminPlatform")>();
+  const actual =
+    await importOriginal<typeof import("../../hooks/useAdminPlatform")>();
   return {
     ...actual,
     useApiHealth: () => ({

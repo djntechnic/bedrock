@@ -48,7 +48,11 @@ export default function ApiRoutesPanel({
   const [undocOnly, setUndocOnly] = useState(false);
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground py-4">Loading API endpoints...</p>;
+    return (
+      <p className="text-sm text-muted-foreground py-4">
+        Loading API endpoints...
+      </p>
+    );
   }
 
   const filtered = routes.filter((r) => {
@@ -84,14 +88,21 @@ export default function ApiRoutesPanel({
             value: totalErrors.toLocaleString(),
             color: "text-destructive",
           },
-          { label: "Error Rate", value: `${errorRate}%`, color: "text-warning" },
+          {
+            label: "Error Rate",
+            value: `${errorRate}%`,
+            color: "text-warning",
+          },
           {
             label: "Undocumented",
             value: String(undocCount),
             color: undocCount > 0 ? "text-warning" : "text-positive",
           },
         ].map(({ label, value, color }) => (
-          <div key={label} className="p-3 bg-muted/40 rounded border border-border">
+          <div
+            key={label}
+            className="p-3 bg-muted/40 rounded border border-border"
+          >
             <p className="text-xs font-medium text-muted-foreground uppercase">
               {label}
             </p>
