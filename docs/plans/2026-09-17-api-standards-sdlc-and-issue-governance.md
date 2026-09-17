@@ -157,30 +157,30 @@
 - Consumes: `/openapi.json` and `GET /api/v1/admin/api-health` via `useApiHealth`.
 - Produces: Reusable `<ApiSpecPanel>` and `<ApiRoutesPanel>` components exported from `@djntechnic/bedrock-ui`, allowing `PlatformHealthPanel` to offer Overview, API Routes, and Spec tabs.
 
-- [ ] **Step 1: Author failing test for `ApiSpecPanel` export and rendering**
+- [x] **Step 1: Author failing test for `ApiSpecPanel` export and rendering**
   Create `packages/bedrock-ui/src/components/admin/ApiSpecPanel.test.tsx` verifying component renders action bar download buttons and Swagger UI container.
   Run: `npm --prefix packages/bedrock-ui run test:run ApiSpecPanel`
   Expected: FAIL (component not found).
 
-- [ ] **Step 2: Add `swagger-ui-react` dependency and CSS to `bedrock-ui`**
+- [x] **Step 2: Add `swagger-ui-react` dependency and CSS to `bedrock-ui`**
   Add `"swagger-ui-react": "^5.18.2"` (or appropriate version) to `packages/bedrock-ui/package.json` dependencies/peerDependencies.
 
-- [ ] **Step 3: Implement `ApiSpecPanel.tsx` and `ApiRoutesPanel.tsx` in `bedrock-ui`**
+- [x] **Step 3: Implement `ApiSpecPanel.tsx` and `ApiRoutesPanel.tsx` in `bedrock-ui`**
   Port the robust implementation from MLBTracker into `packages/bedrock-ui/src/components/admin/`:
   - Lazy-loaded `swagger-ui-react` with theme-matched wrapper.
   - Action bar with OpenAPI JSON download and Postman Collection download anchors.
   - Rich filterable API Routes accordion with telemetry cards, parameter tables, request body schemas, response types, and doc status badges.
 
-- [ ] **Step 4: Integrate into `PlatformHealthPanel.tsx` and export from barrel**
+- [x] **Step 4: Integrate into `PlatformHealthPanel.tsx` and export from barrel**
   Update `PlatformHealthPanel.tsx` to include internal tabs (Overview, API Routes, Spec) or export `<ApiSpecPanel>` and `<ApiRoutesPanel>` so consumer admin pages can mount them directly.
   Export from `packages/bedrock-ui/src/components/admin/index.ts` and `src/index.ts`.
 
-- [ ] **Step 5: Run tests and build `bedrock-ui`**
+- [x] **Step 5: Run tests and build `bedrock-ui`**
   Run: `npm --prefix packages/bedrock-ui run test:run`
   Run: `npm --prefix packages/bedrock-ui run build`
   Expected: All tests pass, build succeeds without TS errors.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
   Run: `git add packages/bedrock-ui/ && git commit -m "feat(bedrock-ui): export ApiSpecPanel and ApiRoutesPanel for S013 admin parity"`
 
 ---

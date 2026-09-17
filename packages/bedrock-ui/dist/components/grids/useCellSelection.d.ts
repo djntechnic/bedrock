@@ -160,4 +160,3 @@ export declare function seedForKey(key: string, modified: boolean): string | nul
  * @returns See {@link CellSelection}.
  */
 export declare function useCellSelection({ enabled, rowKeys, columnIds, getCellText, onCopy, onPaste, onFill, onBeginEdit, }: UseCellSelectionOptions): CellSelection;
-export default useCellSelection;
