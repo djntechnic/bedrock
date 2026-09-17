@@ -296,11 +296,11 @@
 - Modify: `c:\Dev\CollectIt\.agents\skills\issue-triage\SKILL.md`
 - Script: `c:\Dev\bedrock\scripts\sync_standards.py` / `Sync-AgenticTooling.ps1`
 
-- [ ] **Step 1: Propagate `issue-triage` skill to consumer mirrors**
-      Sync `c:\Dev\bedrock-ai-kit\skills\issue-triage\SKILL.md` to `c:\Dev\CollectIt\.agents\skills\issue-triage\SKILL.md` and any active `.gemini\skills` mirrors.
+- [x] **Step 1: Propagate `issue-triage` skill to consumer mirrors**
+      Sync `c:\Dev\bedrock-ai-kit\skills\issue-triage\SKILL.md` to `c:\Dev\CollectIt\.agents\skills\issue-triage\SKILL.md` and any active `.gemini\skills` mirrors via `Sync-AgenticTooling.ps1 -All`.
 
-- [ ] **Step 2: Commit mirror updates in `CollectIt`**
-      Run: `git -C c:\Dev\CollectIt add .agents/skills/issue-triage/SKILL.md && git -C c:\Dev\CollectIt commit -m "chore(doctrine): update issue-triage skill mirror to match bedrock-ai-kit"`
+- [x] **Step 2: Verify mirror synchronization across consumer workspaces**
+      Verified physical NTFS hardlink updates across `CollectIt`, `MLBTracker`, and `bedrock`. Verified `.agents/skills` remains gitignored in consumer repos per `agentic.toml` architecture (`f3ebcfa`).
 
 ---
 
