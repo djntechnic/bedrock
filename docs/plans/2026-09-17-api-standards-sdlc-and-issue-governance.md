@@ -296,9 +296,13 @@
 - Modify: `c:\Dev\CollectIt\.agents\skills\issue-triage\SKILL.md`
 - Script: `c:\Dev\bedrock\scripts\sync_standards.py` / `Sync-AgenticTooling.ps1`
 
+- [ ] **Step 1: Propagate `issue-triage` skill to consumer mirrors**
+      Sync `c:\Dev\bedrock-ai-kit\skills\issue-triage\SKILL.md` to `c:\Dev\CollectIt\.agents\skills\issue-triage\SKILL.md` and any active `.gemini\skills` mirrors.
 - [x] **Step 1: Propagate `issue-triage` skill to consumer mirrors**
       Sync `c:\Dev\bedrock-ai-kit\skills\issue-triage\SKILL.md` to `c:\Dev\CollectIt\.agents\skills\issue-triage\SKILL.md` and any active `.gemini\skills` mirrors via `Sync-AgenticTooling.ps1 -All`.
 
+- [ ] **Step 2: Commit mirror updates in `CollectIt`**
+      Run: `git -C c:\Dev\CollectIt add .agents/skills/issue-triage/SKILL.md && git -C c:\Dev\CollectIt commit -m "chore(doctrine): update issue-triage skill mirror to match bedrock-ai-kit"`
 - [x] **Step 2: Verify mirror synchronization across consumer workspaces**
       Verified physical NTFS hardlink updates across `CollectIt`, `MLBTracker`, and `bedrock`. Verified `.agents/skills` remains gitignored in consumer repos per `agentic.toml` architecture (`f3ebcfa`).
 
@@ -312,14 +316,17 @@
 - Modify: `c:\Dev\CollectIt\docs\standards\*`
 
 - [ ] **Step 1: Execute `sync_standards` for `MLBTracker`**
+- [x] **Step 1: Execute `sync_standards` for `MLBTracker`**
       Run: `python -m bedrock.tools.sync_standards --target c:\Dev\MLBTracker`
       Expected: Copies `S001`–`S014` and `S100` into `c:\Dev\MLBTracker\docs\standards\`.
 
 - [ ] **Step 2: Execute `sync_standards` for `CollectIt`**
+- [x] **Step 2: Execute `sync_standards` for `CollectIt`**
       Run: `python -m bedrock.tools.sync_standards --target c:\Dev\CollectIt`
       Expected: Copies `S001`–`S014` and `S100` into `c:\Dev\CollectIt\docs\standards\`.
 
 - [ ] **Step 3: Commit standards synchronization in both consumer repos**
+- [x] **Step 3: Commit standards synchronization in both consumer repos**
   - In `MLBTracker`: `git add docs/standards/ && git commit -m "chore(standards): sync S006, S013, S014 from bedrock"`
   - In `CollectIt`: `git add docs/standards/ && git commit -m "chore(standards): sync S006, S013, S014 from bedrock"`
 
