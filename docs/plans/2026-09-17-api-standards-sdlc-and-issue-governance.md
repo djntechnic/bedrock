@@ -60,7 +60,7 @@
 - Consumes: Specifications from `2026-09-17-api-standards-sdlc-and-issue-governance-design.md`, `MLBTracker` API reference & authentication docs.
 - Produces: Standard S013 document defining URL blueprint, `ApiResponse[T]`, HTTP status codes, security/existence-hiding 404s, Pydantic schemas, docstrings, and Admin portal testability (API Routes Explorer + Spec Swagger UI).
 
-- [ ] **Step 1: Write `s013-api-standards.md`**
+- [x] **Step 1: Write `s013-api-standards.md`**
   Author the file following the 5-section schema:
   - Header frontmatter: `id: S013`, `title: "API Standards & Admin Interactivity"`, `enforced_by: bedrock.tools.audit_api_docs`, `cli_command: "python -m bedrock.tools.audit_api_docs --app api.main:app"`.
   - Non-negotiable invariants:
@@ -74,11 +74,11 @@
     8. 100% route documentation in OpenAPI schema (zero undocumented routes).
     9. Admin Portal Interactivity: `/admin?tab=health` must expose API Routes Explorer (`/api-health`) and Spec Panel (Swagger UI + OpenAPI/Postman exports) with live authenticated testing.
 
-- [ ] **Step 2: Verify S008 doc naming and layout**
+- [x] **Step 2: Verify S008 doc naming and layout**
   Run: `python -m bedrock.tools.audit_s008_guidance`
   Expected: Exit 0.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
   Run: `git add docs/standards/s013-api-standards.md && git commit -m "docs(standards): author S013 API standards and admin interactivity"`
 
 ---
