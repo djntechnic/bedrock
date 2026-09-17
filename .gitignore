@@ -91,6 +91,7 @@ Desktop.ini
 .claude/agents/
 .claude/rules/
 .claude/hooks/
+scripts/support/
 
 # ==============================================================================
 # 7. DOCUMENTATION ARTIFACTS, DESIGNS & EPHEMERAL SCRATCH
