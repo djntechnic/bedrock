@@ -320,7 +320,6 @@
       Run: `python -m bedrock.tools.sync_standards --target c:\Dev\MLBTracker`
       Expected: Copies `S001`–`S014` and `S100` into `c:\Dev\MLBTracker\docs\standards\`.
 
-- [ ] **Step 2: Execute `sync_standards` for `CollectIt`**
 - [x] **Step 2: Execute `sync_standards` for `CollectIt`**
       Run: `python -m bedrock.tools.sync_standards --target c:\Dev\CollectIt`
       Expected: Copies `S001`–`S014` and `S100` into `c:\Dev\CollectIt\docs\standards\`.
@@ -358,18 +357,18 @@
 - Delete/Retire: `c:\Dev\MLBTracker\frontend\src\components\admin\ApiSpecPanel.tsx`
 - Test: `c:\Dev\MLBTracker\frontend\src\components\admin\ApiSpecPanel.test.tsx`
 
-- [ ] **Step 1: Refactor `AdminPage.tsx` in `MLBTracker` to import `<PlatformHealthPanel>` or `<ApiSpecPanel>` from `@djntechnic/bedrock-ui`**
+- [x] **Step 1: Refactor `AdminPage.tsx` in `MLBTracker` to import `<PlatformHealthPanel>` or `<ApiSpecPanel>` from `@djntechnic/bedrock-ui`**
       Replace local accordion rendering and local `ApiSpecPanel.tsx` with the platform export from `@djntechnic/bedrock-ui`.
 
-- [ ] **Step 2: Run frontend test suite in `MLBTracker`**
+- [x] **Step 2: Run frontend test suite in `MLBTracker`**
       Run: `npm --prefix c:\Dev\MLBTracker\frontend run test:run AdminPage`
       Expected: PASS.
 
-- [ ] **Step 3: Run `audit_s1_duplicates` in `MLBTracker`**
+- [x] **Step 3: Run `audit_s1_duplicates` in `MLBTracker`**
       Run: `python -m bedrock.tools.audit_s1_duplicates` from `c:\Dev\MLBTracker`.
       Expected: PASS (zero duplicate twins detected).
 
-- [ ] **Step 4: Commit in `MLBTracker`**
+- [x] **Step 4: Commit in `MLBTracker`**
       Run: `git -C c:\Dev\MLBTracker add frontend/ && git commit -m "refactor(admin): consume ApiSpecPanel and ApiRoutesPanel from bedrock-ui (§S001)"`
 
 ---
