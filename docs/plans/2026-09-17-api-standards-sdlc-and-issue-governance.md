@@ -30,7 +30,7 @@
 - Consumes: Existing S006 frontmatter and audit gate `audit_s006_pr_workflow`.
 - Produces: Pure SDLC & PR Workflow standard document covering feature branching, one-concern-per-branch, reproduce-then-fix TDD, tiered test verification, draft PRs, background CI monitoring (`gh pr checks --watch`), and post-merge clean tree sync.
 
-- [ ] **Step 1: Draft refactored S006 standard**
+- [x] **Step 1: Draft refactored S006 standard**
   Refactor `s006-sdlc-and-pr-workflow.md` with:
   - Title: `"SDLC & PR Workflow"`
   - Status: `active`, Tier: `platform`
@@ -38,14 +38,14 @@
   - Strictly remove out-of-scope bug isolation and issue taxonomy (delegated to S014).
   - Add explicit invariants for background CI monitoring (`gh pr checks <pr> --watch`), zero broken tests to master, and post-merge clean tree verification (`git status --porcelain` empty).
 
-- [ ] **Step 2: Remove old S006 filename if renamed**
+- [x] **Step 2: Remove old S006 filename if renamed**
   Ensure git tracks the file rename: `git mv s006-defect-isolation-and-pr-workflow.md s006-sdlc-and-pr-workflow.md`.
 
-- [ ] **Step 3: Run S006 audit gate to verify compliance**
+- [x] **Step 3: Run S006 audit gate to verify compliance**
   Run: `python -m bedrock.tools.audit_s006_pr_workflow --root .`
   Expected: Exit 0.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
   Run: `git add docs/standards/s006-sdlc-and-pr-workflow.md && git commit -m "docs(standards): refactor S006 into pure SDLC and PR workflow standard"`
 
 ---
