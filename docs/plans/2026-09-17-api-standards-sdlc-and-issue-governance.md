@@ -58,6 +58,7 @@
 **Files:**
 
 - Create: `c:\dev\bedrock\docs\standards\s013-api-standards.md`
+- Reference: `c:\dev\bedrock\packages\bedrock-api\bedrock\tools\audit_api_docs.py`
 - Reference: `c:\dev\bedrock\packages\bedrock-api\bedrock\tools\audit_s013_api_docs.py`
 
 **Interfaces:**
@@ -67,6 +68,7 @@
 
 - [x] **Step 1: Write `s013-api-standards.md`**
       Author the file following the 5-section schema:
+  - Header frontmatter: `id: S013`, `title: "API Standards & Admin Interactivity"`, `enforced_by: bedrock.tools.audit_api_docs`, `cli_command: "python -m bedrock.tools.audit_api_docs --app api.main:app"`.
   - Header frontmatter: `id: S013`, `title: "API Standards & Admin Interactivity"`, `enforced_by: bedrock.tools.audit_s013_api_docs`, `cli_command: "python -m bedrock.tools.audit_s013_api_docs --app api.main:app"`.
   - Non-negotiable invariants:
     1. Uniform `/api/v1` prefix and lowercase kebab-case resource paths.
@@ -93,6 +95,7 @@
 **Files:**
 
 - Create: `c:\dev\bedrock\docs\standards\s014-issue-logging-and-ecosystem-governance.md`
+- Reference: `c:\dev\bedrock\packages\bedrock-api\bedrock\tools\audit_ledger_freshness.py`
 - Reference: `c:\dev\bedrock\packages\bedrock-api\bedrock\tools\audit_s014_ledger_freshness.py`
 
 **Interfaces:**
@@ -102,6 +105,7 @@
 
 - [x] **Step 1: Write `s014-issue-logging-and-ecosystem-governance.md`**
       Author the file following the 5-section schema:
+  - Header frontmatter: `id: S014`, `title: "Issue Logging & Ecosystem Governance"`, `enforced_by: bedrock.tools.audit_ledger_freshness`, `cli_command: "python -m bedrock.tools.audit_ledger_freshness docs/reference/bedrock_issues_to_file.md"`.
   - Header frontmatter: `id: S014`, `title: "Issue Logging & Ecosystem Governance"`, `enforced_by: bedrock.tools.audit_s014_ledger_freshness`, `cli_command: "python -m bedrock.tools.audit_s014_ledger_freshness docs/reference/bedrock_issues_to_file.md"`.
   - Non-negotiable invariants:
     1. Closed issue taxonomy: Standard Defect (`defect.md`), Out-of-Scope Defect (`out_of_scope_bug.md`), Feature/Task (`feature_task.md`), Grid Issue (`grid_issue.md`).
@@ -134,6 +138,8 @@
 
   ```markdown
   | [S006](s006-sdlc-and-pr-workflow.md) | SDLC & PR Workflow | active | `bedrock.tools.audit_s006_pr_workflow` | platform |
+  | [S013](s013-api-standards.md) | API Standards & Admin Interactivity | active | `bedrock.tools.audit_api_docs` | platform |
+  | [S014](s014-issue-logging-and-ecosystem-governance.md) | Issue Logging & Ecosystem Governance | active | `bedrock.tools.audit_ledger_freshness` | platform |
   | [S013](s013-api-standards.md) | API Standards & Admin Interactivity | active | `bedrock.tools.audit_s013_api_docs` | platform |
   | [S014](s014-issue-logging-and-ecosystem-governance.md) | Issue Logging & Ecosystem Governance | active | `bedrock.tools.audit_s014_ledger_freshness` | platform |
   ```
@@ -267,7 +273,7 @@
 - Consumes: Standard S014 and the 5 operational modes defined in the design spec.
 - Produces: Comprehensive `issue-triage` skill enforcing root-cause investigation, template selection, and cross-repo dual-issue workflow.
 
-- [ ] **Step 1: Refactor `issue-triage/SKILL.md`**
+- [x] **Step 1: Refactor `issue-triage/SKILL.md`**
   - Remove duplicate classification tables.
   - Update all standard citations to canonical `§S001`–`§S014` and `§S100`.
   - Update out-of-scope defect references to cite `§S014`.
@@ -278,7 +284,7 @@
     - Mode D: Grid Issue (7-Layer Audit)
     - Mode E: Cross-Repo Bedrock + Domain Dual-Issue Workflow (Upstream Bedrock ticket, Downstream Domain ticket, Ledger entry formatting, Freshness verification).
 
-- [ ] **Step 2: Commit in `bedrock-ai-kit`**
+- [x] **Step 2: Commit in `bedrock-ai-kit`**
       Run: `git -C c:\Dev\bedrock-ai-kit add skills/issue-triage/SKILL.md && git -C c:\Dev\bedrock-ai-kit commit -m "feat(skills): upgrade issue-triage to enforce S014 and dual-issue protocol"`
 
 ---
@@ -384,6 +390,8 @@
     Run: `pytest c:\Dev\CollectIt\api\tests\test_api_docs.py`
     Expected: PASS.
 
+- [ ] **Step 4: Run `audit_api_docs` on `CollectIt`**
+      Run: `python -m bedrock.tools.audit_api_docs --repo-root c:\Dev\CollectIt --doc docs/guide/api-reference.md --app api.main:app`
 - [ ] **Step 4: Run `audit_s013_api_docs` on `CollectIt`**
       Run: `python -m bedrock.tools.audit_s013_api_docs --repo-root c:\Dev\CollectIt --doc docs/guide/api-reference.md --app api.main:app`
       Expected: Exit 0 (all routes documented).
@@ -417,6 +425,8 @@
       From `c:\Dev\MLBTracker`:
 
   ```bash
+  python -m bedrock.tools.audit_api_docs --app api.main:app
+  python -m bedrock.tools.audit_ledger_freshness docs/reference/bedrock-issues-to-file.md
   python -m bedrock.tools.audit_s013_api_docs --app api.main:app
   python -m bedrock.tools.audit_s014_ledger_freshness docs/reference/bedrock-issues-to-file.md
   python -m bedrock.tools.audit_s008_guidance
@@ -427,6 +437,8 @@
 - [ ] **Step 3: Run CollectIt audit and ledger freshness gates**
       From `c:\Dev\CollectIt`:
   ```bash
+  python -m bedrock.tools.audit_api_docs --app api.main:app --doc docs/guide/api-reference.md
+  python -m bedrock.tools.audit_ledger_freshness docs/reference/bedrock-issues-to-file.md
   python -m bedrock.tools.audit_s013_api_docs --app api.main:app --doc docs/guide/api-reference.md
   python -m bedrock.tools.audit_s014_ledger_freshness docs/reference/bedrock-issues-to-file.md
   python -m bedrock.tools.audit_s008_guidance

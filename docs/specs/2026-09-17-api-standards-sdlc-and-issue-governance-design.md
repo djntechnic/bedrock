@@ -81,6 +81,7 @@ Every Bedrock consumer application must expose an interactive Admin Health porta
 ### 2.3 Verification & Enforcement Gate
 - **Static Reconciliation Gate:**
   ```bash
+  python -m bedrock.tools.audit_api_docs --app api.main:app --doc docs/guide/api_reference.md
   python -m bedrock.tools.audit_s013_api_docs --app api.main:app --doc docs/guide/api_reference.md
   ```
   - **Exit 0:** All registered `/api/v1` routes are documented in `api_reference.md`, and all documented paths exist in the app.
@@ -168,6 +169,7 @@ When a defect, enhancement, or grid capability crosses repository boundaries bet
 
 ### 4.3 Verification & Enforcement Gate
 ```bash
+python -m bedrock.tools.audit_ledger_freshness docs/reference/bedrock-issues-to-file.md
 python -m bedrock.tools.audit_s014_ledger_freshness docs/reference/bedrock-issues-to-file.md
 ```
 - **Exit 0:** All ledger entries cite active, open Bedrock issues, or explicitly record `fixed in bedrock vX.Y.Z`.
@@ -190,7 +192,7 @@ The skill guides users and autonomous agents through 5 distinct workflows:
    - Coordinates authoring the upstream Bedrock issue with `origin:<repo>` tagging.
    - Coordinates authoring the downstream application issue with `Blocked by bedrock#<id>` and pin bump requirements.
    - Formats the exact Markdown entry for `docs/reference/bedrock-issues-to-file.md`.
-    - Runs `audit_s014_ledger_freshness` to verify ledger compliance.
+   - Runs `audit_s014_ledger_freshness` to verify ledger compliance.
 
 ### 5.3 Standards Harmonization
 The skill and all agent configuration files (`CLAUDE.md`, `GEMINI.md`) will reference the canonical 3-digit padded platform standards:
@@ -229,4 +231,5 @@ The skill and all agent configuration files (`CLAUDE.md`, `GEMINI.md`) will refe
    - Run `python -m bedrock.tools.sync_standards` across consumer repositories (`CollectIt`, `MLBTracker`).
 4. **Verification**:
    - Execute `audit_s008_guidance` to ensure kebab-case doc compliance.
+   - Run `audit_api_docs` and `audit_ledger_freshness` across repositories.
    - Run `audit_s013_api_docs` and `audit_s014_ledger_freshness` across repositories.
