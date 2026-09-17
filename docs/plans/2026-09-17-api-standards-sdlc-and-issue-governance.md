@@ -93,7 +93,7 @@
 - Consumes: Design spec Section 4, GitHub template specifications, and consumer ledger rules.
 - Produces: Standard S014 document defining closed issue taxonomy, mandatory 4-phase root cause analysis, out-of-scope bug isolation, Bedrock + domain cross-repo dual-issue protocol, and consumer ledger lifecycle.
 
-- [ ] **Step 1: Write `s014-issue-logging-and-ecosystem-governance.md`**
+- [x] **Step 1: Write `s014-issue-logging-and-ecosystem-governance.md`**
   Author the file following the 5-section schema:
   - Header frontmatter: `id: S014`, `title: "Issue Logging & Ecosystem Governance"`, `enforced_by: bedrock.tools.audit_ledger_freshness`, `cli_command: "python -m bedrock.tools.audit_ledger_freshness docs/reference/bedrock_issues_to_file.md"`.
   - Non-negotiable invariants:
@@ -106,11 +106,11 @@
        - Consumer ledger entry in `docs/reference/bedrock-issues-to-file.md` (entry #, issue link, date, symptom, impact, upstream fix, local workaround).
        - Deletion Rule: ledger entries deleted only after upstream release tag is published AND adopted downstream.
 
-- [ ] **Step 2: Verify S008 doc naming and layout**
+- [x] **Step 2: Verify S008 doc naming and layout**
   Run: `python -m bedrock.tools.audit_s008_guidance`
   Expected: Exit 0.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
   Run: `git add docs/standards/s014-issue-logging-and-ecosystem-governance.md && git commit -m "docs(standards): author S014 issue logging and ecosystem governance"`
 
 ---
