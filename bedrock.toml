@@ -16,6 +16,7 @@ exemptions = [
 
 [tool.bedrock.audit.s002]
 presentational_tables = [
+  "packages/bedrock-ui/src/components/admin/ApiRoutesPanel.tsx",
   "packages/bedrock-ui/src/components/admin/ConfigEditor.tsx",
   "packages/bedrock-ui/src/components/admin/LogViewer.tsx",
   "packages/bedrock-ui/src/components/admin/MenuNavEditorPanel.tsx",
@@ -151,3 +152,18 @@ exemptions = [
 requirements = "packages/bedrock-api/requirements.txt"
 package_json = "package.json"
 exemptions = []
+
+[tool.bedrock.audit.s013]
+doc = "docs/guide/api_reference.md"
+prefix = "/api/v1"
+app = "api.main:app"
+exempt_paths = []
+exemptions = [
+  # bedrock is the platform library repo, not a consumer FastAPI app.
+  "packages/bedrock-api/**",
+]
+
+[tool.bedrock.audit.s014]
+ledger_path = "docs/reference/bedrock-issues-to-file.md"
+exemptions = []
+

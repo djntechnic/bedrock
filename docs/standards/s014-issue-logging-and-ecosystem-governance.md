@@ -3,8 +3,8 @@ id: S014
 title: "Issue Logging & Ecosystem Governance"
 status: active
 tier: platform
-enforced_by: bedrock.tools.audit_ledger_freshness
-cli_command: "python -m bedrock.tools.audit_ledger_freshness docs/reference/bedrock_issues_to_file.md"
+enforced_by: bedrock.tools.audit_s014_ledger_freshness
+cli_command: "python -m bedrock.tools.audit_s014_ledger_freshness docs/reference/bedrock-issues-to-file.md"
 ---
 
 # Standard S014: Issue Logging & Ecosystem Governance
@@ -22,7 +22,7 @@ Standard S014 establishes a closed, rigorous protocol for authoring, triaging, a
    - **Out-of-Scope Defect (`.github/ISSUE_TEMPLATE/out_of_scope_bug.md`):** Non-blocking bugs discovered mid-task that are unrelated to the active branch scope.
    - **Feature / Task (`.github/ISSUE_TEMPLATE/feature_task.md`):** New functional capabilities, refactors, schema migrations, or config additions.
    - **Grid Issue (`.github/ISSUE_TEMPLATE/grid_issue.md`):** Bugs, gaps, or extensions across the 7-layer data grid contract.
-   *Free-form, untyped, or template-less issues are strictly prohibited.*
+     _Free-form, untyped, or template-less issues are strictly prohibited._
 2. **Mandatory 4-Phase Root Cause Analysis:** A defect issue must not be opened until Phases 1 & 2 of systematic debugging are completed. Submitting an issue that describes only observed symptoms without an origin trace is a doctrine violation:
    - **Phase 1 (Origin & Trace):** Identify exact file path and line number where invalid state originates. Provide a copy-paste reproduction command (`pytest tests/...`, `npm run test:run`, curl, CLI). Trace data flow backward across layer boundaries to the mutation point.
    - **Phase 2 (Pattern Analysis):** Compare the broken implementation against working reference patterns in the repository. Identify discrepancies in configuration, environment, dependencies, or schema.
@@ -38,6 +38,7 @@ Standard S014 establishes a closed, rigorous protocol for authoring, triaging, a
 ## Architecture & Code Contracts
 
 ### Consumer Ledger Entry Contract:
+
 ```markdown
 ## 14. `AppSidebar` ignores `item.tooltip` from dynamic nav settings
 
@@ -51,6 +52,7 @@ Standard S014 establishes a closed, rigorous protocol for authoring, triaging, a
 ```
 
 ### Upstream Bedrock Issue Header Contract:
+
 ```markdown
 ---
 name: Bedrock Defect / Enhancement
@@ -60,15 +62,18 @@ labels: ["origin:mlbtracker", "type:defect"]
 ---
 
 ## Goal
+
 <!-- Concise platform mechanism or bug fix to deliver -->
 
 ## Platform Boundary Validation
+
 - [x] No Domain Logic (zero application tables referenced)
 - [x] Extension Point Classification: Registry | Provider | Core Component
 - [x] Applicable across multiple consumer applications
 ```
 
 ### Downstream Application Issue Header Contract:
+
 ```markdown
 ---
 name: Consumer Domain Adoption
@@ -78,6 +83,7 @@ labels: ["type:enhancement", "bedrock-dependency"]
 ---
 
 ## Goal
+
 Adopt upstream Bedrock capability once published.
 
 **Dependency:** Blocked by djntechnic/bedrock#75 (Target Release: v0.9.2).
@@ -98,7 +104,7 @@ Emergency production hotfixes resolving active catastrophic operational outages 
 ## Verification & Enforcement Gate
 
 ```bash
-python -m bedrock.tools.audit_ledger_freshness docs/reference/bedrock_issues_to_file.md
+python -m bedrock.tools.audit_s014_ledger_freshness docs/reference/bedrock-issues-to-file.md
 ```
 
 - **Exit 0:** All ledger entries cite active, open Bedrock issues, or explicitly record the release tag that resolved them (`fixed in bedrock vX.Y.Z`).

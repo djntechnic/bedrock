@@ -3,7 +3,7 @@ import pathlib
 
 from fastapi import APIRouter, FastAPI
 
-from bedrock.tools import audit_api_docs as gate
+from bedrock.tools import audit_s013_api_docs as gate
 
 
 def _write_doc(tmp_path: pathlib.Path, lines: list[str]) -> pathlib.Path:

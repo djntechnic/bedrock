@@ -127,6 +127,6 @@ describe("ApiRoutesPanel", () => {
     expect(methodColor("GET")).toContain("positive");
     expect(methodColor("POST")).toContain("info");
     expect(methodColor("PATCH")).toContain("warning");
-    expect(methodColor("DELETE")).toContain("rose");
+    expect(methodColor("DELETE")).toContain("destructive");
   });
 });

@@ -1,5 +1,5 @@
 """
-Module:  audit_api_docs.py
+Module:  audit_s013_api_docs.py
 Layer:   bedrock/tools
 Desc:    Gate for the boundary between a consumer app's shipped `/api/v1`
          route surface and the human-readable reference that documents it.
@@ -38,9 +38,9 @@ Desc:    Gate for the boundary between a consumer app's shipped `/api/v1`
 
          Exit 0 clean, 1 on a violation, 2 on an environment error.
 
-Usage:   python -m bedrock.tools.audit_api_docs --app api.main:app
-         python -m bedrock.tools.audit_api_docs \\
-             --repo-root . --doc docs/guide/api_reference.md \\
+Usage:   python -m bedrock.tools.audit_s013_api_docs --app api.main:app
+         python -m bedrock.tools.audit_s013_api_docs \
+             --root . --doc docs/guide/api_reference.md \
              --prefix /api/v1 --app api.main:app
 """
 from __future__ import annotations
@@ -54,6 +54,7 @@ import sys
 from loguru import logger
 
 from bedrock.core.stats import iter_route_specs
+from bedrock.tools._config import load_bedrock_config
 
 METHOD_TOKENS = ("GET", "POST", "PUT", "PATCH", "DELETE")
 
@@ -155,26 +156,51 @@ def audit(shipped: set[tuple[str, str]], documented: set[tuple[str, str]]) -> li
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--repo-root", default=".", help="repository root")
+    parser.add_argument("--root", "--repo-root", dest="root", default=".", help="repository root")
     parser.add_argument(
         "--doc",
-        default="docs/guide/api_reference.md",
-        help="the API reference doc, relative to --repo-root",
+        default=None,
+        help="the API reference doc, relative to --root",
     )
     parser.add_argument(
         "--prefix",
-        default="/api/v1",
+        default=None,
         help="the route prefix the reference doc covers",
     )
     parser.add_argument(
         "--app",
-        default="api.main:app",
+        default=None,
         help="dotted `module:attribute` path to the FastAPI app to introspect",
     )
     args = parser.parse_args(argv)
 
-    repo_root = pathlib.Path(args.repo_root).resolve()
-    doc_path = repo_root / args.doc
+    repo_root = pathlib.Path(args.root).resolve()
+
+    doc_default = "docs/guide/api_reference.md"
+    prefix_default = "/api/v1"
+    app_default = "api.main:app"
+    is_exempt_library = False
+
+    try:
+        config = load_bedrock_config(repo_root)
+        doc_default = config.audit_s013.doc
+        prefix_default = config.audit_s013.prefix
+        app_default = config.audit_s013.app
+        if any("packages/bedrock-api" in pat or pat == "*" for pat in config.audit_s013.exemptions):
+            is_exempt_library = True
+    except Exception:
+        pass
+
+    doc_target = args.doc or doc_default
+    prefix_target = args.prefix or prefix_default
+    app_target = args.app or app_default
+
+    # If --app was not explicitly passed and this repo is exempted or a platform library repo without an api directory:
+    if args.app is None and (is_exempt_library or not (repo_root / "api").exists()):
+        logger.info("OK - platform library repo with no consumer API to audit.")
+        return 0
+
+    doc_path = repo_root / doc_target
 
     # `--app` is imported by dotted path, so the repo whose routes are being
     # audited has to be importable. Without this the flag is a half-truth:
@@ -185,9 +211,9 @@ def main(argv: list[str] | None = None) -> int:
         sys.path.insert(0, str(repo_root))
 
     try:
-        app = load_app(args.app)
-        shipped = collect_shipped_routes(app, args.prefix)
-        documented = collect_documented_routes(doc_path, args.prefix)
+        app = load_app(app_target)
+        shipped = collect_shipped_routes(app, prefix_target)
+        documented = collect_documented_routes(doc_path, prefix_target)
     except EnvironmentProblem as exc:
         logger.error(str(exc))
         return 2

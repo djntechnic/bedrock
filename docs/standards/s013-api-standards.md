@@ -3,8 +3,8 @@ id: S013
 title: "API Standards & Admin Interactivity"
 status: active
 tier: platform
-enforced_by: bedrock.tools.audit_api_docs
-cli_command: "python -m bedrock.tools.audit_api_docs --app api.main:app"
+enforced_by: bedrock.tools.audit_s013_api_docs
+cli_command: "python -m bedrock.tools.audit_s013_api_docs --app api.main:app"
 ---
 
 # Standard S013: API Standards & Admin Interactivity
@@ -53,6 +53,7 @@ Standard S013 establishes the non-negotiable architecture, validation, security,
 ## Architecture & Code Contracts
 
 ### Python — Route Definition & Envelope Contract:
+
 ```python
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -93,6 +94,7 @@ def create_card(
 ```
 
 ### Python — Row-Level Existence Hiding:
+
 ```python
 @router.get(
     "/cards/{card_id}",
@@ -112,6 +114,7 @@ def get_card(
 ```
 
 ### TypeScript/React — Admin Spec Panel Consumption:
+
 ```tsx
 import { lazy, Suspense } from "react";
 import { Download, FileJson } from "lucide-react";
@@ -119,16 +122,32 @@ import "swagger-ui-react/swagger-ui.css";
 
 const SwaggerUI = lazy(() => import("swagger-ui-react"));
 
-export function ApiSpecPanel({ specUrl, postmanUrl }: { specUrl: string; postmanUrl?: string }) {
+export function ApiSpecPanel({
+  specUrl,
+  postmanUrl,
+}: {
+  specUrl: string;
+  postmanUrl?: string;
+}) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 p-3">
-        <a href={specUrl} download="openapi.json" className="inline-flex items-center gap-1.5 text-xs font-medium">
+        <a
+          href={specUrl}
+          download="openapi.json"
+          className="inline-flex items-center gap-1.5 text-xs font-medium"
+        >
           <FileJson className="h-3.5 w-3.5" /> Export OpenAPI Spec
         </a>
       </div>
       <div className="swagger-ui-theme rounded-lg border border-border bg-background">
-        <Suspense fallback={<p className="p-4 text-sm text-muted-foreground">Loading OpenAPI Spec…</p>}>
+        <Suspense
+          fallback={
+            <p className="p-4 text-sm text-muted-foreground">
+              Loading OpenAPI Spec…
+            </p>
+          }
+        >
           <SwaggerUI url={specUrl} docExpansion="none" />
         </Suspense>
       </div>
@@ -140,7 +159,7 @@ export function ApiSpecPanel({ specUrl, postmanUrl }: { specUrl: string; postman
 ## Exceptions & Audit Exemptions
 
 ```toml
-[tool.bedrock.audit.api_docs]
+[tool.bedrock.audit.s013]
 exempt_paths = [
   "/health",          # Bare process probe outside /api/v1
   "/health/live",     # Kubernetes liveness probe
@@ -148,14 +167,16 @@ exempt_paths = [
 ]
 ```
 
-Any endpoint legitimately mounted outside `/api/v1` (such as unversioned infrastructure probes) must be declared in `bedrock.toml` under `[tool.bedrock.audit.api_docs].exempt_paths`. Unregistered unversioned endpoints fail review automatically.
+Any endpoint legitimately mounted outside `/api/v1` (such as unversioned infrastructure probes) must be declared in `bedrock.toml` under `[tool.bedrock.audit.s013].exempt_paths`. Unregistered unversioned endpoints fail review automatically.
 
 ## Verification & Enforcement Gate
 
 1. **Static API Documentation Reconciliation Gate:**
+
    ```bash
-   python -m bedrock.tools.audit_api_docs --app api.main:app --doc docs/guide/api_reference.md
+   python -m bedrock.tools.audit_s013_api_docs --app api.main:app --doc docs/guide/api_reference.md
    ```
+
    - **Exit 0:** All shipped `/api/v1` routes match the documentation in `api_reference.md` 1:1.
    - **Exit 1:** Unshipped routes documented, or shipped routes missing from reference documentation.
    - **Exit 2:** Environment error, missing document, or FastAPI app import failure.

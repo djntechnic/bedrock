@@ -28,9 +28,9 @@ export function methodColor(m: string): string {
     case "PATCH":
       return "bg-warning/10 text-warning";
     case "PUT":
-      return "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400";
+      return "bg-secondary text-secondary-foreground";
     case "DELETE":
-      return "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400";
+      return "bg-destructive/10 text-destructive";
     default:
       return "bg-muted text-muted-foreground";
   }
@@ -82,7 +82,7 @@ export default function ApiRoutesPanel({
           {
             label: "Errors",
             value: totalErrors.toLocaleString(),
-            color: "text-rose-500",
+            color: "text-destructive",
           },
           { label: "Error Rate", value: `${errorRate}%`, color: "text-warning" },
           {
@@ -153,7 +153,7 @@ export default function ApiRoutesPanel({
                 {(r.hits || 0).toLocaleString()} hits
               </span>
               {(r.errors || 0) > 0 && (
-                <span className="text-xs text-rose-500 font-mono shrink-0">
+                <span className="text-xs text-destructive font-mono shrink-0">
                   {r.errors} err
                 </span>
               )}
@@ -170,7 +170,7 @@ export default function ApiRoutesPanel({
                 className={`px-1.5 py-0.5 rounded text-xs font-bold shrink-0 ${
                   r.status === "Healthy"
                     ? "bg-positive/10 text-positive"
-                    : "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400"
+                    : "bg-destructive/10 text-destructive"
                 }`}
               >
                 {r.status}
@@ -232,7 +232,7 @@ export default function ApiRoutesPanel({
                           </td>
                           <td className="px-2 py-1">
                             {p.required ? (
-                              <span className="text-rose-500 font-bold">
+                              <span className="text-destructive font-bold">
                                 Yes
                               </span>
                             ) : (
@@ -288,7 +288,7 @@ export default function ApiRoutesPanel({
                           </td>
                           <td className="px-2 py-1">
                             {f.required ? (
-                              <span className="text-rose-500 font-bold">
+                              <span className="text-destructive font-bold">
                                 Yes
                               </span>
                             ) : (
