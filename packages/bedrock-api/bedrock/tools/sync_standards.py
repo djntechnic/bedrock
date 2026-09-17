@@ -2,7 +2,7 @@
 Module:  sync_standards.py
 Layer:   bedrock/tools
 Desc:    Mirrors the canonical platform standards (`docs/standards/s001-*.md`
-         through `s012-*.md`, plus `s100-*.md`) from the Bedrock source of
+         through `s014-*.md`, plus `s100-*.md`) from the Bedrock source of
          truth into a downstream consumer repository (CollectIt, MLBTracker).
 
          A mirrored file gets a read-only header prepended so an editor
@@ -40,7 +40,7 @@ def _is_canonical(filename: str) -> bool:
     if not match:
         return False
     number = int(match.group(1))
-    return 1 <= number <= 12 or number == 100
+    return 1 <= number <= 14 or number == 100
 
 
 def _canonical_source_files(source_root: Path) -> list[Path]:

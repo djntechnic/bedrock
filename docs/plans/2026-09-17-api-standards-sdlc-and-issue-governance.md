@@ -121,7 +121,7 @@
 - Modify: `c:\dev\bedrock\docs\standards\README.md`
 - Verify: All platform audit scripts in `c:\dev\bedrock\packages\bedrock-api\bedrock\tools\`
 
-- [ ] **Step 1: Update Standards Table in `docs/standards/README.md`**
+- [x] **Step 1: Update Standards Table in `docs/standards/README.md`**
   Add rows for `S013` and `S014`, update `S006` title to "SDLC & PR Workflow":
   ```markdown
   | [S006](s006-sdlc-and-pr-workflow.md) | SDLC & PR Workflow | active | `bedrock.tools.audit_s006_pr_workflow` | platform |
@@ -129,7 +129,7 @@
   | [S014](s014-issue-logging-and-ecosystem-governance.md) | Issue Logging & Ecosystem Governance | active | `bedrock.tools.audit_ledger_freshness` | platform |
   ```
 
-- [ ] **Step 2: Run platform audit suite on bedrock**
+- [x] **Step 2: Run platform audit suite on bedrock**
   Run:
   ```powershell
   python -m bedrock.tools.audit_s008_guidance
@@ -138,7 +138,7 @@
   ```
   Expected: All exit 0.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
   Run: `git add docs/standards/README.md && git commit -m "docs(standards): update standards index with S006, S013, and S014"`
 
 ---
