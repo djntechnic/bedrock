@@ -9,7 +9,7 @@ assignees: []
 <!--
   CANONICAL DEFECT WORK-ITEM CONTRACT.
   
-  Governed by: dev-doctrine/issue-triage & systematic-debugging.
+  Governed by: dev-doctrine/issue-triage & systematic-debugging (§S014).
   Title convention: [Phase Key].[Requirement Block] Concise Defect Summary
     e.g. "[P5.02] Fix sqlite date serialization in audit log middleware"
 
@@ -17,7 +17,7 @@ assignees: []
   Labels: apply priority:P1|P2|P3|P4, type:defect, and relevant module label.
 
   Every defect must have Phase 1 (Root Cause) completed before filing.
-  Do NOT submit surface-level symptoms without origin tracing.
+  Do NOT submit surface-level symptoms without origin tracing (§S014).
 -->
 
 ## Goal
@@ -45,7 +45,7 @@ assignees: []
 3. **Expected Behavior:**
    <!-- Exact expected output, return type, or clean execution status -->
 
-## Root Cause Analysis (systematic-debugging Phase 1 & 2)
+## Root Cause Analysis (§S014, systematic-debugging Phase 1 & 2)
 
 - **Origin Point:** `packages/bedrock-.../path/to/file.py:Lxx` (function/method name)
 - **Data Flow & Boundary Breakdown:**
@@ -76,10 +76,10 @@ assignees: []
 
 ## Success Criteria
 
-- [ ] Failing test case created and verified failing before fix
-- [ ] Root-cause fix implemented cleanly
+- [ ] Complies with §S006 (Failing reproduction test created and verified failing before fix)
+- [ ] Complies with §S014 (Root-cause fix implemented cleanly at source; no symptom patching)
 - [ ] Backend tests green: `cd packages/bedrock-api && pytest`
 - [ ] Frontend tests green: `npm test` from root (Vitest)
 - [ ] Frontend type check clean: `npm run typecheck` (`tsc -b --noEmit`)
-- [ ] No `console.*` / `print()` — structured Pino/Loguru logging only
-- [ ] CHANGELOG updated if breaking export or consumer-facing contract
+- [ ] No `console.*` / `print()` — structured Pino/Loguru logging only (§S008)
+- [ ] CHANGELOG updated if breaking export or consumer-facing contract (§S006)

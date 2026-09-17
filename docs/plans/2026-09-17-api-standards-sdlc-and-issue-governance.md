@@ -196,13 +196,13 @@
 - Consumes: S014 standards and canonical template contracts.
 - Produces: Complete GitHub issue template suite in `bedrock` citing `§S001`–`§S014`.
 
-- [ ] **Step 1: Create `grid_issue.md` in `bedrock`**
+- [x] **Step 1: Create `grid_issue.md` in `bedrock`**
   Create `.github/ISSUE_TEMPLATE/grid_issue.md` covering the 7-layer contract audit.
 
-- [ ] **Step 2: Update citations in Bedrock issue templates**
+- [x] **Step 2: Update citations in Bedrock issue templates**
   Update `defect.md` and `out_of_scope_bug.md` to reference `§S014` for defect isolation & authoring, and use 3-digit padded citations (`§S001`–`§S014`).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
   Run: `git add .github/ISSUE_TEMPLATE/ && git commit -m "chore(github): add grid_issue template and update citations to S001-S014"`
 
 ---
