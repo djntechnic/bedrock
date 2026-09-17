@@ -325,7 +325,6 @@
       Run: `python -m bedrock.tools.sync_standards --target c:\Dev\CollectIt`
       Expected: Copies `S001`–`S014` and `S100` into `c:\Dev\CollectIt\docs\standards\`.
 
-- [ ] **Step 3: Commit standards synchronization in both consumer repos**
 - [x] **Step 3: Commit standards synchronization in both consumer repos**
   - In `MLBTracker`: `git add docs/standards/ && git commit -m "chore(standards): sync S006, S013, S014 from bedrock"`
   - In `CollectIt`: `git add docs/standards/ && git commit -m "chore(standards): sync S006, S013, S014 from bedrock"`
@@ -341,11 +340,11 @@
 - Modify: `c:\Dev\CollectIt\.github\ISSUE_TEMPLATE\defect.md`
 - Modify: `c:\Dev\CollectIt\.github\ISSUE_TEMPLATE\out_of_scope_bug.md`
 
-- [ ] **Step 1: Update `MLBTracker` templates**
+- [x] **Step 1: Update `MLBTracker` templates**
       Update `defect.md` and `out_of_scope_bug.md` to reference `§S014` (replacing `§S06`), and update the standards checklist to cite `§S001`–`§S014`.
       Commit: `git -C c:\Dev\MLBTracker add .github/ISSUE_TEMPLATE/ && git -C c:\Dev\MLBTracker commit -m "chore(github): align issue templates with S014 and S001-S014 standards"`
 
-- [ ] **Step 2: Update `CollectIt` templates**
+- [x] **Step 2: Update `CollectIt` templates**
       Update `defect.md` and `out_of_scope_bug.md` to reference `§S014`, and update checklist to cite `§S001`–`§S014`.
       Commit: `git -C c:\Dev\CollectIt add .github/ISSUE_TEMPLATE/ && git -C c:\Dev\CollectIt commit -m "chore(github): align issue templates with S014 and S001-S014 standards"`
 
