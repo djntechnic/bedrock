@@ -413,23 +413,22 @@
 
 - All repositories
 
-- [ ] **Step 1: Run Bedrock audit suite**
+- [x] **Step 1: Run Bedrock audit suite**
       From `c:\Dev\bedrock`:
 
   ```bash
   python -m bedrock.tools.audit_s008_guidance
   python -m bedrock.tools.audit_taxonomy_and_casing
-  python -m bedrock.tools.audit_release_version
+  python -m bedrock.tools.audit_release_version v0.10.0
+  python -m bedrock.tools.run_all --root .
   ```
 
   Expected: Exit 0.
 
-- [ ] **Step 2: Run MLBTracker audit and ledger freshness gates**
+- [x] **Step 2: Run MLBTracker audit and ledger freshness gates**
       From `c:\Dev\MLBTracker`:
 
   ```bash
-  python -m bedrock.tools.audit_api_docs --app api.main:app
-  python -m bedrock.tools.audit_ledger_freshness docs/reference/bedrock-issues-to-file.md
   python -m bedrock.tools.audit_s013_api_docs --app api.main:app
   python -m bedrock.tools.audit_s014_ledger_freshness docs/reference/bedrock-issues-to-file.md
   python -m bedrock.tools.audit_s008_guidance
@@ -437,11 +436,9 @@
 
   Expected: Exit 0.
 
-- [ ] **Step 3: Run CollectIt audit and ledger freshness gates**
+- [x] **Step 3: Run CollectIt audit and ledger freshness gates**
       From `c:\Dev\CollectIt`:
   ```bash
-  python -m bedrock.tools.audit_api_docs --app api.main:app --doc docs/guide/api-reference.md
-  python -m bedrock.tools.audit_ledger_freshness docs/reference/bedrock-issues-to-file.md
   python -m bedrock.tools.audit_s013_api_docs --app api.main:app --doc docs/guide/api-reference.md
   python -m bedrock.tools.audit_s014_ledger_freshness docs/reference/bedrock-issues-to-file.md
   python -m bedrock.tools.audit_s008_guidance

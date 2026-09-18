@@ -176,7 +176,7 @@ def main(argv: list[str] | None = None) -> int:
 
     repo_root = pathlib.Path(args.root).resolve()
 
-    doc_default = "docs/guide/api_reference.md"
+    doc_default = "docs/guide/api-reference.md"
     prefix_default = "/api/v1"
     app_default = "api.main:app"
     is_exempt_library = False

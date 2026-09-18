@@ -127,7 +127,7 @@ class AuditS012Config:
 
 @dataclass
 class AuditS013Config:
-    doc: str = "docs/guide/api_reference.md"
+    doc: str = "docs/guide/api-reference.md"
     prefix: str = "/api/v1"
     app: str = "api.main:app"
     exempt_paths: list[str] = field(default_factory=list)
