@@ -382,30 +382,28 @@
 - Create: `c:\Dev\CollectIt\api\tests\test_api_docs.py`
 - Modify: `c:\Dev\CollectIt\frontend\src\pages\AdminPage.tsx`
 
-- [ ] **Step 1: Author `docs/guide/api-authentication.md` in `CollectIt`**
+- [x] **Step 1: Author `docs/guide/api-authentication.md` in `CollectIt`**
       Document JWT authentication, role/module gating, password/OAuth login flows, and rate limiting error shapes.
 
-- [ ] **Step 2: Author `docs/guide/api-reference.md` in `CollectIt`**
+- [x] **Step 2: Author `docs/guide/api-reference.md` in `CollectIt`**
       Document every `/api/v1/...` route shipped by `CollectIt` (`dashboard`, `entities`, `exporting`, `images`, `items`, `items_bulk`, `libraries`, `listing_templates`, `settings`, `templates`, `variables`, `vault`, `vocabularies`).
 
-- [ ] **Step 3: Add `test_api_docs.py` in `CollectIt`**
+- [x] **Step 3: Add `test_api_docs.py` in `CollectIt`**
       Add unit test verifying:
   - `iter_route_specs` yields all `/api/v1` routes.
   - Zero versioned routes undocumented (`test_no_versioned_route_is_undocumented`).
     Run: `pytest c:\Dev\CollectIt\api\tests\test_api_docs.py`
     Expected: PASS.
 
-- [ ] **Step 4: Run `audit_api_docs` on `CollectIt`**
-      Run: `python -m bedrock.tools.audit_api_docs --repo-root c:\Dev\CollectIt --doc docs/guide/api-reference.md --app api.main:app`
-- [ ] **Step 4: Run `audit_s013_api_docs` on `CollectIt`**
+- [x] **Step 4: Run `audit_s013_api_docs` on `CollectIt`**
       Run: `python -m bedrock.tools.audit_s013_api_docs --repo-root c:\Dev\CollectIt --doc docs/guide/api-reference.md --app api.main:app`
       Expected: Exit 0 (all routes documented).
 
-- [ ] **Step 5: Verify AdminPage in `CollectIt`**
+- [x] **Step 5: Verify AdminPage in `CollectIt`**
       Verify that `AdminPage.tsx` mounts `<PlatformHealthPanel />` (which now renders API Routes and Spec sub-tabs from `@djntechnic/bedrock-ui`).
 
-- [ ] **Step 6: Commit in `CollectIt`**
-      Run: `git -C c:\Dev\CollectIt add docs/guide/ api/tests/ && git commit -m "docs(api): add api-reference, api-authentication, and api_docs verification gate (§S013)"`
+- [x] **Step 6: Commit in `CollectIt`**
+      Run: `git -C c:\Dev\CollectIt add docs/guide/ api/tests/ frontend/src/pages/AdminPage.tsx && git commit -m "docs(api): add api-reference, api-authentication, and api_docs verification gate (§S013)"`
 
 ---
 
