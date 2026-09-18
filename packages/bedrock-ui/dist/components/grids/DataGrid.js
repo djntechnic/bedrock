@@ -26,7 +26,7 @@ import { resolveKpiGradientPolicy } from "./kpiGradientRegistry.js";
 import { hasDashboardPinHost } from "./dashboardPinRegistry.js";
 import { unwrapCellPayload, renderMediaCell, renderCell } from "./cellRenderers.js";
 import EditableCell from "./EditableCell.js";
-import useCellSelection from "./useCellSelection.js";
+import { useCellSelection } from "./useCellSelection.js";
 import { cellPositionClasses } from "./cellPosition.js";
 import { applyColumnSizing, computeColumnMinMax, getGradientCellStyle, resolveKpiGradientHexes, prependRankColumn, prependSelectionColumn, hasAggregates, computeAggValue, formatAggValue } from "../../utils/gridUtils.js";
 import { getRankRowClass } from "../../utils/rankStyle.js";

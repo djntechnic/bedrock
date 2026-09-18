@@ -4,66 +4,68 @@ import { default as default3 } from "./components/grids/GridHeader.js";
 import { default as default4 } from "./components/grids/EditableCell.js";
 import { PresentationalTableChrome, chromeClasses } from "./components/grids/PresentationalTableChrome.js";
 import { default as default5 } from "./components/grids/GridFocusShell.js";
-import { parseTsv, toTsv, default as default6 } from "./components/grids/useCellSelection.js";
-import { default as default7 } from "./components/GridWrapper.js";
+import { parseTsv, toTsv, useCellSelection } from "./components/grids/useCellSelection.js";
+import { default as default6 } from "./components/GridWrapper.js";
 import { SortableTableHead } from "./components/SortableTableHead.js";
 import { EmptyTableRow } from "./components/EmptyTableRow.js";
-import { default as default8 } from "./components/ColumnToggle.js";
+import { default as default7 } from "./components/ColumnToggle.js";
 import { __clearCellRegistry, getMediaCellTypes, isMediaCellType, registerColumnRenderer, registerColumnRenderers, registerMediaRenderer, resolveColumnRenderer, resolveMediaRenderer } from "./components/grids/cellRegistry.js";
 import { __clearRowAccentResolver, registerRowAccentResolver, useRowAccentResolver } from "./components/grids/rowAccentRegistry.js";
 import { __clearKpiGradientPolicies, registerKpiGradientPolicy, resolveKpiGradientPolicy } from "./components/grids/kpiGradientRegistry.js";
 import { __clearDashboardPinHost, hasDashboardPinHost, registerDashboardPinHost } from "./components/grids/dashboardPinRegistry.js";
 import { GridStatusContent, GridStatusRow } from "./components/GridStatus.js";
-import { default as default9 } from "./components/admin/LogViewer.js";
-import { PLATFORM_EVENT_TYPES, default as default10 } from "./components/admin/SecurityLogViewer.js";
-import { default as default11, boolValue, groupByCategory } from "./components/admin/ConfigEditor.js";
-import { default as default12, shortUserAgent } from "./components/admin/UsersPanel.js";
-import { default as default13, formatBytes } from "./components/admin/PlatformHealthPanel.js";
-import { default as default14 } from "./components/admin/ProfilePage.js";
-import { default as default15 } from "./components/admin/RoleMatrixPanel.js";
-import { default as default16 } from "./components/admin/MenuNavEditorPanel.js";
-import { default as default17 } from "./components/admin/ModulesPanel.js";
-import { default as default18 } from "./components/admin/UserAccessProfileView.js";
-import { default as default19 } from "./components/admin/UserOverridesDrawer.js";
+import { default as default8 } from "./components/admin/LogViewer.js";
+import { PLATFORM_EVENT_TYPES, default as default9 } from "./components/admin/SecurityLogViewer.js";
+import { default as default10, boolValue, groupByCategory } from "./components/admin/ConfigEditor.js";
+import { default as default11, shortUserAgent } from "./components/admin/UsersPanel.js";
+import { default as default12, formatBytes } from "./components/admin/PlatformHealthPanel.js";
+import { default as default13, OPENAPI_SPEC_URL, POSTMAN_COLLECTION_URL } from "./components/admin/ApiSpecPanel.js";
+import { default as default14, methodColor } from "./components/admin/ApiRoutesPanel.js";
+import { default as default15 } from "./components/admin/ProfilePage.js";
+import { default as default16 } from "./components/admin/RoleMatrixPanel.js";
+import { default as default17 } from "./components/admin/MenuNavEditorPanel.js";
+import { default as default18 } from "./components/admin/ModulesPanel.js";
+import { default as default19 } from "./components/admin/UserAccessProfileView.js";
+import { default as default20 } from "./components/admin/UserOverridesDrawer.js";
 import { useChangePassword } from "./hooks/useProfile.js";
 import { Can, PermissionButton, useSecurity } from "./hooks/useSecurity.js";
 import { useRoleMatrix } from "./hooks/useRoleMatrix.js";
 import { useUserOverrides } from "./hooks/useUserOverrides.js";
 import { useNavSettings, useNavSettingsManager } from "./hooks/useNavSettings.js";
-import { default as default20 } from "./components/admin/gridEditor/GridEditor.js";
-import { default as default21 } from "./components/admin/gridEditor/GridPreview.js";
-import { default as default22 } from "./components/admin/gridEditor/GridFocusMode.js";
+import { default as default21 } from "./components/admin/gridEditor/GridEditor.js";
+import { default as default22 } from "./components/admin/gridEditor/GridPreview.js";
+import { default as default23 } from "./components/admin/gridEditor/GridFocusMode.js";
 import { __clearApiPreviewEndpoints, getApiBindingsForGrid, getDefaultParamsForBinding, registerApiPreviewEndpoints } from "./components/admin/gridEditor/apiPreviewRegistry.js";
 import { __clearDatasetSchemas, assertKeys, getDatasetSchema, getDatasetSchemas, registerDatasetSchemas, unknownColumnsFor, useDatasetSchema } from "./components/admin/gridEditor/datasetSchemas.js";
 import { stageValue } from "./components/admin/gridEditor/previewStaging.js";
 import { useGridDraft } from "./components/admin/gridEditor/useGridDraft.js";
-import { default as default23 } from "./components/AppSidebar.js";
-import { default as default24 } from "./components/CommandPalette.js";
-import { default as default25 } from "./components/GlobalSearchBar.js";
-import { default as default26 } from "./components/KeyboardShortcutsSheet.js";
-import { default as default27 } from "./components/PageHeader.js";
-import { default as default28 } from "./components/PageToolbar.js";
-import { default as default29 } from "./components/PageSkeleton.js";
-import { default as default30 } from "./components/Breadcrumb.js";
-import { default as default31 } from "./components/AppFooter.js";
+import { default as default24 } from "./components/AppSidebar.js";
+import { default as default25 } from "./components/CommandPalette.js";
+import { default as default26 } from "./components/GlobalSearchBar.js";
+import { default as default27 } from "./components/KeyboardShortcutsSheet.js";
+import { default as default28 } from "./components/PageHeader.js";
+import { default as default29 } from "./components/PageToolbar.js";
+import { default as default30 } from "./components/PageSkeleton.js";
+import { default as default31 } from "./components/Breadcrumb.js";
+import { default as default32 } from "./components/AppFooter.js";
 import "react/jsx-runtime";
 import "lucide-react";
 import { cn } from "./lib/utils.js";
 import { Toaster } from "./components/ui/sonner.js";
 import { toast } from "sonner";
-import { default as default32 } from "./components/HelpPopover.js";
+import { default as default33 } from "./components/HelpPopover.js";
 import { __clearNavItems, getNavItems, isNavItemVisible, registerNavItems } from "./components/navRegistry.js";
 import { __clearSearchSources, getSearchAllTarget, getSearchSources, registerSearchAllTarget, registerSearchSource } from "./components/searchSourceRegistry.js";
 import { __clearCommandRoutes, getCommandRoutes, registerCommandRoutes } from "./lib/commandRoutes.js";
-import { default as default33 } from "./components/ProtectedRoute.js";
-import { default as default34 } from "./components/ModuleDisabled.js";
+import { default as default34 } from "./components/ProtectedRoute.js";
+import { default as default35 } from "./components/ModuleDisabled.js";
 import { AuthContext } from "./context/AuthContext.js";
 import { useAuth } from "./hooks/useAuth.js";
 import { useModules } from "./hooks/useModules.js";
-import { default as default35 } from "./components/auth/SetPasswordPage.js";
-import { default as default36 } from "./components/auth/ForgotPasswordPage.js";
-import { default as default37 } from "./components/auth/VerifyEmailPage.js";
-import { default as default38 } from "./components/auth/AuthFlowCard.js";
+import { default as default36 } from "./components/auth/SetPasswordPage.js";
+import { default as default37 } from "./components/auth/ForgotPasswordPage.js";
+import { default as default38 } from "./components/auth/VerifyEmailPage.js";
+import { default as default39 } from "./components/auth/AuthFlowCard.js";
 import { AUTH_FLOW_PATHS, TOKEN_PARAM, completePasswordReset, confirmEmailVerification, messageFromError, requestEmailVerification, requestPasswordReset } from "./components/auth/authFlowApi.js";
 import { buildGridConfig, useGridConfig } from "./hooks/useGridConfig.js";
 import { mergeUserGridPreference, useTogglePlayerPin, useUnpinUserGridColumn, useUpdateUserGridPreference, useUserGridConfig, useUserGridPreference, useUserGridPreferences, useUserPinnedGrids, useUserPlayerPins } from "./hooks/useUserGridConfig.js";
@@ -132,14 +134,16 @@ export {
   AlertDialogPortal,
   AlertDialogTitle,
   AlertDialogTrigger,
+  default14 as ApiRoutesPanel,
+  default13 as ApiSpecPanel,
   AppConfigContext,
-  default31 as AppFooter,
-  default23 as AppSidebar,
+  default32 as AppFooter,
+  default24 as AppSidebar,
   AuthContext,
-  default38 as AuthFlowCard,
+  default39 as AuthFlowCard,
   BUILT_IN_THEMES,
   Badge,
-  default30 as Breadcrumb,
+  default31 as Breadcrumb,
   Button,
   Can,
   Card,
@@ -152,7 +156,7 @@ export {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-  default8 as ColumnToggle,
+  default7 as ColumnToggle,
   Command,
   CommandDialog,
   CommandEmpty,
@@ -160,10 +164,10 @@ export {
   CommandInput,
   CommandItem,
   CommandList,
-  default24 as CommandPalette,
+  default25 as CommandPalette,
   CommandSeparator,
   CommandShortcut,
-  default11 as ConfigEditor,
+  default10 as ConfigEditor,
   DEFAULT_GRID_HEADER_CONFIG,
   DEFAULT_SHORTCUTS_CONFIG,
   DEFAULT_THEME_SEED,
@@ -186,31 +190,33 @@ export {
   DndColumnWrapper,
   default4 as EditableCell,
   EmptyTableRow,
-  default36 as ForgotPasswordPage,
-  default25 as GlobalSearchBar,
-  default20 as GridEditor,
-  default22 as GridFocusMode,
+  default37 as ForgotPasswordPage,
+  default26 as GlobalSearchBar,
+  default21 as GridEditor,
+  default23 as GridFocusMode,
   default5 as GridFocusShell,
   default3 as GridHeader,
-  default21 as GridPreview,
+  default22 as GridPreview,
   GridStatusContent,
   GridStatusRow,
-  default7 as GridWrapper,
-  default32 as HelpPopover,
+  default6 as GridWrapper,
+  default33 as HelpPopover,
   Input,
   KeyboardShortcutsProvider,
-  default26 as KeyboardShortcutsSheet,
+  default27 as KeyboardShortcutsSheet,
   Label,
-  default9 as LogViewer,
-  default16 as MenuNavEditorPanel,
-  default34 as ModuleDisabled,
-  default17 as ModulesPanel,
+  default8 as LogViewer,
+  default17 as MenuNavEditorPanel,
+  default35 as ModuleDisabled,
+  default18 as ModulesPanel,
+  OPENAPI_SPEC_URL,
   PLATFORM_EVENT_TYPES,
-  default27 as PageHeader,
-  default29 as PageSkeleton,
-  default28 as PageToolbar,
+  POSTMAN_COLLECTION_URL,
+  default28 as PageHeader,
+  default30 as PageSkeleton,
+  default29 as PageToolbar,
   PermissionButton,
-  default13 as PlatformHealthPanel,
+  default12 as PlatformHealthPanel,
   Popover,
   PopoverAnchor,
   PopoverContent,
@@ -219,11 +225,11 @@ export {
   PopoverTitle,
   PopoverTrigger,
   PresentationalTableChrome,
-  default14 as ProfilePage,
-  default33 as ProtectedRoute,
-  default15 as RoleMatrixPanel,
+  default15 as ProfilePage,
+  default34 as ProtectedRoute,
+  default16 as RoleMatrixPanel,
   SYSTEM_THEME_ID,
-  default10 as SecurityLogViewer,
+  default9 as SecurityLogViewer,
   SegmentedControl,
   Select,
   SelectContent,
@@ -235,7 +241,7 @@ export {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-  default35 as SetPasswordPage,
+  default36 as SetPasswordPage,
   Sheet,
   SheetClose,
   SheetContent,
@@ -267,10 +273,10 @@ export {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-  default18 as UserAccessProfileView,
-  default19 as UserOverridesDrawer,
-  default12 as UsersPanel,
-  default37 as VerifyEmailPage,
+  default19 as UserAccessProfileView,
+  default20 as UserOverridesDrawer,
+  default11 as UsersPanel,
+  default38 as VerifyEmailPage,
   __clearApiPreviewEndpoints,
   __clearCellRegistry,
   __clearCommandRoutes,
@@ -332,6 +338,7 @@ export {
   logger,
   mergeUserGridPreference,
   messageFromError,
+  methodColor,
   parseTsv,
   prependRankColumn,
   prependSelectionColumn,
@@ -375,7 +382,7 @@ export {
   useAuditResults,
   useAuditRunDetail,
   useAuth,
-  default6 as useCellSelection,
+  useCellSelection,
   useChangePassword,
   useCommandPaletteStore,
   useConfigSettings,

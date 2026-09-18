@@ -96,6 +96,18 @@ def test_sync_check_returns_one_on_missing_mirror(tmp_path: Path, capsys):
     assert "s001-no-duplicate-ui-code.md" in output
 
 
+def test_sync_removes_obsolete_canonical_standards(tmp_path: Path):
+    source = _make_source(tmp_path)
+    target = _make_target(tmp_path)
+    obsolete = target / "docs" / "standards" / "s006-defect-isolation-and-pr-workflow.md"
+    _write(obsolete, "# Obsolete Standard\n")
+
+    exit_code = sync_standards.main(["--target", str(target), "--source", str(source)])
+
+    assert exit_code == 0
+    assert not obsolete.exists()
+
+
 # ---------------------------------------------------------------------------
 # run_all
 # ---------------------------------------------------------------------------

@@ -342,7 +342,6 @@ function useCellSelection({
   };
 }
 export {
-  useCellSelection as default,
   parseTsv,
   seedForKey,
   toTsv,

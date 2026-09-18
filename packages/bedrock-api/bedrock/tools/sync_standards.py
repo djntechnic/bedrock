@@ -2,7 +2,7 @@
 Module:  sync_standards.py
 Layer:   bedrock/tools
 Desc:    Mirrors the canonical platform standards (`docs/standards/s001-*.md`
-         through `s012-*.md`, plus `s100-*.md`) from the Bedrock source of
+         through `s014-*.md`, plus `s100-*.md`) from the Bedrock source of
          truth into a downstream consumer repository (CollectIt, MLBTracker).
 
          A mirrored file gets a read-only header prepended so an editor
@@ -40,7 +40,7 @@ def _is_canonical(filename: str) -> bool:
     if not match:
         return False
     number = int(match.group(1))
-    return 1 <= number <= 12 or number == 100
+    return 1 <= number <= 14 or number == 100
 
 
 def _canonical_source_files(source_root: Path) -> list[Path]:
@@ -70,7 +70,20 @@ def sync_standards(source_root: Path, target_root: Path, check: bool) -> tuple[b
     diagnostics: list[str] = []
     ok = True
 
-    for source_file in _canonical_source_files(source_root):
+    canonical_sources = _canonical_source_files(source_root)
+    canonical_names = {p.name for p in canonical_sources}
+
+    if target_dir.is_dir():
+        for existing in sorted(target_dir.glob("*.md")):
+            if _is_canonical(existing.name) and existing.name not in canonical_names:
+                if check:
+                    ok = False
+                    diagnostics.append(f"OBSOLETE: {existing} (no longer in canonical source)")
+                else:
+                    existing.unlink()
+                    diagnostics.append(f"REMOVED: {existing}")
+
+    for source_file in canonical_sources:
         expected = _mirrored_content(source_file.read_text(encoding="utf-8"))
         target_file = target_dir / source_file.name
 
@@ -102,7 +115,13 @@ def sync_standards(source_root: Path, target_root: Path, check: bool) -> tuple[b
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", required=True, help="target consumer repository root")
+    parser.add_argument(
+        "--root",
+        "--target",
+        dest="root",
+        required=True,
+        help="target consumer repository root",
+    )
     parser.add_argument(
         "--source",
         default=None,

@@ -1,5 +1,5 @@
 """
-Module:  audit_ledger_freshness.py
+Module:  audit_s014_ledger_freshness.py
 Layer:   bedrock/tools
 Desc:    CI gate for a consumer repo's `docs/reference/bedrock_issues_to_file.md`
          ledger — the table each app keeps of platform defects it hit, linked
@@ -19,10 +19,12 @@ Desc:    CI gate for a consumer repo's `docs/reference/bedrock_issues_to_file.md
          yet has nothing stale to report, so a missing file is success, not an
          error — this only fires once a repo has something to keep honest.
 
-Usage:   python -m bedrock.tools.audit_ledger_freshness <path-to-ledger.md>
+Usage:   python -m bedrock.tools.audit_s014_ledger_freshness <path-to-ledger.md>
+         python -m bedrock.tools.audit_s014_ledger_freshness --root .
 """
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import subprocess
@@ -30,6 +32,8 @@ import sys
 from pathlib import Path
 
 from loguru import logger
+
+from bedrock.tools._config import load_bedrock_config
 
 _BEDROCK_REPO = "djntechnic/bedrock"
 
@@ -190,17 +194,37 @@ def _fetch_open_issue_numbers() -> set[int] | None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = sys.argv[1:] if argv is None else argv
-    if len(args) != 1:
-        logger.error("usage: audit_ledger_freshness <path-to-ledger.md>")
-        return 1
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("path", nargs="?", default=None, help="path to ledger markdown file")
+    parser.add_argument("--root", default=".", help="repository root")
+    args = parser.parse_args(argv)
 
-    path = args[0]
+    root = Path(args.root).resolve()
+    path_str = args.path
+    if path_str is None:
+        try:
+            config = load_bedrock_config(root)
+            path_str = config.audit_s014.ledger_path
+        except Exception:
+            path_str = "docs/reference/bedrock-issues-to-file.md"
+
+    ledger_path = Path(path_str)
+    if not ledger_path.is_absolute():
+        ledger_path = root / ledger_path
+
     open_issues = _fetch_open_issue_numbers()
-    failures = audit(path, open_issues)
+    failures = audit(str(ledger_path), open_issues)
 
     for failure in failures:
         logger.error(failure)
+
+    if not failures:
+        display_path = (
+            str(ledger_path.relative_to(root))
+            if ledger_path.is_relative_to(root)
+            else str(ledger_path)
+        )
+        logger.info(f"OK - ledger at {display_path} is fresh.")
 
     return 1 if failures else 0
 

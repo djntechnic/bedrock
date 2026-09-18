@@ -3,11 +3,11 @@ import pathlib
 
 from fastapi import APIRouter, FastAPI
 
-from bedrock.tools import audit_api_docs as gate
+from bedrock.tools import audit_s013_api_docs as gate
 
 
 def _write_doc(tmp_path: pathlib.Path, lines: list[str]) -> pathlib.Path:
-    doc = tmp_path / "docs" / "guide" / "api_reference.md"
+    doc = tmp_path / "docs" / "guide" / "api-reference.md"
     doc.parent.mkdir(parents=True, exist_ok=True)
     doc.write_text("\n".join(["# API Reference", *lines, ""]), encoding="utf-8")
     return doc
