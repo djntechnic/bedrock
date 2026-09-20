@@ -3,10 +3,10 @@ import subprocess
 from pathlib import Path
 
 from bedrock.tools import (
-    audit_s005_testing,
-    audit_s006_pr_workflow,
-    audit_s007_schema_catalog,
-    audit_s008_guidance,
+    s005_audit_testing,
+    s006_audit_pr_workflow,
+    s007_audit_schema_catalog,
+    s008_audit_guidance,
 )
 
 
@@ -20,7 +20,7 @@ def _write_toml(tmp_path: Path, section: str = "") -> None:
 
 
 # ---------------------------------------------------------------------------
-# audit_s005_testing
+# s005_audit_testing
 # ---------------------------------------------------------------------------
 
 
@@ -29,14 +29,14 @@ def test_s005_returns_zero_when_route_has_paired_test(tmp_path: Path):
     _write(tmp_path / "bedrock" / "routes" / "health.py", "def get_health(): ...\n")
     _write(tmp_path / "tests" / "test_health.py", "def test_get_health(): ...\n")
 
-    assert audit_s005_testing.main(["--root", str(tmp_path)]) == 0
+    assert s005_audit_testing.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s005_returns_one_on_missing_paired_test(tmp_path: Path):
     _write_toml(tmp_path, "[tool.bedrock.audit.s005]\nexemptions = []\n")
     _write(tmp_path / "bedrock" / "routes" / "health.py", "def get_health(): ...\n")
 
-    assert audit_s005_testing.main(["--root", str(tmp_path)]) == 1
+    assert s005_audit_testing.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s005_returns_zero_when_missing_pairing_is_exempted(tmp_path: Path):
@@ -46,7 +46,7 @@ def test_s005_returns_zero_when_missing_pairing_is_exempted(tmp_path: Path):
     )
     _write(tmp_path / "bedrock" / "routes" / "health.py", "def get_health(): ...\n")
 
-    assert audit_s005_testing.main(["--root", str(tmp_path)]) == 0
+    assert s005_audit_testing.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s005_returns_one_on_unexempted_skip_decorator(tmp_path: Path):
@@ -56,7 +56,7 @@ def test_s005_returns_one_on_unexempted_skip_decorator(tmp_path: Path):
         "import pytest\n\n@pytest.mark.skip(reason='flaky')\ndef test_get_health(): ...\n",
     )
 
-    assert audit_s005_testing.main(["--root", str(tmp_path)]) == 1
+    assert s005_audit_testing.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s005_returns_one_on_live_db_reference_without_conftest(tmp_path: Path):
@@ -66,7 +66,7 @@ def test_s005_returns_one_on_live_db_reference_without_conftest(tmp_path: Path):
         "def test_uses_live_db():\n    connect('bedrock.db')\n",
     )
 
-    assert audit_s005_testing.main(["--root", str(tmp_path)]) == 1
+    assert s005_audit_testing.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s005_returns_zero_for_live_db_reference_with_conftest(tmp_path: Path):
@@ -77,11 +77,11 @@ def test_s005_returns_zero_for_live_db_reference_with_conftest(tmp_path: Path):
         "def test_uses_live_db():\n    connect('bedrock.db')\n",
     )
 
-    assert audit_s005_testing.main(["--root", str(tmp_path)]) == 0
+    assert s005_audit_testing.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s005_returns_two_on_missing_bedrock_toml(tmp_path: Path):
-    assert audit_s005_testing.main(["--root", str(tmp_path)]) == 2
+    assert s005_audit_testing.main(["--root", str(tmp_path)]) == 2
 
 
 def test_s005_ignores_venv_and_site_packages(tmp_path: Path):
@@ -102,11 +102,11 @@ def test_s005_ignores_venv_and_site_packages(tmp_path: Path):
         "def test_db(): connect('app.db')\n",
     )
 
-    assert audit_s005_testing.main(["--root", str(tmp_path)]) == 0
+    assert s005_audit_testing.main(["--root", str(tmp_path)]) == 0
 
 
 # ---------------------------------------------------------------------------
-# audit_s006_pr_workflow
+# s006_audit_pr_workflow
 # ---------------------------------------------------------------------------
 
 
@@ -117,7 +117,7 @@ def test_s006_returns_zero_when_ledger_is_well_formed(tmp_path: Path):
     )
     _write(tmp_path / "docs" / "ledger.md", "# Out-of-Scope Ledger\n\n- nothing yet\n")
 
-    assert audit_s006_pr_workflow.main(["--root", str(tmp_path)]) == 0
+    assert s006_audit_pr_workflow.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s006_returns_one_when_ledger_file_missing(tmp_path: Path):
@@ -126,7 +126,7 @@ def test_s006_returns_one_when_ledger_file_missing(tmp_path: Path):
         '[tool.bedrock.audit.s006]\nledger_files = ["docs/ledger.md"]\nexemptions = []\n',
     )
 
-    assert audit_s006_pr_workflow.main(["--root", str(tmp_path)]) == 1
+    assert s006_audit_pr_workflow.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s006_returns_one_when_ledger_missing_markdown_header(tmp_path: Path):
@@ -136,7 +136,7 @@ def test_s006_returns_one_when_ledger_missing_markdown_header(tmp_path: Path):
     )
     _write(tmp_path / "docs" / "ledger.md", "just some text, no header\n")
 
-    assert audit_s006_pr_workflow.main(["--root", str(tmp_path)]) == 1
+    assert s006_audit_pr_workflow.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s006_returns_zero_when_missing_ledger_is_exempted(tmp_path: Path):
@@ -146,7 +146,7 @@ def test_s006_returns_zero_when_missing_ledger_is_exempted(tmp_path: Path):
         'exemptions = ["docs/ledger.md"]\n',
     )
 
-    assert audit_s006_pr_workflow.main(["--root", str(tmp_path)]) == 0
+    assert s006_audit_pr_workflow.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s006_returns_one_on_dirty_working_tree(tmp_path: Path):
@@ -154,21 +154,21 @@ def test_s006_returns_one_on_dirty_working_tree(tmp_path: Path):
     subprocess.run(["git", "init"], cwd=tmp_path, capture_output=True, check=True)
     _write(tmp_path / "untracked.txt", "dirty\n")
 
-    assert audit_s006_pr_workflow.main(["--root", str(tmp_path)]) == 1
+    assert s006_audit_pr_workflow.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s006_returns_zero_when_not_a_git_repository(tmp_path: Path):
     _write_toml(tmp_path, "[tool.bedrock.audit.s006]\nledger_files = []\nexemptions = []\n")
 
-    assert audit_s006_pr_workflow.main(["--root", str(tmp_path)]) == 0
+    assert s006_audit_pr_workflow.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s006_returns_two_on_missing_bedrock_toml(tmp_path: Path):
-    assert audit_s006_pr_workflow.main(["--root", str(tmp_path)]) == 2
+    assert s006_audit_pr_workflow.main(["--root", str(tmp_path)]) == 2
 
 
 # ---------------------------------------------------------------------------
-# audit_s007_schema_catalog
+# s007_audit_schema_catalog
 # ---------------------------------------------------------------------------
 
 
@@ -185,7 +185,7 @@ def test_s007_returns_zero_for_compliant_table(tmp_path: Path):
         f"CREATE TABLE app_config_settings (id INTEGER PRIMARY KEY, {_AUDIT_COLUMNS_SQL});\n",
     )
 
-    assert audit_s007_schema_catalog.main(["--root", str(tmp_path)]) == 0
+    assert s007_audit_schema_catalog.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s007_returns_one_on_bad_table_prefix(tmp_path: Path):
@@ -195,7 +195,7 @@ def test_s007_returns_one_on_bad_table_prefix(tmp_path: Path):
         f"CREATE TABLE settings (id INTEGER PRIMARY KEY, {_AUDIT_COLUMNS_SQL});\n",
     )
 
-    assert audit_s007_schema_catalog.main(["--root", str(tmp_path)]) == 1
+    assert s007_audit_schema_catalog.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s007_returns_one_on_missing_audit_columns(tmp_path: Path):
@@ -205,7 +205,7 @@ def test_s007_returns_one_on_missing_audit_columns(tmp_path: Path):
         "CREATE TABLE app_config_settings (id INTEGER PRIMARY KEY, value TEXT);\n",
     )
 
-    assert audit_s007_schema_catalog.main(["--root", str(tmp_path)]) == 1
+    assert s007_audit_schema_catalog.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s007_returns_zero_for_grandfathered_table(tmp_path: Path):
@@ -218,7 +218,7 @@ def test_s007_returns_zero_for_grandfathered_table(tmp_path: Path):
         "CREATE TABLE settings (id INTEGER PRIMARY KEY, value TEXT);\n",
     )
 
-    assert audit_s007_schema_catalog.main(["--root", str(tmp_path)]) == 0
+    assert s007_audit_schema_catalog.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s007_returns_zero_for_declared_domain_prefix(tmp_path: Path):
@@ -231,7 +231,7 @@ def test_s007_returns_zero_for_declared_domain_prefix(tmp_path: Path):
         f"CREATE TABLE collectit_cards (id INTEGER PRIMARY KEY, {_AUDIT_COLUMNS_SQL});\n",
     )
 
-    assert audit_s007_schema_catalog.main(["--root", str(tmp_path)]) == 0
+    assert s007_audit_schema_catalog.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s007_returns_one_on_bare_table_literal_outside_catalog(tmp_path: Path):
@@ -242,7 +242,7 @@ def test_s007_returns_one_on_bare_table_literal_outside_catalog(tmp_path: Path):
         "    return db.query(\"SELECT value FROM app_config_settings WHERE key = ?\", key)\n",
     )
 
-    assert audit_s007_schema_catalog.main(["--root", str(tmp_path)]) == 1
+    assert s007_audit_schema_catalog.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s007_returns_zero_when_catalog_symbol_used(tmp_path: Path):
@@ -254,15 +254,15 @@ def test_s007_returns_zero_when_catalog_symbol_used(tmp_path: Path):
         "    return db.query(f\"SELECT value FROM {Tables.APP_CONFIG_SETTINGS} WHERE key = ?\", key)\n",
     )
 
-    assert audit_s007_schema_catalog.main(["--root", str(tmp_path)]) == 0
+    assert s007_audit_schema_catalog.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s007_returns_two_on_missing_bedrock_toml(tmp_path: Path):
-    assert audit_s007_schema_catalog.main(["--root", str(tmp_path)]) == 2
+    assert s007_audit_schema_catalog.main(["--root", str(tmp_path)]) == 2
 
 
 # ---------------------------------------------------------------------------
-# audit_s008_guidance
+# s008_audit_guidance
 # ---------------------------------------------------------------------------
 
 
@@ -272,28 +272,28 @@ def test_s008_returns_zero_for_compliant_docs_layout(tmp_path: Path):
     _write(tmp_path / "docs" / "standards" / "s001-example.md", "# S001\n")
     _write(tmp_path / "docs" / "README.md", "# Docs Index\n")
 
-    assert audit_s008_guidance.main(["--root", str(tmp_path)]) == 0
+    assert s008_audit_guidance.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s008_returns_one_when_guidance_doc_exceeds_max_lines(tmp_path: Path):
     _write_toml(tmp_path, "[tool.bedrock.audit.s008]\nmax_lines = 10\nexemptions = []\n")
     _write(tmp_path / "CLAUDE.md", "\n".join(f"line {i}" for i in range(20)))
 
-    assert audit_s008_guidance.main(["--root", str(tmp_path)]) == 1
+    assert s008_audit_guidance.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s008_returns_one_on_deprecated_punchlists_directory(tmp_path: Path):
     _write_toml(tmp_path, "[tool.bedrock.audit.s008]\nexemptions = []\n")
     _write(tmp_path / "docs" / "punchlists" / "old.md", "# Old Punchlist\n")
 
-    assert audit_s008_guidance.main(["--root", str(tmp_path)]) == 1
+    assert s008_audit_guidance.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s008_returns_one_on_non_kebab_case_filename(tmp_path: Path):
     _write_toml(tmp_path, "[tool.bedrock.audit.s008]\nexemptions = []\n")
     _write(tmp_path / "docs" / "standards" / "S001_Example.md", "# S001\n")
 
-    assert audit_s008_guidance.main(["--root", str(tmp_path)]) == 1
+    assert s008_audit_guidance.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s008_returns_zero_for_declared_allowed_root_doc(tmp_path: Path):
@@ -303,15 +303,15 @@ def test_s008_returns_zero_for_declared_allowed_root_doc(tmp_path: Path):
     )
     _write(tmp_path / "docs" / "platform-guide.md", "# Platform Guide\n")
 
-    assert audit_s008_guidance.main(["--root", str(tmp_path)]) == 0
+    assert s008_audit_guidance.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s008_returns_one_on_undeclared_root_doc(tmp_path: Path):
     _write_toml(tmp_path, "[tool.bedrock.audit.s008]\nexemptions = []\n")
     _write(tmp_path / "docs" / "platform-guide.md", "# Platform Guide\n")
 
-    assert audit_s008_guidance.main(["--root", str(tmp_path)]) == 1
+    assert s008_audit_guidance.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s008_returns_two_on_missing_bedrock_toml(tmp_path: Path):
-    assert audit_s008_guidance.main(["--root", str(tmp_path)]) == 2
+    assert s008_audit_guidance.main(["--root", str(tmp_path)]) == 2

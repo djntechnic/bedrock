@@ -2,11 +2,10 @@
 from pathlib import Path
 
 from bedrock.tools import (
-    audit_s001_duplicates,
     s001_audit_duplicates,
-    audit_s002_grids,
-    audit_s003_logging,
-    audit_s004_config,
+    s002_audit_grids,
+    s003_audit_logging,
+    s004_audit_config,
 )
 
 
@@ -30,7 +29,6 @@ def test_s001_returns_zero_when_no_duplicates(tmp_path: Path):
     _write(tmp_path / "components" / "Button.tsx", "export function Button() { return null; }")
     _write(tmp_path / "components" / "Input.tsx", "export function Input() { return null; }")
 
-    assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 0
     assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 0
 
 
@@ -42,7 +40,6 @@ def test_s001_returns_zero_when_duplicate_is_exempted(tmp_path: Path):
     _write(tmp_path / "components" / "Button.tsx", "export function Button() { return null; }")
     _write(tmp_path / "legacy" / "Button.tsx", "export function Button() { return null; }")
 
-    assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 0
     assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 0
 
 
@@ -51,12 +48,10 @@ def test_s001_returns_one_on_unexempted_twin_component(tmp_path: Path):
     _write(tmp_path / "components" / "Button.tsx", "export function Button() { return null; }")
     _write(tmp_path / "pages" / "Button.tsx", "export function Button() { return null; }")
 
-    assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 1
     assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s001_returns_two_on_missing_bedrock_toml(tmp_path: Path):
-    assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 2
     assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 2
 
 
@@ -68,7 +63,6 @@ def test_s001_flags_primitive_imported_outside_barrel(tmp_path: Path):
         "export function PlayerCard() { return <Button />; }\n",
     )
 
-    assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 1
     assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 1
 
 
@@ -80,7 +74,6 @@ def test_s001_returns_zero_for_barrel_primitive_import(tmp_path: Path):
         "export function PlayerCard() { return <Button />; }\n",
     )
 
-    assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 0
     assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 0
 
 
@@ -93,7 +86,6 @@ def test_s001_flags_inline_date_formatter(tmp_path: Path):
         "}\n",
     )
 
-    assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 1
     assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 1
 
 
@@ -107,7 +99,6 @@ def test_s001_returns_zero_for_formatter_from_lib(tmp_path: Path):
         "}\n",
     )
 
-    assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 0
     assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 0
 
 
@@ -120,7 +111,6 @@ def test_s001_flags_inline_query_key_array(tmp_path: Path):
         "}\n",
     )
 
-    assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 1
     assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 1
 
 
@@ -133,7 +123,6 @@ def test_s001_returns_zero_for_query_keys_factory(tmp_path: Path):
         "}\n",
     )
 
-    assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 0
     assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 0
 
 
@@ -175,7 +164,7 @@ def test_s001_flags_multiple_api_routes_maps(tmp_path: Path):
 
 
 # ---------------------------------------------------------------------------
-# audit_s002_grids
+# s002_audit_grids
 # ---------------------------------------------------------------------------
 
 
@@ -195,7 +184,7 @@ def test_s002_returns_zero_when_grid_consumes_use_grid_config(tmp_path: Path):
         """,
     )
 
-    assert audit_s002_grids.main(["--root", str(tmp_path)]) == 0
+    assert s002_audit_grids.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s002_respects_presentational_tables_exemption(tmp_path: Path):
@@ -208,7 +197,7 @@ def test_s002_respects_presentational_tables_exemption(tmp_path: Path):
         "export function ReadOnlyReport() { return <table><tbody /></table>; }",
     )
 
-    assert audit_s002_grids.main(["--root", str(tmp_path)]) == 0
+    assert s002_audit_grids.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s002_returns_one_on_unexempted_raw_table(tmp_path: Path):
@@ -221,7 +210,7 @@ def test_s002_returns_one_on_unexempted_raw_table(tmp_path: Path):
         "export function RawReport() { return <table><tbody /></table>; }",
     )
 
-    assert audit_s002_grids.main(["--root", str(tmp_path)]) == 1
+    assert s002_audit_grids.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s002_returns_one_on_grid_missing_use_grid_config(tmp_path: Path):
@@ -239,11 +228,11 @@ def test_s002_returns_one_on_grid_missing_use_grid_config(tmp_path: Path):
         """,
     )
 
-    assert audit_s002_grids.main(["--root", str(tmp_path)]) == 1
+    assert s002_audit_grids.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s002_returns_two_on_missing_bedrock_toml(tmp_path: Path):
-    assert audit_s002_grids.main(["--root", str(tmp_path)]) == 2
+    assert s002_audit_grids.main(["--root", str(tmp_path)]) == 2
 
 
 def test_audit_s002_fails_when_page_attribute_missing_or_empty(tmp_path: Path):
@@ -262,7 +251,7 @@ def test_audit_s002_fails_when_page_attribute_missing_or_empty(tmp_path: Path):
         """,
     )
 
-    assert audit_s002_grids.main(["--root", str(tmp_path)]) == 1
+    assert s002_audit_grids.main(["--root", str(tmp_path)]) == 1
 
 
 def test_audit_s002_fails_when_row_key_column_is_null_or_not_in_columns(tmp_path: Path):
@@ -281,7 +270,7 @@ def test_audit_s002_fails_when_row_key_column_is_null_or_not_in_columns(tmp_path
         """,
     )
 
-    assert audit_s002_grids.main(["--root", str(tmp_path)]) == 1
+    assert s002_audit_grids.main(["--root", str(tmp_path)]) == 1
 
 
 def test_audit_s002_fails_when_grid_preview_api_endpoint_missing_or_unwired(tmp_path: Path):
@@ -310,7 +299,7 @@ def test_audit_s002_fails_when_grid_preview_api_endpoint_missing_or_unwired(tmp_
         """,
     )
 
-    assert audit_s002_grids.main(["--root", str(tmp_path)]) == 1
+    assert s002_audit_grids.main(["--root", str(tmp_path)]) == 1
 
 
 def test_audit_s002_passes_with_fully_compliant_7_layer_grid_definition(tmp_path: Path):
@@ -351,11 +340,11 @@ def test_audit_s002_passes_with_fully_compliant_7_layer_grid_definition(tmp_path
         """,
     )
 
-    assert audit_s002_grids.main(["--root", str(tmp_path)]) == 0
+    assert s002_audit_grids.main(["--root", str(tmp_path)]) == 0
 
 
 # ---------------------------------------------------------------------------
-# audit_s003_logging
+# s003_audit_logging
 # ---------------------------------------------------------------------------
 
 
@@ -370,7 +359,7 @@ def test_s003_returns_zero_when_structured_logging_used(tmp_path: Path):
         "from loguru import logger\n\nlogger.info('pipeline started')\n",
     )
 
-    assert audit_s003_logging.main(["--root", str(tmp_path)]) == 0
+    assert s003_audit_logging.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s003_returns_one_on_bare_console_call(tmp_path: Path):
@@ -380,14 +369,14 @@ def test_s003_returns_one_on_bare_console_call(tmp_path: Path):
         'console.log("loaded grid " + gridId);\n',
     )
 
-    assert audit_s003_logging.main(["--root", str(tmp_path)]) == 1
+    assert s003_audit_logging.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s003_returns_one_on_bare_print_call(tmp_path: Path):
     _write_toml(tmp_path, "[tool.bedrock.audit.s003]\nexemptions = []\n")
     _write(tmp_path / "services" / "pipeline.py", "print('pipeline started')\n")
 
-    assert audit_s003_logging.main(["--root", str(tmp_path)]) == 1
+    assert s003_audit_logging.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s003_exempts_configured_paths(tmp_path: Path):
@@ -397,7 +386,7 @@ def test_s003_exempts_configured_paths(tmp_path: Path):
     )
     _write(tmp_path / "scripts" / "one_off.py", "print('human-readable status')\n")
 
-    assert audit_s003_logging.main(["--root", str(tmp_path)]) == 0
+    assert s003_audit_logging.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s003_returns_one_on_bare_console_info_call(tmp_path: Path):
@@ -407,22 +396,22 @@ def test_s003_returns_one_on_bare_console_info_call(tmp_path: Path):
         'console.info("loaded grid " + gridId);\n',
     )
 
-    assert audit_s003_logging.main(["--root", str(tmp_path)]) == 1
+    assert s003_audit_logging.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s003_ignores_python_test_files(tmp_path: Path):
     _write_toml(tmp_path, "[tool.bedrock.audit.s003]\nexemptions = []\n")
     _write(tmp_path / "tests" / "test_pipeline.py", "print('debug output for a human')\n")
 
-    assert audit_s003_logging.main(["--root", str(tmp_path)]) == 0
+    assert s003_audit_logging.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s003_returns_two_on_missing_bedrock_toml(tmp_path: Path):
-    assert audit_s003_logging.main(["--root", str(tmp_path)]) == 2
+    assert s003_audit_logging.main(["--root", str(tmp_path)]) == 2
 
 
 # ---------------------------------------------------------------------------
-# audit_s004_config
+# s004_audit_config
 # ---------------------------------------------------------------------------
 
 
@@ -433,7 +422,7 @@ def test_s004_returns_zero_when_config_surface_used(tmp_path: Path):
         "from bedrock.core.database import db\n\nlive_cycle = db.get_config('live_cycle', 2026)\n",
     )
 
-    assert audit_s004_config.main(["--root", str(tmp_path)]) == 0
+    assert s004_audit_config.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s004_returns_one_on_raw_os_environ(tmp_path: Path):
@@ -443,7 +432,7 @@ def test_s004_returns_one_on_raw_os_environ(tmp_path: Path):
         "import os\n\nlive_cycle = int(os.environ.get('LIVE_CYCLE', '2026'))\n",
     )
 
-    assert audit_s004_config.main(["--root", str(tmp_path)]) == 1
+    assert s004_audit_config.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s004_returns_one_on_hardcoded_secret(tmp_path: Path):
@@ -453,7 +442,7 @@ def test_s004_returns_one_on_hardcoded_secret(tmp_path: Path):
         'API_SECRET_KEY = "sk-hardcoded-value"\n',
     )
 
-    assert audit_s004_config.main(["--root", str(tmp_path)]) == 1
+    assert s004_audit_config.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s004_exempts_configured_paths(tmp_path: Path):
@@ -466,7 +455,7 @@ def test_s004_exempts_configured_paths(tmp_path: Path):
         "import os\n\nport = os.environ.get('PORT', '8000')\n",
     )
 
-    assert audit_s004_config.main(["--root", str(tmp_path)]) == 0
+    assert s004_audit_config.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s004_returns_one_on_get_config_call_missing_default(tmp_path: Path):
@@ -476,7 +465,7 @@ def test_s004_returns_one_on_get_config_call_missing_default(tmp_path: Path):
         "from bedrock.core.database import db\n\nlive_cycle = db.get_config('live_cycle')\n",
     )
 
-    assert audit_s004_config.main(["--root", str(tmp_path)]) == 1
+    assert s004_audit_config.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s004_flags_hardcoded_tooltip_delay_duration(tmp_path: Path):
@@ -488,7 +477,7 @@ def test_s004_flags_hardcoded_tooltip_delay_duration(tmp_path: Path):
         "}\n",
     )
 
-    assert audit_s004_config.main(["--root", str(tmp_path)]) == 1
+    assert s004_audit_config.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s004_returns_zero_for_tooltip_delay_from_settings(tmp_path: Path):
@@ -501,7 +490,7 @@ def test_s004_returns_zero_for_tooltip_delay_from_settings(tmp_path: Path):
         "}\n",
     )
 
-    assert audit_s004_config.main(["--root", str(tmp_path)]) == 0
+    assert s004_audit_config.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s003_ignores_default_ignored_dirs(tmp_path: Path):
@@ -511,11 +500,11 @@ def test_s003_ignores_default_ignored_dirs(tmp_path: Path):
     _write(tmp_path / "dist" / "bundle.ts", "console.log('debug in dist');\n")
     _write(tmp_path / "build" / "out.ts", "console.log('debug in build');\n")
 
-    assert audit_s003_logging.main(["--root", str(tmp_path)]) == 0
+    assert s003_audit_logging.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s004_returns_two_on_missing_bedrock_toml(tmp_path: Path):
-    assert audit_s004_config.main(["--root", str(tmp_path)]) == 2
+    assert s004_audit_config.main(["--root", str(tmp_path)]) == 2
 
 
 def test_s004_ignores_default_ignored_dirs(tmp_path: Path):
@@ -529,4 +518,4 @@ def test_s004_ignores_default_ignored_dirs(tmp_path: Path):
         "<TooltipProvider delayDuration={150}>{children}</TooltipProvider>",
     )
 
-    assert audit_s004_config.main(["--root", str(tmp_path)]) == 0
+    assert s004_audit_config.main(["--root", str(tmp_path)]) == 0

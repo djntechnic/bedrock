@@ -2,7 +2,7 @@
 import textwrap
 import pytest
 
-from bedrock.tools import audit_s014_ledger_freshness as gate
+from bedrock.tools import s014_audit_ledger_freshness as gate
 
 
 def _ledger(tmp_path, body: str):

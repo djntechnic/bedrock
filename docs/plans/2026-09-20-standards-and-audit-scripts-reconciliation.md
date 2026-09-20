@@ -23,6 +23,7 @@
 ### Task 1: Reconcile & Standardize S001 Audit (`s001_audit_duplicates.py`)
 
 **Files:**
+
 - Create: `packages/bedrock-api/bedrock/tools/s001_audit_duplicates.py`
 - Create: `scripts/audit/s001_audit_duplicates.py`
 - Modify: `packages/bedrock-api/tests/test_audit_s001_to_s004.py`
@@ -31,6 +32,7 @@
 - Delete: `packages/bedrock-api/tests/test_audit_s1_duplicates.py`
 
 **Interfaces:**
+
 - Consumes: `bedrock.tools._reporter.AuditReporter`, `bedrock.tools._config.load_bedrock_config`
 - Produces: `s001_audit_duplicates.main(argv: list[str] | None = None) -> int`
 
@@ -52,17 +54,16 @@ def test_s001_allows_shadows_marker(tmp_path: Path):
     assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 0
 ```
 
-- [ ] **Step 2: Implement `s001_audit_duplicates.py` consolidating all S001 invariants**
 - [x] **Step 2: Implement `s001_audit_duplicates.py` consolidating all S001 invariants**
 
 Create `packages/bedrock-api/bedrock/tools/s001_audit_duplicates.py` combining:
+
 - Exported symbol collisions across the repo
 - `@shadows <Name>` comment bypass
 - Direct `axios` import check (`_AXIOS_IMPORT = re.compile(r'^\s*import\s+(?!type\b)(?:axios\b|\*\s+as\s+\w+)[^;]*?from\s+["\']axios["\']', re.M)`)
 - Barrel-only primitives, inline formatters, inline query keys
 - Standard `AuditReporter` lifecycle
 
-- [ ] **Step 3: Create runner shim `scripts/audit/s001_audit_duplicates.py`**
 - [x] **Step 3: Create runner shim `scripts/audit/s001_audit_duplicates.py`**
 
 ```python
@@ -75,21 +76,19 @@ if __name__ == "__main__":
     sys.exit(main())
 ```
 
-- [ ] **Step 4: Remove legacy files**
 - [x] **Step 4: Remove legacy files**
 
 Delete:
+
 - `packages/bedrock-api/bedrock/tools/audit_s1_duplicates.py`
 - `packages/bedrock-api/bedrock/tools/audit_s001_duplicates.py`
 - `packages/bedrock-api/tests/test_audit_s1_duplicates.py`
 
-- [ ] **Step 5: Run tests to verify**
 - [x] **Step 5: Run tests to verify**
 
 Run: `pytest packages/bedrock-api/tests/test_audit_s001_to_s004.py -k "s001" -v`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
 - [x] **Step 6: Commit**
 
 ```bash
@@ -103,6 +102,7 @@ git commit -m "refactor(tools): standardize s001_audit_duplicates and prune audi
 ### Task 2: Reconcile S009 Design Tokens & Prune Legacy Audit
 
 **Files:**
+
 - Create: `packages/bedrock-api/bedrock/tools/s009_audit_design_tokens.py`
 - Create: `scripts/audit/s009_audit_design_tokens.py`
 - Modify: `packages/bedrock-api/tests/test_audit_design_tokens.py`
@@ -110,6 +110,7 @@ git commit -m "refactor(tools): standardize s001_audit_duplicates and prune audi
 - Delete: `packages/bedrock-api/bedrock/tools/audit_s009_design_tokens.py`
 
 **Interfaces:**
+
 - Consumes: `bedrock.tools._reporter.AuditReporter`, `bedrock.tools._config.load_bedrock_config`
 - Produces: `s009_audit_design_tokens.main(argv: list[str] | None = None) -> int`
 
@@ -151,6 +152,7 @@ git commit -m "refactor(tools): standardize s009_audit_design_tokens and prune a
 ### Task 3: Rename S002–S008, S010–S014 Audits & Create Runner Shims
 
 **Files:**
+
 - Create: `packages/bedrock-api/bedrock/tools/s002_audit_grids.py` through `s014_audit_ledger_freshness.py`
 - Create: `scripts/audit/s002_audit_grids.py` through `s014_audit_ledger_freshness.py`
 - Modify: `packages/bedrock-api/tests/test_audit_s001_to_s004.py`
@@ -161,12 +163,14 @@ git commit -m "refactor(tools): standardize s009_audit_design_tokens and prune a
 - Delete: old `audit_s002_*.py` through `audit_s014_*.py` files in `packages/bedrock-api/bedrock/tools/`
 
 **Interfaces:**
+
 - Consumes: `bedrock.tools._reporter.AuditReporter`
 - Produces: `s###_audit_[name].main(argv: list[str] | None = None) -> int` for each standard
 
-- [ ] **Step 1: Rename tool modules to `s###_audit_[name].py`**
+- [x] **Step 1: Rename tool modules to `s###_audit_[name].py`**
 
 Rename via git mv:
+
 - `audit_s002_grids.py` -> `s002_audit_grids.py`
 - `audit_s003_logging.py` -> `s003_audit_logging.py`
 - `audit_s004_config.py` -> `s004_audit_config.py`
@@ -180,9 +184,10 @@ Rename via git mv:
 - `audit_s013_api_docs.py` -> `s013_audit_api_docs.py`
 - `audit_s014_ledger_freshness.py` -> `s014_audit_ledger_freshness.py`
 
-- [ ] **Step 2: Create runner shims in `scripts/audit/`**
+- [x] **Step 2: Create runner shims in `scripts/audit/`**
 
 Create runner shims for `s002` through `s014` in `scripts/audit/` following the standard 4-line template:
+
 ```python
 #!/usr/bin/env python
 """Runner shim for Standard S### audit."""
@@ -193,21 +198,22 @@ if __name__ == "__main__":
     sys.exit(main())
 ```
 
-- [ ] **Step 3: Update all test suite imports**
+- [x] **Step 3: Update all test suite imports**
 
 Update module imports in:
+
 - `packages/bedrock-api/tests/test_audit_s001_to_s004.py`
 - `packages/bedrock-api/tests/test_audit_s005_to_s008.py`
 - `packages/bedrock-api/tests/test_audit_s009_to_s012.py`
 - `packages/bedrock-api/tests/test_audit_api_docs.py`
 - `packages/bedrock-api/tests/test_audit_ledger_freshness.py`
 
-- [ ] **Step 4: Run the complete audit test suite**
+- [x] **Step 4: Run the complete audit test suite**
 
 Run: `pytest packages/bedrock-api/tests/test_audit_*.py -v`
 Expected: All tests PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/bedrock-api/bedrock/tools/s*.py scripts/audit/*.py packages/bedrock-api/tests/
@@ -219,17 +225,20 @@ git commit -m "refactor(tools): rename platform audits to s###_audit_* and gener
 ### Task 4: Implement S100 Domain Registry Audit & Shim
 
 **Files:**
+
 - Create: `packages/bedrock-api/bedrock/tools/s100_audit_domain_registry.py`
 - Create: `scripts/audit/s100_audit_domain_registry.py`
 - Create: `packages/bedrock-api/tests/test_audit_s100_domain_registry.py`
 
 **Interfaces:**
+
 - Consumes: `bedrock.tools._reporter.AuditReporter`, `bedrock.tools._config.load_bedrock_config`
 - Produces: `s100_audit_domain_registry.main(argv: list[str] | None = None) -> int`
 
 - [ ] **Step 1: Write unit tests for S100 domain registry validation**
 
 Create `packages/bedrock-api/tests/test_audit_s100_domain_registry.py`:
+
 - Test platform range `S001`–`S099`, `S100` requires `tier: platform`.
 - Test domain range `S101`–`S199` requires `tier: domain`.
 - Test invalid range (e.g. `s200`, `s000`) fails.
@@ -245,6 +254,7 @@ Expected: FAIL (ModuleNotFoundError: `bedrock.tools.s100_audit_domain_registry`)
 - [ ] **Step 3: Implement `s100_audit_domain_registry.py`**
 
 Implement `packages/bedrock-api/bedrock/tools/s100_audit_domain_registry.py` using `AuditReporter`:
+
 - Parses frontmatter and headings of markdown files in `docs/standards/`.
 - Verifies tier matching, reserved numbering ranges, and 5 mandatory sections.
 - Exits 0 clean, 1 on violation, 2 on config error.
@@ -278,12 +288,14 @@ git commit -m "feat(tools): implement s100_audit_domain_registry and runner shim
 ### Task 5: Update Orchestrator (`run_all.py`), Runner (`run_qa.py`), and Sync Tooling (`sync_standards.py`)
 
 **Files:**
+
 - Modify: `packages/bedrock-api/bedrock/tools/run_all.py`
 - Modify: `packages/bedrock-api/bedrock/tools/sync_standards.py`
 - Modify: `packages/bedrock-api/tests/test_run_all.py` (or equivalent orchestrator test)
 - Modify: `scripts/run_qa.py`
 
 **Interfaces:**
+
 - Consumes: `s001_audit_duplicates` through `s014_audit_ledger_freshness`, `s100_audit_domain_registry`
 - Produces: `run_all.run_all(root: Path, fail_fast: bool = False) -> tuple[list[AuditRunResult], int]`
 
@@ -314,19 +326,24 @@ git commit -m "feat(tools): update run_all to dispatch s###_audit_* modules incl
 ### Task 6: Reconcile Standards Docs Frontmatter & Authoring Documentation
 
 **Files:**
+
 - Modify: `docs/standards/s001-no-duplicate-ui-code.md` through `s014-issue-logging-and-ecosystem-governance.md`
 - Modify: `docs/standards/s100-domain-standard-authoring.md`
 - Modify: `docs/standards/README.md`
 
 **Interfaces:**
+
 - Standards YAML frontmatter aligns with `enforced_by: bedrock.tools.s###_audit_[name]` and `cli_command: "python scripts/audit/s###_audit_[name].py --root ."`
 
 - [ ] **Step 1: Update frontmatter in all platform standards**
 
 In `docs/standards/s001-*.md` through `s014-*.md`, update:
+
 ```markdown
 enforced_by: bedrock.tools.s###_audit_[name]
 cli_command: "python scripts/audit/s###_audit_[name].py --root ."
+enforced*by: bedrock.tools.s###\_audit*[name]
+cli*command: "python scripts/audit/s###\_audit*[name].py --root ."
 ```
 
 - [ ] **Step 2: Update `s100-domain-standard-authoring.md` and `docs/standards/README.md`**
@@ -350,6 +367,7 @@ git commit -m "docs(standards): update frontmatter to s###_audit_* and document 
 ### Task 7: Deploy & Reconcile in `bedrock-ai-kit` (`c:\Dev\bedrock-ai-kit`)
 
 **Files:**
+
 - Modify: `c:\Dev\bedrock-ai-kit\rules\s001-no-duplicate-ui-code.md` through `s014...`
 - Modify: `c:\Dev\bedrock-ai-kit\rules\s100-domain-standard-authoring.md`
 - Modify: `c:\Dev\bedrock-ai-kit\scripts\Sync-AgenticTooling.ps1`
@@ -380,6 +398,7 @@ git -C c:\Dev\bedrock-ai-kit commit -m "feat(doctrine): synchronize s###_audit_*
 ### Task 8: Deploy & Reconcile in `CollectIt` (`c:\Dev\CollectIt`)
 
 **Files:**
+
 - Modify: `c:\Dev\CollectIt\docs\standards/` (synced via `sync_standards`)
 - Rename/Create: `c:\Dev\CollectIt\scripts\audit\s101_audit_ebay_compliance.py`
 - Rename/Create: `c:\Dev\CollectIt\scripts\audit\s102_audit_listing_templates.py`
@@ -394,10 +413,12 @@ Expected: Mirrors updated successfully.
 - [ ] **Step 2: Align domain audit scripts into `scripts/audit/`**
 
 Ensure `scripts/audit/` exists in `CollectIt` and rename domain audit scripts to:
+
 - `scripts/audit/s101_audit_ebay_compliance.py`
 - `scripts/audit/s102_audit_listing_templates.py`
 - `scripts/audit/s103_audit_variables.py`
 Remove obsolete `scripts/audits/` if present.
+  Remove obsolete `scripts/audits/` if present.
 
 - [ ] **Step 3: Run platform audits and domain audits in `CollectIt`**
 
@@ -418,6 +439,7 @@ git -C c:\Dev\CollectIt commit -m "chore(standards): sync platform standards and
 ### Task 9: Deploy & Reconcile in `MLBTracker` (`c:\Dev\MLBTracker`)
 
 **Files:**
+
 - Modify: `c:\Dev\MLBTracker\docs\standards/` (synced via `sync_standards`)
 - Create: `c:\Dev\MLBTracker\scripts\audit\s101_audit_stat_invariants.py`
 - Modify: `c:\Dev\MLBTracker\scripts\run_qa.py` / `scripts\run_audit.ps1`
@@ -450,6 +472,7 @@ git -C c:\Dev\MLBTracker commit -m "chore(standards): sync platform standards an
 ### Task 10: Ecosystem Verification & Gate Sign-Off
 
 **Files:**
+
 - Test/Audit: All repositories (`bedrock`, `bedrock-ai-kit`, `CollectIt`, `MLBTracker`)
 
 - [ ] **Step 1: Run full QA in Bedrock**

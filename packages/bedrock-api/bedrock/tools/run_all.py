@@ -36,19 +36,19 @@ from typing import Protocol
 
 from bedrock.tools import (
     s001_audit_duplicates,
-    audit_s002_grids,
-    audit_s003_logging,
-    audit_s004_config,
-    audit_s005_testing,
-    audit_s006_pr_workflow,
-    audit_s007_schema_catalog,
-    audit_s008_guidance,
+    s002_audit_grids,
+    s003_audit_logging,
+    s004_audit_config,
+    s005_audit_testing,
+    s006_audit_pr_workflow,
+    s007_audit_schema_catalog,
+    s008_audit_guidance,
     s009_audit_design_tokens,
-    audit_s010_security,
-    audit_s011_navigation,
-    audit_s012_pins,
-    audit_s013_api_docs,
-    audit_s014_ledger_freshness,
+    s010_audit_security,
+    s011_audit_navigation,
+    s012_audit_pins,
+    s013_audit_api_docs,
+    s014_audit_ledger_freshness,
 )
 
 class _AuditModule(Protocol):
@@ -59,19 +59,19 @@ class _AuditModule(Protocol):
 #: expose a `main(argv) -> int` entry point matching every other audit tool.
 AUDIT_MODULES: list[tuple[str, _AuditModule]] = [
     ("s001", s001_audit_duplicates),
-    ("s002", audit_s002_grids),
-    ("s003", audit_s003_logging),
-    ("s004", audit_s004_config),
-    ("s005", audit_s005_testing),
-    ("s006", audit_s006_pr_workflow),
-    ("s007", audit_s007_schema_catalog),
-    ("s008", audit_s008_guidance),
+    ("s002", s002_audit_grids),
+    ("s003", s003_audit_logging),
+    ("s004", s004_audit_config),
+    ("s005", s005_audit_testing),
+    ("s006", s006_audit_pr_workflow),
+    ("s007", s007_audit_schema_catalog),
+    ("s008", s008_audit_guidance),
     ("s009", s009_audit_design_tokens),
-    ("s010", audit_s010_security),
-    ("s011", audit_s011_navigation),
-    ("s012", audit_s012_pins),
-    ("s013", audit_s013_api_docs),
-    ("s014", audit_s014_ledger_freshness),
+    ("s010", s010_audit_security),
+    ("s011", s011_audit_navigation),
+    ("s012", s012_audit_pins),
+    ("s013", s013_audit_api_docs),
+    ("s014", s014_audit_ledger_freshness),
 ]
 
 _STATUS_BY_EXIT_CODE = {0: "PASS", 1: "FAIL"}
