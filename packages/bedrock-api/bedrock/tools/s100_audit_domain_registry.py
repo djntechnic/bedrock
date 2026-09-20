@@ -74,11 +74,24 @@ class RegistryViolation:
 
 def _parse_frontmatter(content: str) -> tuple[dict[str, Any] | None, str]:
     lines = content.splitlines(keepends=True)
-    if not lines or lines[0].strip() != "---":
+    start_index = 0
+    while start_index < len(lines):
+        line = lines[start_index].strip()
+        if not line:
+            start_index += 1
+            continue
+        if line.startswith("<!--"):
+            while start_index < len(lines) and "-->" not in lines[start_index]:
+                start_index += 1
+            start_index += 1
+            continue
+        break
+
+    if start_index >= len(lines) or lines[start_index].strip() != "---":
         return None, content
 
     closing_index = -1
-    for i in range(1, len(lines)):
+    for i in range(start_index + 1, len(lines)):
         if lines[i].strip() == "---":
             closing_index = i
             break
@@ -86,8 +99,8 @@ def _parse_frontmatter(content: str) -> tuple[dict[str, Any] | None, str]:
     if closing_index == -1:
         return None, content
 
-    fm_raw = "".join(lines[1:closing_index])
-    body = "".join(lines[closing_index + 1:])
+    fm_raw = "".join(lines[start_index + 1 : closing_index])
+    body = "".join(lines[closing_index + 1 :])
 
     if yaml is not None:
         try:
