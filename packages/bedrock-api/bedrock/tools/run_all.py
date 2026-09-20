@@ -36,6 +36,7 @@ from typing import Protocol
 
 from bedrock.tools import (
     audit_s001_duplicates,
+    s001_audit_duplicates,
     audit_s002_grids,
     audit_s003_logging,
     audit_s004_config,
@@ -59,6 +60,7 @@ class _AuditModule(Protocol):
 #: expose a `main(argv) -> int` entry point matching every other audit tool.
 AUDIT_MODULES: list[tuple[str, _AuditModule]] = [
     ("s001", audit_s001_duplicates),
+    ("s001", s001_audit_duplicates),
     ("s002", audit_s002_grids),
     ("s003", audit_s003_logging),
     ("s004", audit_s004_config),

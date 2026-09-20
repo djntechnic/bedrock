@@ -3,6 +3,7 @@ from pathlib import Path
 
 from bedrock.tools import (
     audit_s001_duplicates,
+    s001_audit_duplicates,
     audit_s002_grids,
     audit_s003_logging,
     audit_s004_config,
@@ -20,6 +21,7 @@ def _write_toml(tmp_path: Path, section: str = "") -> None:
 
 # ---------------------------------------------------------------------------
 # audit_s001_duplicates
+# s001_audit_duplicates
 # ---------------------------------------------------------------------------
 
 
@@ -29,6 +31,7 @@ def test_s001_returns_zero_when_no_duplicates(tmp_path: Path):
     _write(tmp_path / "components" / "Input.tsx", "export function Input() { return null; }")
 
     assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 0
+    assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s001_returns_zero_when_duplicate_is_exempted(tmp_path: Path):
@@ -40,6 +43,7 @@ def test_s001_returns_zero_when_duplicate_is_exempted(tmp_path: Path):
     _write(tmp_path / "legacy" / "Button.tsx", "export function Button() { return null; }")
 
     assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 0
+    assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s001_returns_one_on_unexempted_twin_component(tmp_path: Path):
@@ -48,10 +52,12 @@ def test_s001_returns_one_on_unexempted_twin_component(tmp_path: Path):
     _write(tmp_path / "pages" / "Button.tsx", "export function Button() { return null; }")
 
     assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 1
+    assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s001_returns_two_on_missing_bedrock_toml(tmp_path: Path):
     assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 2
+    assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 2
 
 
 def test_s001_flags_primitive_imported_outside_barrel(tmp_path: Path):
@@ -63,6 +69,7 @@ def test_s001_flags_primitive_imported_outside_barrel(tmp_path: Path):
     )
 
     assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 1
+    assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s001_returns_zero_for_barrel_primitive_import(tmp_path: Path):
@@ -74,6 +81,7 @@ def test_s001_returns_zero_for_barrel_primitive_import(tmp_path: Path):
     )
 
     assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 0
+    assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s001_flags_inline_date_formatter(tmp_path: Path):
@@ -86,6 +94,7 @@ def test_s001_flags_inline_date_formatter(tmp_path: Path):
     )
 
     assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 1
+    assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s001_returns_zero_for_formatter_from_lib(tmp_path: Path):
@@ -99,6 +108,7 @@ def test_s001_returns_zero_for_formatter_from_lib(tmp_path: Path):
     )
 
     assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 0
+    assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s001_flags_inline_query_key_array(tmp_path: Path):
@@ -111,6 +121,7 @@ def test_s001_flags_inline_query_key_array(tmp_path: Path):
     )
 
     assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 1
+    assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s001_returns_zero_for_query_keys_factory(tmp_path: Path):
@@ -123,6 +134,44 @@ def test_s001_returns_zero_for_query_keys_factory(tmp_path: Path):
     )
 
     assert audit_s001_duplicates.main(["--root", str(tmp_path)]) == 0
+    assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 0
+
+
+def test_s001_flags_bare_axios_import(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s001]\nexemptions = []\n")
+    _write(
+        tmp_path / "api" / "legacy.ts",
+        'import axios from "axios";\nexport const fetchThing = () => axios.get("/x");\n',
+    )
+
+    assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 1
+
+
+def test_s001_allows_shadows_marker(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s001]\nexemptions = []\n")
+    _write(
+        tmp_path / "components" / "Button.tsx",
+        "// @shadows Button - deliberate fork\nexport function Button() { return null; }\n",
+    )
+    _write(tmp_path / "legacy" / "Button.tsx", "export function Button() { return null; }\n")
+
+    assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 0
+
+
+def test_s001_flags_multiple_query_keys_factories(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s001]\nexemptions = []\n")
+    _write(tmp_path / "hooks" / "queryKeys1.ts", "export const queryKeys = {};\n")
+    _write(tmp_path / "hooks" / "queryKeys2.ts", "export const queryKeys = {};\n")
+
+    assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 1
+
+
+def test_s001_flags_multiple_api_routes_maps(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s001]\nexemptions = []\n")
+    _write(tmp_path / "api" / "routes1.ts", "export const API_ROUTES = {};\n")
+    _write(tmp_path / "api" / "routes2.ts", "export const API_ROUTES = {};\n")
+
+    assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 1
 
 
 # ---------------------------------------------------------------------------
