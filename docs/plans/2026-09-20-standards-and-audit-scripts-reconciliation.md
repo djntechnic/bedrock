@@ -459,23 +459,23 @@ git -C c:\Dev\CollectIt commit -m "chore(standards): sync platform standards and
 - Create: `c:\Dev\MLBTracker\scripts\audit\s101_audit_stat_invariants.py`
 - Modify: `c:\Dev\MLBTracker\scripts\run_qa.py` / `scripts\run_audit.ps1`
 
-- [ ] **Step 1: Sync platform standards from Bedrock**
+- [x] **Step 1: Sync platform standards from Bedrock**
 
 Run: `python -m bedrock.tools.sync_standards --target c:\Dev\MLBTracker --source c:\Dev\bedrock`
 Expected: Mirrors updated successfully.
 
-- [ ] **Step 2: Establish `scripts/audit/s101_audit_stat_invariants.py`**
+- [x] **Step 2: Establish `scripts/audit/s101_audit_stat_invariants.py`**
 
 Ensure `scripts/audit/` exists in `MLBTracker` and create `scripts/audit/s101_audit_stat_invariants.py` subclassing `AuditReporter` to enforce Standard S101.
 
-- [ ] **Step 3: Run platform audits and domain audit in `MLBTracker`**
+- [x] **Step 3: Run platform audits and domain audit in `MLBTracker`**
 
 Run:
 `python -m bedrock.tools.run_all --root c:\Dev\MLBTracker`
 `python c:\Dev\MLBTracker\scripts\audit\s101_audit_stat_invariants.py --root c:\Dev\MLBTracker`
 Expected: Clean PASS.
 
-- [ ] **Step 4: Commit in `MLBTracker`**
+- [x] **Step 4: Commit in `MLBTracker`**
 
 ```bash
 git -C c:\Dev\MLBTracker add docs/standards/ scripts/
