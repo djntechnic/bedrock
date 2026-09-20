@@ -334,7 +334,6 @@ git commit -m "feat(tools): update run_all to dispatch s###_audit_* modules incl
 
 - Standards YAML frontmatter aligns with `enforced_by: bedrock.tools.s###_audit_[name]` and `cli_command: "python scripts/audit/s###_audit_[name].py --root ."`
 
-- [ ] **Step 1: Update frontmatter in all platform standards**
 - [x] **Step 1: Update frontmatter in all platform standards**
 
 In `docs/standards/s001-*.md` through `s014-*.md`, update:
@@ -342,22 +341,17 @@ In `docs/standards/s001-*.md` through `s014-*.md`, update:
 ```markdown
 enforced*by: bedrock.tools.s###\_audit*[name]
 cli*command: "python scripts/audit/s###\_audit*[name].py --root ."
-enforced_by: bedrock.tools.s###_audit_[name]
-cli_command: "python scripts/audit/s###_audit_[name].py --root ."
 ```
 
-- [ ] **Step 2: Update `s100-domain-standard-authoring.md` and `docs/standards/README.md`**
 - [x] **Step 2: Update `s100-domain-standard-authoring.md` and `docs/standards/README.md`**
 
 Update `README.md` index table and authoring checklists to specify the `s###_audit_[name].py` naming standard and the 6-step authoring workflow for platform and domain standards.
 
-- [ ] **Step 3: Run S100 audit to verify all standards pass inspection**
 - [x] **Step 3: Run S100 audit to verify all standards pass inspection**
 
 Run: `python scripts/audit/s100_audit_domain_registry.py --root .`
 Expected: Exit code 0, all standards valid.
 
-- [ ] **Step 4: Commit**
 - [x] **Step 4: Commit**
 
 ```bash
@@ -371,29 +365,35 @@ git commit -m "docs(standards): update frontmatter to s###_audit_* and document 
 
 **Files:**
 
-- Modify: `c:\Dev\bedrock-ai-kit\rules\s001-no-duplicate-ui-code.md` through `s014...`
-- Modify: `c:\Dev\bedrock-ai-kit\rules\s100-domain-standard-authoring.md`
-- Modify: `c:\Dev\bedrock-ai-kit\scripts\Sync-AgenticTooling.ps1`
+- Modify: `c:\Dev\bedrock-ai-kit\docs\standards\s001-no-duplicate-ui-code.md` through `s014...`, `s100...`
+- Delete: `c:\Dev\bedrock-ai-kit\docs\standards\s101-agentic-tooling-and-vendor-governance.md`
+- Delete: `c:\Dev\bedrock-ai-kit\rules\s101-*`
 - Modify: `c:\Dev\bedrock-ai-kit\scripts\Audit-AgenticTooling.ps1`
+- Modify: `c:\Dev\bedrock-ai-kit\tests\test_rules_structure.py`
+- Modify: `c:\Dev\bedrock-ai-kit\tests\test_standards_registry.py`
 
-- [x] **Step 1: Synchronize updated standards into `bedrock-ai-kit/rules/`**
+- [x] **Step 1: Synchronize updated standards into `bedrock-ai-kit/docs/standards/`**
 
-Copy the updated `s001`–`s014` and `s100` markdown files from `c:\Dev\bedrock\docs\standards\` to `c:\Dev\bedrock-ai-kit\rules\`.
+Deploy canonical `s001`–`s014` and `s100` markdown files from `c:\Dev\bedrock\docs\standards\` to `c:\Dev\bedrock-ai-kit\docs\standards\`.
 
-- [x] **Step 2: Update `Sync-AgenticTooling.ps1` and `Audit-AgenticTooling.ps1`**
+- [x] **Step 2: Remove S101 from `bedrock-ai-kit`**
 
-Ensure `Audit-AgenticTooling.ps1` and `Sync-AgenticTooling.ps1` recognize the `s###_audit_` naming convention and shims in `scripts/audit/`.
+Purge `s101` from `docs/standards/` and `rules/` as domain standards do not apply to bedrock-ai-kit. Update test suites accordingly.
 
-- [x] **Step 3: Run validation in `bedrock-ai-kit`**
+- [x] **Step 3: Update `Audit-AgenticTooling.ps1`**
 
-Run: `pwsh -File c:\Dev\bedrock-ai-kit\scripts\Audit-AgenticTooling.ps1 -Root c:\Dev\bedrock-ai-kit`
-Expected: PASS with 0 violations.
+Ensure `Audit-AgenticTooling.ps1` recognizes the `s###_audit_` naming convention, supports `-Root`, and properly exempts consumer domain rules (`s1##`).
 
-- [x] **Step 4: Commit in `bedrock-ai-kit`**
+- [x] **Step 4: Run validation in `bedrock-ai-kit`**
+
+Run: `pwsh -File c:\Dev\bedrock-ai-kit\scripts\Audit-AgenticTooling.ps1` and `python -m pytest tests`.
+Expected: PASS with 0 violations / 18 passed.
+
+- [x] **Step 5: Commit in `bedrock-ai-kit`**
 
 ```bash
-git -C c:\Dev\bedrock-ai-kit add rules/ scripts/
-git -C c:\Dev\bedrock-ai-kit commit -m "feat(doctrine): synchronize s###_audit_* standards and audit tooling"
+git -C c:\Dev\bedrock-ai-kit add -A
+git -C c:\Dev\bedrock-ai-kit commit -m "chore(standards): deploy canonical standards to docs/standards and purge s101 from bedrock-ai-kit"
 ```
 
 ---
