@@ -334,24 +334,30 @@ git commit -m "feat(tools): update run_all to dispatch s###_audit_* modules incl
 
 - Standards YAML frontmatter aligns with `enforced_by: bedrock.tools.s###_audit_[name]` and `cli_command: "python scripts/audit/s###_audit_[name].py --root ."`
 
+- [ ] **Step 1: Update frontmatter in all platform standards**
 - [x] **Step 1: Update frontmatter in all platform standards**
 
 In `docs/standards/s001-*.md` through `s014-*.md`, update:
 
 ```markdown
+enforced*by: bedrock.tools.s###\_audit*[name]
+cli*command: "python scripts/audit/s###\_audit*[name].py --root ."
 enforced_by: bedrock.tools.s###_audit_[name]
 cli_command: "python scripts/audit/s###_audit_[name].py --root ."
 ```
 
+- [ ] **Step 2: Update `s100-domain-standard-authoring.md` and `docs/standards/README.md`**
 - [x] **Step 2: Update `s100-domain-standard-authoring.md` and `docs/standards/README.md`**
 
 Update `README.md` index table and authoring checklists to specify the `s###_audit_[name].py` naming standard and the 6-step authoring workflow for platform and domain standards.
 
+- [ ] **Step 3: Run S100 audit to verify all standards pass inspection**
 - [x] **Step 3: Run S100 audit to verify all standards pass inspection**
 
 Run: `python scripts/audit/s100_audit_domain_registry.py --root .`
 Expected: Exit code 0, all standards valid.
 
+- [ ] **Step 4: Commit**
 - [x] **Step 4: Commit**
 
 ```bash
@@ -370,20 +376,20 @@ git commit -m "docs(standards): update frontmatter to s###_audit_* and document 
 - Modify: `c:\Dev\bedrock-ai-kit\scripts\Sync-AgenticTooling.ps1`
 - Modify: `c:\Dev\bedrock-ai-kit\scripts\Audit-AgenticTooling.ps1`
 
-- [ ] **Step 1: Synchronize updated standards into `bedrock-ai-kit/rules/`**
+- [x] **Step 1: Synchronize updated standards into `bedrock-ai-kit/rules/`**
 
 Copy the updated `s001`–`s014` and `s100` markdown files from `c:\Dev\bedrock\docs\standards\` to `c:\Dev\bedrock-ai-kit\rules\`.
 
-- [ ] **Step 2: Update `Sync-AgenticTooling.ps1` and `Audit-AgenticTooling.ps1`**
+- [x] **Step 2: Update `Sync-AgenticTooling.ps1` and `Audit-AgenticTooling.ps1`**
 
 Ensure `Audit-AgenticTooling.ps1` and `Sync-AgenticTooling.ps1` recognize the `s###_audit_` naming convention and shims in `scripts/audit/`.
 
-- [ ] **Step 3: Run validation in `bedrock-ai-kit`**
+- [x] **Step 3: Run validation in `bedrock-ai-kit`**
 
 Run: `pwsh -File c:\Dev\bedrock-ai-kit\scripts\Audit-AgenticTooling.ps1 -Root c:\Dev\bedrock-ai-kit`
 Expected: PASS with 0 violations.
 
-- [ ] **Step 4: Commit in `bedrock-ai-kit`**
+- [x] **Step 4: Commit in `bedrock-ai-kit`**
 
 ```bash
 git -C c:\Dev\bedrock-ai-kit add rules/ scripts/
