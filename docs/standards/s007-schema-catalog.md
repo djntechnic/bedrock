@@ -103,8 +103,12 @@ follow the same rules under their own `<domain>_` prefix.
   hand-written inline.
 
 ## Object Naming Conventions
+## Architecture & Code Contracts
 
 ### Tables
+### Object Naming Conventions
+
+#### Tables
 
 `<domain>_<entity>[_<qualifier>]`, snake_case, plural entity nouns for row
 collections. The domain prefix identifies the functional area that owns the
@@ -112,6 +116,7 @@ table; the entity names what a row represents; an optional qualifier narrows
 further (`auth_user_sessions` — sessions scoped to `auth_users`).
 
 ### Reserved platform prefixes
+#### Reserved platform prefixes
 
 | Prefix   | Reserved for                                                          |
 | -------- | ---------------------------------------------------------------------- |
@@ -120,39 +125,70 @@ further (`auth_user_sessions` — sessions scoped to `auth_users`).
 | `sys_`   | Schema metadata, system runs, migrations                              |
 | `log_`   | System and audit logs                                                 |
 | `diag_`  | Diagnostics, automated health-check runs                              |
+| `test_`  | Test fixtures and harness state; never in a non-test schema           |
 
 These five prefixes are platform-owned; a consumer does not add tables under
 them. A consumer's own domains — whatever business vocabulary its extension
 points serve — take their own `<domain>_` prefix, chosen by the consumer and
 disjoint from the reserved list above.
+Consumer applications must use a distinct, documented domain prefix for their
+own tables (e.g. `col_` for CollectIt, `mlb_` for MLBTracker) — never one of
+the four platform prefixes above. A collision between a consumer's table name
+and a platform table name is a bug in the consumer's schema, not a reason to
+rename the platform object.
 
 ### Views
+#### Grandfathered exceptions
 
 Prefixed `v_`, noun-first (`v_auth_users_active`, not `v_active_users`). The
 view name reads as "the `v_` table of `<noun>`, filtered/shaped by
 `<qualifier>`."
+Tables that existed before prefixing was introduced are permitted only when
+declared in the grandfathered list in `bedrock.toml` (`[standards.s007]`):
 
 ### Indexes
+```toml
+[standards.s007]
+grandfathered_tables = ["users", "sessions"]
+```
 
 - Standard: `idx_<full_table>_<col1>[_<col2>]`. The table segment is the full
   table name, never an abbreviation — `idx_diag_health_runs_status`, not
   `idx_dhr_status`.
 - Unique: `ux_<table>_<col>`.
 - Partial: append `_partial` to whichever of the two forms above applies.
+Grandfathered status is an adoption bridge, not a permanent pass — a migration
+that renames a grandfathered table to its prefixed form drops it from the list.
+New tables never enter the grandfathered list.
 
 ### Join tables
+#### Junction tables
 
 Name both related tables, alphabetically, pluralized as the join semantics
 require (`auth_role_permissions` combines `auth_roles` and `auth_permissions`
 in alphabetical order of the entity nouns).
+Follow `<domain>_<entity1>_<entity2>`, alphabetized by entity name:
+`auth_roles_users` (associates `auth_roles` and `auth_users`).
 
 ### Staging tables
+#### Views
+
+Follow the same naming convention as tables, prefixed with `v_`:
+`v_auth_active_users`.
+
+#### Indexes
+
+Follow `ix_<table_name>_<column1>[_<column2>]`:
+`ix_auth_users_email`. A unique index uses `uq_`: `uq_auth_users_username`.
+
+#### Transient staging tables
 
 End in `_staging`. A `_staging` table is transient by contract — it exists to
 hold an import or migration in flight, not as a permanent extension of the
 schema it stages into.
 
 ## Mandatory Audit Columns Contract
+### Mandatory Audit Columns Contract
 
 Every stateful/entity table defines:
 
@@ -173,6 +209,7 @@ a boolean-to-integer conversion or an ad hoc timestamp format at the call
 site.
 
 ## Cross-Dialect Portability Contract
+### Cross-Dialect Portability Contract
 
 - **Primary keys**: use a portable auto-incrementing form
   (`INTEGER PRIMARY KEY` under SQLite's `rowid` semantics) rather than a
@@ -193,6 +230,7 @@ site.
   portability guarantee even when the query works today.
 
 ## Single-Source Catalog Architecture
+### Single-Source Catalog Architecture
 
 **Python — `core/schema_catalog.py`** is the sole place raw object names
 appear as string literals in the backend. It exposes `Tables`, `Views`, and

@@ -166,3 +166,6 @@ exemptions = [
 [tool.bedrock.audit.s014]
 ledger_path = "docs/reference/bedrock-issues-to-file.md"
 exemptions = []
+
+[tool.bedrock.audit.s100]
+exemptions = []

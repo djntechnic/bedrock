@@ -36,7 +36,6 @@
 - Consumes: `bedrock.tools._reporter.AuditReporter`, `bedrock.tools._config.load_bedrock_config`
 - Produces: `s001_audit_duplicates.main(argv: list[str] | None = None) -> int`
 
-- [ ] **Step 1: Port missing S1 test cases into `test_audit_s001_to_s004.py`**
 - [x] **Step 1: Port missing S1 test cases into `test_audit_s001_to_s004.py`**
 
 Update `packages/bedrock-api/tests/test_audit_s001_to_s004.py` to import `s001_audit_duplicates` and include tests for direct `axios` imports, `@shadows <Name>` annotations, and duplicate export detection.
@@ -114,11 +113,11 @@ git commit -m "refactor(tools): standardize s001_audit_duplicates and prune audi
 - Consumes: `bedrock.tools._reporter.AuditReporter`, `bedrock.tools._config.load_bedrock_config`
 - Produces: `s009_audit_design_tokens.main(argv: list[str] | None = None) -> int`
 
-- [x] **Step 1: Move `audit_s009_design_tokens.py` to `s009_audit_design_tokens.py`**
+- [ ] **Step 1: Move `audit_s009_design_tokens.py` to `s009_audit_design_tokens.py`**
 
 Rename `packages/bedrock-api/bedrock/tools/audit_s009_design_tokens.py` -> `packages/bedrock-api/bedrock/tools/s009_audit_design_tokens.py`.
 
-- [x] **Step 2: Create runner shim `scripts/audit/s009_audit_design_tokens.py`**
+- [ ] **Step 2: Create runner shim `scripts/audit/s009_audit_design_tokens.py`**
 
 ```python
 #!/usr/bin/env python
@@ -130,16 +129,16 @@ if __name__ == "__main__":
     sys.exit(main())
 ```
 
-- [x] **Step 3: Update `test_audit_design_tokens.py` and `test_audit_s009_to_s012.py`**
+- [ ] **Step 3: Update `test_audit_design_tokens.py` and `test_audit_s009_to_s012.py`**
 
 Update `test_audit_s009_to_s012.py` and `test_audit_design_tokens.py` to import `s009_audit_design_tokens`. Delete `packages/bedrock-api/bedrock/tools/audit_design_tokens.py`.
 
-- [x] **Step 4: Run tests to verify**
+- [ ] **Step 4: Run tests to verify**
 
 Run: `pytest packages/bedrock-api/tests/test_audit_s009_to_s012.py -k "s009" -v`
 Expected: PASS
 
-- [x] **Step 5: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add packages/bedrock-api/bedrock/tools/s009_audit_design_tokens.py scripts/audit/s009_audit_design_tokens.py packages/bedrock-api/tests/test_audit_s009_to_s012.py packages/bedrock-api/tests/test_audit_design_tokens.py
@@ -167,7 +166,7 @@ git commit -m "refactor(tools): standardize s009_audit_design_tokens and prune a
 - Consumes: `bedrock.tools._reporter.AuditReporter`
 - Produces: `s###_audit_[name].main(argv: list[str] | None = None) -> int` for each standard
 
-- [x] **Step 1: Rename tool modules to `s###_audit_[name].py`**
+- [ ] **Step 1: Rename tool modules to `s###_audit_[name].py`**
 
 Rename via git mv:
 
@@ -184,7 +183,7 @@ Rename via git mv:
 - `audit_s013_api_docs.py` -> `s013_audit_api_docs.py`
 - `audit_s014_ledger_freshness.py` -> `s014_audit_ledger_freshness.py`
 
-- [x] **Step 2: Create runner shims in `scripts/audit/`**
+- [ ] **Step 2: Create runner shims in `scripts/audit/`**
 
 Create runner shims for `s002` through `s014` in `scripts/audit/` following the standard 4-line template:
 
@@ -198,7 +197,7 @@ if __name__ == "__main__":
     sys.exit(main())
 ```
 
-- [x] **Step 3: Update all test suite imports**
+- [ ] **Step 3: Update all test suite imports**
 
 Update module imports in:
 
@@ -208,12 +207,12 @@ Update module imports in:
 - `packages/bedrock-api/tests/test_audit_api_docs.py`
 - `packages/bedrock-api/tests/test_audit_ledger_freshness.py`
 
-- [x] **Step 4: Run the complete audit test suite**
+- [ ] **Step 4: Run the complete audit test suite**
 
 Run: `pytest packages/bedrock-api/tests/test_audit_*.py -v`
 Expected: All tests PASS.
 
-- [x] **Step 5: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
 git add packages/bedrock-api/bedrock/tools/s*.py scripts/audit/*.py packages/bedrock-api/tests/
@@ -235,7 +234,7 @@ git commit -m "refactor(tools): rename platform audits to s###_audit_* and gener
 - Consumes: `bedrock.tools._reporter.AuditReporter`, `bedrock.tools._config.load_bedrock_config`
 - Produces: `s100_audit_domain_registry.main(argv: list[str] | None = None) -> int`
 
-- [ ] **Step 1: Write unit tests for S100 domain registry validation**
+- [x] **Step 1: Write unit tests for S100 domain registry validation**
 
 Create `packages/bedrock-api/tests/test_audit_s100_domain_registry.py`:
 
@@ -246,12 +245,12 @@ Create `packages/bedrock-api/tests/test_audit_s100_domain_registry.py`:
 - Test missing 5 mandatory sections fails.
 - Test clean standards directory returns exit code 0.
 
-- [ ] **Step 2: Run test to verify it fails initially**
+- [x] **Step 2: Run test to verify it fails initially**
 
 Run: `pytest packages/bedrock-api/tests/test_audit_s100_domain_registry.py -v`
 Expected: FAIL (ModuleNotFoundError: `bedrock.tools.s100_audit_domain_registry`)
 
-- [ ] **Step 3: Implement `s100_audit_domain_registry.py`**
+- [x] **Step 3: Implement `s100_audit_domain_registry.py`**
 
 Implement `packages/bedrock-api/bedrock/tools/s100_audit_domain_registry.py` using `AuditReporter`:
 
@@ -259,7 +258,7 @@ Implement `packages/bedrock-api/bedrock/tools/s100_audit_domain_registry.py` usi
 - Verifies tier matching, reserved numbering ranges, and 5 mandatory sections.
 - Exits 0 clean, 1 on violation, 2 on config error.
 
-- [ ] **Step 4: Create runner shim `scripts/audit/s100_audit_domain_registry.py`**
+- [x] **Step 4: Create runner shim `scripts/audit/s100_audit_domain_registry.py`**
 
 ```python
 #!/usr/bin/env python
@@ -271,12 +270,12 @@ if __name__ == "__main__":
     sys.exit(main())
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `pytest packages/bedrock-api/tests/test_audit_s100_domain_registry.py -v`
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/bedrock-api/bedrock/tools/s100_audit_domain_registry.py scripts/audit/s100_audit_domain_registry.py packages/bedrock-api/tests/test_audit_s100_domain_registry.py
@@ -340,8 +339,6 @@ git commit -m "feat(tools): update run_all to dispatch s###_audit_* modules incl
 In `docs/standards/s001-*.md` through `s014-*.md`, update:
 
 ```markdown
-enforced_by: bedrock.tools.s###_audit_[name]
-cli_command: "python scripts/audit/s###_audit_[name].py --root ."
 enforced*by: bedrock.tools.s###\_audit*[name]
 cli*command: "python scripts/audit/s###\_audit*[name].py --root ."
 ```
@@ -417,7 +414,6 @@ Ensure `scripts/audit/` exists in `CollectIt` and rename domain audit scripts to
 - `scripts/audit/s101_audit_ebay_compliance.py`
 - `scripts/audit/s102_audit_listing_templates.py`
 - `scripts/audit/s103_audit_variables.py`
-Remove obsolete `scripts/audits/` if present.
   Remove obsolete `scripts/audits/` if present.
 
 - [ ] **Step 3: Run platform audits and domain audits in `CollectIt`**
