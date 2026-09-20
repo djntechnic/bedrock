@@ -34,6 +34,7 @@
 - Consumes: `bedrock.tools._reporter.AuditReporter`, `bedrock.tools._config.load_bedrock_config`
 - Produces: `s001_audit_duplicates.main(argv: list[str] | None = None) -> int`
 
+- [ ] **Step 1: Port missing S1 test cases into `test_audit_s001_to_s004.py`**
 - [x] **Step 1: Port missing S1 test cases into `test_audit_s001_to_s004.py`**
 
 Update `packages/bedrock-api/tests/test_audit_s001_to_s004.py` to import `s001_audit_duplicates` and include tests for direct `axios` imports, `@shadows <Name>` annotations, and duplicate export detection.
@@ -51,6 +52,7 @@ def test_s001_allows_shadows_marker(tmp_path: Path):
     assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 0
 ```
 
+- [ ] **Step 2: Implement `s001_audit_duplicates.py` consolidating all S001 invariants**
 - [x] **Step 2: Implement `s001_audit_duplicates.py` consolidating all S001 invariants**
 
 Create `packages/bedrock-api/bedrock/tools/s001_audit_duplicates.py` combining:
@@ -60,6 +62,7 @@ Create `packages/bedrock-api/bedrock/tools/s001_audit_duplicates.py` combining:
 - Barrel-only primitives, inline formatters, inline query keys
 - Standard `AuditReporter` lifecycle
 
+- [ ] **Step 3: Create runner shim `scripts/audit/s001_audit_duplicates.py`**
 - [x] **Step 3: Create runner shim `scripts/audit/s001_audit_duplicates.py`**
 
 ```python
@@ -72,6 +75,7 @@ if __name__ == "__main__":
     sys.exit(main())
 ```
 
+- [ ] **Step 4: Remove legacy files**
 - [x] **Step 4: Remove legacy files**
 
 Delete:
@@ -79,11 +83,13 @@ Delete:
 - `packages/bedrock-api/bedrock/tools/audit_s001_duplicates.py`
 - `packages/bedrock-api/tests/test_audit_s1_duplicates.py`
 
+- [ ] **Step 5: Run tests to verify**
 - [x] **Step 5: Run tests to verify**
 
 Run: `pytest packages/bedrock-api/tests/test_audit_s001_to_s004.py -k "s001" -v`
 Expected: PASS
 
+- [ ] **Step 6: Commit**
 - [x] **Step 6: Commit**
 
 ```bash
@@ -107,11 +113,11 @@ git commit -m "refactor(tools): standardize s001_audit_duplicates and prune audi
 - Consumes: `bedrock.tools._reporter.AuditReporter`, `bedrock.tools._config.load_bedrock_config`
 - Produces: `s009_audit_design_tokens.main(argv: list[str] | None = None) -> int`
 
-- [ ] **Step 1: Move `audit_s009_design_tokens.py` to `s009_audit_design_tokens.py`**
+- [x] **Step 1: Move `audit_s009_design_tokens.py` to `s009_audit_design_tokens.py`**
 
 Rename `packages/bedrock-api/bedrock/tools/audit_s009_design_tokens.py` -> `packages/bedrock-api/bedrock/tools/s009_audit_design_tokens.py`.
 
-- [ ] **Step 2: Create runner shim `scripts/audit/s009_audit_design_tokens.py`**
+- [x] **Step 2: Create runner shim `scripts/audit/s009_audit_design_tokens.py`**
 
 ```python
 #!/usr/bin/env python
@@ -123,16 +129,16 @@ if __name__ == "__main__":
     sys.exit(main())
 ```
 
-- [ ] **Step 3: Update `test_audit_design_tokens.py` and `test_audit_s009_to_s012.py`**
+- [x] **Step 3: Update `test_audit_design_tokens.py` and `test_audit_s009_to_s012.py`**
 
 Update `test_audit_s009_to_s012.py` and `test_audit_design_tokens.py` to import `s009_audit_design_tokens`. Delete `packages/bedrock-api/bedrock/tools/audit_design_tokens.py`.
 
-- [ ] **Step 4: Run tests to verify**
+- [x] **Step 4: Run tests to verify**
 
 Run: `pytest packages/bedrock-api/tests/test_audit_s009_to_s012.py -k "s009" -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/bedrock-api/bedrock/tools/s009_audit_design_tokens.py scripts/audit/s009_audit_design_tokens.py packages/bedrock-api/tests/test_audit_s009_to_s012.py packages/bedrock-api/tests/test_audit_design_tokens.py

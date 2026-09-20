@@ -35,7 +35,6 @@ from pathlib import Path
 from typing import Protocol
 
 from bedrock.tools import (
-    audit_s001_duplicates,
     s001_audit_duplicates,
     audit_s002_grids,
     audit_s003_logging,
@@ -44,7 +43,7 @@ from bedrock.tools import (
     audit_s006_pr_workflow,
     audit_s007_schema_catalog,
     audit_s008_guidance,
-    audit_s009_design_tokens,
+    s009_audit_design_tokens,
     audit_s010_security,
     audit_s011_navigation,
     audit_s012_pins,
@@ -59,7 +58,6 @@ class _AuditModule(Protocol):
 #: Ordered `(code, module)` pairs dispatched by `run_all`. Each module must
 #: expose a `main(argv) -> int` entry point matching every other audit tool.
 AUDIT_MODULES: list[tuple[str, _AuditModule]] = [
-    ("s001", audit_s001_duplicates),
     ("s001", s001_audit_duplicates),
     ("s002", audit_s002_grids),
     ("s003", audit_s003_logging),
@@ -68,7 +66,7 @@ AUDIT_MODULES: list[tuple[str, _AuditModule]] = [
     ("s006", audit_s006_pr_workflow),
     ("s007", audit_s007_schema_catalog),
     ("s008", audit_s008_guidance),
-    ("s009", audit_s009_design_tokens),
+    ("s009", s009_audit_design_tokens),
     ("s010", audit_s010_security),
     ("s011", audit_s011_navigation),
     ("s012", audit_s012_pins),

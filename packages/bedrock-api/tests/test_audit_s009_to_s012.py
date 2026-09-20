@@ -2,7 +2,7 @@
 from pathlib import Path
 
 from bedrock.tools import (
-    audit_s009_design_tokens,
+    s009_audit_design_tokens,
     audit_s010_security,
     audit_s011_navigation,
     audit_s012_pins,
@@ -19,7 +19,7 @@ def _write_toml(tmp_path: Path, section: str = "") -> None:
 
 
 # ---------------------------------------------------------------------------
-# audit_s009_design_tokens
+# s009_audit_design_tokens
 # ---------------------------------------------------------------------------
 
 
@@ -35,7 +35,7 @@ def test_s009_returns_zero_for_token_based_component(tmp_path: Path):
         ":root {\n  --brand-accent: 38 92% 55%;\n}\n",
     )
 
-    assert audit_s009_design_tokens.main(["--root", str(tmp_path)]) == 0
+    assert s009_audit_design_tokens.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s009_returns_one_on_raw_hex_literal(tmp_path: Path):
@@ -45,7 +45,7 @@ def test_s009_returns_one_on_raw_hex_literal(tmp_path: Path):
         'export function Card() {\n  return <div style={{ color: "#f59e0b" }} />;\n}\n',
     )
 
-    assert audit_s009_design_tokens.main(["--root", str(tmp_path)]) == 1
+    assert s009_audit_design_tokens.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s009_returns_one_on_hardcoded_tailwind_color_utility(tmp_path: Path):
@@ -55,7 +55,7 @@ def test_s009_returns_one_on_hardcoded_tailwind_color_utility(tmp_path: Path):
         'export function Card() {\n  return <div className="bg-blue-500" />;\n}\n',
     )
 
-    assert audit_s009_design_tokens.main(["--root", str(tmp_path)]) == 1
+    assert s009_audit_design_tokens.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s009_returns_one_on_wrapped_hsl_css_variable(tmp_path: Path):
@@ -65,7 +65,7 @@ def test_s009_returns_one_on_wrapped_hsl_css_variable(tmp_path: Path):
         ":root {\n  --color-accent: hsl(38, 92%, 55%);\n}\n",
     )
 
-    assert audit_s009_design_tokens.main(["--root", str(tmp_path)]) == 1
+    assert s009_audit_design_tokens.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s009_returns_zero_when_violation_is_exempted(tmp_path: Path):
@@ -78,11 +78,11 @@ def test_s009_returns_zero_when_violation_is_exempted(tmp_path: Path):
         'export function Card() {\n  return <div style={{ color: "#f59e0b" }} />;\n}\n',
     )
 
-    assert audit_s009_design_tokens.main(["--root", str(tmp_path)]) == 0
+    assert s009_audit_design_tokens.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s009_returns_two_on_missing_bedrock_toml(tmp_path: Path):
-    assert audit_s009_design_tokens.main(["--root", str(tmp_path)]) == 2
+    assert s009_audit_design_tokens.main(["--root", str(tmp_path)]) == 2
 
 
 # ---------------------------------------------------------------------------
