@@ -3,8 +3,8 @@ id: S100
 title: "Domain Standard Authoring Guide"
 status: active
 tier: platform
-enforced_by: bedrock.tools.audit_s100_domain_registry
-cli_command: "python -m bedrock.tools.audit_s100_domain_registry --root ."
+enforced_by: bedrock.tools.s100_audit_domain_registry
+cli_command: "python scripts/audit/s100_audit_domain_registry.py --root ."
 ---
 
 # Standard S100: Domain Standard Authoring Guide
@@ -108,8 +108,8 @@ id: S101
 title: "Canonical Entity Identity"
 status: active
 tier: domain
-enforced_by: consumer_app.tools.audit_s101_entity_identity
-cli_command: "python -m consumer_app.tools.audit_s101_entity_identity --root ."
+enforced_by: scripts.audit.s101_audit_entity_identity
+cli_command: "python scripts/audit/s101_audit_entity_identity.py --root ."
 ---
 ```
 
@@ -134,7 +134,7 @@ range at a low number.
 ## Verification & Enforcement Gate
 
 ```bash
-python -m bedrock.tools.audit_s100_domain_registry --root .
+python scripts/audit/s100_audit_domain_registry.py --root .
 ```
 
 - **Exit 0** — every domain standard found under a consumer's

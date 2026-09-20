@@ -3,8 +3,8 @@ id: S009
 title: "Design System"
 status: active
 tier: platform
-enforced_by: bedrock.tools.audit_s009_design_tokens
-cli_command: "python -m bedrock.tools.audit_s009_design_tokens --root ."
+enforced_by: bedrock.tools.s009_audit_design_tokens
+cli_command: "python scripts/audit/s009_audit_design_tokens.py --root ."
 ---
 
 # Standard S009: Design System
@@ -117,7 +117,7 @@ still fails review even though the audit does not flag it mechanically.
 ## Verification & Enforcement Gate
 
 ```bash
-python -m bedrock.tools.audit_s009_design_tokens --root .
+python scripts/audit/s009_audit_design_tokens.py --root .
 ```
 
 - **Exit 0** — no literal hex/rgb/hsl outside `exempt_paths`/`exempt_literals`,

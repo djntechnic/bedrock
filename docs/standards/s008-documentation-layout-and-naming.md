@@ -3,8 +3,8 @@ id: S008
 title: "Documentation Layout & Naming"
 status: active
 tier: platform
-enforced_by: bedrock.tools.audit_s008_guidance
-cli_command: "python -m bedrock.tools.audit_s008_guidance --root ."
+enforced_by: bedrock.tools.s008_audit_guidance
+cli_command: "python scripts/audit/s008_audit_guidance.py --root ."
 ---
 
 # Standard S008: Documentation Layout & Naming
@@ -135,7 +135,7 @@ PR description.
 ## Verification & Enforcement Gate
 
 ```bash
-python -m bedrock.tools.audit_s008_guidance --root .
+python scripts/audit/s008_audit_guidance.py --root .
 ```
 
 - **Exit 0** — `docs/` contains only `standards/`, `specs/`, `plans/`,

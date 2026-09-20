@@ -334,25 +334,25 @@ git commit -m "feat(tools): update run_all to dispatch s###_audit_* modules incl
 
 - Standards YAML frontmatter aligns with `enforced_by: bedrock.tools.s###_audit_[name]` and `cli_command: "python scripts/audit/s###_audit_[name].py --root ."`
 
-- [ ] **Step 1: Update frontmatter in all platform standards**
+- [x] **Step 1: Update frontmatter in all platform standards**
 
 In `docs/standards/s001-*.md` through `s014-*.md`, update:
 
 ```markdown
-enforced*by: bedrock.tools.s###\_audit*[name]
-cli*command: "python scripts/audit/s###\_audit*[name].py --root ."
+enforced_by: bedrock.tools.s###_audit_[name]
+cli_command: "python scripts/audit/s###_audit_[name].py --root ."
 ```
 
-- [ ] **Step 2: Update `s100-domain-standard-authoring.md` and `docs/standards/README.md`**
+- [x] **Step 2: Update `s100-domain-standard-authoring.md` and `docs/standards/README.md`**
 
 Update `README.md` index table and authoring checklists to specify the `s###_audit_[name].py` naming standard and the 6-step authoring workflow for platform and domain standards.
 
-- [ ] **Step 3: Run S100 audit to verify all standards pass inspection**
+- [x] **Step 3: Run S100 audit to verify all standards pass inspection**
 
 Run: `python scripts/audit/s100_audit_domain_registry.py --root .`
 Expected: Exit code 0, all standards valid.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/standards/

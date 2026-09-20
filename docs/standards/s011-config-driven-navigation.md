@@ -3,8 +3,8 @@ id: S011
 title: "Config-Driven Navigation"
 status: active
 tier: platform
-enforced_by: bedrock.tools.audit_s011_navigation
-cli_command: "python -m bedrock.tools.audit_s011_navigation --root ."
+enforced_by: bedrock.tools.s011_audit_navigation
+cli_command: "python scripts/audit/s011_audit_navigation.py --root ."
 ---
 
 # Standard S011: Config-Driven Navigation
@@ -87,7 +87,7 @@ surface, not public-facing static links.
 ## Verification & Enforcement Gate
 
 ```bash
-python -m bedrock.tools.audit_s011_navigation --root .
+python scripts/audit/s011_audit_navigation.py --root .
 ```
 
 - **Exit 0** — no hardcoded nav tree found outside `exempt_paths`; every

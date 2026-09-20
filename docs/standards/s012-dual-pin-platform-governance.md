@@ -3,8 +3,8 @@ id: S012
 title: "Dual-Pin Platform Governance"
 status: active
 tier: platform
-enforced_by: bedrock.tools.audit_s012_pins
-cli_command: "python -m bedrock.tools.audit_s012_pins --root ."
+enforced_by: bedrock.tools.s012_audit_pins
+cli_command: "python scripts/audit/s012_audit_pins.py --root ."
 ---
 
 # Standard S012: Dual-Pin Platform Governance
@@ -93,7 +93,7 @@ end-date in the PR description.
 ## Verification & Enforcement Gate
 
 ```bash
-python -m bedrock.tools.audit_s012_pins --root .
+python scripts/audit/s012_audit_pins.py --root .
 ```
 
 - **Exit 0** — `requirements.txt` and `package.json` reference the identical

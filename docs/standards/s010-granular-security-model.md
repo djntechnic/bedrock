@@ -3,8 +3,8 @@ id: S010
 title: "Granular Security Model"
 status: active
 tier: platform
-enforced_by: bedrock.tools.audit_s010_security
-cli_command: "python -m bedrock.tools.audit_s010_security --root ."
+enforced_by: bedrock.tools.s010_audit_security
+cli_command: "python scripts/audit/s010_audit_security.py --root ."
 ---
 
 # Standard S010: Granular Security Model
@@ -126,7 +126,7 @@ omitting the permission decorator silently.
 ## Verification & Enforcement Gate
 
 ```bash
-python -m bedrock.tools.audit_s010_security --root .
+python scripts/audit/s010_audit_security.py --root .
 ```
 
 - **Exit 0** — every non-public, non-exempt route declares a permission

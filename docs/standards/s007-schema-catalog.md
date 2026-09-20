@@ -3,8 +3,8 @@ id: S007
 title: "Schema Catalog & Database Object Standards"
 status: active
 tier: platform
-enforced_by: bedrock.tools.audit_s007_schema_catalog
-cli_command: "python -m bedrock.tools.audit_s007_schema_catalog --root ."
+enforced_by: bedrock.tools.s007_audit_schema_catalog
+cli_command: "python scripts/audit/s007_audit_schema_catalog.py --root ."
 ---
 
 # Standard S007: Schema Catalog & Database Object Standards
@@ -294,7 +294,7 @@ exemptions = []  # declared table/column names grandfathered out of naming rules
 ## Verification & Enforcement Gate
 
 ```bash
-python -m bedrock.tools.audit_s007_schema_catalog --root .
+python scripts/audit/s007_audit_schema_catalog.py --root .
 ```
 
 - **Exit 0** — every live schema object has a matching catalog entry with
