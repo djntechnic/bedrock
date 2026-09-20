@@ -365,6 +365,9 @@ git commit -m "docs(standards): update frontmatter to s###_audit_* and document 
 
 **Files:**
 
+- Modify: `c:\Dev\bedrock-ai-kit\rules\s001-no-duplicate-ui-code.md` through `s014...`
+- Modify: `c:\Dev\bedrock-ai-kit\rules\s100-domain-standard-authoring.md`
+- Modify: `c:\Dev\bedrock-ai-kit\scripts\Sync-AgenticTooling.ps1`
 - Modify: `c:\Dev\bedrock-ai-kit\docs\standards\s001-no-duplicate-ui-code.md` through `s014...`, `s100...`
 - Delete: `c:\Dev\bedrock-ai-kit\docs\standards\s101-agentic-tooling-and-vendor-governance.md`
 - Delete: `c:\Dev\bedrock-ai-kit\rules\s101-*`
@@ -372,18 +375,26 @@ git commit -m "docs(standards): update frontmatter to s###_audit_* and document 
 - Modify: `c:\Dev\bedrock-ai-kit\tests\test_rules_structure.py`
 - Modify: `c:\Dev\bedrock-ai-kit\tests\test_standards_registry.py`
 
+- [ ] **Step 1: Synchronize updated standards into `bedrock-ai-kit/rules/`**
 - [x] **Step 1: Synchronize updated standards into `bedrock-ai-kit/docs/standards/`**
 
+Copy the updated `s001`–`s014` and `s100` markdown files from `c:\Dev\bedrock\docs\standards\` to `c:\Dev\bedrock-ai-kit\rules\`.
 Deploy canonical `s001`–`s014` and `s100` markdown files from `c:\Dev\bedrock\docs\standards\` to `c:\Dev\bedrock-ai-kit\docs\standards\`.
 
+- [ ] **Step 2: Update `Sync-AgenticTooling.ps1` and `Audit-AgenticTooling.ps1`**
 - [x] **Step 2: Remove S101 from `bedrock-ai-kit`**
 
+Ensure `Audit-AgenticTooling.ps1` and `Sync-AgenticTooling.ps1` recognize the `s###_audit_` naming convention and shims in `scripts/audit/`.
 Purge `s101` from `docs/standards/` and `rules/` as domain standards do not apply to bedrock-ai-kit. Update test suites accordingly.
 
+- [ ] **Step 3: Run validation in `bedrock-ai-kit`**
 - [x] **Step 3: Update `Audit-AgenticTooling.ps1`**
 
+Run: `pwsh -File c:\Dev\bedrock-ai-kit\scripts\Audit-AgenticTooling.ps1 -Root c:\Dev\bedrock-ai-kit`
+Expected: PASS with 0 violations.
 Ensure `Audit-AgenticTooling.ps1` recognizes the `s###_audit_` naming convention, supports `-Root`, and properly exempts consumer domain rules (`s1##`).
 
+- [ ] **Step 4: Commit in `bedrock-ai-kit`**
 - [x] **Step 4: Run validation in `bedrock-ai-kit`**
 
 Run: `pwsh -File c:\Dev\bedrock-ai-kit\scripts\Audit-AgenticTooling.ps1` and `python -m pytest tests`.
@@ -392,6 +403,8 @@ Expected: PASS with 0 violations / 18 passed.
 - [x] **Step 5: Commit in `bedrock-ai-kit`**
 
 ```bash
+git -C c:\Dev\bedrock-ai-kit add rules/ scripts/
+git -C c:\Dev\bedrock-ai-kit commit -m "feat(doctrine): synchronize s###_audit_* standards and audit tooling"
 git -C c:\Dev\bedrock-ai-kit add -A
 git -C c:\Dev\bedrock-ai-kit commit -m "chore(standards): deploy canonical standards to docs/standards and purge s101 from bedrock-ai-kit"
 ```
@@ -408,12 +421,12 @@ git -C c:\Dev\bedrock-ai-kit commit -m "chore(standards): deploy canonical stand
 - Rename/Create: `c:\Dev\CollectIt\scripts\audit\s103_audit_variables.py`
 - Modify: `c:\Dev\CollectIt\scripts\run_qa.py` / `scripts\run_audit.ps1`
 
-- [ ] **Step 1: Sync platform standards from Bedrock**
+- [x] **Step 1: Sync platform standards from Bedrock**
 
 Run: `python -m bedrock.tools.sync_standards --target c:\Dev\CollectIt --source c:\Dev\bedrock`
 Expected: Mirrors updated successfully.
 
-- [ ] **Step 2: Align domain audit scripts into `scripts/audit/`**
+- [x] **Step 2: Align domain audit scripts into `scripts/audit/`**
 
 Ensure `scripts/audit/` exists in `CollectIt` and rename domain audit scripts to:
 
@@ -422,14 +435,14 @@ Ensure `scripts/audit/` exists in `CollectIt` and rename domain audit scripts to
 - `scripts/audit/s103_audit_variables.py`
   Remove obsolete `scripts/audits/` if present.
 
-- [ ] **Step 3: Run platform audits and domain audits in `CollectIt`**
+- [x] **Step 3: Run platform audits and domain audits in `CollectIt`**
 
 Run:
 `python -m bedrock.tools.run_all --root c:\Dev\CollectIt`
 `python c:\Dev\CollectIt\scripts\audit\s101_audit_ebay_compliance.py --root c:\Dev\CollectIt`
 Expected: Clean PASS.
 
-- [ ] **Step 4: Commit in `CollectIt`**
+- [x] **Step 4: Commit in `CollectIt`**
 
 ```bash
 git -C c:\Dev\CollectIt add docs/standards/ scripts/
