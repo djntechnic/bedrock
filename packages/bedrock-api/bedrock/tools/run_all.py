@@ -4,6 +4,9 @@ Layer:   bedrock/tools
 Desc:    Orchestrates the full platform audit suite - `audit_s001` through
          `audit_s014` - as a single command, so CI (and a developer before
          opening a PR) gets one master summary instead of fourteen separate
+Desc:    Orchestrates the full platform audit suite - `s001` through
+         `s014`, plus `s100` - as a single command, so CI (and a developer before
+         opening a PR) gets one master summary instead of fifteen separate
          invocations to remember and interpret individually.
 
          Exit code contract mirrors `AuditReporter`'s per-audit contract,
@@ -49,6 +52,7 @@ from bedrock.tools import (
     s012_audit_pins,
     s013_audit_api_docs,
     s014_audit_ledger_freshness,
+    s100_audit_domain_registry,
 )
 
 class _AuditModule(Protocol):
@@ -72,6 +76,7 @@ AUDIT_MODULES: list[tuple[str, _AuditModule]] = [
     ("s012", s012_audit_pins),
     ("s013", s013_audit_api_docs),
     ("s014", s014_audit_ledger_freshness),
+    ("s100", s100_audit_domain_registry),
 ]
 
 _STATUS_BY_EXIT_CODE = {0: "PASS", 1: "FAIL"}
@@ -122,7 +127,7 @@ def _render_summary(results: list[AuditRunResult], suite_exit_code: int) -> str:
     lines: list[str] = []
     banner = "=" * 80
     lines.append(banner)
-    lines.append("[RUN-ALL] Platform Audit Suite (S001-S014)")
+    lines.append("[RUN-ALL] Platform Audit Suite (S001-S014, S100)")
     lines.append(banner)
 
     for result in results:

@@ -184,3 +184,9 @@ def test_run_all_json_output_reports_every_audit_status(tmp_path: Path, monkeypa
     assert '"s002"' in output
     assert "PASS" in output
     assert "FAIL" in output
+
+
+def test_run_all_audit_modules_covers_all_fifteen_standards():
+    codes = [code for code, _ in run_all.AUDIT_MODULES]
+    expected = [f"s{i:03d}" for i in range(1, 15)] + ["s100"]
+    assert codes == expected

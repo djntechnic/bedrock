@@ -298,22 +298,22 @@ git commit -m "feat(tools): implement s100_audit_domain_registry and runner shim
 - Consumes: `s001_audit_duplicates` through `s014_audit_ledger_freshness`, `s100_audit_domain_registry`
 - Produces: `run_all.run_all(root: Path, fail_fast: bool = False) -> tuple[list[AuditRunResult], int]`
 
-- [ ] **Step 1: Update `run_all.py` to import and dispatch new module names including S100**
+- [x] **Step 1: Update `run_all.py` to import and dispatch new module names including S100**
 
 Update `AUDIT_MODULES` in `packages/bedrock-api/bedrock/tools/run_all.py` with all 15 audit tools:
 `s001` through `s014`, plus `("s100", s100_audit_domain_registry)`.
 Update summary header: `[RUN-ALL] Platform Audit Suite (S001-S014, S100)`.
 
-- [ ] **Step 2: Update `sync_standards.py`**
+- [x] **Step 2: Update `sync_standards.py`**
 
 Ensure `sync_standards.py` correctly handles `s001`–`s014` and `s100`, preserving the canonical sync contract.
 
-- [ ] **Step 3: Run full local QA and verify `run_all` exit code**
+- [x] **Step 3: Run full local QA and verify `run_all` exit code**
 
 Run: `python -m bedrock.tools.run_all --root .`
 Expected: Exit code 0, all 15 audits pass.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add packages/bedrock-api/bedrock/tools/run_all.py packages/bedrock-api/bedrock/tools/sync_standards.py scripts/run_qa.py
