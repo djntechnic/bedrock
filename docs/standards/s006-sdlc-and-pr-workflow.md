@@ -17,7 +17,7 @@ Standard S006 governs the code modification lifecycle from initial branch cut to
 
 ## Non-Negotiable Invariants
 
-1. **Feature Branch Isolation:** All development must occur on dedicated feature branches cut from `master` (`feat/<name>`, `fix/<name>`, `chore/<name>`). Direct commits to `master` are strictly prohibited.
+1. **Feature Branch Isolation:** All development must occur on dedicated feature branches cut from the default branch (`master`/`main`) (`feat/<name>`, `fix/<name>`, `chore/<name>`). Direct commits to the default branch are strictly prohibited and mechanically blocked by pre-push client guards and server-side GitHub branch rulesets.
 2. **One-Branch-One-Concern:** A pull request must address exactly one concern: one defect, one feature, or one architectural refactor. Diff pollution—such as mixing an unrelated formatting pass, dependency bump, or drive-by refactor into a bug-fix branch—must be split prior to merge.
 3. **Reproduce-Then-Fix (TDD Invariant):** Every bug fix commit must ship with an accompanying automated reproduction test that fails against pre-fix code and passes against post-fix code. A fix diff that touches no test files is presumed unverified, not correct.
 4. **Failing Test Classification:** A failing test is never bypassed or merged around. It must be classified immediately:
@@ -26,12 +26,19 @@ Standard S006 governs the code modification lifecycle from initial branch cut to
 5. **Tiered Verification Protocol:** Testing scales with the development phase:
    - *During iteration:* Fast, targeted delta tests only (`npx vitest related`, `pytest -m "not integration" --testmon -q`).
    - *Before PR creation/merge:* Comprehensive scoped test suites (`pytest -m "not integration"`, `npm run test:run`, `npx tsc -b --noEmit`) and domain/platform audit gates (`pwsh -File scripts/run_audit.ps1`).
-6. **PR Creation & Templates:** All pull requests must be opened as a **Draft** targeting `master` via the GitHub integration or `gh pr create`. Contributors must fully populate `.github/PULL_REQUEST_TEMPLATE.md` with the stated requirement/defect, root cause, and verification command run. Commits must follow Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`).
+6. **PR Creation & Templates:** All pull requests must be opened as a **Draft** targeting the default branch via the GitHub integration or `gh pr create`. Contributors must fully populate `.github/PULL_REQUEST_TEMPLATE.md` with the stated requirement/defect, root cause, and verification command run. Commits must follow Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`).
 7. **Non-Blocking CI Gating:** Continuous Integration checks must be monitored via the background task `gh pr checks <pr> --watch` (yielding the turn to the messaging system). Status-polling loops, `sleep` commands, or manual busy-waiting are strictly banned. All configured CI checks must pass (exit code 0) before draft status is removed or merge is authorized.
-8. **Zero Broken Tests on Master:** A failing test can never be excused or shipped to `master` (§S005).
-9. **Post-Merge Clean Tree Verification:** Following merge and local master synchronization (`git pull origin master`), the local checkout must be verified clean: `git status --porcelain` must be 100% empty before yielding completion.
+8. **Zero Broken Tests on Master:** A failing test can never be excused or shipped to the default branch (§S005).
+9. **Post-Merge Clean Tree Verification:** Following merge and local trunk synchronization (`git pull origin <default_branch>`), the local checkout must be verified clean: `git status --porcelain` must be 100% empty before yielding completion.
 
 ## Architecture & Code Contracts
+
+### Mechanical Enforcement Architecture
+
+Direct check-ins to the repository default branch are mechanically blocked by three non-bypassable layers:
+1. **Client Guard (`.git/hooks/pre-push`):** Inspects incoming push refspecs via `stdin`; terminates with exit code 1 if targeting `refs/heads/<default_branch>`.
+2. **Server Ruleset (`github.com/djntechnic/<repo>`):** Branch ruleset on `~DEFAULT_BRANCH` with `bypass_actors: []` (zero bypass, including administrators) enforcing PR isolation, squash-merging, and deletion of branch references.
+3. **Lifecycle Orchestrator (`/finalize-pr` / `Invoke-EcosystemLifecycle`):** Canonical automation executing tiered testing, Conventional Commits, draft PR creation, reactive CI watching (`gh pr checks --watch`), squash-merge, and local trunk tree reconciliation.
 
 ### Commit Message Conventions
 Commits must use Conventional Commits to clearly delineate intent:
