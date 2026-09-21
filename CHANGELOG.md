@@ -16,6 +16,25 @@ When drafting a release body, write the section as `## For consumers`, not
 nested form — the cascade workflow's extractor matches `^## For consumers`
 literally and fails the release's cascade job on a mismatch.
 
+## v0.10.1 - 2026-09-20
+
+### Platform Standards & Audit Tooling Reconciliation
+
+Reconciled the full suite of Bedrock platform audit tools in `bedrock.tools` to standard naming conventions (`s###_audit_*`), covering §S001 through §S014, and Standard S100 Domain Standard Authoring.
+
+- **Canonical Naming Alignment**: Standardized all module names in `bedrock.tools` to prefix with their standard identifier (`s001_audit_duplicates` through `s014_audit_ledger_freshness`, and `s100_audit_domain_registry`). Legacy names are preserved as compatibility aliases.
+- **Root Shim Layer**: Added matching 1:1 runner scripts in `scripts/audit/` (`s001_audit_duplicates.py` through `s014_audit_ledger_freshness.py`, `s100_audit_domain_registry.py`) providing frictionless direct CLI and subprocess execution.
+- **S100 Domain Standard Authoring**: Defined standard §S100 (`docs/standards/s100-domain-standard-authoring.md`) establishing structural conventions, mandatory frontmatter, and schema contracts for consumer domain-specific standards (e.g. S101+), enforced by `bedrock.tools.s100_audit_domain_registry`.
+- **S013 & S014 Standards Integration**: Integrated S013 (Untracked File Extensions) and S014 (Ledger Freshness) directly into platform standard suites, docs, and test runners.
+
+### For consumers
+
+- **CollectIt**:
+  - Update any invocations in `ci.yml`, test suites, and scripts from legacy tool names (`bedrock.tools.audit_*` or `audit_s0*`) to canonical names (`bedrock.tools.s009_audit_design_tokens`, `bedrock.tools.s014_audit_ledger_freshness`, etc.).
+  - Author domain standards (e.g. §S101 eBay Compliance) in `docs/standards/` adhering to §S100 domain standard authoring guidelines.
+- **MLBTracker**:
+  - Update any CI or maintenance scripts referencing legacy audit module names to canonical `bedrock.tools.s###_audit_*` modules (`s011_audit_navigation`, `s012_audit_pins`, etc.).
+
 ## v0.10.0 - 2026-09-14
 
 ### Platform Standards Substrate
