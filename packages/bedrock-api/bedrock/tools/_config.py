@@ -14,9 +14,11 @@ Desc:    Declarative manifest loader for `bedrock.toml`. Every `bedrock.tools
 from __future__ import annotations
 
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from pathlib import Path
 from typing import Any
+
+from loguru import logger
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -211,7 +213,17 @@ def _build_section(section_key: str, raw_sections: dict) -> Any:
             "`exemptions = [...]` list."
         )
 
-    kwargs = dict(raw_section)
+    valid_fields = {f.name for f in fields(section_cls)}
+    kwargs = {}
+    for key, value in raw_section.items():
+        if key in valid_fields:
+            kwargs[key] = value
+        else:
+            logger.warning(
+                "Ignoring unrecognized key {key} in [tool.bedrock.audit.{section}]",
+                key=key,
+                section=section_key,
+            )
     kwargs["exemptions"] = _merge_exemptions(list(raw_section["exemptions"]))
     return section_cls(**kwargs)
 

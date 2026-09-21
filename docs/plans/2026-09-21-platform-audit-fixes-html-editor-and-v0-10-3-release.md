@@ -57,7 +57,7 @@
 - Consumes: `load_bedrock_config(root: Path) -> BedrockConfig`
 - Produces: Sanitized `@dataclass` instantiation in `_build_section()` filtering unmapped keyword arguments.
 
-- [ ] **Step 1: Write the failing regression test**
+- [x] **Step 1: Write the failing regression test**
 
 In `packages/bedrock-api/tests/test_audit_s005_to_s008.py`, add a test that loads a TOML configuration containing unknown/deprecated keys:
 
@@ -78,7 +78,7 @@ def test_load_bedrock_config_ignores_unexpected_keys(tmp_path: Path):
     assert "tests/legacy/**" in config.audit_s005.exemptions
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run:
 
@@ -89,7 +89,7 @@ echo "exit=$LASTEXITCODE"
 
 Expected: FAIL with `TypeError: AuditS005Config.__init__() got an unexpected keyword argument 'skip_exemptions'`.
 
-- [ ] **Step 3: Implement kwargs filtering in `_config.py`**
+- [x] **Step 3: Implement kwargs filtering in `_config.py`**
 
 In `packages/bedrock-api/bedrock/tools/_config.py`, update `_build_section`:
 
@@ -116,7 +116,7 @@ def _build_section(section_cls: type[T], raw_section: dict[str, Any] | None) -> 
     return section_cls(**filtered_kwargs)
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run:
 
@@ -127,7 +127,7 @@ echo "exit=$LASTEXITCODE"
 
 Expected: PASS with exit code `0`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/bedrock-api/bedrock/tools/_config.py packages/bedrock-api/tests/test_audit_s005_to_s008.py
