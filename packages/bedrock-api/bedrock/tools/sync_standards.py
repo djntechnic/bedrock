@@ -46,6 +46,9 @@ def _is_canonical(filename: str) -> bool:
 def _canonical_source_files(source_root: Path) -> list[Path]:
     standards_dir = source_root / "docs" / "standards"
     if not standards_dir.is_dir():
+        # Fall back to package-bundled standards if running from installed package
+        standards_dir = Path(__file__).resolve().parent.parent / "standards"
+    if not standards_dir.is_dir():
         return []
     return sorted(p for p in standards_dir.glob("*.md") if _is_canonical(p.name))
 
@@ -71,6 +74,11 @@ def sync_standards(source_root: Path, target_root: Path, check: bool) -> tuple[b
     ok = True
 
     canonical_sources = _canonical_source_files(source_root)
+    if not canonical_sources:
+        return False, [
+            f"ERROR: Cannot locate canonical standards (checked {source_root / 'docs' / 'standards'} "
+            f"and {Path(__file__).resolve().parent.parent / 'standards'})"
+        ]
     canonical_names = {p.name for p in canonical_sources}
 
     if target_dir.is_dir():

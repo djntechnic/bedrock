@@ -10,9 +10,9 @@ function methodColor(m) {
     case "PATCH":
       return "bg-warning/10 text-warning";
     case "PUT":
-      return "bg-violet-100 text-violet-800 dark:bg-violet-900/30 dark:text-violet-400";
+      return "bg-secondary text-secondary-foreground";
     case "DELETE":
-      return "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400";
+      return "bg-destructive/10 text-destructive";
     default:
       return "bg-muted text-muted-foreground";
   }
@@ -50,18 +50,29 @@ function ApiRoutesPanel({
       {
         label: "Errors",
         value: totalErrors.toLocaleString(),
-        color: "text-rose-500"
+        color: "text-destructive"
       },
-      { label: "Error Rate", value: `${errorRate}%`, color: "text-warning" },
+      {
+        label: "Error Rate",
+        value: `${errorRate}%`,
+        color: "text-warning"
+      },
       {
         label: "Undocumented",
         value: String(undocCount),
         color: undocCount > 0 ? "text-warning" : "text-positive"
       }
-    ].map(({ label, value, color }) => /* @__PURE__ */ jsxs("div", { className: "p-3 bg-muted/40 rounded border border-border", children: [
-      /* @__PURE__ */ jsx("p", { className: "text-xs font-medium text-muted-foreground uppercase", children: label }),
-      /* @__PURE__ */ jsx("p", { className: `text-lg font-bold font-mono ${color}`, children: value })
-    ] }, label)) }),
+    ].map(({ label, value, color }) => /* @__PURE__ */ jsxs(
+      "div",
+      {
+        className: "p-3 bg-muted/40 rounded border border-border",
+        children: [
+          /* @__PURE__ */ jsx("p", { className: "text-xs font-medium text-muted-foreground uppercase", children: label }),
+          /* @__PURE__ */ jsx("p", { className: `text-lg font-bold font-mono ${color}`, children: value })
+        ]
+      },
+      label
+    )) }),
     /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3", children: [
       /* @__PURE__ */ jsx(
         "input",
@@ -120,7 +131,7 @@ function ApiRoutesPanel({
               (r.hits || 0).toLocaleString(),
               " hits"
             ] }),
-            (r.errors || 0) > 0 && /* @__PURE__ */ jsxs("span", { className: "text-xs text-rose-500 font-mono shrink-0", children: [
+            (r.errors || 0) > 0 && /* @__PURE__ */ jsxs("span", { className: "text-xs text-destructive font-mono shrink-0", children: [
               r.errors,
               " err"
             ] }),
@@ -134,7 +145,7 @@ function ApiRoutesPanel({
             /* @__PURE__ */ jsx(
               "span",
               {
-                className: `px-1.5 py-0.5 rounded text-xs font-bold shrink-0 ${r.status === "Healthy" ? "bg-positive/10 text-positive" : "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400"}`,
+                className: `px-1.5 py-0.5 rounded text-xs font-bold shrink-0 ${r.status === "Healthy" ? "bg-positive/10 text-positive" : "bg-destructive/10 text-destructive"}`,
                 children: r.status
               }
             )
@@ -166,7 +177,7 @@ function ApiRoutesPanel({
                   /* @__PURE__ */ jsx("td", { className: "px-2 py-1 font-mono font-medium", children: p.name }),
                   /* @__PURE__ */ jsx("td", { className: "px-2 py-1 text-muted-foreground", children: p.in }),
                   /* @__PURE__ */ jsx("td", { className: "px-2 py-1 font-mono text-info", children: p.type }),
-                  /* @__PURE__ */ jsx("td", { className: "px-2 py-1", children: p.required ? /* @__PURE__ */ jsx("span", { className: "text-rose-500 font-bold", children: "Yes" }) : /* @__PURE__ */ jsx("span", { className: "text-muted-foreground", children: "No" }) }),
+                  /* @__PURE__ */ jsx("td", { className: "px-2 py-1", children: p.required ? /* @__PURE__ */ jsx("span", { className: "text-destructive font-bold", children: "Yes" }) : /* @__PURE__ */ jsx("span", { className: "text-muted-foreground", children: "No" }) }),
                   /* @__PURE__ */ jsx("td", { className: "px-2 py-1 font-mono text-muted-foreground", children: p.default != null ? String(p.default) : "—" }),
                   /* @__PURE__ */ jsx("td", { className: "px-2 py-1 text-muted-foreground", children: p.description || "—" })
                 ] }, p.name)) })
@@ -192,7 +203,7 @@ function ApiRoutesPanel({
                 /* @__PURE__ */ jsx("tbody", { className: "divide-y divide-border/40", children: r.body_fields.map((f) => /* @__PURE__ */ jsxs("tr", { children: [
                   /* @__PURE__ */ jsx("td", { className: "px-2 py-1 font-mono font-medium", children: f.name }),
                   /* @__PURE__ */ jsx("td", { className: "px-2 py-1 font-mono text-info", children: f.type }),
-                  /* @__PURE__ */ jsx("td", { className: "px-2 py-1", children: f.required ? /* @__PURE__ */ jsx("span", { className: "text-rose-500 font-bold", children: "Yes" }) : /* @__PURE__ */ jsx("span", { className: "text-muted-foreground", children: "No" }) }),
+                  /* @__PURE__ */ jsx("td", { className: "px-2 py-1", children: f.required ? /* @__PURE__ */ jsx("span", { className: "text-destructive font-bold", children: "Yes" }) : /* @__PURE__ */ jsx("span", { className: "text-muted-foreground", children: "No" }) }),
                   /* @__PURE__ */ jsx("td", { className: "px-2 py-1 font-mono text-muted-foreground", children: f.default != null ? String(f.default) : "—" }),
                   /* @__PURE__ */ jsx("td", { className: "px-2 py-1 text-muted-foreground", children: f.description || "—" })
                 ] }, f.name)) })

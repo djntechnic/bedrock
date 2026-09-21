@@ -190,3 +190,15 @@ def test_run_all_audit_modules_covers_all_fifteen_standards():
     codes = [code for code, _ in run_all.AUDIT_MODULES]
     expected = [f"s{i:03d}" for i in range(1, 15)] + ["s100"]
     assert codes == expected
+
+
+def test_sync_standards_falls_back_to_package_bundled(tmp_path: Path):
+    target_root = tmp_path / "consumer"
+    empty_source = tmp_path / "empty_source"
+    empty_source.mkdir()
+
+    ok, diags = sync_standards.sync_standards(empty_source, target_root, check=False)
+    assert ok
+    mirrors = list((target_root / "docs" / "standards").glob("*.md"))
+    assert len(mirrors) == 15
+

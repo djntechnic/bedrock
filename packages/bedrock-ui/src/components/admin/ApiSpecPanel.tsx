@@ -12,12 +12,17 @@ import { lazy, Suspense, useEffect } from "react";
 import { Download, FileJson } from "lucide-react";
 import { log } from "../../utils/logger";
 import { getAuthToken } from "../../api/client";
-import "swagger-ui-react/swagger-ui.css";
-
 // Swagger UI is a heavy, CommonJS-flavoured dependency. Load it lazily so it
 // stays out of the main bundle (and the module graph of unrelated tests) until
 // the Spec tab is actually opened.
-const SwaggerUI = lazy(() => import("swagger-ui-react"));
+const SwaggerUI = lazy(async () => {
+  try {
+    await import(/* @vite-ignore */ "swagger-ui-react/swagger-ui.css");
+  } catch {
+    // Stylesheet optional if peer dependency is omitted
+  }
+  return import("swagger-ui-react");
+});
 
 /**
  * Origin of the backend. In production `VITE_API_BASE_URL` is set to

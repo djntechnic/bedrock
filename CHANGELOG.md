@@ -16,6 +16,18 @@ When drafting a release body, write the section as `## For consumers`, not
 nested form — the cascade workflow's extractor matches `^## For consumers`
 literally and fails the release's cascade job on a mismatch.
 
+## v0.10.2 - 2026-09-20
+
+### Packaged Canonical Standards & Optional Swagger UI Decoupling
+
+- **Packaged Canonical Standards**: Bundled canonical standards S001–S014 and S100 directly within `bedrock-api` under `bedrock/standards/` as package data. `bedrock.tools.sync_standards` now falls back to package-bundled standards when running from pip installations in consumer CI, eliminating false-positive `OBSOLETE` failures when Bedrock source checkout is absent.
+- **Optional Swagger UI CSS Decoupling**: Dynamically load `swagger-ui-react/swagger-ui.css` inside `ApiSpecPanel`'s lazy boundary. Consumers that import `@djntechnic/bedrock-ui` without installing the optional peer dependency `swagger-ui-react` are no longer blocked with unresolved module errors during bundler and test runs.
+
+### For consumers
+
+- **CollectIt & MLBTracker**:
+  - `python -m bedrock.tools.sync_standards --root . --check` now validates standards against the installed package without requiring local Bedrock clones.
+
 ## v0.10.1 - 2026-09-20
 
 ### Platform Standards & Audit Tooling Reconciliation

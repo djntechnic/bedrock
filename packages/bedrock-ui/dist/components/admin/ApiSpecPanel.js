@@ -3,9 +3,17 @@ import { lazy, useEffect, Suspense } from "react";
 import { FileJson, Download } from "lucide-react";
 import { log } from "../../utils/logger.js";
 import { getAuthToken } from "../../api/client.js";
-import "swagger-ui-react/swagger-ui.css";
 const __vite_import_meta_env__ = {};
-const SwaggerUI = lazy(() => import("swagger-ui-react"));
+const SwaggerUI = lazy(async () => {
+  try {
+    await import(
+      /* @vite-ignore */
+      "swagger-ui-react/swagger-ui.css"
+    );
+  } catch {
+  }
+  return import("swagger-ui-react");
+});
 const API_ORIGIN = typeof import.meta !== "undefined" && __vite_import_meta_env__?.VITE_API_BASE_URL || "";
 const OPENAPI_SPEC_URL = `${API_ORIGIN}/openapi.json`;
 const POSTMAN_COLLECTION_URL = `${API_ORIGIN}/static/collections/app.postman_collection.json`;

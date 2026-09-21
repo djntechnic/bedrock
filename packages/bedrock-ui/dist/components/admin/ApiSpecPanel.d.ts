@@ -7,7 +7,6 @@
  *              download anchors for the raw openapi.json and the committed
  *              Postman collection asset.
  */
-import "swagger-ui-react/swagger-ui.css";
 /** Live OpenAPI specification served by FastAPI. */
 export declare const OPENAPI_SPEC_URL: string;
 /** Committed Postman collection asset served from the backend static mount. */
