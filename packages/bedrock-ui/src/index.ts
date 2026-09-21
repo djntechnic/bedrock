@@ -179,6 +179,12 @@ export * from "./components/ui/table";
 export * from "./components/ui/tabs";
 export * from "./components/ui/tooltip";
 
+// ── HTML editor ──────────────────────────────────────────────────────────────
+export { HtmlCodeEditor } from "./components/editor/HtmlCodeEditor";
+export type { HtmlCodeEditorProps } from "./components/editor/HtmlCodeEditor";
+export { beautifyHtml } from "./components/editor/beautifyHtml";
+export { createHtmlLinterExtension } from "./components/editor/htmlLinter";
+
 // ── Lib ──────────────────────────────────────────────────────────────────────
 export * from "./lib/utils";
 export * from "./lib/fuzzyMatch";

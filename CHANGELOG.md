@@ -16,6 +16,33 @@ When drafting a release body, write the section as `## For consumers`, not
 nested form — the cascade workflow's extractor matches `^## For consumers`
 literally and fails the release's cascade job on a mismatch.
 
+## v0.10.3 - 2026-09-21
+
+### Fixed - four audit-tool defects that only a consumer repo could trigger
+
+Each of these passed bedrock's own suite because bedrock's own tree happens to satisfy the assumptions the tools baked in. All four surfaced from running the audits inside MLBTracker and CollectIt.
+
+- **#87 - unknown `bedrock.toml` keys aborted the whole audit run.** `_build_section()` unpacked TOML straight into the section dataclass, so a key the dataclass did not declare (a stale or template-drifted `skip_exemptions = true` under `[tool.bedrock.audit.s005]`) raised `TypeError`. Keys are now filtered against `dataclasses.fields()` and each dropped key is logged as a warning; declared exemptions still load.
+- **#88 - `run_audit.ps1 -Domain` also ran the platform audits.** The dispatch fell through to `bedrock.tools.run_all`. `-Platform`, `-Domain` and `-All` are now isolated, and `-Domain` with no scripts under `scripts/audit/` exits 0 with a notice.
+- **#89 - `s011_audit_navigation` and `s012_audit_pins` assumed the bedrock monorepo layout.** Defaults pointed at `packages/bedrock-ui/...` and `packages/bedrock-api/requirements.txt`, which do not exist in a consumer. An explicit `bedrock.toml` value still wins; otherwise each tool walks an ordered candidate list (consumer layouts first, monorepo layout last).
+- **#90 - `s009_audit_design_tokens` scanned vendored data.** Stylesheets under `data/`, `imports/` and `exports/` produced hundreds of raw-color hits. Those directories are excluded from the S009 scan only (`DATA_ASSET_DIRS`), not from the shared ignore list, so other audits still scan e.g. `routes/exports/`.
+
+### Added - `<HtmlCodeEditor>` in `@djntechnic/bedrock-ui`
+
+- `HtmlCodeEditor` / `HtmlCodeEditorProps` - CodeMirror 6 HTML editor with syntax highlighting, live HTMLHint diagnostics, and an `onFormat` hook (Shift-Alt-F). Read-only unless `readOnly={false}`. Themed entirely through the semantic tokens in `tokens.css`, so it follows dark mode and custom themes.
+- `beautifyHtml(content)` - shared js-beautify formatter; leaves `<pre>` / `<code>` bodies and `{{token}}` placeholders intact.
+- `createHtmlLinterExtension(rules?)` - the HTMLHint-to-`@codemirror/lint` bridge, for consumers composing their own editor.
+
+### Breaking changes
+
+None. Nothing existing was removed or changed in signature.
+
+### For consumers
+
+- **New peer dependencies** (bedrock-ui): `@uiw/react-codemirror`, `@codemirror/lang-html`, `@codemirror/lint`, `@codemirror/state`, `@codemirror/view`, `htmlhint`, `js-beautify`. npm 7+ installs peers automatically; a consumer that installs with `--legacy-peer-deps` must add them by hand. A consumer that never imports the editor is unaffected at runtime.
+- **CollectIt**: `OutputPane.tsx` can replace its `<pre>` output with `<HtmlCodeEditor>` and `beautifyHtml` (manual-edit toggle, Format HTML, Reset).
+- **CollectIt & MLBTracker**: bump both pins to `v0.10.3` together (`/bump-bedrock-pin v0.10.3`). Repos that carried `bedrock.toml` overrides or `run_audit.ps1` workarounds for #87-#90 can delete them.
+
 ## v0.10.2 - 2026-09-20
 
 ### Packaged Canonical Standards & Optional Swagger UI Decoupling

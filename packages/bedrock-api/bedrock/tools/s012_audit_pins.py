@@ -26,7 +26,12 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from bedrock.tools._config import load_bedrock_config
+from bedrock.tools._config import (
+    PACKAGE_JSON_CANDIDATES,
+    REQUIREMENTS_CANDIDATES,
+    load_bedrock_config,
+    resolve_candidate_path,
+)
 from bedrock.tools._reporter import AuditReporter
 
 _REQUIREMENTS_TAG = re.compile(r"bedrock-api\s*@\s*git\+[^@]+@([^#\s]+)#subdirectory=")
@@ -98,22 +103,30 @@ def _audit_self_repo_mode(pyproject_text: str, package_json_text: str) -> list[P
 
 
 def audit(
-    root: Path, requirements_rel: str, package_json_rel: str, exemptions: list[str]
+    root: Path,
+    requirements_rel: str | None,
+    package_json_rel: str | None,
+    exemptions: list[str],
 ) -> list[PinViolation]:
-    if _is_exempt(requirements_rel, exemptions) or _is_exempt(package_json_rel, exemptions):
+    requirements_rel = resolve_candidate_path(root, requirements_rel, REQUIREMENTS_CANDIDATES)
+    package_json_rel = resolve_candidate_path(root, package_json_rel, PACKAGE_JSON_CANDIDATES)
+    if any(
+        rel is not None and _is_exempt(rel, exemptions)
+        for rel in (requirements_rel, package_json_rel)
+    ):
         return []
 
-    requirements_path = root / requirements_rel
-    package_json_path = root / package_json_rel
+    requirements_path = root / requirements_rel if requirements_rel else None
+    package_json_path = root / package_json_rel if package_json_rel else None
     pyproject_path = root / "packages" / "bedrock-api" / "pyproject.toml"
 
-    if requirements_path.exists():
+    if requirements_path is not None and requirements_path.exists():
         requirements_text = requirements_path.read_text(encoding="utf-8", errors="replace")
-        if _REQUIREMENTS_TAG.search(requirements_text) and package_json_path.exists():
+        if _REQUIREMENTS_TAG.search(requirements_text) and package_json_path is not None and package_json_path.exists():
             package_json_text = package_json_path.read_text(encoding="utf-8", errors="replace")
             return _audit_consumer_mode(requirements_text, package_json_text)
 
-    if pyproject_path.exists() and package_json_path.exists():
+    if pyproject_path.exists() and package_json_path is not None and package_json_path.exists():
         pyproject_text = pyproject_path.read_text(encoding="utf-8", errors="replace")
         package_json_text = package_json_path.read_text(encoding="utf-8", errors="replace")
         return _audit_self_repo_mode(pyproject_text, package_json_text)
@@ -122,7 +135,8 @@ def audit(
         PinViolation(
             "could not find a resolvable dual-pin source: neither a "
             "bedrock-api git+ pin in requirements.txt nor "
-            "packages/bedrock-api/pyproject.toml + package.json were found"
+            "packages/bedrock-api/pyproject.toml + package.json were found "
+            f"(package.json searched in: {', '.join(PACKAGE_JSON_CANDIDATES)})"
         )
     ]
 

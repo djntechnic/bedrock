@@ -315,3 +315,25 @@ def test_s008_returns_one_on_undeclared_root_doc(tmp_path: Path):
 
 def test_s008_returns_two_on_missing_bedrock_toml(tmp_path: Path):
     assert s008_audit_guidance.main(["--root", str(tmp_path)]) == 2
+
+
+# ---------------------------------------------------------------------------
+# _config.load_bedrock_config (#87)
+# ---------------------------------------------------------------------------
+
+
+def test_load_bedrock_config_ignores_unexpected_keys(tmp_path: Path):
+    from bedrock.tools._config import load_bedrock_config
+
+    _write_toml(
+        tmp_path,
+        '[tool.bedrock.audit.s005]\n'
+        'exemptions = ["tests/legacy/**"]\n'
+        "skip_exemptions = true\n"
+        "legacy_numeric_setting = 42\n",
+    )
+
+    config = load_bedrock_config(tmp_path)
+
+    assert "tests/legacy/**" in config.audit_s005.exemptions
+    assert not hasattr(config.audit_s005, "skip_exemptions")

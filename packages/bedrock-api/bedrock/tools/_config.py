@@ -14,9 +14,11 @@ Desc:    Declarative manifest loader for `bedrock.toml`. Every `bedrock.tools
 from __future__ import annotations
 
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from pathlib import Path
 from typing import Any
+
+from loguru import logger
 
 if sys.version_info >= (3, 11):
     import tomllib
@@ -37,6 +39,12 @@ DEFAULT_IGNORED_DIRS: frozenset[str] = frozenset(
     }
 )
 
+# Directories holding vendored or generated data assets (imported stylesheets,
+# exported reports), not authored source. Scoped to the audits that scan asset
+# content (S009) rather than added to DEFAULT_IGNORED_DIRS, which every audit
+# shares - ignoring `exports/` globally would blind S010 to a `routes/exports/`.
+DATA_ASSET_DIRS: frozenset[str] = frozenset({"data", "imports", "exports"})
+
 # Paths every audit tool ignores regardless of what a consumer declares.
 _PLATFORM_BASELINE_EXEMPTIONS: tuple[str, ...] = tuple(
     f"**/{d}/**" for d in sorted(DEFAULT_IGNORED_DIRS)
@@ -44,6 +52,36 @@ _PLATFORM_BASELINE_EXEMPTIONS: tuple[str, ...] = tuple(
 
 _AUDIT_SECTIONS: tuple[str, ...] = tuple(f"s{i:03d}" for i in range(1, 15))
 _AUDIT_SECTIONS: tuple[str, ...] = tuple(f"s{i:03d}" for i in range(1, 15)) + ("s100",)
+
+
+# Where an audit looks when `bedrock.toml` does not name a file. Consumer
+# layouts come first; the bedrock monorepo's own layout is the last resort.
+NAV_CONFIG_CANDIDATES: tuple[str, ...] = (
+    "frontend/src/components/domain/navigation.ts",
+    "frontend/src/navigation.ts",
+    "packages/bedrock-ui/src/navigation/navConfig.ts",
+)
+REQUIREMENTS_CANDIDATES: tuple[str, ...] = (
+    "requirements.txt",
+    "packages/bedrock-api/requirements.txt",
+)
+PACKAGE_JSON_CANDIDATES: tuple[str, ...] = (
+    "frontend/package.json",
+    "package.json",
+    "packages/bedrock-ui/package.json",
+)
+
+
+def resolve_candidate_path(
+    root: Path, explicit: str | None, candidates: tuple[str, ...]
+) -> str | None:
+    """An explicit `bedrock.toml` value always wins, even when the file is
+    missing, so a typo is reported instead of masked by a fallback. With no
+    explicit value, return the first candidate that exists under `root`, or
+    None when none does."""
+    if explicit is not None:
+        return explicit
+    return next((c for c in candidates if (root / c).exists()), None)
 
 
 def _merge_exemptions(consumer_exemptions: list[str]) -> list[str]:
@@ -115,14 +153,14 @@ class AuditS010Config:
 
 @dataclass
 class AuditS011Config:
-    nav_config: str = "packages/bedrock-ui/src/navigation/navConfig.ts"
+    nav_config: str | None = None
     exemptions: list[str] = field(default_factory=list)
 
 
 @dataclass
 class AuditS012Config:
-    requirements: str = "packages/bedrock-api/requirements.txt"
-    package_json: str = "packages/bedrock-ui/package.json"
+    requirements: str | None = None
+    package_json: str | None = None
     exemptions: list[str] = field(default_factory=list)
 
 
@@ -211,7 +249,17 @@ def _build_section(section_key: str, raw_sections: dict) -> Any:
             "`exemptions = [...]` list."
         )
 
-    kwargs = dict(raw_section)
+    valid_fields = {f.name for f in fields(section_cls)}
+    kwargs = {}
+    for key, value in raw_section.items():
+        if key in valid_fields:
+            kwargs[key] = value
+        else:
+            logger.warning(
+                "Ignoring unrecognized key {key} in [tool.bedrock.audit.{section}]",
+                key=key,
+                section=section_key,
+            )
     kwargs["exemptions"] = _merge_exemptions(list(raw_section["exemptions"]))
     return section_cls(**kwargs)
 
