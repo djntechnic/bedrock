@@ -274,7 +274,7 @@ git commit -m "fix(templates): isolate -Domain switch in run_audit.ps1 dispatch 
 - Consumes: Target repository root (`--root <path>`) and parsed `BedrockConfig`
 - Produces: Candidate path resolution across standard consumer directory layouts.
 
-- [ ] **Step 1: Write the failing regression test**
+- [x] **Step 1: Write the failing regression test**
 
 In `packages/bedrock-api/tests/test_audit_s009_to_s012.py`, add tests asserting candidate path resolution:
 
@@ -304,7 +304,7 @@ def test_audit_s012_resolves_consumer_dual_pin_paths(tmp_path: Path):
     assert not any("could not find a resolvable dual-pin source" in v for v in result.violations)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run:
 
@@ -315,7 +315,7 @@ echo "exit=$LASTEXITCODE"
 
 Expected: FAIL.
 
-- [ ] **Step 3: Implement candidate resolution logic**
+- [x] **Step 3: Implement candidate resolution logic**
 
 In `packages/bedrock-api/bedrock/tools/audit_s011_navigation.py`:
 Resolve navigation config by checking candidates:
@@ -339,7 +339,7 @@ Resolve `package_json` by checking:
 3. `root / "package.json"`
 4. `root / "packages" / "bedrock-ui" / "package.json"`
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run:
 
@@ -350,7 +350,7 @@ echo "exit=$LASTEXITCODE"
 
 Expected: PASS with exit code `0`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/bedrock-api/bedrock/tools/_config.py packages/bedrock-api/bedrock/tools/audit_s011_navigation.py packages/bedrock-api/bedrock/tools/audit_s012_pins.py packages/bedrock-api/tests/test_audit_s009_to_s012.py

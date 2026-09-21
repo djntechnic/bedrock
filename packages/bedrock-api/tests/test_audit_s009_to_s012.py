@@ -1,6 +1,8 @@
 """Unit tests for the S009-S012 platform audit CLI tools."""
 from pathlib import Path
 
+import pytest
+
 from bedrock.tools import (
     s009_audit_design_tokens,
     s010_audit_security,
@@ -230,6 +232,37 @@ def test_s011_returns_zero_when_hardcoded_link_is_exempted(tmp_path: Path):
     assert s011_audit_navigation.main(["--root", str(tmp_path)]) == 0
 
 
+_VALID_NAV_CONFIG = (
+    "export const navConfig = [\n"
+    '  { id: "dashboard", label: "Dashboard", path: "/dashboard", icon: "Home", permission: "dashboard:view" },\n'
+    "];\n"
+)
+
+
+@pytest.mark.parametrize(
+    "nav_config_rel",
+    [
+        "frontend/src/components/domain/navigation.ts",
+        "frontend/src/navigation.ts",
+    ],
+)
+def test_audit_s011_resolves_consumer_navigation_path(tmp_path: Path, nav_config_rel: str):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s011]\nexemptions = []\n")
+    _write(tmp_path / nav_config_rel, _VALID_NAV_CONFIG)
+
+    assert s011_audit_navigation.main(["--root", str(tmp_path)]) == 0
+
+
+def test_audit_s011_explicit_nav_config_is_not_replaced_by_a_candidate(tmp_path: Path):
+    _write_toml(
+        tmp_path,
+        '[tool.bedrock.audit.s011]\nnav_config = "src/typo-navigation.ts"\nexemptions = []\n',
+    )
+    _write(tmp_path / "frontend" / "src" / "navigation.ts", _VALID_NAV_CONFIG)
+
+    assert s011_audit_navigation.main(["--root", str(tmp_path)]) == 1
+
+
 def test_s011_returns_two_on_missing_bedrock_toml(tmp_path: Path):
     assert s011_audit_navigation.main(["--root", str(tmp_path)]) == 2
 
@@ -342,6 +375,37 @@ def test_s012_returns_zero_when_divergence_is_exempted(tmp_path: Path):
     )
 
     assert s012_audit_pins.main(["--root", str(tmp_path)]) == 0
+
+
+_CONSUMER_S012_TOML_SECTION = "[tool.bedrock.audit.s012]\nexemptions = []\n"
+
+
+def _write_consumer_pins(tmp_path: Path, api_tag: str, ui_tag: str) -> None:
+    _write(
+        tmp_path / "requirements.txt",
+        f"bedrock-api @ git+https://github.com/djntechnic/bedrock@{api_tag}"
+        "#subdirectory=packages/bedrock-api\n",
+    )
+    _write(
+        tmp_path / "frontend" / "package.json",
+        '{\n  "dependencies": {\n'
+        f'    "@djntechnic/bedrock-ui": "github:djntechnic/bedrock#{ui_tag}"\n'
+        "  }\n}\n",
+    )
+
+
+def test_audit_s012_resolves_consumer_dual_pin_paths(tmp_path: Path):
+    _write_toml(tmp_path, _CONSUMER_S012_TOML_SECTION)
+    _write_consumer_pins(tmp_path, "v0.10.2", "v0.10.2")
+
+    assert s012_audit_pins.main(["--root", str(tmp_path)]) == 0
+
+
+def test_audit_s012_detects_divergence_in_consumer_layout(tmp_path: Path):
+    _write_toml(tmp_path, _CONSUMER_S012_TOML_SECTION)
+    _write_consumer_pins(tmp_path, "v0.10.2", "v0.10.1")
+
+    assert s012_audit_pins.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s012_returns_two_on_missing_bedrock_toml(tmp_path: Path):

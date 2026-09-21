@@ -24,7 +24,12 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from bedrock.tools._config import DEFAULT_IGNORED_DIRS, load_bedrock_config
+from bedrock.tools._config import (
+    DEFAULT_IGNORED_DIRS,
+    NAV_CONFIG_CANDIDATES,
+    load_bedrock_config,
+    resolve_candidate_path,
+)
 from bedrock.tools._reporter import AuditReporter
 
 _REQUIRED_NAV_FIELDS = ("id", "label", "path", "icon", "permission")
@@ -59,8 +64,20 @@ def _line_of(text: str, offset: int) -> int:
 
 
 def _check_nav_config_schema(
-    root: Path, nav_config: str, exemptions: list[str]
+    root: Path, nav_config: str | None, exemptions: list[str]
 ) -> list[NavViolation]:
+    if nav_config is None:
+        searched = ", ".join(NAV_CONFIG_CANDIDATES)
+        return [
+            NavViolation(
+                file=NAV_CONFIG_CANDIDATES[0],
+                line=1,
+                message=f"no navConfig found (looked in: {searched}) - navigation must be "
+                "declared through a config-driven navConfig, not hardcoded per component; "
+                "set `nav_config` in [tool.bedrock.audit.s011] to point at yours",
+            )
+        ]
+
     if _is_exempt(nav_config, exemptions):
         return []
 
@@ -118,8 +135,9 @@ def _check_hardcoded_nav_trees(root: Path, exemptions: list[str]) -> list[NavVio
     return violations
 
 
-def audit(root: Path, nav_config: str, exemptions: list[str]) -> list[NavViolation]:
-    return _check_nav_config_schema(root, nav_config, exemptions) + _check_hardcoded_nav_trees(
+def audit(root: Path, nav_config: str | None, exemptions: list[str]) -> list[NavViolation]:
+    resolved = resolve_candidate_path(root, nav_config, NAV_CONFIG_CANDIDATES)
+    return _check_nav_config_schema(root, resolved, exemptions) + _check_hardcoded_nav_trees(
         root, exemptions
     )
 
