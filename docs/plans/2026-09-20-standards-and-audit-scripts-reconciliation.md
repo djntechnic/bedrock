@@ -490,12 +490,12 @@ git -C c:\Dev\MLBTracker commit -m "chore(standards): sync platform standards an
 
 - Test/Audit: All repositories (`bedrock`, `bedrock-ai-kit`, `CollectIt`, `MLBTracker`)
 
-- [ ] **Step 1: Run full QA in Bedrock**
+- [x] **Step 1: Run full QA in Bedrock**
 
 Run: `python scripts/run_qa.py --mode full`
 Expected: All steps pass (pytest, vitest, typecheck, 15 platform audits).
 
-- [ ] **Step 2: Run S100 audit across all three consumer repositories**
+- [x] **Step 2: Run S100 audit across all three consumer repositories**
 
 Run:
 `python -m bedrock.tools.s100_audit_domain_registry --root c:\Dev\bedrock`
@@ -503,6 +503,6 @@ Run:
 `python -m bedrock.tools.s100_audit_domain_registry --root c:\Dev\MLBTracker`
 Expected: Exit code 0 across all 3 repos.
 
-- [ ] **Step 3: Verify git status is clean across all repositories**
+- [x] **Step 3: Verify git status is clean across all repositories**
 
 Run git status across `bedrock`, `bedrock-ai-kit`, `CollectIt`, `MLBTracker`.
