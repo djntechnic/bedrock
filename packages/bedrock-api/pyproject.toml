@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bedrock-api"
-version = "0.10.1"
+version = "0.10.2"
 description = "Reusable FastAPI application platform: grid config, auth, app config, schema catalog"
 requires-python = ">=3.11"
 dependencies = [
@@ -57,4 +57,4 @@ include = ["bedrock*"]
 # if it ever changes is the quiet kind: the source tree works and the installed
 # package has no baseline and no migrations.
 [tool.setuptools.package-data]
-bedrock = ["schema/*.sql", "schema/migrations/*.sql"]
+bedrock = ["schema/*.sql", "schema/migrations/*.sql", "standards/*.md"]
