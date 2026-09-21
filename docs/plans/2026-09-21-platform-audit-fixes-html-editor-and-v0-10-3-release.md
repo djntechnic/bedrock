@@ -475,7 +475,7 @@ git commit -m "fix(audit_s009): exclude data, imports, and exports directories f
 - Consumes: Bedrock design tokens (§S009), `@uiw/react-codemirror`, `htmlhint`, `js-beautify`
 - Produces: Exported `<HtmlCodeEditor>` component, `beautifyHtml()` function, and types.
 
-- [ ] **Step 1: Install frontend dependencies in `package.json`**
+- [x] **Step 1: Install frontend dependencies in `package.json`**
 
 In `package.json`:
 Add to `peerDependencies` (or `dependencies`):
@@ -495,7 +495,7 @@ npm install --no-audit --no-fund
 echo "exit=$LASTEXITCODE"
 ```
 
-- [ ] **Step 2: Write failing unit test for `beautifyHtml`**
+- [x] **Step 2: Write failing unit test for `beautifyHtml`**
 
 Create `packages/bedrock-ui/src/components/editor/beautifyHtml.test.ts`:
 
@@ -518,7 +518,7 @@ describe("beautifyHtml", () => {
 });
 ```
 
-- [ ] **Step 3: Implement `beautifyHtml.ts`**
+- [x] **Step 3: Implement `beautifyHtml.ts`**
 
 Create `packages/bedrock-ui/src/components/editor/beautifyHtml.ts`:
 
@@ -546,7 +546,7 @@ npm test -- packages/bedrock-ui/src/components/editor/beautifyHtml.test.ts
 echo "exit=$LASTEXITCODE"
 ```
 
-- [ ] **Step 4: Implement `editorTheme.ts` and `htmlLinter.ts`**
+- [x] **Step 4: Implement `editorTheme.ts` and `htmlLinter.ts`**
 
 Create `packages/bedrock-ui/src/components/editor/editorTheme.ts` mapping CodeMirror classes to CSS variables:
 
@@ -617,7 +617,7 @@ export const htmlLinterExtension = linter((view) => {
 });
 ```
 
-- [ ] **Step 5: Implement `HtmlCodeEditor.tsx`**
+- [x] **Step 5: Implement `HtmlCodeEditor.tsx`**
 
 Create `packages/bedrock-ui/src/components/editor/HtmlCodeEditor.tsx`:
 
@@ -679,7 +679,7 @@ export const HtmlCodeEditor: React.FC<HtmlCodeEditorProps> = ({
 };
 ```
 
-- [ ] **Step 6: Write component test `HtmlCodeEditor.test.tsx`**
+- [x] **Step 6: Write component test `HtmlCodeEditor.test.tsx`**
 
 Create `packages/bedrock-ui/src/components/editor/HtmlCodeEditor.test.tsx`:
 
@@ -699,11 +699,11 @@ describe("HtmlCodeEditor", () => {
 });
 ```
 
-- [ ] **Step 7: Export from `packages/bedrock-ui/src/index.ts`**
+- [x] **Step 7: Export from `packages/bedrock-ui/src/index.ts`**
 
 Export `HtmlCodeEditor`, `type HtmlCodeEditorProps`, `beautifyHtml`, and `htmlLinterExtension`.
 
-- [ ] **Step 8: Build and typecheck package**
+- [x] **Step 8: Build and typecheck package**
 
 Run:
 
@@ -717,7 +717,7 @@ echo "exit=$LASTEXITCODE"
 
 Expected: PASS with exit code `0`.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add package.json packages/bedrock-ui/src/components/editor/ packages/bedrock-ui/src/index.ts packages/bedrock-ui/dist/
@@ -741,19 +741,19 @@ git commit -m "feat(ui): add reusable HtmlCodeEditor subsystem with formatting a
 - Consumes: Passing test suites and verified dist builds
 - Produces: Tag `v0.10.3` pushed to remote, published GitHub release notes.
 
-- [ ] **Step 1: Bump version numbers in both manifests**
+- [x] **Step 1: Bump version numbers in both manifests**
 
 Update `package.json`: `"version": "0.10.3"`.
 Update `packages/bedrock-api/pyproject.toml`: `version = "0.10.3"`.
 
-- [ ] **Step 2: Add `CHANGELOG.md` entry for `## v0.10.3`**
+- [x] **Step 2: Add `CHANGELOG.md` entry for `## v0.10.3`**
 
 Document:
 
 - Bug fixes: #87 (TOML kwargs sanitization), #88 (run_audit.ps1 dispatch), #89 (multi-candidate consumer path fallbacks), #90 (data/vendor exclusions in design token audit).
 - Feature: Reusable `<HtmlCodeEditor>` component, formatting via `beautifyHtml`, and HTMLHint diagnostics in `@djntechnic/bedrock-ui`.
 
-- [ ] **Step 3: Run pre-release validation gates**
+- [x] **Step 3: Run pre-release validation gates**
 
 ```powershell
 # Frontend
@@ -770,7 +770,7 @@ echo "exit=$LASTEXITCODE"
 
 Expected: All gates exit with code `0`.
 
-- [ ] **Step 4: Commit and tag `v0.10.3`**
+- [x] **Step 4: Commit and tag `v0.10.3`**
 
 ```bash
 git add package.json packages/bedrock-api/pyproject.toml CHANGELOG.md
@@ -781,7 +781,7 @@ git push origin master
 git push origin v0.10.3
 ```
 
-- [ ] **Step 5: Publish GitHub Release**
+- [x] **Step 5: Publish GitHub Release**
 
 ```bash
 python -c '
@@ -795,7 +795,7 @@ Path("build/release-notes.md").write_text("## v" + notes.split("\n## ")[0], enco
 gh release create v0.10.3 --title "v0.10.3 - Platform audit hardening and HtmlCodeEditor" --notes-file build/release-notes.md
 ```
 
-- [ ] **Step 6: Prove tag is visible remotely**
+- [x] **Step 6: Prove tag is visible remotely**
 
 ```powershell
 git ls-remote --tags https://github.com/djntechnic/bedrock | Select-String "v0.10.3"
