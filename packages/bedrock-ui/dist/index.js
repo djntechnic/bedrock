@@ -107,6 +107,9 @@ import { Switch } from "./components/ui/switch.js";
 import { Table, TableBody, TableCaption, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "./components/ui/table.js";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs.js";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./components/ui/tooltip.js";
+import { HtmlCodeEditor } from "./components/editor/HtmlCodeEditor.js";
+import { beautifyHtml } from "./components/editor/beautifyHtml.js";
+import { createHtmlLinterExtension } from "./components/editor/htmlLinter.js";
 import { fuzzyFilter, fuzzyScore } from "./lib/fuzzyMatch.js";
 import { buildShortcutGroups, isMacPlatform, primaryModifierLabel, resolveShortcutsConfig } from "./lib/shortcuts.js";
 import { getConditionalClass, getConditionalVariant } from "./utils/conditionalFormat.js";
@@ -201,6 +204,7 @@ export {
   GridStatusRow,
   default6 as GridWrapper,
   default33 as HelpPopover,
+  HtmlCodeEditor,
   Input,
   KeyboardShortcutsProvider,
   default27 as KeyboardShortcutsSheet,
@@ -293,6 +297,7 @@ export {
   applyDrafts,
   assertKeys,
   badgeVariants,
+  beautifyHtml,
   boolValue,
   buildGridConfig,
   buildShortcutGroups,
@@ -304,6 +309,7 @@ export {
   computeAggValue,
   computeColumnMinMax,
   confirmEmailVerification,
+  createHtmlLinterExtension,
   documentHeadTags,
   formatAggValue,
   formatBytes,
