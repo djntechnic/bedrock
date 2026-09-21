@@ -144,11 +144,11 @@ def test_s002_presentational_tables_default_to_empty_list(tmp_path: Path):
     assert cfg.audit_s002.presentational_tables == []
 
 
-def test_s012_requirements_and_package_json_defaults(tmp_path: Path):
+def test_s012_requirements_and_package_json_default_to_candidate_resolution(tmp_path: Path):
     _write_toml(tmp_path, "[tool.bedrock]\n")
     cfg = load_bedrock_config(tmp_path)
-    assert cfg.audit_s012.requirements == "packages/bedrock-api/requirements.txt"
-    assert cfg.audit_s012.package_json == "packages/bedrock-ui/package.json"
+    assert cfg.audit_s012.requirements is None
+    assert cfg.audit_s012.package_json is None
 
 
 def test_missing_bedrock_toml_raises(tmp_path: Path):

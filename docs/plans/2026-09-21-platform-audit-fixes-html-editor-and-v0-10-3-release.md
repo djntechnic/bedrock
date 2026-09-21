@@ -374,7 +374,7 @@ git commit -m "fix(audit): support multi-candidate consumer paths in audit_s011 
 - Consumes: Target repository directory scan
 - Produces: Filtered source file list excluding `data/`, `imports/`, and `exports/`.
 
-- [ ] **Step 1: Write the failing regression test**
+- [x] **Step 1: Write the failing regression test**
 
 In `packages/bedrock-api/tests/test_audit_s009_to_s012.py`:
 
@@ -391,7 +391,7 @@ def test_audit_s009_ignores_vendor_data_directories(tmp_path: Path):
     assert not any("bootstrap.min.css" in v for v in result.violations)
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run:
 
@@ -402,7 +402,7 @@ echo "exit=$LASTEXITCODE"
 
 Expected: FAIL with design token violation in `bootstrap.min.css`.
 
-- [ ] **Step 3: Update `DEFAULT_IGNORED_DIRS` in `_config.py` and `audit_s009_design_tokens.py`**
+- [x] **Step 3: Update `DEFAULT_IGNORED_DIRS` in `_config.py` and `audit_s009_design_tokens.py`**
 
 In `packages/bedrock-api/bedrock/tools/_config.py`:
 
@@ -424,7 +424,7 @@ DEFAULT_IGNORED_DIRS: set[str] = {
 In `packages/bedrock-api/bedrock/tools/audit_s009_design_tokens.py`:
 Ensure `_source_files(root: Path)` filters against `DEFAULT_IGNORED_DIRS` for any path part.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run:
 
@@ -435,7 +435,7 @@ echo "exit=$LASTEXITCODE"
 
 Expected: PASS with exit code `0`.
 
-- [ ] **Step 5: Run full backend audit suite to verify zero regressions**
+- [x] **Step 5: Run full backend audit suite to verify zero regressions**
 
 Run:
 
@@ -446,7 +446,7 @@ echo "exit=$LASTEXITCODE"
 
 Expected: All tests PASS with exit code `0`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/bedrock-api/bedrock/tools/_config.py packages/bedrock-api/bedrock/tools/audit_s009_design_tokens.py packages/bedrock-api/tests/test_audit_s009_to_s012.py

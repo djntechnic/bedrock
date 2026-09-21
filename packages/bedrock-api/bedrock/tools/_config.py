@@ -39,6 +39,12 @@ DEFAULT_IGNORED_DIRS: frozenset[str] = frozenset(
     }
 )
 
+# Directories holding vendored or generated data assets (imported stylesheets,
+# exported reports), not authored source. Scoped to the audits that scan asset
+# content (S009) rather than added to DEFAULT_IGNORED_DIRS, which every audit
+# shares - ignoring `exports/` globally would blind S010 to a `routes/exports/`.
+DATA_ASSET_DIRS: frozenset[str] = frozenset({"data", "imports", "exports"})
+
 # Paths every audit tool ignores regardless of what a consumer declares.
 _PLATFORM_BASELINE_EXEMPTIONS: tuple[str, ...] = tuple(
     f"**/{d}/**" for d in sorted(DEFAULT_IGNORED_DIRS)

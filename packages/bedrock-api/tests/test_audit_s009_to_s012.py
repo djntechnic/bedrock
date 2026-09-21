@@ -84,6 +84,27 @@ def test_s009_returns_zero_when_violation_is_exempted(tmp_path: Path):
     assert s009_audit_design_tokens.main(["--root", str(tmp_path)]) == 0
 
 
+@pytest.mark.parametrize("asset_dir", ["data", "imports", "exports"])
+def test_audit_s009_ignores_vendor_data_directories(tmp_path: Path, asset_dir: str):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s009]\nexemptions = []\n")
+    _write(
+        tmp_path / asset_dir / "vendor" / "bootstrap.min.css",
+        "body { color: #ffffff; background: #000000; }\n",
+    )
+
+    assert s009_audit_design_tokens.main(["--root", str(tmp_path)]) == 0
+
+
+def test_audit_s009_still_scans_source_when_repo_root_sits_inside_a_data_directory(
+    tmp_path: Path,
+):
+    repo = tmp_path / "data" / "checkout"
+    _write_toml(repo, "[tool.bedrock.audit.s009]\nexemptions = []\n")
+    _write(repo / "frontend" / "src" / "Card.tsx", 'const c = { color: "#f59e0b" };\n')
+
+    assert s009_audit_design_tokens.main(["--root", str(repo)]) == 1
+
+
 def test_s009_returns_two_on_missing_bedrock_toml(tmp_path: Path):
     assert s009_audit_design_tokens.main(["--root", str(tmp_path)]) == 2
 
