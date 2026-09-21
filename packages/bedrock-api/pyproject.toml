@@ -57,4 +57,4 @@ include = ["bedrock*"]
 # if it ever changes is the quiet kind: the source tree works and the installed
 # package has no baseline and no migrations.
 [tool.setuptools.package-data]
-bedrock = ["schema/*.sql", "schema/migrations/*.sql", "standards/*.md"]
+bedrock = ["schema/*.sql", "schema/migrations/*.sql", "standards/*.md", "templates/scripts/*.ps1"]

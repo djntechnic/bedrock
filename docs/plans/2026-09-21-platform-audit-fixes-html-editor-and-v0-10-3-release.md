@@ -151,7 +151,7 @@ git commit -m "fix(tools): sanitize dataclass kwargs in _build_section against u
 - Consumes: PowerShell switches `[switch]$All`, `[switch]$Platform`, `[switch]$Domain`
 - Produces: Strict mutual isolation so `-Domain` exclusively executes `scripts/audits/audit_s1*.py`.
 
-- [ ] **Step 1: Write unit test validating dispatch isolation**
+- [x] **Step 1: Write unit test validating dispatch isolation**
 
 Create `packages/bedrock-api/tests/test_audit_runner_dispatch.py`:
 
@@ -169,7 +169,7 @@ def test_run_audit_template_dispatch_domain_isolation():
     assert '$All = $true' in content
 ```
 
-- [ ] **Step 2: Run test to verify initial state**
+- [x] **Step 2: Run test to verify initial state**
 
 Run:
 
@@ -178,7 +178,7 @@ python -m pytest packages/bedrock-api/tests/test_audit_runner_dispatch.py -v
 echo "exit=$LASTEXITCODE"
 ```
 
-- [ ] **Step 3: Update `run_audit.ps1` template and spec documentation**
+- [x] **Step 3: Update `run_audit.ps1` template and spec documentation**
 
 In `packages/bedrock-api/bedrock/templates/scripts/run_audit.ps1`:
 
@@ -238,7 +238,7 @@ exit 0
 
 Also update the embedded template in `docs/specs/2026-09-12-ecosystem-standards-and-tooling-architecture.md`.
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run:
 
@@ -249,7 +249,7 @@ echo "exit=$LASTEXITCODE"
 
 Expected: PASS with exit code `0`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/bedrock-api/bedrock/templates/scripts/run_audit.ps1 packages/bedrock-api/tests/test_audit_runner_dispatch.py docs/specs/2026-09-12-ecosystem-standards-and-tooling-architecture.md
