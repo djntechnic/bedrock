@@ -1,10 +1,10 @@
 # Platform Audit Fixes, HTML Code Editor Subsystem, and v0.10.3 Release Design
 
-**Date:** 2026-09-21  
-**Author:** Pair Programming Agent & djntechnic  
-**Status:** Approved  
-**Target Release:** `v0.10.3`  
-**Governing Standards:** Bedrock Platform Invariants §S001–§S014  
+**Date:** 2026-09-21
+**Author:** Pair Programming Agent & djntechnic
+**Status:** Approved
+**Target Release:** `v0.10.3`
+**Governing Standards:** Bedrock Platform Invariants §S001–§S014
 
 ---
 
@@ -17,10 +17,12 @@ This design addresses four platform audit defects logged from consumer usage (#8
 ## 2. Platform Audit Defect Remediation
 
 ### 2.1 Issue #87: `_config.py` raises `TypeError` on unexpected `bedrock.toml` keys
+
 - **Problem Statement:** In `packages/bedrock-api/bedrock/tools/_config.py`, `_build_section()` converts raw TOML dictionaries directly into `**kwargs` when calling dataclass constructors (`section_cls(**kwargs)`). When consumer repositories contain deprecated, template-drifted, or unrecognized keys (e.g. `skip_exemptions = true` under `[tool.bedrock.audit.s005]`), the Python dataclass raises an unhandled `TypeError`, aborting the entire audit runner.
 - **Root Cause:** Direct dictionary unpacking without field introspection against `@dataclass` field definitions.
 - **Resolution:**
   Filter `kwargs` against `dataclasses.fields(section_cls)`:
+
   ```python
   import dataclasses
   from loguru import logger
@@ -37,6 +39,7 @@ This design addresses four platform audit defects logged from consumer usage (#8
           )
   return section_cls(**filtered_kwargs)
   ```
+
 - **Files Impacted:**
   - `packages/bedrock-api/bedrock/tools/_config.py`
   - `packages/bedrock-api/tests/test_tools_config.py` (or `test_audit_s005_to_s008.py`)
@@ -45,6 +48,7 @@ This design addresses four platform audit defects logged from consumer usage (#8
 ---
 
 ### 2.2 Issue #88: `run_audit.ps1` dispatches `bedrock.tools.run_all` when `-Domain` is specified
+
 - **Problem Statement:** In `packages/bedrock-api/bedrock/templates/scripts/run_audit.ps1`, the switch logic evaluates platform audits whenever `$Domain` is invoked if fallthrough defaults are not strictly gated, causing platform audits to execute during domain-specific checks.
 - **Root Cause:** Conditional branching did not isolate switches when `-Domain` was exclusively requested.
 - **Resolution:**
@@ -81,6 +85,7 @@ This design addresses four platform audit defects logged from consumer usage (#8
 ---
 
 ### 2.3 Issue #89: `audit_s011` and `audit_s012` assume internal platform repo paths
+
 - **Problem Statement:** `AuditS011Config.nav_config` defaults to `packages/bedrock-ui/src/navigation/navConfig.ts`. `AuditS012Config.requirements` defaults to `packages/bedrock-api/requirements.txt` and `package_json` to `packages/bedrock-ui/package.json`. In consumer repos lacking explicit overrides in `bedrock.toml`, `audit_s011` and `audit_s012` fail with file-not-found errors.
 - **Root Cause:** Dataclass defaults hardcode the Bedrock monorepo structure instead of resolving consumer paths.
 - **Resolution:**
@@ -109,6 +114,7 @@ This design addresses four platform audit defects logged from consumer usage (#8
 ---
 
 ### 2.4 Issue #90: Design token scanner does not respect root .gitignore for vendor asset directories
+
 - **Problem Statement:** `audit_s009_design_tokens._source_files()` traverses all `.ts`, `.tsx`, `.css` in the root tree. Vendor files, fixtures, and data dumps under `data/`, `imports/`, and `exports/` trigger hundreds of false-positive hex color violations.
 - **Root Cause:** Data and vendor directories are omitted from `DEFAULT_IGNORED_DIRS`.
 - **Resolution:**
@@ -138,14 +144,18 @@ This design addresses four platform audit defects logged from consumer usage (#8
 ## 3. Reusable HTML Code Editor Subsystem (`@djntechnic/bedrock-ui`)
 
 ### 3.1 Overview & Responsibilities
+
 In compliance with §S001 (Zero UI Duplication), the HTML editor, formatting engine, and linter are implemented centrally in `@djntechnic/bedrock-ui`.
+
 - **Syntax Highlighting & Interaction:** CodeMirror 6 via `@uiw/react-codemirror` and `@codemirror/lang-html`.
 - **Formatting:** `js-beautify.html` configured to respect semantic HTML and preserve placeholders (`{{token}}`).
 - **Linting:** Real-time lint diagnostics using `htmlhint` mapped to `@codemirror/lint` squiggly markers and tooltip popovers.
 - **Theming:** Full compliance with §S009 using Bedrock CSS semantic tokens (`var(--text-primary)`, `var(--primary)`, `var(--warning)`, `var(--border)`, `var(--surface-sunken)`).
 
 ### 3.2 Package Manifest Changes (`package.json`)
+
 Add dependencies to `package.json`:
+
 - `@uiw/react-codemirror`: `^4.23.0`
 - `@codemirror/lang-html`: `^6.4.9`
 - `@codemirror/lint`: `^6.8.4`
@@ -154,6 +164,7 @@ Add dependencies to `package.json`:
 - DevDependencies: `@types/js-beautify`: `^1.14.3`
 
 ### 3.3 Component Architecture (`HtmlCodeEditor.tsx`)
+
 File: `packages/bedrock-ui/src/components/editor/HtmlCodeEditor.tsx`
 
 ```typescript
@@ -170,7 +181,9 @@ export interface HtmlCodeEditorProps {
 ```
 
 #### Formatting Helper (`beautifyHtml`):
+
 File: `packages/bedrock-ui/src/components/editor/beautifyHtml.ts`
+
 ```typescript
 import { html as beautify } from "js-beautify";
 
@@ -189,13 +202,17 @@ export function beautifyHtml(content: string): string {
 ```
 
 #### Linting Extension (`htmlLinter`):
+
 File: `packages/bedrock-ui/src/components/editor/htmlLinter.ts`
 Uses `HTMLHint.verify(content, rules)` to generate `Diagnostic[]` for `@codemirror/lint`:
+
 - Checks for unclosed tags, attribute quotes, duplicate attributes, and tag pairing.
 - Displays line/column squigglies with severity classification.
 
 ### 3.4 Export Surface
+
 Exported from `packages/bedrock-ui/src/index.ts`:
+
 - `HtmlCodeEditor`, `type HtmlCodeEditorProps`
 - `beautifyHtml`
 - `createHtmlLinterExtension`
@@ -205,7 +222,9 @@ Exported from `packages/bedrock-ui/src/index.ts`:
 ## 4. CollectIt `OutputPane.tsx` Integration
 
 ### 4.1 Consumer Flow
+
 In `CollectIt/frontend/src/components/listing-studio/OutputPane.tsx`:
+
 1. Import `HtmlCodeEditor`, `beautifyHtml` from `@djntechnic/bedrock-ui`.
 2. State Management:
    - `manualEdit: boolean` (default: `false`, controlled by switch "Enable Manual Edit").
@@ -223,13 +242,16 @@ In `CollectIt/frontend/src/components/listing-studio/OutputPane.tsx`:
 ## 5. Release Orchestration (`v0.10.3`)
 
 ### 5.1 Pre-Release Verification
+
 Run local gates in `bedrock`:
+
 1. `npm test` and `npm run typecheck` in repo root.
 2. `pytest packages/bedrock-api/tests` with dev dependencies installed.
 3. Validate synchronized version via:
    `python -m bedrock.tools.audit_release_version v0.10.3`
 
 ### 5.2 Release Artifacts
+
 1. Update `package.json` to `"version": "0.10.3"`.
 2. Update `packages/bedrock-api/pyproject.toml` to `version = "0.10.3"`.
 3. Document `## v0.10.3` in `CHANGELOG.md`.
@@ -243,6 +265,7 @@ Run local gates in `bedrock`:
 ## 6. Downstream Pin Bumps & Acceptance Gates
 
 ### 6.1 `MLBTracker`
+
 1. Verify remote tag `v0.10.3`.
 2. Update `requirements.txt` and `frontend/package.json` to `v0.10.3`.
 3. Run `npm install --package-lock-only --ignore-scripts`.
@@ -250,6 +273,7 @@ Run local gates in `bedrock`:
 5. Run full gates: `python scripts/maintenance/audit_bedrock_pins.py`, `pwsh scripts/run_audit.ps1`, unit tests.
 
 ### 6.2 `CollectIt`
+
 1. Verify remote tag `v0.10.3`.
 2. Update `requirements.txt` and `frontend/package.json` to `v0.10.3`.
 3. Regenerate lockfile and verify package contents.

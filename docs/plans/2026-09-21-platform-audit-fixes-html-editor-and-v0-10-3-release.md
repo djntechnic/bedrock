@@ -28,15 +28,15 @@
 
 ## Domain Specialist Delegation Matrix
 
-| Task | Domain / Subsystem | Assigned Specialist Agent |
-| :--- | :--- | :--- |
-| **Task 1** | Platform Tools Config Sanitization (#87) | `.claude/agents/backend-api-engineer.md` |
-| **Task 2** | Audit Runner Script Dispatch Isolation (#88) | `.claude/agents/backend-api-engineer.md` |
-| **Task 3** | Consumer Path Fallback Resolution (#89) | `.claude/agents/backend-api-engineer.md` |
-| **Task 4** | Design Token Data Directory Exclusions (#90) | `.claude/agents/backend-api-engineer.md` |
-| **Task 5** | Reusable `<HtmlCodeEditor>` Subsystem | `.claude/agents/frontend-ui-engineer.md` |
-| **Task 6** | Platform Release `v0.10.3` Execution | `.claude/agents/quality-gatekeeper.md` |
-| **Task 7** | MLBTracker Dual-Pin Bump | `.claude/agents/quality-gatekeeper.md` |
+| Task       | Domain / Subsystem                                     | Assigned Specialist Agent                |
+| :--------- | :----------------------------------------------------- | :--------------------------------------- |
+| **Task 1** | Platform Tools Config Sanitization (#87)               | `.claude/agents/backend-api-engineer.md` |
+| **Task 2** | Audit Runner Script Dispatch Isolation (#88)           | `.claude/agents/backend-api-engineer.md` |
+| **Task 3** | Consumer Path Fallback Resolution (#89)                | `.claude/agents/backend-api-engineer.md` |
+| **Task 4** | Design Token Data Directory Exclusions (#90)           | `.claude/agents/backend-api-engineer.md` |
+| **Task 5** | Reusable `<HtmlCodeEditor>` Subsystem                  | `.claude/agents/frontend-ui-engineer.md` |
+| **Task 6** | Platform Release `v0.10.3` Execution                   | `.claude/agents/quality-gatekeeper.md`   |
+| **Task 7** | MLBTracker Dual-Pin Bump                               | `.claude/agents/quality-gatekeeper.md`   |
 | **Task 8** | CollectIt Dual-Pin Bump & `OutputPane.tsx` Integration | `.claude/agents/frontend-ui-engineer.md` |
 
 ---
@@ -48,10 +48,12 @@
 **Specialist Agent:** `.claude/agents/backend-api-engineer.md`
 
 **Files:**
+
 - Modify: `packages/bedrock-api/bedrock/tools/_config.py:200-215`
 - Test: `packages/bedrock-api/tests/test_audit_s005_to_s008.py`
 
 **Interfaces:**
+
 - Consumes: `load_bedrock_config(root: Path) -> BedrockConfig`
 - Produces: Sanitized `@dataclass` instantiation in `_build_section()` filtering unmapped keyword arguments.
 
@@ -79,10 +81,12 @@ def test_load_bedrock_config_ignores_unexpected_keys(tmp_path: Path):
 - [ ] **Step 2: Run test to verify it fails**
 
 Run:
+
 ```powershell
 python -m pytest packages/bedrock-api/tests/test_audit_s005_to_s008.py -k "test_load_bedrock_config_ignores_unexpected_keys" -v
 echo "exit=$LASTEXITCODE"
 ```
+
 Expected: FAIL with `TypeError: AuditS005Config.__init__() got an unexpected keyword argument 'skip_exemptions'`.
 
 - [ ] **Step 3: Implement kwargs filtering in `_config.py`**
@@ -99,7 +103,7 @@ def _build_section(section_cls: type[T], raw_section: dict[str, Any] | None) -> 
     kwargs = dict(raw_section)
     if "exemptions" in kwargs and isinstance(kwargs["exemptions"], list):
         kwargs["exemptions"] = _merge_exemptions(list(kwargs["exemptions"]))
-    
+
     valid_fields = {f.name for f in dataclasses.fields(section_cls)}
     filtered_kwargs = {}
     for key, value in kwargs.items():
@@ -115,10 +119,12 @@ def _build_section(section_cls: type[T], raw_section: dict[str, Any] | None) -> 
 - [ ] **Step 4: Run test to verify it passes**
 
 Run:
+
 ```powershell
 python -m pytest packages/bedrock-api/tests/test_audit_s005_to_s008.py -k "test_load_bedrock_config_ignores_unexpected_keys" -v
 echo "exit=$LASTEXITCODE"
 ```
+
 Expected: PASS with exit code `0`.
 
 - [ ] **Step 5: Commit**
@@ -135,11 +141,13 @@ git commit -m "fix(tools): sanitize dataclass kwargs in _build_section against u
 **Specialist Agent:** `.claude/agents/backend-api-engineer.md`
 
 **Files:**
+
 - Modify: `packages/bedrock-api/bedrock/templates/scripts/run_audit.ps1`
 - Modify: `docs/specs/2026-09-12-ecosystem-standards-and-tooling-architecture.md:590-630`
 - Test: `packages/bedrock-api/tests/test_audit_runner_dispatch.py`
 
 **Interfaces:**
+
 - Consumes: PowerShell switches `[switch]$All`, `[switch]$Platform`, `[switch]$Domain`
 - Produces: Strict mutual isolation so `-Domain` exclusively executes `scripts/audits/audit_s1*.py`.
 
@@ -164,6 +172,7 @@ def test_run_audit_template_dispatch_domain_isolation():
 - [ ] **Step 2: Run test to verify initial state**
 
 Run:
+
 ```powershell
 python -m pytest packages/bedrock-api/tests/test_audit_runner_dispatch.py -v
 echo "exit=$LASTEXITCODE"
@@ -232,10 +241,12 @@ Also update the embedded template in `docs/specs/2026-09-12-ecosystem-standards-
 - [ ] **Step 4: Run test to verify it passes**
 
 Run:
+
 ```powershell
 python -m pytest packages/bedrock-api/tests/test_audit_runner_dispatch.py -v
 echo "exit=$LASTEXITCODE"
 ```
+
 Expected: PASS with exit code `0`.
 
 - [ ] **Step 5: Commit**
@@ -252,12 +263,14 @@ git commit -m "fix(templates): isolate -Domain switch in run_audit.ps1 dispatch 
 **Specialist Agent:** `.claude/agents/backend-api-engineer.md`
 
 **Files:**
+
 - Modify: `packages/bedrock-api/bedrock/tools/_config.py`
 - Modify: `packages/bedrock-api/bedrock/tools/audit_s011_navigation.py`
 - Modify: `packages/bedrock-api/bedrock/tools/audit_s012_pins.py`
 - Test: `packages/bedrock-api/tests/test_audit_s009_to_s012.py`
 
 **Interfaces:**
+
 - Consumes: Target repository root (`--root <path>`) and parsed `BedrockConfig`
 - Produces: Candidate path resolution across standard consumer directory layouts.
 
@@ -294,16 +307,19 @@ def test_audit_s012_resolves_consumer_dual_pin_paths(tmp_path: Path):
 - [ ] **Step 2: Run test to verify it fails**
 
 Run:
+
 ```powershell
 python -m pytest packages/bedrock-api/tests/test_audit_s009_to_s012.py -k "test_audit_s011_resolves_consumer_navigation_path or test_audit_s012_resolves_consumer_dual_pin_paths" -v
 echo "exit=$LASTEXITCODE"
 ```
+
 Expected: FAIL.
 
 - [ ] **Step 3: Implement candidate resolution logic**
 
 In `packages/bedrock-api/bedrock/tools/audit_s011_navigation.py`:
 Resolve navigation config by checking candidates:
+
 1. `root / config.audit_s011.nav_config` (if exists and explicitly specified)
 2. `root / "frontend" / "src" / "components" / "domain" / "navigation.ts"`
 3. `root / "frontend" / "src" / "navigation.ts"`
@@ -311,11 +327,13 @@ Resolve navigation config by checking candidates:
 
 In `packages/bedrock-api/bedrock/tools/audit_s012_pins.py`:
 Resolve `requirements` by checking:
+
 1. `root / config.audit_s012.requirements` (if exists)
 2. `root / "requirements.txt"`
 3. `root / "packages" / "bedrock-api" / "requirements.txt"`
 
 Resolve `package_json` by checking:
+
 1. `root / config.audit_s012.package_json` (if exists)
 2. `root / "frontend" / "package.json"`
 3. `root / "package.json"`
@@ -324,10 +342,12 @@ Resolve `package_json` by checking:
 - [ ] **Step 4: Run tests to verify they pass**
 
 Run:
+
 ```powershell
 python -m pytest packages/bedrock-api/tests/test_audit_s009_to_s012.py -k "test_audit_s011_resolves_consumer_navigation_path or test_audit_s012_resolves_consumer_dual_pin_paths" -v
 echo "exit=$LASTEXITCODE"
 ```
+
 Expected: PASS with exit code `0`.
 
 - [ ] **Step 5: Commit**
@@ -344,11 +364,13 @@ git commit -m "fix(audit): support multi-candidate consumer paths in audit_s011 
 **Specialist Agent:** `.claude/agents/backend-api-engineer.md`
 
 **Files:**
+
 - Modify: `packages/bedrock-api/bedrock/tools/_config.py:20-35`
 - Modify: `packages/bedrock-api/bedrock/tools/audit_s009_design_tokens.py:70-85`
 - Test: `packages/bedrock-api/tests/test_audit_s009_to_s012.py`
 
 **Interfaces:**
+
 - Consumes: Target repository directory scan
 - Produces: Filtered source file list excluding `data/`, `imports/`, and `exports/`.
 
@@ -372,15 +394,18 @@ def test_audit_s009_ignores_vendor_data_directories(tmp_path: Path):
 - [ ] **Step 2: Run test to verify it fails**
 
 Run:
+
 ```powershell
 python -m pytest packages/bedrock-api/tests/test_audit_s009_to_s012.py -k "test_audit_s009_ignores_vendor_data_directories" -v
 echo "exit=$LASTEXITCODE"
 ```
+
 Expected: FAIL with design token violation in `bootstrap.min.css`.
 
 - [ ] **Step 3: Update `DEFAULT_IGNORED_DIRS` in `_config.py` and `audit_s009_design_tokens.py`**
 
 In `packages/bedrock-api/bedrock/tools/_config.py`:
+
 ```python
 DEFAULT_IGNORED_DIRS: set[str] = {
     ".git",
@@ -402,19 +427,23 @@ Ensure `_source_files(root: Path)` filters against `DEFAULT_IGNORED_DIRS` for an
 - [ ] **Step 4: Run test to verify it passes**
 
 Run:
+
 ```powershell
 python -m pytest packages/bedrock-api/tests/test_audit_s009_to_s012.py -k "test_audit_s009_ignores_vendor_data_directories" -v
 echo "exit=$LASTEXITCODE"
 ```
+
 Expected: PASS with exit code `0`.
 
 - [ ] **Step 5: Run full backend audit suite to verify zero regressions**
 
 Run:
+
 ```powershell
 python -m pytest packages/bedrock-api/tests/ -v
 echo "exit=$LASTEXITCODE"
 ```
+
 Expected: All tests PASS with exit code `0`.
 
 - [ ] **Step 6: Commit**
@@ -431,6 +460,7 @@ git commit -m "fix(audit_s009): exclude data, imports, and exports directories f
 **Specialist Agent:** `.claude/agents/frontend-ui-engineer.md`
 
 **Files:**
+
 - Modify: `package.json`
 - Create: `packages/bedrock-ui/src/components/editor/HtmlCodeEditor.tsx`
 - Create: `packages/bedrock-ui/src/components/editor/beautifyHtml.ts`
@@ -441,6 +471,7 @@ git commit -m "fix(audit_s009): exclude data, imports, and exports directories f
 - Test: `packages/bedrock-ui/src/components/editor/beautifyHtml.test.ts`
 
 **Interfaces:**
+
 - Consumes: Bedrock design tokens (§S009), `@uiw/react-codemirror`, `htmlhint`, `js-beautify`
 - Produces: Exported `<HtmlCodeEditor>` component, `beautifyHtml()` function, and types.
 
@@ -448,15 +479,17 @@ git commit -m "fix(audit_s009): exclude data, imports, and exports directories f
 
 In `package.json`:
 Add to `peerDependencies` (or `dependencies`):
+
 - `"@uiw/react-codemirror": "^4.23.0"`
 - `"@codemirror/lang-html": "^6.4.9"`
 - `"@codemirror/lint": "^6.8.4"`
 - `"htmlhint": "^1.1.4"`
 - `"js-beautify": "^1.15.1"`
-Add to `devDependencies`:
+  Add to `devDependencies`:
 - `"@types/js-beautify": "^1.14.3"`
 
 Run:
+
 ```powershell
 npm install --no-audit --no-fund
 echo "exit=$LASTEXITCODE"
@@ -507,6 +540,7 @@ export function beautifyHtml(content: string): string {
 ```
 
 Verify `beautifyHtml.test.ts` passes:
+
 ```powershell
 npm test -- packages/bedrock-ui/src/components/editor/beautifyHtml.test.ts
 echo "exit=$LASTEXITCODE"
@@ -515,32 +549,38 @@ echo "exit=$LASTEXITCODE"
 - [ ] **Step 4: Implement `editorTheme.ts` and `htmlLinter.ts`**
 
 Create `packages/bedrock-ui/src/components/editor/editorTheme.ts` mapping CodeMirror classes to CSS variables:
+
 ```typescript
 import { EditorView } from "@codemirror/view";
 import { Extension } from "@codemirror/state";
 
-export const bedrockEditorTheme: Extension = EditorView.theme({
-  "&": {
-    color: "var(--color-text-primary, #0f172a)",
-    backgroundColor: "var(--color-bg-subtle, #f8fafc)",
-    fontSize: "0.875rem",
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+export const bedrockEditorTheme: Extension = EditorView.theme(
+  {
+    "&": {
+      color: "var(--color-text-primary, #0f172a)",
+      backgroundColor: "var(--color-bg-subtle, #f8fafc)",
+      fontSize: "0.875rem",
+      fontFamily:
+        "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    },
+    ".cm-content": {
+      caretColor: "var(--color-primary, #2563eb)",
+    },
+    ".cm-gutters": {
+      backgroundColor: "var(--color-bg-muted, #f1f5f9)",
+      color: "var(--color-text-muted, #64748b)",
+      borderRight: "1px solid var(--color-border, #e2e8f0)",
+    },
+    "&.cm-focused .cm-cursor": {
+      borderLeftColor: "var(--color-primary, #2563eb)",
+    },
   },
-  ".cm-content": {
-    caretColor: "var(--color-primary, #2563eb)",
-  },
-  ".cm-gutters": {
-    backgroundColor: "var(--color-bg-muted, #f1f5f9)",
-    color: "var(--color-text-muted, #64748b)",
-    borderRight: "1px solid var(--color-border, #e2e8f0)",
-  },
-  "&.cm-focused .cm-cursor": {
-    borderLeftColor: "var(--color-primary, #2563eb)",
-  },
-}, { dark: false });
+  { dark: false },
+);
 ```
 
 Create `packages/bedrock-ui/src/components/editor/htmlLinter.ts`:
+
 ```typescript
 import { linter, Diagnostic } from "@codemirror/lint";
 import { HTMLHint } from "htmlhint";
@@ -580,6 +620,7 @@ export const htmlLinterExtension = linter((view) => {
 - [ ] **Step 5: Implement `HtmlCodeEditor.tsx`**
 
 Create `packages/bedrock-ui/src/components/editor/HtmlCodeEditor.tsx`:
+
 ```typescript
 import React, { useMemo } from "react";
 import CodeMirror, { Extension } from "@uiw/react-codemirror";
@@ -641,6 +682,7 @@ export const HtmlCodeEditor: React.FC<HtmlCodeEditorProps> = ({
 - [ ] **Step 6: Write component test `HtmlCodeEditor.test.tsx`**
 
 Create `packages/bedrock-ui/src/components/editor/HtmlCodeEditor.test.tsx`:
+
 ```typescript
 import React from "react";
 import { render, screen } from "@testing-library/react";
@@ -664,6 +706,7 @@ Export `HtmlCodeEditor`, `type HtmlCodeEditorProps`, `beautifyHtml`, and `htmlLi
 - [ ] **Step 8: Build and typecheck package**
 
 Run:
+
 ```powershell
 npm run build
 npm run build:types
@@ -671,6 +714,7 @@ npm run typecheck
 npm test
 echo "exit=$LASTEXITCODE"
 ```
+
 Expected: PASS with exit code `0`.
 
 - [ ] **Step 9: Commit**
@@ -687,22 +731,25 @@ git commit -m "feat(ui): add reusable HtmlCodeEditor subsystem with formatting a
 **Specialist Agent:** `.claude/agents/quality-gatekeeper.md`
 
 **Files:**
+
 - Modify: `package.json` (`"version": "0.10.3"`)
 - Modify: `packages/bedrock-api/pyproject.toml` (`version = "0.10.3"`)
 - Modify: `CHANGELOG.md`
 
 **Interfaces:**
+
 - Consumes: Passing test suites and verified dist builds
 - Produces: Tag `v0.10.3` pushed to remote, published GitHub release notes.
 
 - [ ] **Step 1: Bump version numbers in both manifests**
 
-Update `package.json`: `"version": "0.10.3"`.  
+Update `package.json`: `"version": "0.10.3"`.
 Update `packages/bedrock-api/pyproject.toml`: `version = "0.10.3"`.
 
 - [ ] **Step 2: Add `CHANGELOG.md` entry for `## v0.10.3`**
 
 Document:
+
 - Bug fixes: #87 (TOML kwargs sanitization), #88 (run_audit.ps1 dispatch), #89 (multi-candidate consumer path fallbacks), #90 (data/vendor exclusions in design token audit).
 - Feature: Reusable `<HtmlCodeEditor>` component, formatting via `beautifyHtml`, and HTMLHint diagnostics in `@djntechnic/bedrock-ui`.
 
@@ -720,6 +767,7 @@ python -m pytest packages/bedrock-api/tests/
 python -m bedrock.tools.audit_release_version v0.10.3
 echo "exit=$LASTEXITCODE"
 ```
+
 Expected: All gates exit with code `0`.
 
 - [ ] **Step 4: Commit and tag `v0.10.3`**
@@ -752,6 +800,7 @@ gh release create v0.10.3 --title "v0.10.3 - Platform audit hardening and HtmlCo
 ```powershell
 git ls-remote --tags https://github.com/djntechnic/bedrock | Select-String "v0.10.3"
 ```
+
 Expected: Remote returns `refs/tags/v0.10.3`.
 
 ---
@@ -761,10 +810,12 @@ Expected: Remote returns `refs/tags/v0.10.3`.
 **Specialist Agent:** `.claude/agents/quality-gatekeeper.md`
 
 **Files in `c:\Dev\MLBTracker`:**
+
 - Modify: `requirements.txt`
 - Modify: `frontend/package.json`
 
 **Interfaces:**
+
 - Consumes: Tag `v0.10.3` from `djntechnic/bedrock`
 - Produces: Updated lockfile and verified audit suites in `MLBTracker`.
 
@@ -778,10 +829,13 @@ git ls-remote --tags https://github.com/djntechnic/bedrock | Select-String "v0.1
 - [ ] **Step 2: Update dual pins in `requirements.txt` and `frontend/package.json`**
 
 In `C:\Dev\MLBTracker\requirements.txt`:
+
 ```
 bedrock-api @ git+https://github.com/djntechnic/bedrock@v0.10.3#subdirectory=packages/bedrock-api
 ```
+
 In `C:\Dev\MLBTracker\frontend\package.json`:
+
 ```json
 "@djntechnic/bedrock-ui": "github:djntechnic/bedrock#v0.10.3"
 ```
@@ -795,6 +849,7 @@ rm -r -fo node_modules/@djntechnic
 npm install --ignore-scripts
 Get-Content node_modules/@djntechnic/bedrock-ui/package.json | Select-String '"version"'
 ```
+
 Expected: Displays `"version": "0.10.3"`.
 
 - [ ] **Step 4: Run MLBTracker verification suite**
@@ -807,6 +862,7 @@ pytest
 npm test
 echo "exit=$LASTEXITCODE"
 ```
+
 Expected: All tests and audits pass cleanly with exit code `0`.
 
 - [ ] **Step 5: Commit changes in MLBTracker**
@@ -824,22 +880,27 @@ git commit -m "chore: bump bedrock dual-pins to v0.10.3"
 **Specialist Agent:** `.claude/agents/frontend-ui-engineer.md`
 
 **Files in `c:\Dev\CollectIt`:**
+
 - Modify: `requirements.txt`
 - Modify: `frontend/package.json`
 - Modify: `frontend/src/components/listing-studio/OutputPane.tsx`
 - Modify: `frontend/src/components/listing-studio/OutputPane.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `<HtmlCodeEditor>` and `beautifyHtml` exported from `@djntechnic/bedrock-ui` `v0.10.3`
 - Produces: Integrated CodeMirror editor in `OutputPane.tsx` with manual edit toggle, formatting, linting, and byte-identical export.
 
 - [ ] **Step 1: Update dual pins in `requirements.txt` and `frontend/package.json`**
 
 In `C:\Dev\CollectIt\requirements.txt`:
+
 ```
 bedrock-api @ git+https://github.com/djntechnic/bedrock@v0.10.3#subdirectory=packages/bedrock-api
 ```
+
 In `C:\Dev\CollectIt\frontend\package.json`:
+
 ```json
 "@djntechnic/bedrock-ui": "github:djntechnic/bedrock#v0.10.3"
 ```
@@ -853,11 +914,13 @@ rm -r -fo node_modules/@djntechnic
 npm install --ignore-scripts
 Get-Content node_modules/@djntechnic/bedrock-ui/package.json | Select-String '"version"'
 ```
+
 Expected: Displays `"version": "0.10.3"`.
 
 - [ ] **Step 3: Integrate `<HtmlCodeEditor>` in `OutputPane.tsx`**
 
 In `C:\Dev\CollectIt\frontend\src\components\listing-studio/OutputPane.tsx`:
+
 1. Import `HtmlCodeEditor` and `beautifyHtml` from `@djntechnic/bedrock-ui`.
 2. Add state `manualEdit: boolean` (default `false`) and `customText: string | null` (default `null`).
 3. Add toolbar switches:
@@ -865,6 +928,7 @@ In `C:\Dev\CollectIt\frontend\src\components\listing-studio/OutputPane.tsx`:
    - "Format HTML" `<Button size="sm" variant="outline" onClick={handleFormat}>`
    - "Reset" `<Button size="sm" variant="ghost" onClick={() => setCustomText(null)}>` (when `customText !== null`)
 4. Replace `<pre className="token-code...">{beautifyForDisplay(text)}</pre>` with:
+
 ```tsx
 <HtmlCodeEditor
   value={displayText}
@@ -877,6 +941,7 @@ In `C:\Dev\CollectIt\frontend\src\components\listing-studio/OutputPane.tsx`:
 - [ ] **Step 4: Update `OutputPane.test.tsx`**
 
 Ensure `OutputPane.test.tsx` exercises:
+
 - Read-only default rendering.
 - Manual edit switch enables editing.
 - "Format HTML" action formats content.
@@ -893,6 +958,7 @@ npm run typecheck
 pytest
 echo "exit=$LASTEXITCODE"
 ```
+
 Expected: All tests and audits pass cleanly with exit code `0`.
 
 - [ ] **Step 6: Commit changes in CollectIt**
