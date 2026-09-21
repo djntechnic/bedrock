@@ -3,8 +3,8 @@ id: S004
 title: "No Hardcoded Config Settings"
 status: active
 tier: platform
-enforced_by: bedrock.tools.audit_s004_config
-cli_command: "python -m bedrock.tools.audit_s004_config --root ."
+enforced_by: bedrock.tools.s004_audit_config
+cli_command: "python scripts/audit/s004_audit_config.py --root ."
 ---
 
 # Standard S004: No Hardcoded Config Settings
@@ -118,7 +118,7 @@ application code reached after boot is never exempt.
 ## Verification & Enforcement Gate
 
 ```bash
-python -m bedrock.tools.audit_s004_config --root .
+python scripts/audit/s004_audit_config.py --root .
 ```
 
 - **Exit 0** — no raw `os.environ` reads outside `exempt_paths`, no

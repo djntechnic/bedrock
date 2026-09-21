@@ -2,10 +2,10 @@
 from pathlib import Path
 
 from bedrock.tools import (
-    audit_s009_design_tokens,
-    audit_s010_security,
-    audit_s011_navigation,
-    audit_s012_pins,
+    s009_audit_design_tokens,
+    s010_audit_security,
+    s011_audit_navigation,
+    s012_audit_pins,
 )
 
 
@@ -20,6 +20,7 @@ def _write_toml(tmp_path: Path, section: str = "") -> None:
 
 # ---------------------------------------------------------------------------
 # audit_s009_design_tokens
+# s009_audit_design_tokens
 # ---------------------------------------------------------------------------
 
 
@@ -35,7 +36,7 @@ def test_s009_returns_zero_for_token_based_component(tmp_path: Path):
         ":root {\n  --brand-accent: 38 92% 55%;\n}\n",
     )
 
-    assert audit_s009_design_tokens.main(["--root", str(tmp_path)]) == 0
+    assert s009_audit_design_tokens.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s009_returns_one_on_raw_hex_literal(tmp_path: Path):
@@ -45,7 +46,7 @@ def test_s009_returns_one_on_raw_hex_literal(tmp_path: Path):
         'export function Card() {\n  return <div style={{ color: "#f59e0b" }} />;\n}\n',
     )
 
-    assert audit_s009_design_tokens.main(["--root", str(tmp_path)]) == 1
+    assert s009_audit_design_tokens.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s009_returns_one_on_hardcoded_tailwind_color_utility(tmp_path: Path):
@@ -55,7 +56,7 @@ def test_s009_returns_one_on_hardcoded_tailwind_color_utility(tmp_path: Path):
         'export function Card() {\n  return <div className="bg-blue-500" />;\n}\n',
     )
 
-    assert audit_s009_design_tokens.main(["--root", str(tmp_path)]) == 1
+    assert s009_audit_design_tokens.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s009_returns_one_on_wrapped_hsl_css_variable(tmp_path: Path):
@@ -65,7 +66,7 @@ def test_s009_returns_one_on_wrapped_hsl_css_variable(tmp_path: Path):
         ":root {\n  --color-accent: hsl(38, 92%, 55%);\n}\n",
     )
 
-    assert audit_s009_design_tokens.main(["--root", str(tmp_path)]) == 1
+    assert s009_audit_design_tokens.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s009_returns_zero_when_violation_is_exempted(tmp_path: Path):
@@ -78,11 +79,11 @@ def test_s009_returns_zero_when_violation_is_exempted(tmp_path: Path):
         'export function Card() {\n  return <div style={{ color: "#f59e0b" }} />;\n}\n',
     )
 
-    assert audit_s009_design_tokens.main(["--root", str(tmp_path)]) == 0
+    assert s009_audit_design_tokens.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s009_returns_two_on_missing_bedrock_toml(tmp_path: Path):
-    assert audit_s009_design_tokens.main(["--root", str(tmp_path)]) == 2
+    assert s009_audit_design_tokens.main(["--root", str(tmp_path)]) == 2
 
 
 # ---------------------------------------------------------------------------
@@ -100,7 +101,7 @@ def test_s010_returns_zero_when_mutating_route_declares_permission(tmp_path: Pat
         "    return user_service.delete(user_id)\n",
     )
 
-    assert audit_s010_security.main(["--root", str(tmp_path)]) == 0
+    assert s010_audit_security.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s010_returns_zero_when_mutating_route_declares_current_user(tmp_path: Path):
@@ -112,7 +113,7 @@ def test_s010_returns_zero_when_mutating_route_declares_current_user(tmp_path: P
         "    return user_service.create(payload)\n",
     )
 
-    assert audit_s010_security.main(["--root", str(tmp_path)]) == 0
+    assert s010_audit_security.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s010_returns_one_on_unauthenticated_mutating_route(tmp_path: Path):
@@ -124,7 +125,7 @@ def test_s010_returns_one_on_unauthenticated_mutating_route(tmp_path: Path):
         "    return user_service.delete(user_id)\n",
     )
 
-    assert audit_s010_security.main(["--root", str(tmp_path)]) == 1
+    assert s010_audit_security.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s010_returns_zero_when_unauthenticated_route_is_exempted(tmp_path: Path):
@@ -139,15 +140,15 @@ def test_s010_returns_zero_when_unauthenticated_route_is_exempted(tmp_path: Path
         "    return {\"status\": \"ok\"}\n",
     )
 
-    assert audit_s010_security.main(["--root", str(tmp_path)]) == 0
+    assert s010_audit_security.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s010_returns_two_on_missing_bedrock_toml(tmp_path: Path):
-    assert audit_s010_security.main(["--root", str(tmp_path)]) == 2
+    assert s010_audit_security.main(["--root", str(tmp_path)]) == 2
 
 
 # ---------------------------------------------------------------------------
-# audit_s011_navigation
+# s011_audit_navigation
 # ---------------------------------------------------------------------------
 
 
@@ -168,13 +169,13 @@ def test_s011_returns_zero_for_config_driven_navigation(tmp_path: Path):
         "}\n",
     )
 
-    assert audit_s011_navigation.main(["--root", str(tmp_path)]) == 0
+    assert s011_audit_navigation.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s011_returns_one_on_missing_nav_config(tmp_path: Path):
     _write_toml(tmp_path, "[tool.bedrock.audit.s011]\nexemptions = []\n")
 
-    assert audit_s011_navigation.main(["--root", str(tmp_path)]) == 1
+    assert s011_audit_navigation.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s011_returns_one_on_incomplete_nav_config_schema(tmp_path: Path):
@@ -186,7 +187,7 @@ def test_s011_returns_one_on_incomplete_nav_config_schema(tmp_path: Path):
         "];\n",
     )
 
-    assert audit_s011_navigation.main(["--root", str(tmp_path)]) == 1
+    assert s011_audit_navigation.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s011_returns_one_on_hardcoded_nav_link(tmp_path: Path):
@@ -204,7 +205,7 @@ def test_s011_returns_one_on_hardcoded_nav_link(tmp_path: Path):
         "}\n",
     )
 
-    assert audit_s011_navigation.main(["--root", str(tmp_path)]) == 1
+    assert s011_audit_navigation.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s011_returns_zero_when_hardcoded_link_is_exempted(tmp_path: Path):
@@ -226,15 +227,15 @@ def test_s011_returns_zero_when_hardcoded_link_is_exempted(tmp_path: Path):
         "}\n",
     )
 
-    assert audit_s011_navigation.main(["--root", str(tmp_path)]) == 0
+    assert s011_audit_navigation.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s011_returns_two_on_missing_bedrock_toml(tmp_path: Path):
-    assert audit_s011_navigation.main(["--root", str(tmp_path)]) == 2
+    assert s011_audit_navigation.main(["--root", str(tmp_path)]) == 2
 
 
 # ---------------------------------------------------------------------------
-# audit_s012_pins
+# s012_audit_pins
 # ---------------------------------------------------------------------------
 
 
@@ -258,7 +259,7 @@ def test_s012_returns_zero_when_pins_match(tmp_path: Path):
         "  }\n}\n",
     )
 
-    assert audit_s012_pins.main(["--root", str(tmp_path)]) == 0
+    assert s012_audit_pins.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s012_returns_one_when_pins_diverge(tmp_path: Path):
@@ -275,7 +276,7 @@ def test_s012_returns_one_when_pins_diverge(tmp_path: Path):
         "  }\n}\n",
     )
 
-    assert audit_s012_pins.main(["--root", str(tmp_path)]) == 1
+    assert s012_audit_pins.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s012_returns_one_on_non_tag_ref(tmp_path: Path):
@@ -292,7 +293,7 @@ def test_s012_returns_one_on_non_tag_ref(tmp_path: Path):
         "  }\n}\n",
     )
 
-    assert audit_s012_pins.main(["--root", str(tmp_path)]) == 1
+    assert s012_audit_pins.main(["--root", str(tmp_path)]) == 1
 
 
 _S012_SELF_REPO_TOML_SECTION = (
@@ -308,7 +309,7 @@ def test_s012_returns_zero_for_matching_self_repo_versions(tmp_path: Path):
     )
     _write(tmp_path / "package.json", '{\n  "name": "@djntechnic/bedrock-ui",\n  "version": "0.10.0"\n}\n')
 
-    assert audit_s012_pins.main(["--root", str(tmp_path)]) == 0
+    assert s012_audit_pins.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s012_returns_one_for_mismatched_self_repo_versions(tmp_path: Path):
@@ -319,7 +320,7 @@ def test_s012_returns_one_for_mismatched_self_repo_versions(tmp_path: Path):
     )
     _write(tmp_path / "package.json", '{\n  "name": "@djntechnic/bedrock-ui",\n  "version": "0.9.2"\n}\n')
 
-    assert audit_s012_pins.main(["--root", str(tmp_path)]) == 1
+    assert s012_audit_pins.main(["--root", str(tmp_path)]) == 1
 
 
 def test_s012_returns_zero_when_divergence_is_exempted(tmp_path: Path):
@@ -340,8 +341,8 @@ def test_s012_returns_zero_when_divergence_is_exempted(tmp_path: Path):
         "  }\n}\n",
     )
 
-    assert audit_s012_pins.main(["--root", str(tmp_path)]) == 0
+    assert s012_audit_pins.main(["--root", str(tmp_path)]) == 0
 
 
 def test_s012_returns_two_on_missing_bedrock_toml(tmp_path: Path):
-    assert audit_s012_pins.main(["--root", str(tmp_path)]) == 2
+    assert s012_audit_pins.main(["--root", str(tmp_path)]) == 2

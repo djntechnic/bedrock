@@ -3,8 +3,8 @@ id: S003
 title: "Logging Protocol"
 status: active
 tier: platform
-enforced_by: bedrock.tools.audit_s003_logging
-cli_command: "python -m bedrock.tools.audit_s003_logging --root ."
+enforced_by: bedrock.tools.s003_audit_logging
+cli_command: "python scripts/audit/s003_audit_logging.py --root ."
 ---
 
 # Standard S003: Logging Protocol
@@ -117,7 +117,7 @@ stdout.
 ## Verification & Enforcement Gate
 
 ```bash
-python -m bedrock.tools.audit_s003_logging --root .
+python scripts/audit/s003_audit_logging.py --root .
 ```
 
 - **Exit 0** — zero bare `console.*` in frontend source and zero bare `print`

@@ -3,8 +3,8 @@ id: S002
 title: "All Grids Wired to Admin Config"
 status: active
 tier: platform
-enforced_by: bedrock.tools.audit_s002_grids
-cli_command: "python -m bedrock.tools.audit_s002_grids --root ."
+enforced_by: bedrock.tools.s002_audit_grids
+cli_command: "python scripts/audit/s002_audit_grids.py --root ."
 ---
 
 # Standard S002: All Grids Wired to Admin Config
@@ -147,7 +147,7 @@ exemption with no matching rationale is a configuration error.
 ## Verification & Enforcement Gate
 
 ```bash
-python -m bedrock.tools.audit_s002_grids --root . --diff
+python scripts/audit/s002_audit_grids.py --root . --diff
 ```
 
 - **Exit 0** — every grid's seven layers agree; no config field is read as a

@@ -38,6 +38,7 @@ exemptions = [
   # consumed by CI logs, or machine-readable JSON) — not an incidental debug
   # print. Same rationale as the scripts/** carve-out in the S003 doc.
   "packages/bedrock-api/bedrock/tools/audit_*.py",
+  "packages/bedrock-api/bedrock/tools/s*.py",
   "packages/bedrock-api/bedrock/tools/remediate_taxonomy_and_casing.py",
   "packages/bedrock-api/bedrock/tools/run_all.py",
   "packages/bedrock-api/bedrock/tools/sync_standards.py",
@@ -75,6 +76,7 @@ exemptions = [
   # The audit source itself: its own regex patterns and diagnostic strings
   # contain the literal text this audit scans for.
   "packages/bedrock-api/bedrock/tools/audit_s004_config.py",
+  "packages/bedrock-api/bedrock/tools/s004_audit_config.py",
   # Test fixtures intentionally write raw os.environ/get_config/secret-shaped
   # literals as sample input and assertion text; s003 carries the same
   # test-file carve-out structurally.
@@ -165,4 +167,7 @@ exemptions = [
 
 [tool.bedrock.audit.s014]
 ledger_path = "docs/reference/bedrock-issues-to-file.md"
+exemptions = []
+
+[tool.bedrock.audit.s100]
 exemptions = []

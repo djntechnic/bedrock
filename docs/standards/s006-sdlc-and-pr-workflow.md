@@ -3,8 +3,8 @@ id: S006
 title: "SDLC & PR Workflow"
 status: active
 tier: platform
-enforced_by: bedrock.tools.audit_s006_pr_workflow
-cli_command: "python -m bedrock.tools.audit_s006_pr_workflow --root ."
+enforced_by: bedrock.tools.s006_audit_pr_workflow
+cli_command: "python scripts/audit/s006_audit_pr_workflow.py --root ."
 ---
 
 # Standard S006: SDLC & PR Workflow
@@ -94,7 +94,7 @@ A bug fix that genuinely cannot be exercised via automated test suites (e.g., ch
 ## Verification & Enforcement Gate
 
 ```bash
-python -m bedrock.tools.audit_s006_pr_workflow --root .
+python scripts/audit/s006_audit_pr_workflow.py --root .
 ```
 
 - **Exit 0:** All tracking ledgers declared in `bedrock.toml` are well-formed and non-empty; the working tree is clean (`git status --porcelain` empty).

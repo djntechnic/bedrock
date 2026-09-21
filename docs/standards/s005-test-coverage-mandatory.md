@@ -3,8 +3,8 @@ id: S005
 title: "Test Coverage Mandatory"
 status: active
 tier: platform
-enforced_by: bedrock.tools.audit_s005_testing
-cli_command: "python -m bedrock.tools.audit_s005_testing --root ."
+enforced_by: bedrock.tools.s005_audit_testing
+cli_command: "python scripts/audit/s005_audit_testing.py --root ."
 ---
 
 # Standard S005: Test Coverage Mandatory
@@ -114,7 +114,7 @@ with no justification fails the audit as a configuration error.
 ## Verification & Enforcement Gate
 
 ```bash
-python -m bedrock.tools.audit_s005_testing --root .
+python scripts/audit/s005_audit_testing.py --root .
 ```
 
 - **Exit 0** — every changed route/component has a paired test, no

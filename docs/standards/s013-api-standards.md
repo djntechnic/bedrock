@@ -3,8 +3,8 @@ id: S013
 title: "API Standards & Admin Interactivity"
 status: active
 tier: platform
-enforced_by: bedrock.tools.audit_s013_api_docs
-cli_command: "python -m bedrock.tools.audit_s013_api_docs --app api.main:app"
+enforced_by: bedrock.tools.s013_audit_api_docs
+cli_command: "python scripts/audit/s013_audit_api_docs.py --root ."
 ---
 
 # Standard S013: API Standards & Admin Interactivity
@@ -174,7 +174,7 @@ Any endpoint legitimately mounted outside `/api/v1` (such as unversioned infrast
 1. **Static API Documentation Reconciliation Gate:**
 
    ```bash
-   python -m bedrock.tools.audit_s013_api_docs --app api.main:app --doc docs/guide/api_reference.md
+   python scripts/audit/s013_audit_api_docs.py --app api.main:app --doc docs/guide/api_reference.md
    ```
 
    - **Exit 0:** All shipped `/api/v1` routes match the documentation in `api_reference.md` 1:1.

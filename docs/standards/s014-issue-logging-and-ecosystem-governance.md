@@ -3,8 +3,8 @@ id: S014
 title: "Issue Logging & Ecosystem Governance"
 status: active
 tier: platform
-enforced_by: bedrock.tools.audit_s014_ledger_freshness
-cli_command: "python -m bedrock.tools.audit_s014_ledger_freshness docs/reference/bedrock-issues-to-file.md"
+enforced_by: bedrock.tools.s014_audit_ledger_freshness
+cli_command: "python scripts/audit/s014_audit_ledger_freshness.py --root ."
 ---
 
 # Standard S014: Issue Logging & Ecosystem Governance
@@ -104,7 +104,7 @@ Emergency production hotfixes resolving active catastrophic operational outages 
 ## Verification & Enforcement Gate
 
 ```bash
-python -m bedrock.tools.audit_s014_ledger_freshness docs/reference/bedrock-issues-to-file.md
+python scripts/audit/s014_audit_ledger_freshness.py docs/reference/bedrock-issues-to-file.md
 ```
 
 - **Exit 0:** All ledger entries cite active, open Bedrock issues, or explicitly record the release tag that resolved them (`fixed in bedrock vX.Y.Z`).

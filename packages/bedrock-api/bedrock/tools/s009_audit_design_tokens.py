@@ -1,5 +1,5 @@
 """
-Module:  audit_s009_design_tokens.py
+Module:  s009_audit_design_tokens.py
 Layer:   bedrock/tools
 Desc:    Enforcement for [S009-design-system](../../../../docs/standards/s009-design-system.md).
 
@@ -17,7 +17,7 @@ Desc:    Enforcement for [S009-design-system](../../../../docs/standards/s009-de
 
          Exit 0 clean, 1 on a violation, 2 on a configuration error.
 
-Usage:   python -m bedrock.tools.audit_s009_design_tokens --root .
+Usage:   python -m bedrock.tools.s009_audit_design_tokens --root .
 """
 from __future__ import annotations
 

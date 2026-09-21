@@ -43,6 +43,7 @@ _PLATFORM_BASELINE_EXEMPTIONS: tuple[str, ...] = tuple(
 )
 
 _AUDIT_SECTIONS: tuple[str, ...] = tuple(f"s{i:03d}" for i in range(1, 15))
+_AUDIT_SECTIONS: tuple[str, ...] = tuple(f"s{i:03d}" for i in range(1, 15)) + ("s100",)
 
 
 def _merge_exemptions(consumer_exemptions: list[str]) -> list[str]:
@@ -140,6 +141,11 @@ class AuditS014Config:
     exemptions: list[str] = field(default_factory=list)
 
 
+@dataclass
+class AuditS100Config:
+    exemptions: list[str] = field(default_factory=list)
+
+
 _SECTION_CLASSES: dict[str, type] = {
     "s001": AuditS001Config,
     "s002": AuditS002Config,
@@ -155,6 +161,7 @@ _SECTION_CLASSES: dict[str, type] = {
     "s012": AuditS012Config,
     "s013": AuditS013Config,
     "s014": AuditS014Config,
+    "s100": AuditS100Config,
 }
 
 
@@ -176,6 +183,7 @@ class BedrockConfig:
     audit_s012: AuditS012Config
     audit_s013: AuditS013Config
     audit_s014: AuditS014Config
+    audit_s100: AuditS100Config
 
 
 def _find_repo_root(start: Path) -> Path:

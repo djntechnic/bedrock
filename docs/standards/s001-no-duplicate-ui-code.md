@@ -3,8 +3,8 @@ id: S001
 title: "No Duplicate UI Code"
 status: active
 tier: platform
-enforced_by: bedrock.tools.audit_s001_duplicates
-cli_command: "python -m bedrock.tools.audit_s001_duplicates --root ."
+enforced_by: bedrock.tools.s001_audit_duplicates
+cli_command: "python scripts/audit/s001_audit_duplicates.py --root ."
 ---
 
 # Standard S001: No Duplicate UI Code
@@ -115,7 +115,7 @@ matching header fails the audit as a configuration error, not a pass.
 ## Verification & Enforcement Gate
 
 ```bash
-python -m bedrock.tools.audit_s001_duplicates --root .
+python scripts/audit/s001_audit_duplicates.py --root .
 ```
 
 - **Exit 0** — no duplicate `useReactTable` call sites, no shadowed exports
