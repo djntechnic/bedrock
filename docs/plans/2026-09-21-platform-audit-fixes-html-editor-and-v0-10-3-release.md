@@ -819,14 +819,14 @@ Expected: Remote returns `refs/tags/v0.10.3`.
 - Consumes: Tag `v0.10.3` from `djntechnic/bedrock`
 - Produces: Updated lockfile and verified audit suites in `MLBTracker`.
 
-- [ ] **Step 1: Check remote tag existence from `MLBTracker`**
+- [x] **Step 1: Check remote tag existence from `MLBTracker`**
 
 ```powershell
 cd C:\Dev\MLBTracker
 git ls-remote --tags https://github.com/djntechnic/bedrock | Select-String "v0.10.3"
 ```
 
-- [ ] **Step 2: Update dual pins in `requirements.txt` and `frontend/package.json`**
+- [x] **Step 2: Update dual pins in `requirements.txt` and `frontend/package.json`**
 
 In `C:\Dev\MLBTracker\requirements.txt`:
 
@@ -840,7 +840,7 @@ In `C:\Dev\MLBTracker\frontend\package.json`:
 "@djntechnic/bedrock-ui": "github:djntechnic/bedrock#v0.10.3"
 ```
 
-- [ ] **Step 3: Regenerate lockfile and verify installation**
+- [x] **Step 3: Regenerate lockfile and verify installation**
 
 ```powershell
 cd C:\Dev\MLBTracker\frontend
@@ -852,7 +852,7 @@ Get-Content node_modules/@djntechnic/bedrock-ui/package.json | Select-String '"v
 
 Expected: Displays `"version": "0.10.3"`.
 
-- [ ] **Step 4: Run MLBTracker verification suite**
+- [x] **Step 4: Run MLBTracker verification suite**
 
 ```powershell
 cd C:\Dev\MLBTracker
@@ -865,7 +865,7 @@ echo "exit=$LASTEXITCODE"
 
 Expected: All tests and audits pass cleanly with exit code `0`.
 
-- [ ] **Step 5: Commit changes in MLBTracker**
+- [x] **Step 5: Commit changes in MLBTracker**
 
 ```bash
 cd C:\Dev\MLBTracker
@@ -891,7 +891,7 @@ git commit -m "chore: bump bedrock dual-pins to v0.10.3"
 - Consumes: `<HtmlCodeEditor>` and `beautifyHtml` exported from `@djntechnic/bedrock-ui` `v0.10.3`
 - Produces: Integrated CodeMirror editor in `OutputPane.tsx` with manual edit toggle, formatting, linting, and byte-identical export.
 
-- [ ] **Step 1: Update dual pins in `requirements.txt` and `frontend/package.json`**
+- [x] **Step 1: Update dual pins in `requirements.txt` and `frontend/package.json`**
 
 In `C:\Dev\CollectIt\requirements.txt`:
 
@@ -905,7 +905,7 @@ In `C:\Dev\CollectIt\frontend\package.json`:
 "@djntechnic/bedrock-ui": "github:djntechnic/bedrock#v0.10.3"
 ```
 
-- [ ] **Step 2: Regenerate lockfile and install in CollectIt**
+- [x] **Step 2: Regenerate lockfile and install in CollectIt**
 
 ```powershell
 cd C:\Dev\CollectIt\frontend
@@ -917,7 +917,7 @@ Get-Content node_modules/@djntechnic/bedrock-ui/package.json | Select-String '"v
 
 Expected: Displays `"version": "0.10.3"`.
 
-- [ ] **Step 3: Integrate `<HtmlCodeEditor>` in `OutputPane.tsx`**
+- [x] **Step 3: Integrate `<HtmlCodeEditor>` in `OutputPane.tsx`**
 
 In `C:\Dev\CollectIt\frontend\src\components\listing-studio/OutputPane.tsx`:
 
@@ -938,7 +938,7 @@ In `C:\Dev\CollectIt\frontend\src\components\listing-studio/OutputPane.tsx`:
 />
 ```
 
-- [ ] **Step 4: Update `OutputPane.test.tsx`**
+- [x] **Step 4: Update `OutputPane.test.tsx`**
 
 Ensure `OutputPane.test.tsx` exercises:
 
@@ -947,7 +947,7 @@ Ensure `OutputPane.test.tsx` exercises:
 - "Format HTML" action formats content.
 - Copy action preserves byte-identical export content when manual edit is disabled.
 
-- [ ] **Step 5: Run CollectIt full verification suite**
+- [x] **Step 5: Run CollectIt full verification suite**
 
 ```powershell
 cd C:\Dev\CollectIt
@@ -961,7 +961,7 @@ echo "exit=$LASTEXITCODE"
 
 Expected: All tests and audits pass cleanly with exit code `0`.
 
-- [ ] **Step 6: Commit changes in CollectIt**
+- [x] **Step 6: Commit changes in CollectIt**
 
 ```bash
 cd C:\Dev\CollectIt
