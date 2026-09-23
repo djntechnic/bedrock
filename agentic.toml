@@ -35,6 +35,7 @@ skills = [
   "requesting-code-review",
   "run-tests",
   "sql-sentinel",
+  "stitch-bedrock-sync",
   "subagent-driven-development",
   "systematic-debugging",
   "tanstack-intent",
@@ -53,6 +54,7 @@ agents = [
   "frontend-ui-engineer",
   "quality-gatekeeper",
   "ui-sentinel",
+  "ui-stitch-builder",
 ]
 
 hooks = [
