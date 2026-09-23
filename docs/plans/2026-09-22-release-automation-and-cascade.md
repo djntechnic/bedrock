@@ -1537,7 +1537,7 @@ EOF
   `file-adoption-issues` job reads `## For consumers`.
 - Produces: nothing consumed by a later task's code.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # packages/bedrock-api/tests/test_cascade_workflow_jobs.py
@@ -1585,12 +1585,12 @@ def test_close_upstream_issues_job_has_no_matrix_consumer():
     assert "strategy" not in job or "matrix" not in job.get("strategy", {})
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd packages/bedrock-api && python -m pytest tests/test_cascade_workflow_jobs.py -v`
 Expected: FAIL — `close-upstream-issues` not present in `data["jobs"]`.
 
-- [ ] **Step 3: Add the job to `cascade.yml`**
+- [x] **Step 3: Add the job to `cascade.yml`**
 
 Insert a new top-level job in `.github/workflows/cascade.yml`, after the
 existing `file-adoption-issues` job (after line 74, end of file):
@@ -1646,17 +1646,17 @@ existing `file-adoption-issues` job (after line 74, end of file):
           done
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `cd packages/bedrock-api && python -m pytest tests/test_cascade_workflow_jobs.py -v`
 Expected: PASS (4 passed)
 
-- [ ] **Step 5: Run the full backend suite to guard against regressions**
+- [x] **Step 5: Run the full backend suite to guard against regressions**
 
 Run: `cd packages/bedrock-api && python -m pytest`
 Expected: all tests pass, zero failures.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add .github/workflows/cascade.yml \
