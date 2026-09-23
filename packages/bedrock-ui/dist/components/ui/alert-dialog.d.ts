@@ -1,3 +1,8 @@
+/**
+ * @file alert-dialog.tsx
+ * @module frontend/src/components/ui
+ * @description shadcn/ui AlertDialog primitive (Radix wrapper).
+ */
 import * as React from "react";
 import { AlertDialog as AlertDialogPrimitive } from "radix-ui";
 import { Button } from "./button";
