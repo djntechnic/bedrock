@@ -1,6 +1,6 @@
 # Release Automation & Downstream Cascade Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use deliver-task skill to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship the release-automation pipeline the design spec describes: a
 new `§S015` changelog contract with an enforcing audit, a GitHub Release
