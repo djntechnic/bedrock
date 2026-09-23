@@ -71,3 +71,51 @@ jobs:
             --title "Adopt bedrock $TAG" \
             --label cascade:pending \
             --body-file "$RUNNER_TEMP/adoption-body.md"
+
+  close-upstream-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve the release tag and body
+        id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          EVENT_BODY: ${{ github.event.release.body }}
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [ -n "$INPUT_TAG" ]; then
+            TAG="$INPUT_TAG"
+            BODY=$(gh release view "$TAG" --repo "$REPO" --json body --jq .body)
+          else
+            TAG="$EVENT_TAG"
+            BODY="$EVENT_BODY"
+          fi
+          {
+            echo "tag=$TAG"
+            echo 'body<<CASCADE_EOF'
+            printf '%s\n' "$BODY"
+            echo 'CASCADE_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Close every resolved upstream issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ steps.resolve.outputs.tag }}
+          BODY: ${{ steps.resolve.outputs.body }}
+        run: |
+          issues_line=$(printf '%s' "$BODY" | grep -m1 '\*\*Resolves Upstream Issues:\*\*' || true)
+          if [ -z "$issues_line" ]; then
+            echo "No 'Resolves Upstream Issues' key found in release $TAG body; nothing to close." >&2
+            exit 0
+          fi
+          issue_numbers=$(printf '%s' "$issues_line" | grep -oE '#[0-9]+' | tr -d '#')
+          if [ -z "$issue_numbers" ]; then
+            echo "Resolves Upstream Issues is 'None' or unparseable for $TAG; nothing to close." >&2
+            exit 0
+          fi
+          for issue in $issue_numbers; do
+            gh issue comment "$issue" --repo "$REPO" --body "Resolved and verified in bedrock release \`$TAG\`."
+            gh issue close "$issue" --repo "$REPO" --reason completed
+          done

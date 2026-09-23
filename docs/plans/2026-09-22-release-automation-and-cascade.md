@@ -1,6 +1,6 @@
 # Release Automation & Downstream Cascade Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use deliver-task skill to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship the release-automation pipeline the design spec describes: a
 new `§S015` changelog contract with an enforcing audit, a GitHub Release
@@ -113,7 +113,7 @@ TOML (`bedrock.toml`).
   category titles). No other task imports this file programmatically; it is
   read by GitHub's platform, not by bedrock's own Python.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # packages/bedrock-api/tests/test_release_yml_schema.py
@@ -149,14 +149,14 @@ def test_release_yml_excludes_noise_labels():
     assert data["changelog"]["exclude"]["labels"] == ["duplicate", "invalid", "wontfix"]
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd packages/bedrock-api && python -m pytest tests/test_release_yml_schema.py -v`
 Expected: FAIL — `.github/release.yml` does not exist (first test fails with
 `AssertionError`, remaining tests fail with `FileNotFoundError` inside
 `yaml.safe_load`).
 
-- [ ] **Step 3: Write `.github/release.yml`**
+- [x] **Step 3: Write `.github/release.yml`**
 
 ```yaml
 changelog:
@@ -171,12 +171,12 @@ changelog:
     labels: ["duplicate", "invalid", "wontfix"]
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `cd packages/bedrock-api && python -m pytest tests/test_release_yml_schema.py -v`
 Expected: PASS (4 passed)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add .github/release.yml packages/bedrock-api/tests/test_release_yml_schema.py
@@ -217,7 +217,7 @@ EOF
   mirror, see Task 4) and by a parity test asserting it matches
   `cascade.yml`'s `matrix.consumer` list.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # packages/bedrock-api/tests/test_standard_s015_doc.py
@@ -294,7 +294,7 @@ def test_pr_template_has_changelog_entry_block():
     assert "Prevention" in text
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd packages/bedrock-api && python -m pytest tests/test_standard_s015_doc.py -v`
 Expected: FAIL — `s015-release-automation-and-changelog-contract.md` does
@@ -302,7 +302,7 @@ not exist; `bedrock.toml` has no `[tool.bedrock.audit.s015]` or
 `[tool.bedrock.ecosystem]` section; PR template has no `### Changelog
 Entry` block.
 
-- [ ] **Step 3: Author the standard document**
+- [x] **Step 3: Author the standard document**
 
 ```markdown
 ---
@@ -446,7 +446,7 @@ python -m bedrock.tools.s015_audit_release_notes vX.Y.Z --root .
   `bedrock.toml`).
 ```
 
-- [ ] **Step 4: Add the index row to `docs/standards/README.md`**
+- [x] **Step 4: Add the index row to `docs/standards/README.md`**
 
 Insert a new row immediately after the `S014` row (line 44) and before the
 `S100` row:
@@ -455,7 +455,7 @@ Insert a new row immediately after the `S014` row (line 44) and before the
 | [S015](s015-release-automation-and-changelog-contract.md) | Release Automation & Changelog Contract | active | `bedrock.tools.s015_audit_release_notes` | platform |
 ```
 
-- [ ] **Step 5: Append the `bedrock.toml` sections**
+- [x] **Step 5: Append the `bedrock.toml` sections**
 
 Append after the existing `[tool.bedrock.audit.s100]` block (end of file):
 
@@ -468,7 +468,7 @@ exemptions = []
 consumers = ["CollectIt", "MLBTracker"]
 ```
 
-- [ ] **Step 6: Add the `### Changelog Entry` block to the PR template**
+- [x] **Step 6: Add the `### Changelog Entry` block to the PR template**
 
 Insert into `.github/PULL_REQUEST_TEMPLATE.md` after the `## Test Plan`
 section (after line 24, before `## Platform Standards Checklist`):
@@ -484,12 +484,12 @@ section (after line 24, before `## Platform Standards Checklist`):
 - **Prevention:** <!-- Specific regression tests added. -->
 ```
 
-- [ ] **Step 7: Run test to verify it passes**
+- [x] **Step 7: Run test to verify it passes**
 
 Run: `cd packages/bedrock-api && python -m pytest tests/test_standard_s015_doc.py -v`
 Expected: PASS (6 passed)
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add docs/standards/s015-release-automation-and-changelog-contract.md \
@@ -545,7 +545,7 @@ EOF
   directly by Task 4's `Invoke-PreTagGates` as
   `s015_audit_release_notes.py <TargetVersion> --root .`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # packages/bedrock-api/tests/test_audit_s015_release_notes.py
@@ -674,13 +674,13 @@ def test_malformed_bedrock_toml_errors(tmp_path):
     assert s015_audit_release_notes.main(["v0.11.0", "--root", str(tmp_path)]) == 2
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd packages/bedrock-api && python -m pytest tests/test_audit_s015_release_notes.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named
 'bedrock.tools.s015_audit_release_notes'`.
 
-- [ ] **Step 3: Register `AuditS015Config` in `_config.py`**
+- [x] **Step 3: Register `AuditS015Config` in `_config.py`**
 
 In `packages/bedrock-api/bedrock/tools/_config.py`, add after
 `AuditS014Config` (currently ending at line 179):
@@ -715,7 +715,7 @@ In `BedrockConfig` (after `audit_s014: AuditS014Config`):
     audit_s015: AuditS015Config
 ```
 
-- [ ] **Step 4: Write the core audit module**
+- [x] **Step 4: Write the core audit module**
 
 ```python
 # packages/bedrock-api/bedrock/tools/s015_audit_release_notes.py
@@ -896,7 +896,7 @@ if __name__ == "__main__":  # pragma: no cover
     raise SystemExit(main())
 ```
 
-- [ ] **Step 5: Write the CLI shim**
+- [x] **Step 5: Write the CLI shim**
 
 ```python
 # scripts/audit/s015_audit_release_notes.py
@@ -908,7 +908,7 @@ from bedrock.tools.s015_audit_release_notes import main
 sys.exit(main())
 ```
 
-- [ ] **Step 6: Register in `run_all.py`**
+- [x] **Step 6: Register in `run_all.py`**
 
 Add `s015_audit_release_notes` to the import block (after `s014_audit_ledger_freshness,`):
 
@@ -937,7 +937,7 @@ Desc:    Orchestrates the full platform audit suite - `s001` through
          of through this sweep.
 ```
 
-- [ ] **Step 7: Widen `_is_canonical` in `sync_standards.py`**
+- [x] **Step 7: Widen `_is_canonical` in `sync_standards.py`**
 
 Change line 43:
 
@@ -945,17 +945,17 @@ Change line 43:
     return 1 <= number <= 15 or number == 100
 ```
 
-- [ ] **Step 8: Run tests to verify they pass**
+- [x] **Step 8: Run tests to verify they pass**
 
 Run: `cd packages/bedrock-api && python -m pytest tests/test_audit_s015_release_notes.py tests/test_standard_s015_doc.py -v`
 Expected: PASS (all tests green)
 
-- [ ] **Step 9: Run the full backend suite and typecheck**
+- [x] **Step 9: Run the full backend suite and typecheck**
 
 Run: `cd packages/bedrock-api && python -m pytest`
 Expected: all tests pass, zero failures.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add packages/bedrock-api/bedrock/tools/s015_audit_release_notes.py \
@@ -1011,7 +1011,7 @@ never reached until every pure decision has already been validated) but are
 exercised by the `-WhatIf` dry-run path documented in the script's own
 comment-based help.
 
-- [ ] **Step 1: Write the failing Pester tests for the helper module**
+- [x] **Step 1: Write the failing Pester tests for the helper module**
 
 ```powershell
 # scripts/maintenance/CutBedrockRelease.Helpers.Tests.ps1
@@ -1125,13 +1125,13 @@ Describe "Test-RemoteReleaseState (three-fact resume check)" {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pwsh -Command "Invoke-Pester -Path scripts/maintenance/CutBedrockRelease.Helpers.Tests.ps1 -Output Detailed"`
 Expected: FAIL — `CutBedrockRelease.Helpers.psm1` does not exist, module
 import fails.
 
-- [ ] **Step 3: Write the pure-logic helper module**
+- [x] **Step 3: Write the pure-logic helper module**
 
 ```powershell
 # scripts/maintenance/CutBedrockRelease.Helpers.psm1
@@ -1286,12 +1286,12 @@ function Test-RemoteReleaseState {
 Export-ModuleMember -Function Resolve-TargetVersion, ConvertTo-PromotedReleaseBody, Build-ChangelogEntry, Test-RemoteReleaseState
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pwsh -Command "Invoke-Pester -Path scripts/maintenance/CutBedrockRelease.Helpers.Tests.ps1 -Output Detailed"`
 Expected: PASS (13 tests, 0 failed)
 
-- [ ] **Step 5: Write the orchestrator script**
+- [x] **Step 5: Write the orchestrator script**
 
 ```powershell
 # scripts/maintenance/Cut-BedrockRelease.ps1
@@ -1496,12 +1496,12 @@ Write-Host "==> Release $version published. Server-side cascade and issue closur
 exit 0
 ```
 
-- [ ] **Step 6: Verify the orchestrator's syntax parses**
+- [x] **Step 6: Verify the orchestrator's syntax parses**
 
 Run: `pwsh -Command "$null = [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'scripts/maintenance/Cut-BedrockRelease.ps1'), [ref]$null, [ref]$errors); if ($errors) { $errors; exit 1 } else { Write-Host 'parses clean' }"`
 Expected: `parses clean`, no errors.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add scripts/maintenance/Cut-BedrockRelease.ps1 \
@@ -1537,7 +1537,7 @@ EOF
   `file-adoption-issues` job reads `## For consumers`.
 - Produces: nothing consumed by a later task's code.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # packages/bedrock-api/tests/test_cascade_workflow_jobs.py
@@ -1585,12 +1585,12 @@ def test_close_upstream_issues_job_has_no_matrix_consumer():
     assert "strategy" not in job or "matrix" not in job.get("strategy", {})
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd packages/bedrock-api && python -m pytest tests/test_cascade_workflow_jobs.py -v`
 Expected: FAIL — `close-upstream-issues` not present in `data["jobs"]`.
 
-- [ ] **Step 3: Add the job to `cascade.yml`**
+- [x] **Step 3: Add the job to `cascade.yml`**
 
 Insert a new top-level job in `.github/workflows/cascade.yml`, after the
 existing `file-adoption-issues` job (after line 74, end of file):
@@ -1646,17 +1646,17 @@ existing `file-adoption-issues` job (after line 74, end of file):
           done
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `cd packages/bedrock-api && python -m pytest tests/test_cascade_workflow_jobs.py -v`
 Expected: PASS (4 passed)
 
-- [ ] **Step 5: Run the full backend suite to guard against regressions**
+- [x] **Step 5: Run the full backend suite to guard against regressions**
 
 Run: `cd packages/bedrock-api && python -m pytest`
 Expected: all tests pass, zero failures.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add .github/workflows/cascade.yml \
@@ -1701,14 +1701,14 @@ documentation-only change in a sibling repository outside `bedrock`'s own
 audited surface; this task is exempted the same way `docs/**` changes are
 exempted under `[tool.bedrock.audit.s006]`.
 
-- [ ] **Step 1: Read the current skill file**
+- [x] **Step 1: Read the current skill file**
 
 Run: `cat C:/Dev/bedrock-ai-kit/skills/cut-release/SKILL.md` (or open it in
 an editor) to confirm the current manual 7-step structure before editing —
 do this immediately before Step 2 so the diff reflects the file's actual
 current content, not a stale assumption.
 
-- [ ] **Step 2: Replace the manual step-by-step body with delegation to the orchestrator**
+- [x] **Step 2: Replace the manual step-by-step body with delegation to the orchestrator**
 
 Replace the skill's execution section (the manual 7-step sequence) with:
 
@@ -1760,14 +1760,14 @@ this file's parameter list and switches to match before relying on it for
 the next release.
 ```
 
-- [ ] **Step 3: Verify the file is well-formed markdown**
+- [x] **Step 3: Verify the file is well-formed markdown**
 
 Run: `cat C:/Dev/bedrock-ai-kit/skills/cut-release/SKILL.md | head -50` and
 visually confirm the frontmatter (if any) at the top of the file is
 unmodified and the new `## Execution` / `## Cross-Repo Synchronization`
 sections render as valid markdown (no unclosed code fences).
 
-- [ ] **Step 4: Commit in the bedrock-ai-kit repository**
+- [x] **Step 4: Commit in the bedrock-ai-kit repository**
 
 ```bash
 cd C:/Dev/bedrock-ai-kit

@@ -1,13 +1,13 @@
 """
 Module:  run_all.py
 Layer:   bedrock/tools
-Desc:    Orchestrates the full platform audit suite - `audit_s001` through
-         `audit_s014` - as a single command, so CI (and a developer before
-         opening a PR) gets one master summary instead of fourteen separate
 Desc:    Orchestrates the full platform audit suite - `s001` through
          `s014`, plus `s100` - as a single command, so CI (and a developer before
          opening a PR) gets one master summary instead of fifteen separate
-         invocations to remember and interpret individually.
+         invocations to remember and interpret individually. `s015` is
+         version-scoped (it validates one CHANGELOG.md entry, not the whole
+         repo) and is invoked directly by the release orchestrator instead
+         of through this sweep.
 
          Exit code contract mirrors `AuditReporter`'s per-audit contract,
          escalated across the whole suite:
@@ -52,6 +52,7 @@ from bedrock.tools import (
     s012_audit_pins,
     s013_audit_api_docs,
     s014_audit_ledger_freshness,
+    s015_audit_release_notes,
     s100_audit_domain_registry,
 )
 

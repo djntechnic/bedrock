@@ -1,0 +1,10 @@
+changelog:
+  categories:
+    - title: "### Fixed"
+      labels: ["type:defect", "bug"]
+    - title: "### Added / Changed"
+      labels: ["type:feature", "type:task", "enhancement"]
+    - title: "### Platform Maintenance"
+      labels: ["type:refactor", "chore", "documentation"]
+  exclude:
+    labels: ["duplicate", "invalid", "wontfix"]

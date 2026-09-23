@@ -40,7 +40,7 @@ def _is_canonical(filename: str) -> bool:
     if not match:
         return False
     number = int(match.group(1))
-    return 1 <= number <= 14 or number == 100
+    return 1 <= number <= 15 or number == 100
 
 
 def _canonical_source_files(source_root: Path) -> list[Path]:

@@ -50,8 +50,7 @@ _PLATFORM_BASELINE_EXEMPTIONS: tuple[str, ...] = tuple(
     f"**/{d}/**" for d in sorted(DEFAULT_IGNORED_DIRS)
 )
 
-_AUDIT_SECTIONS: tuple[str, ...] = tuple(f"s{i:03d}" for i in range(1, 15))
-_AUDIT_SECTIONS: tuple[str, ...] = tuple(f"s{i:03d}" for i in range(1, 15)) + ("s100",)
+_AUDIT_SECTIONS: tuple[str, ...] = tuple(f"s{i:03d}" for i in range(1, 16)) + ("s100",)
 
 
 # Where an audit looks when `bedrock.toml` does not name a file. Consumer
@@ -180,6 +179,12 @@ class AuditS014Config:
 
 
 @dataclass
+class AuditS015Config:
+    changelog_path: str = "CHANGELOG.md"
+    exemptions: list[str] = field(default_factory=list)
+
+
+@dataclass
 class AuditS100Config:
     exemptions: list[str] = field(default_factory=list)
 
@@ -199,6 +204,7 @@ _SECTION_CLASSES: dict[str, type] = {
     "s012": AuditS012Config,
     "s013": AuditS013Config,
     "s014": AuditS014Config,
+    "s015": AuditS015Config,
     "s100": AuditS100Config,
 }
 
@@ -221,6 +227,7 @@ class BedrockConfig:
     audit_s012: AuditS012Config
     audit_s013: AuditS013Config
     audit_s014: AuditS014Config
+    audit_s015: AuditS015Config
     audit_s100: AuditS100Config
 
 

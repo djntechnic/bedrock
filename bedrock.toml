@@ -171,3 +171,10 @@ exemptions = []
 
 [tool.bedrock.audit.s100]
 exemptions = []
+
+[tool.bedrock.audit.s015]
+changelog_path = "CHANGELOG.md"
+exemptions = []
+
+[tool.bedrock.ecosystem]
+consumers = ["CollectIt", "MLBTracker"]
