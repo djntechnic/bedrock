@@ -42,6 +42,7 @@ not `§S1` or `§S01`.
 | [S012](s012-dual-pin-platform-governance.md)           | Dual-Pin Platform Governance         | active | `bedrock.tools.s012_audit_pins`             | platform |
 | [S013](s013-api-standards.md)                          | API Standards & Admin Interactivity  | active | `bedrock.tools.s013_audit_api_docs`         | platform |
 | [S014](s014-issue-logging-and-ecosystem-governance.md) | Issue Logging & Ecosystem Governance | active | `bedrock.tools.s014_audit_ledger_freshness` | platform |
+| [S015](s015-release-automation-and-changelog-contract.md) | Release Automation & Changelog Contract | active | `bedrock.tools.s015_audit_release_notes` | platform |
 | [S100](s100-domain-standard-authoring.md)              | Domain Standard Authoring Guide      | active | `bedrock.tools.s100_audit_domain_registry`  | platform |
 
 ## Downstream Synchronization

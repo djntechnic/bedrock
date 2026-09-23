@@ -217,7 +217,7 @@ EOF
   mirror, see Task 4) and by a parity test asserting it matches
   `cascade.yml`'s `matrix.consumer` list.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # packages/bedrock-api/tests/test_standard_s015_doc.py
@@ -294,7 +294,7 @@ def test_pr_template_has_changelog_entry_block():
     assert "Prevention" in text
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd packages/bedrock-api && python -m pytest tests/test_standard_s015_doc.py -v`
 Expected: FAIL — `s015-release-automation-and-changelog-contract.md` does
@@ -302,7 +302,7 @@ not exist; `bedrock.toml` has no `[tool.bedrock.audit.s015]` or
 `[tool.bedrock.ecosystem]` section; PR template has no `### Changelog
 Entry` block.
 
-- [ ] **Step 3: Author the standard document**
+- [x] **Step 3: Author the standard document**
 
 ```markdown
 ---
@@ -446,7 +446,7 @@ python -m bedrock.tools.s015_audit_release_notes vX.Y.Z --root .
   `bedrock.toml`).
 ```
 
-- [ ] **Step 4: Add the index row to `docs/standards/README.md`**
+- [x] **Step 4: Add the index row to `docs/standards/README.md`**
 
 Insert a new row immediately after the `S014` row (line 44) and before the
 `S100` row:
@@ -455,7 +455,7 @@ Insert a new row immediately after the `S014` row (line 44) and before the
 | [S015](s015-release-automation-and-changelog-contract.md) | Release Automation & Changelog Contract | active | `bedrock.tools.s015_audit_release_notes` | platform |
 ```
 
-- [ ] **Step 5: Append the `bedrock.toml` sections**
+- [x] **Step 5: Append the `bedrock.toml` sections**
 
 Append after the existing `[tool.bedrock.audit.s100]` block (end of file):
 
@@ -468,7 +468,7 @@ exemptions = []
 consumers = ["CollectIt", "MLBTracker"]
 ```
 
-- [ ] **Step 6: Add the `### Changelog Entry` block to the PR template**
+- [x] **Step 6: Add the `### Changelog Entry` block to the PR template**
 
 Insert into `.github/PULL_REQUEST_TEMPLATE.md` after the `## Test Plan`
 section (after line 24, before `## Platform Standards Checklist`):
@@ -484,12 +484,12 @@ section (after line 24, before `## Platform Standards Checklist`):
 - **Prevention:** <!-- Specific regression tests added. -->
 ```
 
-- [ ] **Step 7: Run test to verify it passes**
+- [x] **Step 7: Run test to verify it passes**
 
 Run: `cd packages/bedrock-api && python -m pytest tests/test_standard_s015_doc.py -v`
 Expected: PASS (6 passed)
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add docs/standards/s015-release-automation-and-changelog-contract.md \

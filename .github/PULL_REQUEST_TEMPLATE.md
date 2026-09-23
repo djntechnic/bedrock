@@ -23,6 +23,15 @@ Closes #<!-- issue number -->
 - [ ] Frontend: `npm test` from root (Vitest) — green
 - [ ] Type Check: `npm run typecheck` (`tsc -b --noEmit`) — clean
 
+### Changelog Entry
+
+<!-- Required for any PR labeled type:defect. The release generator
+     extracts this verbatim and maps it onto CHANGELOG.md's Origin / Root
+     Cause and Prevention / Test keys — write the narrative once, here. -->
+
+- **Root Cause & Escape:** <!-- Why existing tests missed it. -->
+- **Prevention:** <!-- Specific regression tests added. -->
+
 ## Platform Standards Checklist
 
 - [ ] **Platform Boundary** — zero business domain logic added; application-specific behaviors exposed via extension points (Registry or Provider)
