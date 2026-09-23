@@ -545,7 +545,7 @@ EOF
   directly by Task 4's `Invoke-PreTagGates` as
   `s015_audit_release_notes.py <TargetVersion> --root .`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # packages/bedrock-api/tests/test_audit_s015_release_notes.py
@@ -674,13 +674,13 @@ def test_malformed_bedrock_toml_errors(tmp_path):
     assert s015_audit_release_notes.main(["v0.11.0", "--root", str(tmp_path)]) == 2
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd packages/bedrock-api && python -m pytest tests/test_audit_s015_release_notes.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named
 'bedrock.tools.s015_audit_release_notes'`.
 
-- [ ] **Step 3: Register `AuditS015Config` in `_config.py`**
+- [x] **Step 3: Register `AuditS015Config` in `_config.py`**
 
 In `packages/bedrock-api/bedrock/tools/_config.py`, add after
 `AuditS014Config` (currently ending at line 179):
@@ -715,7 +715,7 @@ In `BedrockConfig` (after `audit_s014: AuditS014Config`):
     audit_s015: AuditS015Config
 ```
 
-- [ ] **Step 4: Write the core audit module**
+- [x] **Step 4: Write the core audit module**
 
 ```python
 # packages/bedrock-api/bedrock/tools/s015_audit_release_notes.py
@@ -896,7 +896,7 @@ if __name__ == "__main__":  # pragma: no cover
     raise SystemExit(main())
 ```
 
-- [ ] **Step 5: Write the CLI shim**
+- [x] **Step 5: Write the CLI shim**
 
 ```python
 # scripts/audit/s015_audit_release_notes.py
@@ -908,7 +908,7 @@ from bedrock.tools.s015_audit_release_notes import main
 sys.exit(main())
 ```
 
-- [ ] **Step 6: Register in `run_all.py`**
+- [x] **Step 6: Register in `run_all.py`**
 
 Add `s015_audit_release_notes` to the import block (after `s014_audit_ledger_freshness,`):
 
@@ -937,7 +937,7 @@ Desc:    Orchestrates the full platform audit suite - `s001` through
          of through this sweep.
 ```
 
-- [ ] **Step 7: Widen `_is_canonical` in `sync_standards.py`**
+- [x] **Step 7: Widen `_is_canonical` in `sync_standards.py`**
 
 Change line 43:
 
@@ -945,17 +945,17 @@ Change line 43:
     return 1 <= number <= 15 or number == 100
 ```
 
-- [ ] **Step 8: Run tests to verify they pass**
+- [x] **Step 8: Run tests to verify they pass**
 
 Run: `cd packages/bedrock-api && python -m pytest tests/test_audit_s015_release_notes.py tests/test_standard_s015_doc.py -v`
 Expected: PASS (all tests green)
 
-- [ ] **Step 9: Run the full backend suite and typecheck**
+- [x] **Step 9: Run the full backend suite and typecheck**
 
 Run: `cd packages/bedrock-api && python -m pytest`
 Expected: all tests pass, zero failures.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add packages/bedrock-api/bedrock/tools/s015_audit_release_notes.py \
