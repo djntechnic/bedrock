@@ -1011,7 +1011,7 @@ never reached until every pure decision has already been validated) but are
 exercised by the `-WhatIf` dry-run path documented in the script's own
 comment-based help.
 
-- [ ] **Step 1: Write the failing Pester tests for the helper module**
+- [x] **Step 1: Write the failing Pester tests for the helper module**
 
 ```powershell
 # scripts/maintenance/CutBedrockRelease.Helpers.Tests.ps1
@@ -1125,13 +1125,13 @@ Describe "Test-RemoteReleaseState (three-fact resume check)" {
 }
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `pwsh -Command "Invoke-Pester -Path scripts/maintenance/CutBedrockRelease.Helpers.Tests.ps1 -Output Detailed"`
 Expected: FAIL — `CutBedrockRelease.Helpers.psm1` does not exist, module
 import fails.
 
-- [ ] **Step 3: Write the pure-logic helper module**
+- [x] **Step 3: Write the pure-logic helper module**
 
 ```powershell
 # scripts/maintenance/CutBedrockRelease.Helpers.psm1
@@ -1286,12 +1286,12 @@ function Test-RemoteReleaseState {
 Export-ModuleMember -Function Resolve-TargetVersion, ConvertTo-PromotedReleaseBody, Build-ChangelogEntry, Test-RemoteReleaseState
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `pwsh -Command "Invoke-Pester -Path scripts/maintenance/CutBedrockRelease.Helpers.Tests.ps1 -Output Detailed"`
 Expected: PASS (13 tests, 0 failed)
 
-- [ ] **Step 5: Write the orchestrator script**
+- [x] **Step 5: Write the orchestrator script**
 
 ```powershell
 # scripts/maintenance/Cut-BedrockRelease.ps1
@@ -1496,12 +1496,12 @@ Write-Host "==> Release $version published. Server-side cascade and issue closur
 exit 0
 ```
 
-- [ ] **Step 6: Verify the orchestrator's syntax parses**
+- [x] **Step 6: Verify the orchestrator's syntax parses**
 
 Run: `pwsh -Command "$null = [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path 'scripts/maintenance/Cut-BedrockRelease.ps1'), [ref]$null, [ref]$errors); if ($errors) { $errors; exit 1 } else { Write-Host 'parses clean' }"`
 Expected: `parses clean`, no errors.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add scripts/maintenance/Cut-BedrockRelease.ps1 \
