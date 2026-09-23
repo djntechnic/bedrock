@@ -3,8 +3,6 @@
  * @module frontend/src/components/ui
  * @description shadcn/ui Sheet (slide-over) primitive (Radix wrapper).
  */
-"use client";
-
 import { Dialog as SheetPrimitive } from "radix-ui";
 import * as React from "react";
 

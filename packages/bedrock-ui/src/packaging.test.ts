@@ -134,3 +134,24 @@ describe("published package layout", () => {
     });
   });
 });
+
+describe("source directive hygiene", () => {
+  const srcRoot = resolve(here, ".");
+
+  it("contains zero extraneous \"use client\" directives in source files", () => {
+    const sourceFiles = walk(srcRoot).filter(
+      (f) => f.endsWith(".ts") || f.endsWith(".tsx"),
+    );
+    const offenders: string[] = [];
+    for (const file of sourceFiles) {
+      const content = readFileSync(file, "utf-8");
+      if (/^["']use client["'];?/m.test(content)) {
+        offenders.push(relative(srcRoot, file).replace(/\\/g, "/"));
+      }
+    }
+    // bedrock-ui ships a plain Vite/Rollup ESM build, not a Next.js RSC
+    // boundary — a stray "use client" directive is dead weight that Rollup
+    // has to warn about (MODULE_LEVEL_DIRECTIVE) on every build.
+    expect(offenders).toEqual([]);
+  });
+});
