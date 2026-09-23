@@ -1701,14 +1701,14 @@ documentation-only change in a sibling repository outside `bedrock`'s own
 audited surface; this task is exempted the same way `docs/**` changes are
 exempted under `[tool.bedrock.audit.s006]`.
 
-- [ ] **Step 1: Read the current skill file**
+- [x] **Step 1: Read the current skill file**
 
 Run: `cat C:/Dev/bedrock-ai-kit/skills/cut-release/SKILL.md` (or open it in
 an editor) to confirm the current manual 7-step structure before editing —
 do this immediately before Step 2 so the diff reflects the file's actual
 current content, not a stale assumption.
 
-- [ ] **Step 2: Replace the manual step-by-step body with delegation to the orchestrator**
+- [x] **Step 2: Replace the manual step-by-step body with delegation to the orchestrator**
 
 Replace the skill's execution section (the manual 7-step sequence) with:
 
@@ -1760,14 +1760,14 @@ this file's parameter list and switches to match before relying on it for
 the next release.
 ```
 
-- [ ] **Step 3: Verify the file is well-formed markdown**
+- [x] **Step 3: Verify the file is well-formed markdown**
 
 Run: `cat C:/Dev/bedrock-ai-kit/skills/cut-release/SKILL.md | head -50` and
 visually confirm the frontmatter (if any) at the top of the file is
 unmodified and the new `## Execution` / `## Cross-Repo Synchronization`
 sections render as valid markdown (no unclosed code fences).
 
-- [ ] **Step 4: Commit in the bedrock-ai-kit repository**
+- [x] **Step 4: Commit in the bedrock-ai-kit repository**
 
 ```bash
 cd C:/Dev/bedrock-ai-kit
