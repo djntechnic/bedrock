@@ -113,7 +113,7 @@ TOML (`bedrock.toml`).
   category titles). No other task imports this file programmatically; it is
   read by GitHub's platform, not by bedrock's own Python.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```python
 # packages/bedrock-api/tests/test_release_yml_schema.py
@@ -149,14 +149,14 @@ def test_release_yml_excludes_noise_labels():
     assert data["changelog"]["exclude"]["labels"] == ["duplicate", "invalid", "wontfix"]
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `cd packages/bedrock-api && python -m pytest tests/test_release_yml_schema.py -v`
 Expected: FAIL — `.github/release.yml` does not exist (first test fails with
 `AssertionError`, remaining tests fail with `FileNotFoundError` inside
 `yaml.safe_load`).
 
-- [ ] **Step 3: Write `.github/release.yml`**
+- [x] **Step 3: Write `.github/release.yml`**
 
 ```yaml
 changelog:
@@ -171,12 +171,12 @@ changelog:
     labels: ["duplicate", "invalid", "wontfix"]
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `cd packages/bedrock-api && python -m pytest tests/test_release_yml_schema.py -v`
 Expected: PASS (4 passed)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add .github/release.yml packages/bedrock-api/tests/test_release_yml_schema.py
