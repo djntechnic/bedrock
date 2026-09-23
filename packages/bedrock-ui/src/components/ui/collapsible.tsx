@@ -5,8 +5,6 @@
  *              import + data-slot conventions as the sibling Dialog / Sheet /
  *              AlertDialog wrappers so panels compose identically.
  */
-"use client"
-
 import * as React from "react"
 import { Collapsible as CollapsiblePrimitive } from "radix-ui"
 

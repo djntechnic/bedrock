@@ -1,3 +1,8 @@
+/**
+ * @file sheet.tsx
+ * @module frontend/src/components/ui
+ * @description shadcn/ui Sheet (slide-over) primitive (Radix wrapper).
+ */
 import { Dialog as SheetPrimitive } from "radix-ui";
 import * as React from "react";
 declare const Sheet: React.FC<SheetPrimitive.DialogProps>;

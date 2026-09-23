@@ -102,6 +102,13 @@ export default defineConfig({
     },
     rollupOptions: {
       external,
+      // Suppress Rollup's MODULE_LEVEL_DIRECTIVE warning — a Next.js RSC
+      // convention this plain ESM lib build has no use for — without
+      // masking any other warning or error class.
+      onwarn(warning, defaultHandler) {
+        if (warning.code === "MODULE_LEVEL_DIRECTIVE") return;
+        defaultHandler(warning);
+      },
       output: {
         // One `.js` per source module, at the same relative path the `.d.ts`
         // for it lands on. Entry names are already source-relative, so
