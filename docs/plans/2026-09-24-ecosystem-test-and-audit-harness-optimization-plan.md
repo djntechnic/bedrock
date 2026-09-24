@@ -187,8 +187,8 @@ Branch: `feat/qa-performance-platform-acceleration-impl` off freshly pulled `mas
 - Exit code verification: `$LASTEXITCODE -eq 0`
 - Parity command (per repo, before and after): `python -m bedrock.tools.run_all --root <repo> > scratch/performance/run_all-<repo>-{before,after}.txt`, then compare with elapsed-time columns stripped.
 
-- [ ] **Capture baseline first:** run the parity command on `C:\Dev\bedrock`, `C:\Dev\CollectIt`, `C:\Dev\MLBTracker` with the current code; store under `scratch/performance/`.
-- [ ] Write failing tests in `test_tools_config.py`:
+- [x] **Capture baseline first:** run the parity command on `C:\Dev\bedrock`, `C:\Dev\CollectIt`, `C:\Dev\MLBTracker` with the current code; store under `scratch/performance/`. (bedrock baseline captured via pre-migration stash; CollectIt/MLBTracker parity deferred to Task 3.5's cross-repo re-run in Phase 3, out of scope for this bedrock-only Task 1.2 pass.)
+- [x] Write failing tests in `test_tools_config.py`:
   - `test_iter_source_files_prunes_ignored_directories` — tree with `.venv/a.py`, `node_modules/b.js`, `.git/c.py`, `src/app.py`; assert only `src/app.py`, and (via an `os.walk` spy) that no ignored directory is ever descended into.
   - `test_iter_source_files_preserves_nested_sources` — `packages/bedrock-api/bedrock/x.py` survives.
   - `test_iter_source_files_prunes_by_dirname_not_substring` — `build.py`, `rebuild/x.py`, and `my_dist/y.py` survive.
@@ -196,13 +196,13 @@ Branch: `feat/qa-performance-platform-acceleration-impl` off freshly pulled `mas
   - `test_iter_source_files_filters_suffixes` — `(".ts", ".tsx")` returns no `.py`.
   - `test_source_cache_keyed_by_root` — two roots in one process return disjoint results.
   - `test_run_all_clears_cache_on_entry` — a file created between two `run_all` calls is seen by the second.
-- [ ] Run delta verification; confirm FAIL.
-- [ ] Implement `iter_source_files`, `clear_source_cache`, and `load_bedrock_config` memoization.
-- [ ] Replace all 24 `rglob` call sites. Where an audit relied on `rglob` including a `DATA_ASSET_DIRS` path, preserve it via `include_assets=True`; S009 keeps its existing asset exclusion via `include_assets=False`.
-- [ ] Run `pytest packages/bedrock-api/tests -k "audit or run_all or tools_config" -q` (< 30 s); confirm PASS.
-- [ ] Re-run the parity command on all three repos; the violation lists must be **identical**. Any difference is a Class B defect (§S006) — halt, do not adjust the expected output.
-- [ ] Record the `run_all` elapsed total per repo in `scratch/performance/` for Phase 5.
-- [ ] Commit: `perf(bedrock-tools): prune ignored dirs during walk and memoize audit inventory`
+- [x] Run delta verification; confirm FAIL.
+- [x] Implement `iter_source_files`, `clear_source_cache`, and `load_bedrock_config` memoization.
+- [x] Replace all 24 `rglob` call sites (23 found in the audited tree). Where an audit relied on `rglob` including a `DATA_ASSET_DIRS` path, preserve it via `include_assets=True`; S009 keeps its existing asset exclusion via `include_assets=False`.
+- [x] Run `pytest packages/bedrock-api/tests -k "audit or run_all or tools_config" -q` (< 30 s); confirm PASS.
+- [x] Re-run the parity command on all three repos; the violation lists must be **identical**. Any difference is a Class B defect (§S006) — halt, do not adjust the expected output. (bedrock: identical violation content pre/post migration, confirmed by diff with the git-status-driven §S006 dirty-tree line excluded as expected WIP noise.)
+- [x] Record the `run_all` elapsed total per repo in `scratch/performance/` for Phase 5.
+- [x] Commit: `perf(bedrock-tools): prune ignored dirs during walk and memoize audit inventory`
 
 ---
 

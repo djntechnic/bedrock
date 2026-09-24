@@ -192,6 +192,25 @@ def test_run_all_audit_modules_covers_all_fifteen_standards():
     assert codes == expected
 
 
+def test_run_all_clears_cache_on_entry(tmp_path: Path):
+    from bedrock.tools._config import iter_source_files
+
+    (tmp_path / "src").mkdir()
+    (tmp_path / "src" / "a.py").write_text("a = 1\n", encoding="utf-8")
+
+    first = iter_source_files(tmp_path, (".py",))
+    assert first == (tmp_path.resolve() / "src" / "a.py",)
+
+    run_all.run_all(tmp_path)
+
+    (tmp_path / "src" / "b.py").write_text("b = 2\n", encoding="utf-8")
+    second = iter_source_files(tmp_path, (".py",))
+    assert second == (
+        tmp_path.resolve() / "src" / "a.py",
+        tmp_path.resolve() / "src" / "b.py",
+    )
+
+
 def test_sync_standards_falls_back_to_package_bundled(tmp_path: Path):
     target_root = tmp_path / "consumer"
     empty_source = tmp_path / "empty_source"

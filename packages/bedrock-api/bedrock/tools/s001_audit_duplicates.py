@@ -30,7 +30,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from bedrock.tools._config import DEFAULT_IGNORED_DIRS, load_bedrock_config
+from bedrock.tools._config import DEFAULT_IGNORED_DIRS, iter_source_files, load_bedrock_config
 from bedrock.tools._reporter import AuditReporter
 
 #: Tests compose the very names they exercise; a fixture named `Button`
@@ -102,11 +102,9 @@ def _source_files(root: Path) -> list[Path]:
         return []
     return sorted(
         path
-        for path in root.rglob("*")
-        if path.suffix in {".ts", ".tsx"}
-        and not path.name.endswith(_TEST_SUFFIXES)
+        for path in iter_source_files(root, (".ts", ".tsx"))
+        if not path.name.endswith(_TEST_SUFFIXES)
         and not path.name.endswith(".d.ts")
-        and not any(part in DEFAULT_IGNORED_DIRS for part in path.parts)
     )
 
 

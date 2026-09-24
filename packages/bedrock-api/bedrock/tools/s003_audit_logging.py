@@ -21,7 +21,7 @@ from pathlib import Path
 
 import re
 
-from bedrock.tools._config import DEFAULT_IGNORED_DIRS, load_bedrock_config
+from bedrock.tools._config import DEFAULT_IGNORED_DIRS, iter_source_files, load_bedrock_config
 from bedrock.tools._reporter import AuditReporter
 
 _TEST_SUFFIXES = (".test.ts", ".test.tsx", ".spec.ts", ".spec.tsx")
@@ -53,21 +53,15 @@ def _frontend_files(root: Path) -> list[Path]:
         return []
     return sorted(
         path
-        for path in root.rglob("*")
-        if path.suffix in {".ts", ".tsx"}
-        and not path.name.endswith(_TEST_SUFFIXES)
-        and not any(part in DEFAULT_IGNORED_DIRS for part in path.parts)
+        for path in iter_source_files(root, (".ts", ".tsx"))
+        if not path.name.endswith(_TEST_SUFFIXES)
     )
 
 
 def _backend_files(root: Path) -> list[Path]:
     if not root.is_dir():
         return []
-    return sorted(
-        path
-        for path in root.rglob("*.py")
-        if not any(part in DEFAULT_IGNORED_DIRS for part in path.parts)
-    )
+    return sorted(iter_source_files(root, (".py",)))
 
 
 def audit(root: Path, exemptions: list[str]) -> list[LoggingViolation]:

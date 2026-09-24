@@ -31,7 +31,11 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from bedrock.tools._config import DATA_ASSET_DIRS, DEFAULT_IGNORED_DIRS, load_bedrock_config
+from bedrock.tools._config import (
+    DEFAULT_IGNORED_DIRS,
+    iter_source_files,
+    load_bedrock_config,
+)
 from bedrock.tools._reporter import AuditReporter
 
 _HEX_LITERAL = re.compile(r"#(?:[0-9a-fA-F]{3,4}){1,2}\b")
@@ -69,12 +73,6 @@ class TokenViolation:
     message: str
 
 
-def _in_data_asset_dir(path: Path, root: Path) -> bool:
-    # Relative to the scan root, so a checkout that itself lives under a
-    # `data/` directory is still scanned.
-    return any(part in DATA_ASSET_DIRS for part in path.relative_to(root).parts[:-1])
-
-
 def _is_exempt(value: str, exemptions: list[str]) -> bool:
     if any(part in DEFAULT_IGNORED_DIRS for part in Path(value).parts):
         return True
@@ -86,11 +84,8 @@ def _source_files(root: Path) -> list[Path]:
         return []
     return sorted(
         path
-        for path in root.rglob("*")
-        if path.suffix in _SOURCE_SUFFIXES
-        and not path.name.endswith(".d.ts")
-        and not any(part in DEFAULT_IGNORED_DIRS for part in path.parts)
-        and not _in_data_asset_dir(path, root)
+        for path in iter_source_files(root, tuple(_SOURCE_SUFFIXES), include_assets=False)
+        if not path.name.endswith(".d.ts")
     )
 
 
@@ -182,9 +177,8 @@ def audit(
 ) -> list[TokenViolation]:
     tokens_css_paths = {
         p.relative_to(root).as_posix()
-        for p in root.rglob("tokens.css")
-        if not any(part in DEFAULT_IGNORED_DIRS for part in p.parts)
-        and not _in_data_asset_dir(p, root)
+        for p in iter_source_files(root, (".css",), include_assets=False)
+        if p.name == "tokens.css"
     }
     return (
         _check_raw_literals(root, tokens_css_paths, theme_palette, exemptions)
