@@ -27,6 +27,7 @@ from pathlib import Path
 from bedrock.tools._config import (
     DEFAULT_IGNORED_DIRS,
     NAV_CONFIG_CANDIDATES,
+    iter_source_files,
     load_bedrock_config,
     resolve_candidate_path,
 )
@@ -110,9 +111,7 @@ def _check_hardcoded_nav_trees(root: Path, exemptions: list[str]) -> list[NavVio
     if not root.is_dir():
         return violations
 
-    for path in sorted(root.rglob("*.tsx")):
-        if any(part in DEFAULT_IGNORED_DIRS for part in path.parts):
-            continue
+    for path in iter_source_files(root, (".tsx",)):
         if path.stem not in _NAV_COMPONENT_NAMES:
             continue
         rel = path.relative_to(root).as_posix()

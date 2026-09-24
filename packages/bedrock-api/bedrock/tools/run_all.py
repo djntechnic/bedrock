@@ -37,6 +37,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Protocol
 
+from bedrock.tools._config import clear_source_cache
 from bedrock.tools import (
     s001_audit_duplicates,
     s002_audit_grids,
@@ -106,6 +107,7 @@ def _run_one(code: str, module: _AuditModule, root: Path) -> AuditRunResult:
 
 
 def run_all(root: Path, fail_fast: bool = False) -> tuple[list[AuditRunResult], int]:
+    clear_source_cache()
     results: list[AuditRunResult] = []
     suite_exit_code = 0
 

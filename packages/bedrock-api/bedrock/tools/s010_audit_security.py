@@ -22,7 +22,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from bedrock.tools._config import DEFAULT_IGNORED_DIRS, load_bedrock_config
+from bedrock.tools._config import DEFAULT_IGNORED_DIRS, iter_source_files, load_bedrock_config
 from bedrock.tools._reporter import AuditReporter
 
 _ROUTE_BLOCK = re.compile(
@@ -52,18 +52,9 @@ def _is_exempt(rel_path: str, exemptions: list[str]) -> bool:
 
 
 def _route_files(root: Path) -> list[Path]:
-    candidates: list[Path] = []
-    for base_name in ("routes", "api"):
-        for base in root.rglob(base_name):
-            if any(part in DEFAULT_IGNORED_DIRS for part in base.parts):
-                continue
-            if base.is_dir():
-                candidates.extend(
-                    p
-                    for p in base.glob("*.py")
-                    if not any(part in DEFAULT_IGNORED_DIRS for part in p.parts)
-                )
-    return sorted(set(candidates))
+    return sorted(
+        p for p in iter_source_files(root, (".py",)) if p.parent.name in ("routes", "api")
+    )
 
 
 def _line_of(text: str, offset: int) -> int:

@@ -31,7 +31,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from bedrock.tools._config import load_bedrock_config
+from bedrock.tools._config import iter_source_files, load_bedrock_config
 from bedrock.tools._reporter import AuditReporter
 from bedrock.tools.audit_taxonomy_and_casing import CASING_EXEMPT_NAMES, KEBAB_CASE_RE
 
@@ -69,9 +69,7 @@ def build_rename_plan(root: Path, exemptions: list[str]) -> list[RenamePlan]:
         base = root / base_dir
         if not base.is_dir():
             continue
-        for path in sorted(base.rglob("*")):
-            if path.is_dir():
-                continue
+        for path in iter_source_files(base, ()):
             rel = path.relative_to(root).as_posix()
             if _is_exempt(rel, exemptions):
                 continue
@@ -138,10 +136,7 @@ def rewrite_inbound_links(root: Path, renames: list[RenamePlan], dry_run: bool =
         return {}
 
     results: dict[str, int] = {}
-    for md_path in sorted(root.rglob("*.md")):
-        if any(part in {"node_modules", "__pycache__", ".git"} for part in md_path.parts):
-            continue
-
+    for md_path in iter_source_files(root, (".md",)):
         text = md_path.read_text(encoding="utf-8", errors="replace")
         count = 0
 

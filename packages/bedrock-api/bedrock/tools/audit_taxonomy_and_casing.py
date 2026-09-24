@@ -30,7 +30,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from bedrock.tools._config import DEFAULT_IGNORED_DIRS, load_bedrock_config
+from bedrock.tools._config import DEFAULT_IGNORED_DIRS, iter_source_files, load_bedrock_config
 from bedrock.tools._reporter import AuditReporter
 
 APPROVED_DOC_FOLDERS = {"standards", "specs", "plans", "archive", "reference"}
@@ -96,9 +96,7 @@ def _check_casing(root: Path, exemptions: list[str]) -> list[TaxonomyViolation]:
         base = root / base_dir
         if not base.is_dir():
             continue
-        for path in sorted(base.rglob("*")):
-            if path.is_dir() or any(part in DEFAULT_IGNORED_DIRS for part in path.parts):
-                continue
+        for path in iter_source_files(base, ()):
             rel = path.relative_to(root).as_posix()
             if _is_exempt(rel, exemptions):
                 continue

@@ -13,6 +13,8 @@ Desc:    Declarative manifest loader for `bedrock.toml`. Every `bedrock.tools
 """
 from __future__ import annotations
 
+import functools
+import os
 import sys
 from dataclasses import dataclass, field, fields
 from pathlib import Path
@@ -69,6 +71,61 @@ PACKAGE_JSON_CANDIDATES: tuple[str, ...] = (
     "package.json",
     "packages/bedrock-ui/package.json",
 )
+
+
+@functools.lru_cache(maxsize=32)
+def _iter_source_files_cached(
+    root: Path,
+    suffixes: tuple[str, ...],
+    include_assets: bool,
+    extra_ignored: frozenset[str],
+) -> tuple[Path, ...]:
+    if not root.is_dir():
+        return ()
+
+    ignored = DEFAULT_IGNORED_DIRS | extra_ignored
+    if not include_assets:
+        ignored = ignored | DATA_ASSET_DIRS
+
+    matches: list[Path] = []
+    for dirpath, dirnames, filenames in os.walk(root, topdown=True):
+        dirnames[:] = [d for d in dirnames if d not in ignored]
+        for filename in filenames:
+            if suffixes and Path(filename).suffix not in suffixes:
+                continue
+            matches.append(Path(dirpath) / filename)
+
+    return tuple(sorted(matches))
+
+
+def iter_source_files(
+    root: Path,
+    suffixes: tuple[str, ...],
+    *,
+    include_assets: bool = True,
+    extra_ignored: frozenset[str] = frozenset(),
+) -> tuple[Path, ...]:
+    """Walk `root` once, pruning `DEFAULT_IGNORED_DIRS | extra_ignored`
+    (and `DATA_ASSET_DIRS` when `include_assets=False`) in place so
+    ignored subtrees (`.venv`, `node_modules`, `.git`, ...) are never
+    descended into. Directories are matched by exact name, never by
+    substring, so `build.py` and `rebuild/` survive a `build` prune rule.
+
+    An empty `suffixes` tuple returns every file (no suffix filter);
+    otherwise a file is kept only when `Path(name).suffix` is a member.
+
+    Results are sorted and memoized per `(root.resolve(), suffixes,
+    include_assets, extra_ignored)` - call `clear_source_cache()` to
+    invalidate between suite runs or in tests that mutate the tree."""
+    return _iter_source_files_cached(root.resolve(), tuple(suffixes), include_assets, extra_ignored)
+
+
+def clear_source_cache() -> None:
+    """Clear the `iter_source_files` and `load_bedrock_config` memoization
+    caches. Called at the entry point of `run_all.run_all()` so every suite
+    invocation starts from a clean inventory."""
+    _iter_source_files_cached.cache_clear()
+    load_bedrock_config.cache_clear()
 
 
 def resolve_candidate_path(
@@ -271,6 +328,7 @@ def _build_section(section_key: str, raw_sections: dict) -> Any:
     return section_cls(**kwargs)
 
 
+@functools.lru_cache(maxsize=8)
 def load_bedrock_config(repo_root: Path | None = None) -> BedrockConfig:
     """Load and validate `bedrock.toml` from `repo_root` (or the auto-detected
     git repository root when `repo_root` is None)."""

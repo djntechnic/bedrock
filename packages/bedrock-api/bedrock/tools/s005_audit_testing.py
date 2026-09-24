@@ -25,7 +25,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from bedrock.tools._config import DEFAULT_IGNORED_DIRS, load_bedrock_config
+from bedrock.tools._config import DEFAULT_IGNORED_DIRS, iter_source_files, load_bedrock_config
 from bedrock.tools._reporter import AuditReporter
 
 _SKIP_PATTERNS = re.compile(
@@ -59,7 +59,7 @@ def _iter_python_files(root: Path) -> list[Path]:
         return []
     return sorted(
         path
-        for path in root.rglob("*.py")
+        for path in iter_source_files(root, (".py",))
         if not _is_ignored(path)
     )
 
@@ -68,12 +68,12 @@ def _check_test_pairing(root: Path, exemptions: list[str]) -> list[TestingViolat
     violations: list[TestingViolation] = []
     all_test_stems = {
         p.stem
-        for p in root.rglob("test_*.py")
-        if not _is_ignored(p)
+        for p in iter_source_files(root, (".py",))
+        if p.name.startswith("test_") and not _is_ignored(p)
     } | {
         p.stem.replace(".test", "")
-        for p in root.rglob("*.test.ts*")
-        if not _is_ignored(p)
+        for p in iter_source_files(root, (".ts", ".tsx"))
+        if fnmatch.fnmatch(p.name, "*.test.ts*") and not _is_ignored(p)
     }
 
     for path in _iter_python_files(root):
@@ -99,15 +99,13 @@ def _check_test_pairing(root: Path, exemptions: list[str]) -> list[TestingViolat
 
 def _check_skip_decorators(root: Path, exemptions: list[str]) -> list[TestingViolation]:
     violations: list[TestingViolation] = []
-    test_files = [
-        path
-        for path in (
-            list(root.rglob("test_*.py"))
-            + list(root.rglob("*.test.ts*"))
-            + list(root.rglob("*.spec.ts*"))
-        )
-        if not _is_ignored(path)
+    py_files = [p for p in iter_source_files(root, (".py",)) if p.name.startswith("test_")]
+    ts_files = [
+        p
+        for p in iter_source_files(root, (".ts", ".tsx"))
+        if fnmatch.fnmatch(p.name, "*.test.ts*") or fnmatch.fnmatch(p.name, "*.spec.ts*")
     ]
+    test_files = [path for path in (py_files + ts_files) if not _is_ignored(path)]
     for path in test_files:
         rel = path.relative_to(root).as_posix()
         if _is_exempt(rel, exemptions):
@@ -127,7 +125,9 @@ def _check_skip_decorators(root: Path, exemptions: list[str]) -> list[TestingVio
 
 def _check_live_db_isolation(root: Path, exemptions: list[str]) -> list[TestingViolation]:
     violations: list[TestingViolation] = []
-    for path in root.rglob("test_*.py"):
+    for path in iter_source_files(root, (".py",)):
+        if not path.name.startswith("test_"):
+            continue
         if _is_ignored(path):
             continue
         rel = path.relative_to(root).as_posix()

@@ -23,7 +23,15 @@ const log = pino({
   // Strip sensitive fields completely before outputting strings
   redact: appSettings.logging.redactKeys
 });
+function setLogLevel(level) {
+  log.level = level;
+}
+function getLogLevel() {
+  return log.level;
+}
 export {
-  log
+  getLogLevel,
+  log,
+  setLogLevel
 };
 //# sourceMappingURL=logger.js.map
