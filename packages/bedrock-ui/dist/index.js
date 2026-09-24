@@ -119,7 +119,7 @@ import { DEFAULT_GRID_HEADER_CONFIG, DEFAULT_SHORTCUTS_CONFIG, DEFAULT_TOOLTIP_D
 import { apiClient, getAuthToken, setAuthToken } from "./api/client.js";
 import { API_ROUTES } from "./api/routes.js";
 import { logger } from "./lib/logger.js";
-import { log } from "./utils/logger.js";
+import { getLogLevel, log, setLogLevel } from "./utils/logger.js";
 import { appSettings, resolveAppName } from "./config/index.js";
 import { BUILT_IN_THEMES, DEFAULT_THEME_SEED } from "./theme/palettes.js";
 export {
@@ -326,6 +326,7 @@ export {
   getGradientCellStyle,
   getHookConfig,
   getInventoryStatuses,
+  getLogLevel,
   getMediaCellTypes,
   getNavItems,
   getRankIcon,
@@ -372,6 +373,7 @@ export {
   resolveShortcutsConfig,
   resolveSystemPalette,
   setAuthToken,
+  setLogLevel,
   shortUserAgent,
   stageValue,
   toTsv,

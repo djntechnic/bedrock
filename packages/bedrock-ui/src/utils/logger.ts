@@ -8,17 +8,19 @@ import { appSettings } from '../config';
 
 const isProduction = import.meta.env.PROD;
 
+export type LogLevel = "fatal" | "error" | "warn" | "info" | "debug" | "trace" | "silent";
+
 export const log = pino({
   // Dynamically set the logging threshold from settings
   level: appSettings.logging.level,
-  
+
   // Format numeric levels into readable string tags (e.g. 30 -> INFO)
   formatters: {
     level: (label) => {
       return { level: label.toUpperCase() };
     },
   },
-  
+
   browser: {
     // Objects are what a log *shipper* consumes; formatted text is what a human
     // at a dev server reads. This condition was the other way round — inverted
@@ -29,8 +31,21 @@ export const log = pino({
     asObject: isProduction,
     disabled: isProduction && appSettings.logging.disableConsoleInProd,
   },
-  
+
   // Strip sensitive fields completely before outputting strings
   redact: appSettings.logging.redactKeys
 });
+
+/**
+ * Opt-in runtime override of the shared logger's threshold. Consumers call this
+ * from a test setup file (e.g. `setLogLevel("silent")`) — the platform default
+ * stays `appSettings.logging.level` unless a caller explicitly changes it.
+ */
+export function setLogLevel(level: LogLevel): void {
+  log.level = level;
+}
+
+export function getLogLevel(): LogLevel {
+  return log.level as LogLevel;
+}
 

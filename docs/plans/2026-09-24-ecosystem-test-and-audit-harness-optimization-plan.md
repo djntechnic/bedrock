@@ -235,16 +235,16 @@ Branch: `feat/qa-performance-platform-acceleration-impl` off freshly pulled `mas
 - Target runtime: `< 15 s`
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] Write failing tests:
+- [x] Write failing tests:
   - `leaves default level unchanged` — `getLogLevel()` equals `appSettings.logging.level` on import.
   - `setLogLevel("silent") suppresses all output` — a pino destination spy receives nothing for `log.error`.
   - `setLogLevel round-trips` — `setLogLevel("debug")` → `getLogLevel() === "debug"` and `log.level === "debug"`.
   - `lib/logger facade honors the level` — `logger.info` from `lib/logger.ts` is suppressed under `"silent"`.
-- [ ] Run delta verification; confirm FAIL.
-- [ ] Implement `LogLevel`, `setLogLevel`, `getLogLevel`; restore level in `afterEach` of the test file.
-- [ ] Run delta verification; confirm PASS.
-- [ ] `npm run build` and commit the regenerated `dist/` for the logger only; discard unrelated `dist/` churn (e.g. the pre-existing `dist/components/ui/sheet.js.map` modification) with `git restore` after confirming it is not produced by this task.
-- [ ] Commit: `feat(bedrock-ui): add opt-in setLogLevel/getLogLevel controls to log`
+- [x] Run delta verification; confirm FAIL.
+- [x] Implement `LogLevel`, `setLogLevel`, `getLogLevel`; restore level in `afterEach` of the test file.
+- [x] Run delta verification; confirm PASS.
+- [x] `npm run build` and commit the regenerated `dist/` for the logger only; discard unrelated `dist/` churn (e.g. the pre-existing `dist/components/ui/sheet.js.map` modification) with `git restore` after confirming it is not produced by this task.
+- [x] Commit: `feat(bedrock-ui): add opt-in setLogLevel/getLogLevel controls to log`
 
 ---
 
