@@ -54,7 +54,8 @@ except ImportError:
     psycopg2 = None  # type: ignore[assignment]
 from contextlib import contextmanager
 from time import monotonic
-from typing import Callable
+from typing import Callable, Mapping
+from loguru import logger as _loguru_logger
 from bedrock.core.config import config
 from bedrock.core.schema_catalog import Tables as T
 
@@ -116,6 +117,68 @@ _PG_POOL_MAX = 10
 
 logger = logging.getLogger(__name__)
 
+# Opt-in SQLite pragmas a consumer may set via `BEDROCK_SQLITE_PRAGMAS` /
+# `DatabaseManager.configure_sqlite_pragmas`. Deliberately narrow: every entry
+# here is a tuning knob, never one that changes correctness semantics.
+ALLOWED_SQLITE_PRAGMAS: frozenset[str] = frozenset({
+    "journal_mode", "synchronous", "cache_size", "temp_store",
+    "mmap_size", "wal_autocheckpoint",
+})
+
+# Enforced unconditionally by `_create_sqlite_connection` on every connection.
+# Never configurable — accepting these here would let a caller silently
+# disable the platform's own data-integrity/lock-contention guarantees.
+INVARIANT_SQLITE_PRAGMAS: frozenset[str] = frozenset({"foreign_keys", "busy_timeout"})
+
+# A pragma value is interpolated directly into `PRAGMA {key} = {value};`
+# (sqlite3 does not support bound parameters for PRAGMA statements), so this
+# is the injection boundary: no statement terminator, comment marker, or
+# whitespace can survive this pattern.
+_PRAGMA_VALUE_PATTERN = re.compile(r"^[A-Za-z0-9_-]+$")
+
+
+def parse_sqlite_pragmas(raw: str | Mapping[str, str | int] | None) -> dict[str, str]:
+    """Validate and normalize a set of configurable SQLite pragmas.
+
+    Accepts either a raw ``"key=value,key=value"`` string (the
+    `BEDROCK_SQLITE_PRAGMAS` env-var shape) or a mapping supplied directly by
+    a caller (e.g. `DatabaseManager.configure_sqlite_pragmas`). Every key must
+    be in `ALLOWED_SQLITE_PRAGMAS`; a key in `INVARIANT_SQLITE_PRAGMAS` is
+    rejected outright since the platform enforces those unconditionally on
+    every connection. Every value must match `_PRAGMA_VALUE_PATTERN`.
+
+    :raises ValueError: an unknown key, an invariant key, or an unsafe value.
+    """
+    if raw is None:
+        return {}
+
+    if isinstance(raw, str):
+        pairs: dict[str, str] = {}
+        for entry in raw.split(","):
+            entry = entry.strip()
+            if not entry:
+                continue
+            if "=" not in entry:
+                raise ValueError(f"Malformed SQLite pragma entry: {entry!r}")
+            key, value = entry.split("=", 1)
+            pairs[key.strip()] = value.strip()
+    else:
+        pairs = {str(key).strip(): str(value).strip() for key, value in raw.items()}
+
+    validated: dict[str, str] = {}
+    for key, value in pairs.items():
+        if key in INVARIANT_SQLITE_PRAGMAS:
+            raise ValueError(
+                f"SQLite pragma {key!r} is enforced by the platform and cannot be overridden."
+            )
+        if key not in ALLOWED_SQLITE_PRAGMAS:
+            raise ValueError(f"Unknown SQLite pragma {key!r} is not on the configurable whitelist.")
+        if not _PRAGMA_VALUE_PATTERN.match(value):
+            raise ValueError(f"Unsafe value for SQLite pragma {key!r}: {value!r}")
+        validated[key] = value
+    return validated
+
+
 class DatabaseManager:
     """
     Centralized database manager.
@@ -134,6 +197,12 @@ class DatabaseManager:
         # Lazily-initialised Postgres connection pool (guarded by _pool_lock).
         self._pg_pool = None
         self._pool_lock = threading.Lock()
+
+        # Opt-in configurable pragmas (§S004: unset env var -> {} -> byte-for-byte
+        # default SQLite connection behavior). `_pragmas_logged` gates the
+        # "applied" log line to once per manager, not once per connection.
+        self._sqlite_pragmas: dict[str, str] = parse_sqlite_pragmas(config.SQLITE_PRAGMAS)
+        self._pragmas_logged = False
 
     @property
     def sqlite_path(self):
@@ -191,7 +260,52 @@ class DatabaseManager:
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA foreign_keys = ON;")
         conn.execute(f"PRAGMA busy_timeout = {int(timeout_sec * 1000)};")
+
+        if self.is_postgres:
+            # Structurally unreachable via get_connection() (the Postgres
+            # branch never calls this method), but kept as a defensive
+            # graceful-degrade in case a caller invokes it directly.
+            logger.debug("SQLite pragmas ignored: DatabaseManager is bound to PostgreSQL.")
+        elif self._sqlite_pragmas:
+            # journal_mode first: it is persistent in the database file, so
+            # ordering it ahead of the rest matches how the other pragmas
+            # (session-scoped) are meant to layer on top of it.
+            ordered_keys = sorted(self._sqlite_pragmas, key=lambda k: k != "journal_mode")
+            for key in ordered_keys:
+                conn.execute(f"PRAGMA {key} = {self._sqlite_pragmas[key]};")
+            if not self._pragmas_logged:
+                _loguru_logger.info("SQLite pragmas applied: {pragmas}", pragmas=self._sqlite_pragmas)
+                self._pragmas_logged = True
         return conn
+
+    def configure_sqlite_pragmas(self, pragmas: Mapping[str, str | int]) -> None:
+        """Validate, store, and apply a set of configurable SQLite pragmas.
+
+        Drops the calling thread's cached connection so the next acquisition
+        opens with the updated pragma set. Consumers call this after swapping
+        `sqlite_path` (e.g. pointing at a test database copy) so the new
+        pragmas apply to the new target rather than a connection opened
+        against the old one.
+
+        No-ops (after validation) when `is_postgres` is True — pragmas are a
+        SQLite-only concept.
+        """
+        validated = parse_sqlite_pragmas(pragmas)
+
+        if self.is_postgres:
+            logger.debug("SQLite pragmas ignored: DatabaseManager is bound to PostgreSQL.")
+            return
+
+        self._sqlite_pragmas = validated
+        self._pragmas_logged = False
+
+        conn = getattr(self._local, "sqlite_conn", None)
+        if conn is not None:
+            try:
+                conn.close()
+            except sqlite3.Error:
+                pass
+            self._local.sqlite_conn = None
 
     def _get_sqlite_connection(self) -> sqlite3.Connection:
         """

@@ -197,3 +197,17 @@ def test_dotenv_preserves_injected_db(monkeypatch, tmp_path):
     expected = os.path.normpath(os.path.join(str(tmp_path), "data", "scratch.db"))
     assert config.config.SQLITE_DB_PATH == expected
 
+
+def test_sqlite_pragmas_env_parsing(monkeypatch):
+    """BEDROCK_SQLITE_PRAGMAS parses into a dict; SQLITE_PRAGMAS is read live, no reload needed."""
+    import bedrock.core.config as config_module
+
+    monkeypatch.delenv("BEDROCK_SQLITE_PRAGMAS", raising=False)
+    assert config_module.config.SQLITE_PRAGMAS == {}
+
+    monkeypatch.setenv("BEDROCK_SQLITE_PRAGMAS", "journal_mode=WAL,synchronous=NORMAL")
+    assert config_module.config.SQLITE_PRAGMAS == {
+        "journal_mode": "WAL",
+        "synchronous": "NORMAL",
+    }
+

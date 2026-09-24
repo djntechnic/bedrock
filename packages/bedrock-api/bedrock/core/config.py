@@ -56,6 +56,32 @@ class Config:
         except (ValueError, TypeError):
             return 30.0
 
+    @property
+    def SQLITE_PRAGMAS(self) -> dict[str, str]:
+        """Additional, opt-in SQLite connection pragmas.
+
+        Read from ``BEDROCK_SQLITE_PRAGMAS`` as comma-separated ``key=value``
+        pairs, e.g. ``"journal_mode=WAL,synchronous=NORMAL"``. Unset or blank
+        defaults to ``{}``, so a fresh connection behaves byte-for-byte as it
+        did before this setting existed.
+
+        This is raw string parsing only — pragma names and values are
+        validated against the platform's whitelist by
+        `bedrock.core.database.parse_sqlite_pragmas`, not here, to avoid a
+        circular import between the two modules.
+        """
+        raw = os.environ.get("BEDROCK_SQLITE_PRAGMAS", "")
+        if not raw.strip():
+            return {}
+        pragmas: dict[str, str] = {}
+        for pair in raw.split(","):
+            pair = pair.strip()
+            if not pair or "=" not in pair:
+                continue
+            key, value = pair.split("=", 1)
+            pragmas[key.strip()] = value.strip()
+        return pragmas
+
     CACHE_DIR = os.path.join(_DATA_DIR, ".cache")
 
     # Cloudflare Images CDN — optional; the adapter degrades when unset.

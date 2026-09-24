@@ -126,7 +126,7 @@ Branch: `feat/qa-performance-platform-acceleration-impl` off freshly pulled `mas
 - Target runtime: `< 15 s`
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] Write failing tests:
+- [x] Write failing tests:
   - `test_sqlite_pragmas_default_is_empty` — unset env → `{}`; a new connection reports `journal_mode=delete` (behavior unchanged).
   - `test_sqlite_pragmas_applied_on_connection` — `configure_sqlite_pragmas({"journal_mode": "WAL", "synchronous": "NORMAL"})` on a `tmp_path` DB → `PRAGMA journal_mode` returns `wal`, `PRAGMA synchronous` returns `1`.
   - `test_sqlite_pragmas_env_parsing` — `monkeypatch.setenv("BEDROCK_SQLITE_PRAGMAS", "journal_mode=WAL,synchronous=NORMAL")`.
@@ -135,11 +135,11 @@ Branch: `feat/qa-performance-platform-acceleration-impl` off freshly pulled `mas
   - `test_sqlite_pragmas_cannot_override_invariants` — `foreign_keys=OFF` → `ValueError`.
   - `test_configure_sqlite_pragmas_resets_thread_connection` — the cached thread-local connection is replaced.
   - `test_sqlite_pragmas_ignored_on_postgres` — manager with `is_postgres=True` does not raise.
-- [ ] Run delta verification; confirm FAIL.
-- [ ] Implement `SQLITE_PRAGMAS` in `config.py` and `ALLOWED_SQLITE_PRAGMAS`, `INVARIANT_SQLITE_PRAGMAS`, `parse_sqlite_pragmas`, `configure_sqlite_pragmas` in `database.py`. Existing `%s` → `?` adaptation in `_adapt_sql` is untouched.
-- [ ] Run delta verification; confirm PASS with `$LASTEXITCODE -eq 0`.
-- [ ] Run `pytest packages/bedrock-api/tests/test_database.py packages/bedrock-api/tests/test_database_pooling.py -q` (< 30 s) to prove no regression in connection handling.
-- [ ] Commit: `feat(bedrock-api): add opt-in whitelisted SQLite pragma hook`
+- [x] Run delta verification; confirm FAIL.
+- [x] Implement `SQLITE_PRAGMAS` in `config.py` and `ALLOWED_SQLITE_PRAGMAS`, `INVARIANT_SQLITE_PRAGMAS`, `parse_sqlite_pragmas`, `configure_sqlite_pragmas` in `database.py`. Existing `%s` → `?` adaptation in `_adapt_sql` is untouched.
+- [x] Run delta verification; confirm PASS with `$LASTEXITCODE -eq 0`.
+- [x] Run `pytest packages/bedrock-api/tests/test_database.py packages/bedrock-api/tests/test_database_pooling.py -q` (< 30 s) to prove no regression in connection handling.
+- [x] Commit: `feat(bedrock-api): add opt-in whitelisted SQLite pragma hook`
 
 ---
 
