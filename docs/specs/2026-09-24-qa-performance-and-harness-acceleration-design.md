@@ -202,12 +202,91 @@ Output is buffered per lane and printed cleanly upon lane completion. The orches
 
 ---
 
-## 5. Verification & Testing Strategy
+## 5. Granular Test Execution Performance Telemetry (Behind the Scenes)
+
+### 5.1 Objective & Behavior
+To detect regressions immediately and track performance optimizations over time, the test harness must capture granular start, end, and duration metrics for **every individual test** (both backend and frontend) without adding overhead or polluting stdout.
+- **Silent Execution:** Telemetry is gathered automatically behind the scenes during `run_qa.py` and local test invocations.
+- **Single Overwriting Artifact:** Telemetry writes to `scratch/performance/test-execution-profile.json` (git-ignored), overwriting the previous run on each execution.
+- **Zero Human Overhead:** No flags required for everyday runs; developers and agents inspect the generated JSON when diagnosing regressions.
+
+### 5.2 Telemetry Artifact Schema
+```json
+{
+  "metadata": {
+    "timestamp": "2026-09-24T06:50:00Z",
+    "git_commit": "d4b525a",
+    "branch": "feat/qa-performance-platform-acceleration",
+    "run_mode": "full",
+    "total_wall_clock_ms": 115420
+  },
+  "summary": {
+    "total_tests": 2661,
+    "passed": 2660,
+    "failed": 0,
+    "skipped": 1,
+    "slowest_outliers": [
+      {
+        "id": "frontend/src/components/bulk/CsvImportSheet.test.tsx > CsvImportSheet > Step 1",
+        "duration_ms": 7240,
+        "suite": "frontend"
+      },
+      {
+        "id": "api/tests/test_migration_024.py::test_seed_legacy_rows",
+        "duration_ms": 5310,
+        "suite": "backend"
+      }
+    ]
+  },
+  "tests": [
+    {
+      "id": "api/tests/test_listing.py::test_create_listing",
+      "suite": "backend",
+      "file": "api/tests/test_listing.py",
+      "status": "passed",
+      "start_epoch_ms": 1790243400120,
+      "end_epoch_ms": 1790243400145,
+      "duration_ms": 25.4,
+      "phases": {
+        "setup_ms": 1.2,
+        "call_ms": 23.8,
+        "teardown_ms": 0.4
+      }
+    }
+  ]
+}
+```
+
+### 5.3 Backend (Pytest) Telemetry Collector (`bedrock.tools.pytest_timings`)
+1. **Lightweight Built-in Pytest Plugin:**
+   - Lives in `bedrock-api` under `packages/bedrock-api/bedrock/tools/pytest_timings.py`.
+   - Hooks into:
+     - `pytest_runtest_protocol`: Records high-precision wall timestamps (`time.perf_counter_ns()`).
+     - `pytest_runtest_makereport`: Extracts per-phase setup, call, and teardown durations and status (`passed`, `failed`, `skipped`).
+     - `pytest_sessionfinish`: Dumps structured backend test metrics to `.qa-perf/backend-raw.json`.
+   - Enabled seamlessly by default in `run_qa.py` via `-p bedrock.tools.pytest_timings` or `pytest.ini`.
+
+### 5.4 Frontend (Vitest) Telemetry Collector
+1. **Vitest JSON Reporter Integration:**
+   - `vitest run --reporter=json --outputFile=.qa-perf/frontend-raw.json`.
+   - Vitest captures individual `task.result.startTime`, `duration`, and pass/fail state across all workspace projects.
+
+### 5.5 Harness Consolidation (`scripts/run_qa.py`)
+1. At the completion of any test tier (`fast`, `scoped`, `full`), `run_qa.py` calls an internal telemetry synthesizer:
+   - Ingests `.qa-perf/backend-raw.json` and `.qa-perf/frontend-raw.json`.
+   - Normalizes timestamps, calculates suite statistics, and ranks the top 20 slowest tests.
+   - Atomically overwrites `scratch/performance/test-execution-profile.json`.
+   - Automatically cleans up intermediate `.qa-perf/` raw files.
+
+---
+
+## 6. Verification & Testing Strategy
 
 ### Platform Level (`bedrock`)
 1. **Unit Tests:**
    - `packages/bedrock-api/tests/test_database.py`: Test pragma whitelist filtering, syntax validation, environment variable parsing, and execution on SQLite connections.
    - `packages/bedrock-api/tests/test_tools_config.py`: Test `iter_source_files` pruning of `.venv`, `node_modules`, `.git`, handling of `DATA_ASSET_DIRS`, and suffix matching.
+   - `packages/bedrock-api/tests/test_pytest_timings.py`: Test telemetry hook records start/end timestamps and phase durations without failing tests.
 2. **Audit Parity:**
    Run `python -m bedrock.tools.run_all` on `bedrock` before and after the refactor to prove exact violation parity (0 behavioral drift).
 3. **Speed Benchmarking:**
@@ -215,7 +294,8 @@ Output is buffered per lane and printed cleanly upon lane completion. The orches
 
 ### Release & Downstream Hand-off (§S012, §S015)
 1. Prepare CHANGELOG entry following required section ordering:
-   - `Added / Changed`: Configurable SQLite pragmas hook in `bedrock.core.database`; pruned file walker `iter_source_files` in `bedrock.tools._config`.
+   - `Added / Changed`: Configurable SQLite pragmas hook in `bedrock.core.database`; pruned file walker `iter_source_files` in `bedrock.tools._config`; granular test execution telemetry plugin in `bedrock.tools.pytest_timings`.
    - `Platform Maintenance`: Memoized file inventory in `run_all`; test logging silence hook in `bedrock-ui`.
 2. Bump versions in `packages/bedrock-api/pyproject.toml` and `packages/bedrock-ui/package.json`.
 3. Tag the release and proceed with `/bump-bedrock-pin` in consumer repositories.
+
