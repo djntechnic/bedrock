@@ -16,6 +16,39 @@ When drafting a release body, write the section as `## For consumers`, not
 nested form — the cascade workflow's extractor matches `^## For consumers`
 literally and fails the release's cascade job on a mismatch.
 
+## v0.11.0 - 2026-09-24
+
+### Breaking Changes
+
+None
+
+### Fixed
+
+None
+
+### Added / Changed
+
+- **Added - opt-in SQLite connection pragmas.** `DatabaseManager.configure_sqlite_pragmas()` and the `BEDROCK_SQLITE_PRAGMAS` env var let a consumer tune a narrow whitelist of connection pragmas — `journal_mode`, `synchronous`, `cache_size`, `temp_store`, `mmap_size`, `wal_autocheckpoint` (`ALLOWED_SQLITE_PRAGMAS` in `core/database.py`). `foreign_keys` and `busy_timeout` are enforced unconditionally on every connection and are never accepted here (`INVARIANT_SQLITE_PRAGMAS`) — a request to override either raises `ValueError`, as does any key outside the whitelist or a value that fails the injection-safe `^[A-Za-z0-9_-]+$` pattern (SQLite's `PRAGMA` statement has no bound-parameter form, so the value is interpolated directly). `BEDROCK_SQLITE_PRAGMAS` takes the env-var shape `"journal_mode=WAL,synchronous=NORMAL"`; an unset var parses to `{}` and connection behavior is byte-for-byte the prior default (§S004). WAL + `synchronous=NORMAL` is the recommended pairing for single-host SQLite deployments — including bedrock's own test harness — trading a narrow crash-durability window for materially lower per-commit fsync cost; it is not a change bedrock makes unless a consumer opts in.
+- **Added - `setLogLevel` / `getLogLevel` in `@djntechnic/bedrock-ui`.** `packages/bedrock-ui/src/utils/logger.ts` now exports `setLogLevel(level: LogLevel)` / `getLogLevel(): LogLevel` as an opt-in runtime override of the shared Pino `log` export's threshold. The platform default remains `appSettings.logging.level` unless a caller explicitly calls `setLogLevel` — the intended use is a consumer's test setup file silencing log noise (`setLogLevel("silent")`) without touching the logging surface itself.
+- **Changed - audit file discovery prunes ignored directories during the walk.** `iter_source_files()` (`bedrock/tools/_config.py`) now prunes `DEFAULT_IGNORED_DIRS` (plus `DATA_ASSET_DIRS` when excluded, plus any caller-supplied `extra_ignored`) in place during `os.walk` instead of filtering after a full descent, so `.venv`, `node_modules`, `.git`, and similar subtrees are never walked. Directory names are matched exactly, never by substring, so `build.py` and a `rebuild/` directory are unaffected by a `build` prune rule. Results are sorted and memoized per `(root, suffixes, include_assets, extra_ignored)` for the process, shared by every `run_all` audit; `clear_source_cache()` invalidates between suite runs. Violation output is unchanged — this is a traversal-cost optimization only, not a behavior change to what any audit reports. Locally this cut bedrock's own `run_all` from ~24 s to ~6 s.
+
+### Platform Maintenance
+
+None
+
+### For consumers
+
+- **`conftest.py` opt-in snippet** — set `BEDROCK_SQLITE_PRAGMAS` before the test database is first opened, e.g.:
+  ```python
+  import os
+  os.environ.setdefault("BEDROCK_SQLITE_PRAGMAS", "journal_mode=WAL,synchronous=NORMAL")
+  ```
+  A consumer adopting WAL must extend its existing teardown guard to also remove the `-wal` and `-shm` sidecar files next to the test database path (not just the main file) — WAL mode leaves both until a checkpoint or a clean close, and a leftover sidecar from a prior run is what makes a "clean" test directory not actually clean.
+- **Vitest `setup.ts`** — call `setLogLevel("silent")` (imported from `@djntechnic/bedrock-ui`) once at the top of the shared Vitest setup file to silence Pino output across the suite; it is opt-in and has no effect unless called.
+- **Resolves Upstream Issues:** None
+- **Target Downstream Repositories:** `djntechnic/CollectIt`, `djntechnic/MLBTracker`
+- **Expected Pin Migration:** `/bump-bedrock-pin v0.11.0`
+
 ## v0.10.3 - 2026-09-21
 
 ### Fixed - four audit-tool defects that only a consumer repo could trigger
