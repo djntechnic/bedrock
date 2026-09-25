@@ -335,15 +335,15 @@ Precondition: Task 2.1 verified tag. Task 3.1 merges first as its own PR; Tasks 
 - Target runtime: `< 25 s`
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] Write failing tests:
+- [x] Write failing tests:
   - `test_test_db_uses_wal` — `PRAGMA journal_mode` on the session DB returns `wal`; `PRAGMA synchronous` returns `1`.
   - `test_teardown_removes_wal_sidecars` — invoke the extracted teardown helper against a `tmp_path` DB with sidecars; none remain.
   - `test_teardown_refuses_live_sidecars` — a base path that resolves (case-varied) to the live DB raises before any `unlink`.
   - `test_default_test_entity_is_session_cached` — a query-count spy shows one fetch across two tests.
-- [ ] Run delta verification; confirm FAIL.
-- [ ] Extract teardown into a helper (`_remove_test_db(test_db: Path) -> None`) so it is testable; implement the pragma opt-in and session cache.
-- [ ] Run delta verification; confirm PASS.
-- [ ] Commit: `perf(tests): run test DB under WAL/NORMAL with sidecar-safe teardown`
+- [x] Run delta verification; confirm FAIL.
+- [x] Extract teardown into a helper (`_remove_test_db(test_db: Path) -> None`) so it is testable; implement the pragma opt-in and session cache.
+- [x] Run delta verification; confirm PASS.
+- [x] Commit: `perf(tests): run test DB under WAL/NORMAL with sidecar-safe teardown`
 
 ---
 
@@ -370,12 +370,12 @@ Precondition: Task 2.1 verified tag. Task 3.1 merges first as its own PR; Tasks 
 - Target runtime: `< 30 s` each
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] Record `npx vitest list --reporter=json | ...` file count before (expect 100) and the on-disk `*.test.ts(x)` count (expect 102).
-- [ ] Apply the config changes.
-- [ ] Run delta verification; confirm PASS.
-- [ ] `npx vitest list` file count now equals the on-disk count (102). Any residual gap is investigated, not waived.
-- [ ] Confirm no pino JSON lines appear in the delta run output.
-- [ ] Commit: `perf(frontend): threads pool, per-project isolation, include orphaned theme tests`
+- [x] Record `npx vitest list --reporter=json | ...` file count before (101, not 100 — repo has grown since this estimate) and the on-disk `*.test.ts(x)` count (103, not 102).
+- [x] Apply the config changes.
+- [x] Run delta verification; confirm PASS.
+- [x] `npx vitest list` file count now equals the on-disk count (103). No residual gap.
+- [x] Confirm no pino JSON lines appear in the delta run output.
+- [x] Commit: `perf(frontend): threads pool, per-project isolation, include orphaned theme tests`
 
 ---
 
@@ -399,11 +399,11 @@ Precondition: Task 2.1 verified tag. Task 3.1 merges first as its own PR; Tasks 
 - Target runtime: `< 30 s` (each shard ≲ 8 s)
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] Record per-file durations with `--reporter=verbose` before.
-- [ ] Split the file; run delta verification; confirm 45 tests pass.
-- [ ] Apply query optimizations to the StudioPage trio; `npx vitest run StudioPage` (< 30 s) passes with an unchanged test count.
-- [ ] Record per-file durations after in `scratch/performance/`.
-- [ ] Commit: `perf(frontend): shard CsvImportSheet spec and trim ByRole hot paths`
+- [x] Record per-file durations with `--reporter=verbose` before.
+- [x] Split the file; run delta verification; confirm 45 tests pass.
+- [x] Apply query optimizations to the StudioPage trio; `npx vitest run StudioPage` (< 30 s) passes with an unchanged test count.
+- [x] Record per-file durations after in `scratch/performance/`.
+- [x] Commit: `perf(frontend): shard CsvImportSheet spec and trim ByRole hot paths`
 
 ---
 
@@ -430,11 +430,11 @@ Precondition: Task 2.1 verified tag. Task 3.1 merges first as its own PR; Tasks 
 - Target runtime: second `tsc` `< 5 s`; knip `< 6 s`
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] Apply tsconfig changes; run twice; confirm warm run ≤ 5 s and `tsc -b --verbose` no longer says "out of date because output file … does not exist".
-- [ ] Pin knip, add script, regenerate lockfile, fix the hint.
-- [ ] Declare vulture; prove it in the fresh venv; delete the proof venv.
-- [ ] Add the CI buildinfo cache step.
-- [ ] Commit: `perf(tooling): incremental tsc, pinned knip, declared vulture`
+- [x] Apply tsconfig changes; run twice; confirm warm run ≤ 5 s and `tsc -b --verbose` no longer says "out of date because output file … does not exist".
+- [x] Pin knip, add script, regenerate lockfile, fix the hint.
+- [x] Declare vulture; prove it in the fresh venv; delete the proof venv.
+- [x] Add the CI buildinfo cache step.
+- [x] Commit: `perf(tooling): incremental tsc, pinned knip, declared vulture`
 
 ---
 
@@ -480,16 +480,16 @@ def aggregate_exit(results: Sequence[LaneResult]) -> int:
 - Target runtime: `< 10 s`
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] Write failing tests using trivial `python -c` commands as lane steps:
+- [x] Write failing tests using trivial `python -c` commands as lane steps:
   - `test_run_qa_worst_lane_exit_wins` — lane `fail` (exit 1, finishes first) + lane `slow_pass` → aggregate 1.
   - `test_run_qa_config_error_dominates` — exits `{0, 1, 2}` → 2.
   - `test_run_qa_lane_stops_at_first_failure` — second step of a failing lane never runs.
   - `test_run_qa_lane_output_is_contiguous` — two lanes emitting interleaved-by-time lines produce two contiguous blocks.
   - `test_run_qa_lanes_run_concurrently` — two 1 s sleeps complete in < 1.8 s.
-- [ ] Run delta verification; confirm FAIL.
-- [ ] Implement `run_lanes`, `aggregate_exit`, wire full mode; clean duplicates; fix B7.
-- [ ] Run delta verification; confirm PASS.
-- [ ] Commit: `perf(qa): run backend, frontend, and audit lanes in parallel`
+- [x] Run delta verification; confirm FAIL.
+- [x] Implement `run_lanes`, `aggregate_exit`, wire full mode; clean duplicates; fix B7.
+- [x] Run delta verification; confirm PASS.
+- [x] Commit: `perf(qa): run backend, frontend, and audit lanes in parallel`
 
 ---
 
@@ -608,11 +608,11 @@ Precondition: Task 2.1 verified tag. Apply the CollectIt patterns; MLBTracker's 
 
 **This is the only phase that runs full suites.**
 
-- [ ] Same machine, same power profile, no other heavy processes; one warm-up run discarded per repo.
-- [ ] **bedrock:** `python -m bedrock.tools.run_all --root C:\Dev\CollectIt` and `--root C:\Dev\MLBTracker` — record wall time (target ≤ 7 s, baseline 24.3 s) and re-confirm violation parity against the Task 1.2 baselines.
-- [ ] **CollectIt:** `python scripts/run_qa.py --mode full` — record total wall and per-lane time; then `pwsh scripts/run_audit.ps1 -All`.
-- [ ] **MLBTracker:** the same two commands.
-- [ ] Fill this table in each results file:
+- [x] Same machine, same power profile, no other heavy processes; one warm-up run discarded per repo.
+- [x] **bedrock:** `python -m bedrock.tools.run_all --root C:\Dev\CollectIt` and `--root C:\Dev\MLBTracker` — record wall time (target ≤ 7 s, baseline 24.3 s) and re-confirm violation parity against the Task 1.2 baselines.
+- [x] **CollectIt:** `python scripts/run_qa.py --mode full` — record total wall and per-lane time; then `pwsh scripts/run_audit.ps1 -All`.
+- [x] **MLBTracker:** the same two commands.
+- [x] Fill this table in each results file:
 
   | Lane | Baseline | Measured | Target | Pass? |
   | ---- | -------- | -------- | ------ | ----- |
@@ -624,12 +624,12 @@ Precondition: Task 2.1 verified tag. Apply the CollectIt patterns; MLBTracker's 
   | `run_audit.ps1 -All` | ~26 s | | ≤ 8 s | |
   | vitest files run / on disk | 100 / 102 | | equal | |
 
-- [ ] Test counts must be ≥ baseline (CollectIt pytest 1629 passed; vitest 1032 tests + the two recovered theme files). A drop is a defect, not a speedup.
-- [ ] Any failing test is classified (§S005): Class A fixed on the branch; Class B halts the PR and is filed via `/issue-triage` with origin trace.
-- [ ] A missed target with all gates green is reported with its measured number — it does not block merge and is not rounded.
-- [ ] Open a draft PR per consumer from `perf/test-harness-acceleration` → `master` via `/finalize-pr`. Body: defects addressed (bottleneck IDs), root causes, the results table, and the verification commands. End with the attribution line.
-- [ ] Watch CI with background `gh pr checks <pr> --watch`; squash-merge only on all-green.
-- [ ] After each merge: `git pull origin master`; `git status --porcelain` empty.
+- [x] Test counts must be ≥ baseline (CollectIt pytest 1629 passed; vitest 1032 tests + the two recovered theme files). A drop is a defect, not a speedup.
+- [x] Any failing test is classified (§S005): Class A fixed on the branch; Class B halts the PR and is filed via `/issue-triage` with origin trace.
+- [x] A missed target with all gates green is reported with its measured number — it does not block merge and is not rounded.
+- [x] Open a draft PR per consumer from `perf/test-harness-acceleration` → `master` via `/finalize-pr`. Body: defects addressed (bottleneck IDs), root causes, the results table, and the verification commands. End with the attribution line.
+- [x] Watch CI with background `gh pr checks <pr> --watch`; squash-merge only on all-green.
+- [x] After each merge: `git pull origin master`; `git status --porcelain` empty.
 
 ---
 
