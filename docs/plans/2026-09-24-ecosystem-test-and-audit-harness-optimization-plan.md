@@ -335,15 +335,15 @@ Precondition: Task 2.1 verified tag. Task 3.1 merges first as its own PR; Tasks 
 - Target runtime: `< 25 s`
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] Write failing tests:
+- [x] Write failing tests:
   - `test_test_db_uses_wal` — `PRAGMA journal_mode` on the session DB returns `wal`; `PRAGMA synchronous` returns `1`.
   - `test_teardown_removes_wal_sidecars` — invoke the extracted teardown helper against a `tmp_path` DB with sidecars; none remain.
   - `test_teardown_refuses_live_sidecars` — a base path that resolves (case-varied) to the live DB raises before any `unlink`.
   - `test_default_test_entity_is_session_cached` — a query-count spy shows one fetch across two tests.
-- [ ] Run delta verification; confirm FAIL.
-- [ ] Extract teardown into a helper (`_remove_test_db(test_db: Path) -> None`) so it is testable; implement the pragma opt-in and session cache.
-- [ ] Run delta verification; confirm PASS.
-- [ ] Commit: `perf(tests): run test DB under WAL/NORMAL with sidecar-safe teardown`
+- [x] Run delta verification; confirm FAIL.
+- [x] Extract teardown into a helper (`_remove_test_db(test_db: Path) -> None`) so it is testable; implement the pragma opt-in and session cache.
+- [x] Run delta verification; confirm PASS.
+- [x] Commit: `perf(tests): run test DB under WAL/NORMAL with sidecar-safe teardown`
 
 ---
 
