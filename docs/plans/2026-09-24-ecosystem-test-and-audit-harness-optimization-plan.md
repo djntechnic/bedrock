@@ -370,12 +370,12 @@ Precondition: Task 2.1 verified tag. Task 3.1 merges first as its own PR; Tasks 
 - Target runtime: `< 30 s` each
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] Record `npx vitest list --reporter=json | ...` file count before (expect 100) and the on-disk `*.test.ts(x)` count (expect 102).
-- [ ] Apply the config changes.
-- [ ] Run delta verification; confirm PASS.
-- [ ] `npx vitest list` file count now equals the on-disk count (102). Any residual gap is investigated, not waived.
-- [ ] Confirm no pino JSON lines appear in the delta run output.
-- [ ] Commit: `perf(frontend): threads pool, per-project isolation, include orphaned theme tests`
+- [x] Record `npx vitest list --reporter=json | ...` file count before (101, not 100 — repo has grown since this estimate) and the on-disk `*.test.ts(x)` count (103, not 102).
+- [x] Apply the config changes.
+- [x] Run delta verification; confirm PASS.
+- [x] `npx vitest list` file count now equals the on-disk count (103). No residual gap.
+- [x] Confirm no pino JSON lines appear in the delta run output.
+- [x] Commit: `perf(frontend): threads pool, per-project isolation, include orphaned theme tests`
 
 ---
 
@@ -399,11 +399,11 @@ Precondition: Task 2.1 verified tag. Task 3.1 merges first as its own PR; Tasks 
 - Target runtime: `< 30 s` (each shard ≲ 8 s)
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] Record per-file durations with `--reporter=verbose` before.
-- [ ] Split the file; run delta verification; confirm 45 tests pass.
-- [ ] Apply query optimizations to the StudioPage trio; `npx vitest run StudioPage` (< 30 s) passes with an unchanged test count.
-- [ ] Record per-file durations after in `scratch/performance/`.
-- [ ] Commit: `perf(frontend): shard CsvImportSheet spec and trim ByRole hot paths`
+- [x] Record per-file durations with `--reporter=verbose` before.
+- [x] Split the file; run delta verification; confirm 45 tests pass.
+- [x] Apply query optimizations to the StudioPage trio; `npx vitest run StudioPage` (< 30 s) passes with an unchanged test count.
+- [x] Record per-file durations after in `scratch/performance/`.
+- [x] Commit: `perf(frontend): shard CsvImportSheet spec and trim ByRole hot paths`
 
 ---
 
@@ -430,11 +430,11 @@ Precondition: Task 2.1 verified tag. Task 3.1 merges first as its own PR; Tasks 
 - Target runtime: second `tsc` `< 5 s`; knip `< 6 s`
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] Apply tsconfig changes; run twice; confirm warm run ≤ 5 s and `tsc -b --verbose` no longer says "out of date because output file … does not exist".
-- [ ] Pin knip, add script, regenerate lockfile, fix the hint.
-- [ ] Declare vulture; prove it in the fresh venv; delete the proof venv.
-- [ ] Add the CI buildinfo cache step.
-- [ ] Commit: `perf(tooling): incremental tsc, pinned knip, declared vulture`
+- [x] Apply tsconfig changes; run twice; confirm warm run ≤ 5 s and `tsc -b --verbose` no longer says "out of date because output file … does not exist".
+- [x] Pin knip, add script, regenerate lockfile, fix the hint.
+- [x] Declare vulture; prove it in the fresh venv; delete the proof venv.
+- [x] Add the CI buildinfo cache step.
+- [x] Commit: `perf(tooling): incremental tsc, pinned knip, declared vulture`
 
 ---
 
@@ -480,16 +480,16 @@ def aggregate_exit(results: Sequence[LaneResult]) -> int:
 - Target runtime: `< 10 s`
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] Write failing tests using trivial `python -c` commands as lane steps:
+- [x] Write failing tests using trivial `python -c` commands as lane steps:
   - `test_run_qa_worst_lane_exit_wins` — lane `fail` (exit 1, finishes first) + lane `slow_pass` → aggregate 1.
   - `test_run_qa_config_error_dominates` — exits `{0, 1, 2}` → 2.
   - `test_run_qa_lane_stops_at_first_failure` — second step of a failing lane never runs.
   - `test_run_qa_lane_output_is_contiguous` — two lanes emitting interleaved-by-time lines produce two contiguous blocks.
   - `test_run_qa_lanes_run_concurrently` — two 1 s sleeps complete in < 1.8 s.
-- [ ] Run delta verification; confirm FAIL.
-- [ ] Implement `run_lanes`, `aggregate_exit`, wire full mode; clean duplicates; fix B7.
-- [ ] Run delta verification; confirm PASS.
-- [ ] Commit: `perf(qa): run backend, frontend, and audit lanes in parallel`
+- [x] Run delta verification; confirm FAIL.
+- [x] Implement `run_lanes`, `aggregate_exit`, wire full mode; clean duplicates; fix B7.
+- [x] Run delta verification; confirm PASS.
+- [x] Commit: `perf(qa): run backend, frontend, and audit lanes in parallel`
 
 ---
 
