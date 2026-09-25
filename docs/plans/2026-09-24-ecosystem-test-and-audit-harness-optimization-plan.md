@@ -608,11 +608,11 @@ Precondition: Task 2.1 verified tag. Apply the CollectIt patterns; MLBTracker's 
 
 **This is the only phase that runs full suites.**
 
-- [ ] Same machine, same power profile, no other heavy processes; one warm-up run discarded per repo.
-- [ ] **bedrock:** `python -m bedrock.tools.run_all --root C:\Dev\CollectIt` and `--root C:\Dev\MLBTracker` — record wall time (target ≤ 7 s, baseline 24.3 s) and re-confirm violation parity against the Task 1.2 baselines.
-- [ ] **CollectIt:** `python scripts/run_qa.py --mode full` — record total wall and per-lane time; then `pwsh scripts/run_audit.ps1 -All`.
-- [ ] **MLBTracker:** the same two commands.
-- [ ] Fill this table in each results file:
+- [x] Same machine, same power profile, no other heavy processes; one warm-up run discarded per repo.
+- [x] **bedrock:** `python -m bedrock.tools.run_all --root C:\Dev\CollectIt` and `--root C:\Dev\MLBTracker` — record wall time (target ≤ 7 s, baseline 24.3 s) and re-confirm violation parity against the Task 1.2 baselines.
+- [x] **CollectIt:** `python scripts/run_qa.py --mode full` — record total wall and per-lane time; then `pwsh scripts/run_audit.ps1 -All`.
+- [x] **MLBTracker:** the same two commands.
+- [x] Fill this table in each results file:
 
   | Lane | Baseline | Measured | Target | Pass? |
   | ---- | -------- | -------- | ------ | ----- |
@@ -624,12 +624,12 @@ Precondition: Task 2.1 verified tag. Apply the CollectIt patterns; MLBTracker's 
   | `run_audit.ps1 -All` | ~26 s | | ≤ 8 s | |
   | vitest files run / on disk | 100 / 102 | | equal | |
 
-- [ ] Test counts must be ≥ baseline (CollectIt pytest 1629 passed; vitest 1032 tests + the two recovered theme files). A drop is a defect, not a speedup.
-- [ ] Any failing test is classified (§S005): Class A fixed on the branch; Class B halts the PR and is filed via `/issue-triage` with origin trace.
-- [ ] A missed target with all gates green is reported with its measured number — it does not block merge and is not rounded.
-- [ ] Open a draft PR per consumer from `perf/test-harness-acceleration` → `master` via `/finalize-pr`. Body: defects addressed (bottleneck IDs), root causes, the results table, and the verification commands. End with the attribution line.
-- [ ] Watch CI with background `gh pr checks <pr> --watch`; squash-merge only on all-green.
-- [ ] After each merge: `git pull origin master`; `git status --porcelain` empty.
+- [x] Test counts must be ≥ baseline (CollectIt pytest 1629 passed; vitest 1032 tests + the two recovered theme files). A drop is a defect, not a speedup.
+- [x] Any failing test is classified (§S005): Class A fixed on the branch; Class B halts the PR and is filed via `/issue-triage` with origin trace.
+- [x] A missed target with all gates green is reported with its measured number — it does not block merge and is not rounded.
+- [x] Open a draft PR per consumer from `perf/test-harness-acceleration` → `master` via `/finalize-pr`. Body: defects addressed (bottleneck IDs), root causes, the results table, and the verification commands. End with the attribution line.
+- [x] Watch CI with background `gh pr checks <pr> --watch`; squash-merge only on all-green.
+- [x] After each merge: `git pull origin master`; `git status --porcelain` empty.
 
 ---
 
