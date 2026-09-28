@@ -51,6 +51,7 @@ import { default as default32 } from "./components/AppFooter.js";
 import "react/jsx-runtime";
 import "lucide-react";
 import { cn } from "./lib/utils.js";
+import { SORTABLE_INSTRUCTIONS, SortableGrid, SortableItem, useSortableGrid } from "./components/dnd/SortableGrid.js";
 import { Toaster } from "./components/ui/sonner.js";
 import { toast } from "sonner";
 import { default as default33 } from "./components/HelpPopover.js";
@@ -232,6 +233,7 @@ export {
   default15 as ProfilePage,
   default34 as ProtectedRoute,
   default16 as RoleMatrixPanel,
+  SORTABLE_INSTRUCTIONS,
   SYSTEM_THEME_ID,
   default9 as SecurityLogViewer,
   SegmentedControl,
@@ -255,6 +257,8 @@ export {
   SheetTitle,
   SheetTrigger,
   Skeleton,
+  SortableGrid,
+  SortableItem,
   SortableTableHead,
   StatBadge,
   Switch,
@@ -432,6 +436,7 @@ export {
   useSecurityEvents,
   useSelectionStore,
   useSidebarStore,
+  useSortableGrid,
   useTableState,
   useTheme,
   useTogglePlayerPin,

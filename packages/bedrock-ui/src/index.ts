@@ -97,6 +97,19 @@ export { default as Breadcrumb } from "./components/Breadcrumb";
 export type { BreadcrumbItem } from "./components/Breadcrumb";
 export { default as AppFooter } from "./components/AppFooter";
 export * from "./components/EmptyState";
+export {
+  SortableGrid,
+  SortableItem,
+  useSortableGrid,
+  SORTABLE_INSTRUCTIONS,
+} from "./components/dnd/SortableGrid";
+export type {
+  SortableGridProps,
+  SortableItemProps,
+  SortableItemDomProps,
+  UseSortableGridOptions,
+  UseSortableGridResult,
+} from "./components/dnd/SortableGrid";
 // `ThemeProvider` mounts this already; exported for a host that opts out with
 // `toaster={false}` and places its own, and re-exported `toast` so a consumer
 // does not have to depend on `sonner` directly to raise one.
