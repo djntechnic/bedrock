@@ -110,7 +110,6 @@ docs/reference/punchlists/
 
 # Deprecated/pre-eviction directory guards (prevent accidental re-commit via git add -A)
 docs/punchlists/
-docs/archive/
 docs/artifacts/
 docs/screenshots/
 docs/working files/

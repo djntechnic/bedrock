@@ -11,16 +11,16 @@ from api.routes import ROUTERS, PREFIX
 import api.domain  # noqa: F401 — registrations are import side effects
 
 app = create_app(
-    title="CollectIt API",
-    version="0.1.0",
+    title="Sample Application API",
+    version="1.0.0",
     routers=[RouterMount(r, prefix=PREFIX) for r in ROUTERS],
-    root_message="CollectIt API is running",
+    root_message="Application API is running",
 )
 ```
 
 That is the whole entry point. Before this existed, the reference for it was
-`packages/bedrock-api/tests/conftest.py::build_app()` — a fixture, which two
-consumers copied and then drifted from independently. The fixture now *calls*
+`packages/bedrock-api/tests/conftest.py::build_app()` — a fixture, which consumer
+applications previously duplicated and drifted from. The fixture now *calls*
 `create_app()`, so the reference and the implementation cannot disagree.
 
 ## What it does, in order

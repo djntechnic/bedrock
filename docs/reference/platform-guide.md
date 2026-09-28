@@ -6,7 +6,9 @@ Bedrock is a foundational application framework providing standardized, non-busi
 
 ### The Core Platform Invariant
 
-Bedrock contains **zero business domain logic or vocabulary**. There are no cards, no listings, no players, no teams, no leagues, and no pricing concepts within this repository. 
+Bedrock contains **zero business domain logic or vocabulary**. There are no
+product listings, transactions, or application-specific entity tables within
+this repository. 
 
 **The Boundary Rule / Test:**
 *A backend service or endpoint belongs to the consumer app if and only if it accesses application-specific tables.*
@@ -16,17 +18,17 @@ If a service operates exclusively against platform tables (such as `app_grid_set
 
 Bedrock is designed for absolute consumer independence. The platform must always be able to boot and operate with zero registered domain contributions. All extension points degrade gracefully to safe defaults. A Bedrock application with no domain specific logic registered still boots successfully and presents a functional admin panel.
 
-## 2. The Repository Ecosystem
+## 2. The Repository Ecosystem & Architecture
 
-The Bedrock ecosystem currently consists of one upstream foundation repository and two distinct consumer applications. 
+Bedrock provides a foundation for full-stack applications through two tightly-coupled packages:
 
-*   **Monorepo Upstream:** `djntechnic/bedrock` produces two primary artifacts: `bedrock-api` (Python/FastAPI) and `@djntechnic/bedrock-ui` (React/TypeScript).
-*   **Consumer 1:** `djntechnic/MLBTracker` is the historical origin of the extracted platform. It operates within the baseball analytics domain, dealing with rankings, players, rosters, and transactions.
-*   **Consumer 2:** `djntechnic/CollectIt` operates in the collectibles marketplace domain (cards, listings, marketplace integrations). Its existence proves the complete decoupling of the platform from its baseball origins.
+*   **Platform Backend:** `bedrock-api` (Python/FastAPI) provides data access, authentication, dynamic grid configurations, migration orchestration, and platform audit tooling.
+*   **Platform Frontend:** `@djntechnic/bedrock-ui` (React/TypeScript) provides the DataGrid engine, administrative consoles, command palette, navigation shells, and token-driven design system.
+*   **Consumer Applications:** Independent host applications integrate Bedrock's backend and frontend packages via git release tags, registering domain-specific models, routers, and UI components through platform extension points.
 
-### Extraction Background
+### Platform Decoupling & Shared Infrastructure
 
-Bedrock was born from the need to eliminate code duplication across consumers. As a second application required the same grid engine, authentication stack, and admin console as MLBTracker, these shared abstractions were extracted into the Bedrock platform. This ensures bug fixes, security patches, and platform enhancements are made once and distributed to all consumer applications seamlessly.
+Bedrock standardizes core full-stack infrastructure into a unified foundation. By encapsulating grid operations, authentication, RBAC, schema drift detection, and administration into reusable platform packages, bug fixes, security updates, and performance enhancements are applied once and distributed consistently across all consumer applications.
 
 ## 3. Change Evaluation Rubric & Decision Framework
 
@@ -49,7 +51,7 @@ Avoid premature generalization. If a capability is currently only needed by one 
 
 ### Extension Point Selection Matrix
 
-When Bedrock requires application knowledge, it exposes an extension point. There are two primary kinds of extension points, plus a variation for early boot sequences. 
+When Bedrock requires application knowledge, it exposes an extension point. There are two primary kinds of extension points, plus a variation for early boot sequences.
 
 | Kind | Purpose | Behavior | Resolution | Example |
 | :--- | :--- | :--- | :--- | :--- |
@@ -121,11 +123,11 @@ To successfully compile the TypeScript source provided by Bedrock, consumers mus
 
 ### The Dual Pin Rule
 
-Because Bedrock provides both backend and frontend artifacts, both must be pinned to the exact same git release tag simultaneously. `bedrock-api` (in `requirements.txt`) and `@djntechnic/bedrock-ui` (in `frontend/package.json`) must always match (e.g., `v0.8.1`). 
+Because Bedrock provides both backend and frontend artifacts, both must be pinned to the exact same git release tag simultaneously. `bedrock-api` (in `requirements.txt`) and `@djntechnic/bedrock-ui` (in `frontend/package.json`) must always match (e.g., `<release-tag>`).
 
 ### Repo-Root NPM Layout
 
-The Bedrock `package.json` resides at the repository root, not inside `packages/bedrock-ui/`. This is because npm cannot install from a git subdirectory. The `exports` map points to `packages/bedrock-ui/dist/`, which is built dynamically at install time via the `prepare` script. 
+The Bedrock `package.json` resides at the repository root, not inside `packages/bedrock-ui/`. This is because npm cannot install from a git subdirectory. The `exports` map points to `packages/bedrock-ui/dist/`, which is built dynamically at install time via the `prepare` script.
 
 ### Install Gotchas
 
@@ -144,24 +146,24 @@ Releases always happen in Bedrock first, cascading to consumers:
 1.  Bedrock PR is merged to `master`.
 2.  The `/cut-release <tag>` command generates release notes, explicitly including a `## For consumers` adoption section.
 3.  The git tag is pushed using the full 40-char SHA.
-4.  The GitHub Action `.github/workflows/cascade.yml` automatically opens `cascade:pending` issues in CollectIt and MLBTracker.
+4.  The GitHub Action `.github/workflows/cascade.yml` automatically opens `cascade:pending` issues in registered downstream consumer applications.
 5.  Consumers run `/bump-bedrock-pin <tag>` and resolve the adoption issues as either `boarded` or `declined-with-reason`.
 
 ## 8. Consumer Profiles & Divergence Matrix
 
-While Bedrock standardizes infrastructure, consumers utilize its features differently based on their domains.
+While Bedrock standardizes infrastructure, consumers utilize its features differently based on their operational profiles.
 
-| Capability / Feature | CollectIt | MLBTracker | Notes |
+| Capability / Feature | Profile A (E-Commerce / Catalog) | Profile B (Time-Series / Analytics) | Notes |
 | :--- | :--- | :--- | :--- |
-| **Domain** | Collectibles Marketplace | Baseball Analytics | Proves multi-domain platform decoupling. |
-| **Current Season Resolver** | Omitted | Registered | CollectIt has no season concept; degrades safely to current year. |
-| **Dashboard Pinning** | Omitted | Registered | CollectIt lacks a dashboard; omits `registerDashboardPinHost()`. |
-| **Storage Provider** | App-Local (R2) | Bedrock | CollectIt requires S3/R2 listing capabilities not in Bedrock's protocol ([`docs/object-storage.md`](object-storage.md), [`docs/media.md`](media.md)). |
-| **Extraction Status** | Fully Decoupled | Fully Decoupled | Legacy MLBTracker artifacts (e.g. `collector` role) have been scrubbed. |
+| **Domain Archetype** | Transactional marketplace, item inventory | Longitudinal data, seasons/campaigns | Illustrates multi-profile platform decoupling. |
+| **Seasonal Resolver** | Omitted | Registered | Archetype A has no season concept; degrades safely to calendar year. |
+| **Dashboard Pinning** | Omitted | Registered | Archetype A uses direct list views; omits `registerDashboardPinHost()`. |
+| **Storage Provider** | App-Local / Custom S3 | Bedrock Default Media Provider | Specialized storage needs can plug in custom providers ([`docs/object-storage.md`](object-storage.md), [`docs/media.md`](media.md)). |
+| **Platform Coupling** | Fully Decoupled | Fully Decoupled | Clean architectural separation without domain leak. |
 
 ### "Absence as a Feature"
 
-CollectIt intentionally omits the `current_season` and `registerDashboardPinHost()` registrations. Since CollectIt has no dashboard, registering the pin host would expose UI toggles that do nothing visible. The platform is designed such that the absence of these registrations is handled gracefully—the feature is simply off. Do not "fix" this by adding dummy registrations.
+A consumer application may intentionally omit optional extension point registrations such as custom season resolvers or `registerDashboardPinHost()`. If an application has no dashboard surface, registering a dashboard pin host would expose UI toggles that have no target surface. The platform is intentionally architected so that the absence of these optional registrations is handled gracefully—the feature is simply disabled. Never add dummy registrations to satisfy an unused platform hook.
 
 ## 9. Guardrails, Common Pitfalls & Audit Gates
 
