@@ -55,7 +55,7 @@ function Test-CleanWorkingTree {
 }
 
 function Get-LatestReleaseTag {
-    git fetch --tags origin | Out-Null
+    git fetch --tags --force origin | Out-Null
     $tags = git tag --list "v*.*.*" --sort=-v:refname
     if (-not $tags) {
         throw "No existing vMAJOR.MINOR.PATCH tag found to compute a baseline from."
@@ -65,6 +65,10 @@ function Get-LatestReleaseTag {
 
 function Invoke-GraphQLDeltaQuery {
     param([Parameter(Mandatory)] [string]$BaselineTag)
+
+    $deltaPrNumbers = git log "$BaselineTag..HEAD" --oneline |
+        Select-String -Pattern '\(#(\d+)\)' |
+        ForEach-Object { [int]$_.Matches.Groups[1].Value }
 
     $query = @'
 query($owner: String!, $repo: String!) {
@@ -82,7 +86,41 @@ query($owner: String!, $repo: String!) {
 }
 '@
     $raw = gh api graphql -f query=$query -f owner="djntechnic" -f repo="bedrock" | ConvertFrom-Json
-    return $raw.data.repository.pullRequests.nodes
+    $nodes = @($raw.data.repository.pullRequests.nodes)
+
+    $filteredNodes = if ($deltaPrNumbers) {
+        @($nodes | Where-Object { $_.number -in $deltaPrNumbers })
+    } else {
+        @()
+    }
+
+    $normalizedPrs = @()
+    foreach ($node in $filteredNodes) {
+        $labels = @($node.labels.nodes | ForEach-Object { $_.name })
+        $issues = @($node.closingIssuesReferences.nodes | ForEach-Object { $_.number })
+        $normalizedPrs += [pscustomobject]@{
+            Number        = $node.number
+            Title         = $node.title
+            Body          = $node.body
+            Labels        = $labels
+            ClosingIssues = $issues
+        }
+    }
+    return $normalizedPrs
+}
+
+function Sync-VersionManifests {
+    param([Parameter(Mandatory)] [string]$Version)
+
+    $rawVersion = if ($Version.StartsWith("v")) { $Version.Substring(1) } else { $Version }
+
+    $pkgJson = Get-Content package.json -Raw
+    $pkgJson = $pkgJson -replace '("version"\s*:\s*)"[^"]+"', "`$1`"$rawVersion`""
+    Set-Content package.json -Value $pkgJson -NoNewline
+
+    $pyproject = Get-Content packages/bedrock-api/pyproject.toml -Raw
+    $pyproject = $pyproject -replace '(?m)^(version\s*=\s*)"[^"]+"', "`$1`"$rawVersion`""
+    Set-Content packages/bedrock-api/pyproject.toml -Value $pyproject -NoNewline
 }
 
 function Invoke-PreTagGates {
@@ -95,6 +133,10 @@ function Invoke-PreTagGates {
     Write-Host "==> Gate: s012_audit_pins" -ForegroundColor Cyan
     python scripts/audit/s012_audit_pins.py --root .
     if ($LASTEXITCODE -ne 0) { throw "s012_audit_pins failed (exit $LASTEXITCODE)" }
+
+    Write-Host "==> Gate: audit_release_version" -ForegroundColor Cyan
+    python -m bedrock.tools.audit_release_version $Version --repo-root .
+    if ($LASTEXITCODE -ne 0) { throw "audit_release_version failed (exit $LASTEXITCODE)" }
 
     Write-Host "==> Gate: pytest" -ForegroundColor Cyan
     Push-Location packages/bedrock-api
@@ -148,7 +190,7 @@ function Publish-GitHubRelease {
 
 # --- Main flow -------------------------------------------------------------
 
-$tagName = if ($TargetVersion) { $TargetVersion } else { $null }
+$tagName = if ($TargetVersion) { if ($TargetVersion -match '^v') { $TargetVersion } else { "v$TargetVersion" } } else { $null }
 $remoteTagExists = if ($tagName) { [bool](git ls-remote --tags origin $tagName) } else { $false }
 $remoteReleaseExists = $false
 if ($remoteTagExists) {
@@ -168,8 +210,8 @@ Test-CleanWorkingTree
 $baselineTag = Get-LatestReleaseTag
 $mergedPrs = Invoke-GraphQLDeltaQuery -BaselineTag $baselineTag
 
-$labelSets = $mergedPrs | ForEach-Object { $_.labels.nodes | ForEach-Object { $_.name } }
-$resolution = Resolve-TargetVersion -BaselineTag $baselineTag -PrLabelSets $labelSets -ExplicitVersion $TargetVersion -Force:$Force
+$labelSets = @($mergedPrs | ForEach-Object { ,($_.Labels) })
+$resolution = Resolve-TargetVersion -BaselineTag $baselineTag -PrLabelSets $labelSets -ExplicitVersion $tagName -Force:$Force
 if ($resolution.Halted) {
     throw $resolution.HaltReason
 }
@@ -177,7 +219,7 @@ $version = $resolution.Version
 
 $consumers = (Get-Content bedrock.toml -Raw | Select-String -Pattern 'consumers\s*=\s*\[(.*?)\]').Matches[0].Groups[1].Value `
     -split "," | ForEach-Object { $_.Trim().Trim('"') }
-$issueNumbers = $mergedPrs | ForEach-Object { $_.closingIssuesReferences.nodes } | ForEach-Object { $_.number } | Sort-Object -Unique
+$issueNumbers = @($mergedPrs | ForEach-Object { $_.ClosingIssues } | Sort-Object -Unique)
 
 $entryResult = Build-ChangelogEntry -MergedPrs $mergedPrs -TargetVersion $version -Consumers $consumers -ResolvedIssueNumbers $issueNumbers
 if ($entryResult.Halted -and -not $Force) {
@@ -188,6 +230,7 @@ $changelogPath = "CHANGELOG.md"
 $existing = Get-Content $changelogPath -Raw
 Set-Content -Path $changelogPath -Value ($entryResult.Text + "`n`n" + $existing) -NoNewline
 
+Sync-VersionManifests -Version $version
 Invoke-PreTagGates -Version $version
 
 if ($PSCmdlet.ShouldProcess("origin/master and tag $version", "commit, tag, and push")) {
