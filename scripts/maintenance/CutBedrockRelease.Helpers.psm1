@@ -8,7 +8,7 @@ function Resolve-TargetVersion {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)] [string]$BaselineTag,
-        [Parameter(Mandatory)] [array]$PrLabelSets,
+        [Parameter(Mandatory)] [AllowEmptyCollection()] [array]$PrLabelSets,
         [string]$ExplicitVersion,
         [switch]$Force
     )

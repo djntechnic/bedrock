@@ -43,6 +43,14 @@ Describe "Resolve-TargetVersion" {
         $result.Halted | Should -Be $false
         $result.Version | Should -Be "v0.10.4"
     }
+
+    It "bumps patch when PrLabelSets is an empty collection" {
+        $labels = @()
+        $result = Resolve-TargetVersion -BaselineTag "v0.10.3" -PrLabelSets $labels
+        $result.Version | Should -Be "v0.10.4"
+        $result.Segment | Should -Be "patch"
+        $result.Halted | Should -Be $false
+    }
 }
 
 Describe "ConvertTo-PromotedReleaseBody" {
