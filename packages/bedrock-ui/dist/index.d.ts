@@ -73,6 +73,8 @@ export { default as Breadcrumb } from "./components/Breadcrumb";
 export type { BreadcrumbItem } from "./components/Breadcrumb";
 export { default as AppFooter } from "./components/AppFooter";
 export * from "./components/EmptyState";
+export { SortableGrid, SortableItem, useSortableGrid, SORTABLE_INSTRUCTIONS, } from "./components/dnd/SortableGrid";
+export type { SortableGridProps, SortableItemProps, SortableItemDomProps, UseSortableGridOptions, UseSortableGridResult, } from "./components/dnd/SortableGrid";
 export { Toaster } from "./components/ui/sonner";
 export type { PlatformToasterProps } from "./components/ui/sonner";
 export { toast } from "sonner";
