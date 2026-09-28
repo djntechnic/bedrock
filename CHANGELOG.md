@@ -1,3 +1,23 @@
+## v0.11.1 - 2026-09-28
+
+### Breaking Changes
+None
+
+### Fixed
+None
+
+### Added / Changed
+- **[#110] feat(ui): add accessible SortableGrid drag-and-drop reorder primitive**
+
+### Platform Maintenance
+- **[#111] fix(release): resolve delta filtering, empty label binding, and manifest sync in release orchestrator**
+- **[#109] docs(plans): complete Phase 5 cross-ecosystem benchmark and landings**
+
+### For consumers
+- **Resolves Upstream Issues:** None
+- **Target Downstream Repositories:** `djntechnic/CollectIt`, `djntechnic/MLBTracker`
+- **Expected Pin Migration:** `/bump-bedrock-pin v0.11.1`
+
 # Changelog
 
 Every release carries a `## For consumers` section listing what to adopt and
