@@ -8,7 +8,7 @@ assignees: []
 
 <!--
   CANONICAL DEFECT WORK-ITEM CONTRACT.
-  
+
   Governed by: dev-doctrine/issue-triage & systematic-debugging (§S014).
   Title convention: [Phase Key].[Requirement Block] Concise Defect Summary
     e.g. "[P5.02] Fix sqlite date serialization in audit log middleware"
@@ -62,7 +62,7 @@ assignees: []
   The minimal, direct root-cause fix. Fix at source, never patch symptoms.
 -->
 
-- **Fix Hypothesis:** 
+- **Fix Hypothesis:**
 - **Platform vs Consumer Impact:** <!-- Is this an internal fix behind stable export or a breaking surface change? -->
 
 ## Files Impacted & Test Specification (Phase 4)
