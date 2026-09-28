@@ -1,13 +1,12 @@
 <!-- CLAUDE.md is the navigational index. Hard ceiling: 200 lines.
      New long-form content goes under docs/ and is referenced from here —
-     never inlined. Mirrors the convention used by the consumer repos
-     (MLBTracker, CollectIt). -->
+     never inlined. Mirrors the convention used by consumer repos. -->
 
 # bedrock — Claude Code Project
 
 ## What this is
 
-The reusable application platform behind `MLBTracker` and `CollectIt`: a
+A domain-agnostic, reusable application platform: a
 config-driven grid engine, the admin Grid Editor, an auth shell, app config,
 schema drift detection, and the admin API. It ships as **two packages installed
 by git tag**, not from a registry.
@@ -22,7 +21,7 @@ on two different refs has a backend and frontend that disagree about what they
 are, and it fails at install time, not review time.
 
 **The npm manifest lives at the repo root**, not in `packages/bedrock-ui/` — npm
-cannot install a package from a subdirectory (see v0.1.1). `vitest.config.ts`
+cannot install a package from a subdirectory. `vitest.config.ts`
 sits at the root for the same reason: the two need to agree about where
 `node_modules` is.
 
@@ -30,8 +29,8 @@ sits at the root for the same reason: the two need to agree about where
 
 ## The platform boundary
 
-**bedrock holds no business domain.** Nothing here knows what a baseball player
-or a trading card is. Everywhere the platform needs application knowledge it
+**bedrock holds no business domain.** Nothing here knows what an application's
+specific business entities are. Everywhere the platform needs application knowledge it
 exposes an extension point and the host application supplies the answer.
 
 The test, stated from the consumer side: *a backend file belongs to the
@@ -167,7 +166,7 @@ never carries over.
 
 | Command | Usage | Description |
 | ------- | ----- | ----------- |
-| `/cut-release` | `/cut-release v0.6.0` | Move both versions, CHANGELOG, gates, tag, push, verify. |
+| `/cut-release` | `/cut-release <tag>` | Move both versions, CHANGELOG, gates, tag, push, verify. |
 
 ## GitHub Repo
 

@@ -1,11 +1,7 @@
 # Media storage
 
-Attach files to anything, hold them for review, and put the bytes wherever the
-deployment says. Plan F4.
-
-Generalised out of MLBTracker's `photo_service` — good work bound to one table:
-every function took a `collection_card_id` and resolved ownership through
-`_owner_of_card`. What was actually generic is here, keyed by
+Attach files to any application entity, manage approval states, and store bytes across
+configurable storage providers. All media operations are keyed generically by
 `(entity_type, entity_id)`.
 
 ## Two layers
@@ -18,14 +14,14 @@ whether a human has approved it. Most callers want the second.
 from bedrock.services import media_service as media
 
 asset = media.attach_media(
-    "collection_card", card_id, file_bytes, "front.jpg",
+    "user_profile", profile_id, file_bytes, "avatar.jpg",
     owner_id=user.user_id, submitted_by_user_id=user.user_id,
 )
 # → status "pending"
 
 media.approve([asset.media_id], reviewed_by_user_id=admin.user_id)
 
-for asset in media.list_for_entity("collection_card", card_id):
+for asset in media.list_for_entity("user_profile", profile_id):
     ...  # approved only, unless you ask otherwise
 ```
 

@@ -5,9 +5,10 @@ key back. That is the right surface for "a user uploaded a photo, put it
 somewhere", and it is what `media_service` calls.
 
 It is the wrong surface for an application that owns its own key space.
-CollectIt's image keys are `{sku}/{seq}.jpg` — minted by the application,
-immutable for the life of a listing, and the reason its `immutable` cache
-header is honest. A backend that mints its own key cannot express that at all.
+When an application manages explicit structured keys (such as `{item_id}/{seq}.jpg`)
+— minted by the application, immutable for the life of an asset, and backed by
+HTTP `immutable` cache-control headers — a backend that generates opaque random IDs
+cannot satisfy that requirement.
 
 So the capability is widened by a **second protocol**, not a wider first one.
 
@@ -15,11 +16,11 @@ So the capability is widened by a **second protocol**, not a wider first one.
 from bedrock.storage import active_object_store
 
 store = active_object_store()
-store.put("SKU-1/01.jpg", jpeg, content_type="image/jpeg",
+store.put("ITEM-1/01.jpg", jpeg, content_type="image/jpeg",
           cache_control="public, max-age=31536000, immutable")
-store.list_prefix("SKU-1/")
-store.delete_many(["SKU-1/01.jpg", "SKU-1/02.jpg"])
-store.verify_public("SKU-1/01.jpg")
+store.list_prefix("ITEM-1/")
+store.delete_many(["ITEM-1/01.jpg", "ITEM-1/02.jpg"])
+store.verify_public("ITEM-1/01.jpg")
 ```
 
 `ObjectStore` extends `StorageProvider`, so an object store is still a storage

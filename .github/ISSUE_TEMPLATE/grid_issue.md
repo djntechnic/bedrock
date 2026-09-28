@@ -8,7 +8,7 @@ assignees: []
 
 ## Summary & Impact
 - **Grid Identifier:** `<grid_id>`
-- **Consumer Application:** `Bedrock Core` | `MLBTracker` | `CollectIt`
+- **Consumer Application:** `Bedrock Core` | `<Host Application Name>`
 - **Affected Surface:** Admin Grid Editor | Presentational Grid | DataGrid Primitive
 - **Severity:** Blocker | Critical | Normal | Low
 

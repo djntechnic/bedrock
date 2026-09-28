@@ -231,5 +231,5 @@ identical; only the spelling differs, and only because Python forces it.
    have real answers here and neither is guessable from the signature.
 4. Ship a test that the platform works with nothing registered. That property —
    not the happy path — is what makes the package reusable rather than
-   MLBTracker with the names filed off.
+   a domain-specific application with the names filed off.
 5. Add a row to the tables above.

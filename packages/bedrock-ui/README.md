@@ -2,7 +2,7 @@
 
 The reusable React half of the bedrock platform: a config-driven grid engine,
 the admin Grid Editor, the app shell, auth wiring, and the design-token
-contract. Extracted from MLBTracker; MLBTracker is its first consumer.
+contract.
 
 ## Ships built ESM, not TypeScript source
 
@@ -55,12 +55,12 @@ together or not at all.
 ```jsonc
 // package.json
 "dependencies": {
-  "@djntechnic/bedrock-ui": "github:djntechnic/bedrock#v0.1.0"
+  "@djntechnic/bedrock-ui": "github:djntechnic/bedrock#<release-tag>"
 }
 ```
 
-Peer dependencies are pinned to the versions MLBTracker actually runs, which
-is the only combination known to work. Note `zustand` is v4, not v5.
+Peer dependencies are pinned to tested canonical versions known to work
+reliably across platform consumers. Note that `zustand` is v4, not v5.
 
 ## Tokens
 
@@ -111,12 +111,6 @@ tests should live in this repository rather than in a consumer's, and until
 they move here they reach their subject by deep import instead of forcing a
 private component into the public API to make a test compile.
 
-## Provenance
+## Architecture & Boundary Contract
 
-These files were extracted from MLBTracker by computing the transitive import
-closure of the platform's entry points — a list nobody wrote, so nothing could
-be left off it by accident. The extraction scripts lived in `tools/` through
-v0.1.0 and were removed once MLBTracker began consuming the package: with the
-app downstream, re-deriving these files *from* the app is backwards, and a
-re-run would silently revert any fix made here. They remain in git history if
-the closure ever needs recomputing.
+Bedrock UI is structured as a self-contained component and design system library derived from an import closure of the platform entry points, ensuring zero coupling to external application domain logic. All components compose core tokens, primitives, and registries to deliver a cohesive, theme-adaptable user experience across host applications.

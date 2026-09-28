@@ -1,6 +1,6 @@
 # bedrock
 
-A reusable full-stack application platform, extracted from MLBTracker.
+A domain-agnostic, reusable full-stack application platform.
 
 Provides a config-driven grid backend and React DataGrid engine, JWT auth with roles and per-user module
 gating, DB-backed application config, a schema catalog with boot-time drift
@@ -9,10 +9,10 @@ of it.
 
 ## Packages
 
-| Package | Version | Scope |
-| --- | --- | --- |
-| `packages/bedrock-api` | v0.10.0 | FastAPI application platform: grid config, auth/RBAC, schema catalog, migrations, health, media, storage providers, ecosystem standards audits (`bedrock.tools`) |
-| `packages/bedrock-ui` | v0.10.0 | Reusable React UI platform: DataGrid engine, admin Grid Editor, auth shell, navigation rail, design tokens, command palette |
+| Package | Scope |
+| --- | --- |
+| `packages/bedrock-api` | FastAPI application platform: grid config, auth/RBAC, schema catalog, migrations, health, media, storage providers, ecosystem standards audits (`bedrock.tools`) |
+| `packages/bedrock-ui` | Reusable React UI platform: DataGrid engine, admin Grid Editor, auth shell, navigation rail, design tokens, command palette |
 
 ## Assembling an application
 
@@ -70,7 +70,7 @@ at `AUTH_FLOW_PATHS`, which is also what the backend builds the links from.
 
 Every extension point degrades sensibly when nothing is registered, so a
 brand-new application boots before it has any data. That property is what makes
-the package genuinely reusable rather than MLBTracker with the names filed off
+the platform genuinely domain-agnostic and reusable across any application domain
 — and it is verified, not assumed.
 
 Full contract, including which kind to reach for and why the failure policy
@@ -92,7 +92,7 @@ reaches half the databases.
 
 ## Platform Standards & Audit Tooling
 
-Platform standards (§S001–§S012) are defined in [`docs/standards/`](docs/standards/) and enforced across repositories via 1:1 automated audit tooling:
+Platform standards (§S001–§S015, §S100) are defined in [`docs/standards/`](docs/standards/) and enforced across repositories via 1:1 automated audit tooling:
 
 ```bash
 # Run all platform audits
@@ -149,14 +149,14 @@ npm run build
 
 ## Consuming it
 
-Both packages move together in lockstep:
+Both packages move together in lockstep referenced by release tag:
 
 ```
-bedrock-api @ git+https://github.com/djntechnic/bedrock.git@v0.10.0#subdirectory=packages/bedrock-api
+bedrock-api @ git+https://github.com/djntechnic/bedrock.git@<release-tag>#subdirectory=packages/bedrock-api
 ```
 
 ```json
-"@djntechnic/bedrock-ui": "github:djntechnic/bedrock#v0.10.0"
+"@djntechnic/bedrock-ui": "github:djntechnic/bedrock#<release-tag>"
 ```
 
 Git tags rather than a package registry: real version pinning, dual-pin lockstep governance (§S012), and zero publishing infrastructure.

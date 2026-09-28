@@ -132,8 +132,8 @@ them. A consumer's own domains — whatever business vocabulary its extension
 points serve — take their own `<domain>_` prefix, chosen by the consumer and
 disjoint from the reserved list above.
 Consumer applications must use a distinct, documented domain prefix for their
-own tables (e.g. `col_` for CollectIt, `mlb_` for MLBTracker) — never one of
-the four platform prefixes above. A collision between a consumer's table name
+own tables (e.g. `app_`, `store_`, `analytics_`) — never one of
+the platform prefixes above. A collision between a consumer's table name
 and a platform table name is a bug in the consumer's schema, not a reason to
 rename the platform object.
 
