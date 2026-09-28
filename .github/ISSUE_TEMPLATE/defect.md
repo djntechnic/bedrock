@@ -28,7 +28,7 @@ assignees: []
 
 - **Priority:** <!-- P1 Critical · P2 Major · P3 Normal · P4 Minor -->
 - **Affected Surface:** <!-- bedrock-api, @djntechnic/bedrock-ui, schema migrations, admin engine -->
-- **Consumer Blast Radius:** <!-- Will downstream apps (CollectIt, MLBTracker) fail on install, build, or runtime? -->
+- **Consumer Blast Radius:** <!-- Will downstream consumer applications fail on install, build, or runtime? -->
 
 ## Systematic Reproduction
 
