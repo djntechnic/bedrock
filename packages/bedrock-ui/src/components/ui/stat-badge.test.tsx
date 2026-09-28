@@ -67,7 +67,7 @@ describe("StatBadge", () => {
         <StatBadge
           value="stat"
           variant="negative"
-          className="bg-red-500 text-white"
+          className="bg-primary text-primary-foreground"
         />,
       );
       const badge = screen.getByText("stat");
