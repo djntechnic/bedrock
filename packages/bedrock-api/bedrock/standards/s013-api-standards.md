@@ -17,7 +17,7 @@ Standard S013 establishes the non-negotiable architecture, validation, security,
 
 ## Non-Negotiable Invariants
 
-1. **Uniform Prefixing & Resource Naming:** All versioned HTTP endpoints must mount under `/api/v1/...`. URL paths must use lowercase kebab-case for resource collections (e.g., `/api/v1/user-preferences`, `/api/v1/collection/cards`). Verbs are prohibited in resource paths except for specialized state machine transitions or action controllers (e.g., `/api/v1/auth/change-password`, `/api/v1/transactions/{id}/complete`).
+1. **Uniform Prefixing & Resource Naming:** All versioned HTTP endpoints must mount under `/api/v1/...`. URL paths must use lowercase kebab-case for resource collections (e.g., `/api/v1/user-preferences`, `/api/v1/items`). Verbs are prohibited in resource paths except for specialized state machine transitions or action controllers (e.g., `/api/v1/auth/change-password`, `/api/v1/transactions/{id}/complete`).
 2. **Canonical Response Envelope:** All application and platform endpoints must return data encapsulated in the canonical `ApiResponse[T]` schema:
    ```json
    {
@@ -61,56 +61,56 @@ from bedrock.schemas.base import ApiResponse
 from bedrock.dependencies import require_role
 from bedrock.services import user_service as _us
 
-router = APIRouter(prefix="/api/v1/collection", tags=["collection"])
+router = APIRouter(prefix="/api/v1/items", tags=["items"])
 
-class CardCreatePayload(BaseModel):
-    card_name: str = Field(..., min_length=1, max_length=200, description="Canonical player or subject card name")
-    card_number: str = Field(..., max_length=50, description="Set card checklist identifier")
+class ItemCreatePayload(BaseModel):
+    item_name: str = Field(..., min_length=1, max_length=200, description="Canonical item or resource name")
+    item_code: str = Field(..., max_length=50, description="Catalog item identifier")
     condition_score: float | None = Field(default=None, ge=1.0, le=10.0, description="Numerical condition grade (1-10)")
 
-class CardResponse(BaseModel):
-    collection_card_id: int
-    card_name: str
-    card_number: str
+class ItemResponse(BaseModel):
+    item_id: int
+    item_name: str
+    item_code: str
     owner_id: int
 
 @router.post(
-    "/cards",
-    response_model=ApiResponse[CardResponse],
+    "",
+    response_model=ApiResponse[ItemResponse],
     status_code=status.HTTP_201_CREATED,
-    summary="Create a new collection card",
-    description="Registers a new card entry into the authenticated caller's collection. The owner_id is resolved directly from caller credentials.",
+    summary="Create a new item",
+    description="Registers a new item entry into the authenticated caller's workspace. The owner_id is resolved directly from caller credentials.",
 )
-def create_card(
-    payload: CardCreatePayload,
+def create_item(
+    payload: ItemCreatePayload,
     current_user: _us.UserRecord = Depends(require_role("member")),
-) -> ApiResponse[CardResponse]:
-    card = _card_service.create_user_card(
+) -> ApiResponse[ItemResponse]:
+    item = _item_service.create_user_item(
         owner_id=current_user.user_id,
-        card_name=payload.card_name,
-        card_number=payload.card_number,
+        item_name=payload.item_name,
+        item_code=payload.item_code,
     )
-    return ApiResponse(status="ok", data=CardResponse.model_validate(card))
+    return ApiResponse(status="ok", data=ItemResponse.model_validate(item))
 ```
 
 ### Python — Row-Level Existence Hiding:
 
 ```python
 @router.get(
-    "/cards/{card_id}",
-    response_model=ApiResponse[CardResponse],
-    summary="Retrieve single card by identifier",
-    description="Fetches card details. Returns 404 if the card does not exist OR if it belongs to another user.",
+    "/{item_id}",
+    response_model=ApiResponse[ItemResponse],
+    summary="Retrieve single item by identifier",
+    description="Fetches item details. Returns 404 if the item does not exist OR if it belongs to another user.",
 )
-def get_card(
-    card_id: int,
+def get_item(
+    item_id: int,
     current_user: _us.UserRecord = Depends(require_role("member")),
-) -> ApiResponse[CardResponse]:
-    card = _card_service.get_user_card(card_id=card_id, owner_id=current_user.user_id)
-    if card is None:
+) -> ApiResponse[ItemResponse]:
+    item = _item_service.get_user_item(item_id=item_id, owner_id=current_user.user_id)
+    if item is None:
         # 404 existence hiding: never emit 403 to prevent probing ID sequences
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Card not found")
-    return ApiResponse(status="ok", data=CardResponse.model_validate(card))
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item not found")
+    return ApiResponse(status="ok", data=ItemResponse.model_validate(item))
 ```
 
 ### TypeScript/React — Admin Spec Panel Consumption:

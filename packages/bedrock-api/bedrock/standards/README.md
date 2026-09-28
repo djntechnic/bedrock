@@ -68,7 +68,7 @@ consumer's own `docs/standards/`, verbatim, alongside the consumer's own
 4. **Register in Orchestrator:** Add `("s0##", s0##_audit_[name])` to `AUDIT_MODULES` in `run_all.py`.
 5. **Sync Invariant:** Update `_is_canonical` range in `sync_standards.py`.
 6. **Tests & Docs:** Add unit test in `packages/bedrock-api/tests/` and register in the index table above.
-7. **Deploy:** Deploy updates to `bedrock-ai-kit`, `CollectIt`, and `MLBTracker`.
+7. **Deploy:** Deploy updates to `bedrock-ai-kit` and consumer applications.
 
 ### Adding a Consumer Domain Standard (`S101`–`S199`)
 1. Create `docs/standards/s1##-[kebab-name].md` in the consumer repo with `tier: domain`.

@@ -43,7 +43,7 @@ verified invariant in every consumer repository.
 **`requirements.txt` — correct:**
 
 ```
-bedrock-api @ git+https://github.com/djntechnic/bedrock@v0.10.0#subdirectory=packages/bedrock-api
+bedrock-api @ git+https://github.com/djntechnic/bedrock@<release-tag>#subdirectory=packages/bedrock-api
 ```
 
 **`package.json` — correct, same tag:**
@@ -51,7 +51,7 @@ bedrock-api @ git+https://github.com/djntechnic/bedrock@v0.10.0#subdirectory=pac
 ```json
 {
   "dependencies": {
-    "@djntechnic/bedrock-ui": "github:djntechnic/bedrock#v0.10.0"
+    "@djntechnic/bedrock-ui": "github:djntechnic/bedrock#<release-tag>"
   }
 }
 ```
@@ -59,8 +59,8 @@ bedrock-api @ git+https://github.com/djntechnic/bedrock@v0.10.0#subdirectory=pac
 **Violation — tags diverge:**
 
 ```
-requirements.txt:  ...@v0.10.0#subdirectory=packages/bedrock-api
-package.json:      "github:djntechnic/bedrock#v0.9.2"
+requirements.txt:  ...@<release-tag-a>#subdirectory=packages/bedrock-api
+package.json:      "github:djntechnic/bedrock#<release-tag-b>"
 ```
 
 **Python — audit check shape:**

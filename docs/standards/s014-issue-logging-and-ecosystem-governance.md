@@ -13,7 +13,7 @@ cli_command: "python scripts/audit/s014_audit_ledger_freshness.py --root ."
 
 Vague, symptom-only bug reports ("X crashed with error Y") waste engineering capacity by forcing the next contributor or autonomous agent to repeat root-cause discovery from scratch. Furthermore, when issues cross the boundary between platform primitives and consumer applications, uncoordinated tracking results in orphaned workarounds, unadopted upstream fixes, and broken dependency pins.
 
-Standard S014 establishes a closed, rigorous protocol for authoring, triaging, and coordinating work items across Bedrock (`djntechnic/bedrock`), consumer applications (`djntechnic/MLBTracker`, `djntechnic/CollectIt`), and ecosystem tooling (`djntechnic/bedrock-ai-kit`). It separates work-item governance from code modification lifecycles (governed by S006), enforces root-cause investigations before ticket submission, mandates out-of-scope bug decoupling, and formalizes the cross-repository dual-issue protocol.
+Standard S014 establishes a closed, rigorous protocol for authoring, triaging, and coordinating work items across Bedrock (`djntechnic/bedrock`), downstream consumer applications, and ecosystem tooling (`djntechnic/bedrock-ai-kit`). It separates work-item governance from code modification lifecycles (governed by S006), enforces root-cause investigations before ticket submission, mandates out-of-scope bug decoupling, and formalizes the cross-repository dual-issue protocol.
 
 ## Non-Negotiable Invariants
 
@@ -30,7 +30,7 @@ Standard S014 establishes a closed, rigorous protocol for authoring, triaging, a
    - **Phase 4 (Test Specification Contract):** Specify target test file, input scenarios, expected outputs, and edge cases (null, empty, boundary values) to implement before applying the fix.
 3. **Out-of-Scope Defect Isolation Rule:** Any unrelated defect discovered during active task execution that does not block current deliverables must **never be patched inline**. Inline fixes violate one-branch-one-concern (§S006). The defect must be immediately documented and decoupled via `.github/ISSUE_TEMPLATE/out_of_scope_bug.md`, and the active feature branch must proceed without delay. An out-of-scope filing can never be used to bypass a currently failing test in the active PR diff.
 4. **Cross-Repository Dual-Issue Protocol:** When a work item spans domain application code and Bedrock platform primitives:
-   - **Upstream Bedrock Ticket (`djntechnic/bedrock`):** Must be strictly domain-agnostic (zero baseball, collectibles, or domain tables). Tagged with `origin:<repo>` (e.g. `origin:mlbtracker`, `origin:collectit`) and `bug` or `enhancement`. Details impacted platform files in `packages/bedrock-api` or `packages/bedrock-ui`, platform boundary validation, extension point classification (`Registry` vs `Provider` vs `N/A`), and reproduction test contracts.
+   - **Upstream Bedrock Ticket (`djntechnic/bedrock`):** Must be strictly domain-agnostic (zero domain entities or application-specific tables). Tagged with `origin:<repo>` (e.g. `origin:<consumer-repo>`) and `bug` or `enhancement`. Details impacted platform files in `packages/bedrock-api` or `packages/bedrock-ui`, platform boundary validation, extension point classification (`Registry` vs `Provider` vs `N/A`), and reproduction test contracts.
    - **Downstream Application Ticket (`djntechnic/<app>`):** Specifies application-side domain wiring, extension point registration, seed migrations, and test fixtures. Explicitly states `Blocked by djntechnic/bedrock#<id>` and tracks the dual-pin upgrade (`/bump-bedrock-pin <tag>`).
    - **Consumer Ledger Tracking:** The consumer repository must immediately record an entry in `docs/reference/bedrock-issues-to-file.md` containing entry number, Markdown issue link (`[bedrock#<id>](https://...)`), discovery date, symptom, impact, upstream fix required, and applied local workaround.
    - **Ledger Deletion Invariant:** A ledger entry is removed **only** after the upstream Bedrock release tag is published **and** both pins have been upgraded and adopted downstream.
@@ -42,12 +42,12 @@ Standard S014 establishes a closed, rigorous protocol for authoring, triaging, a
 ```markdown
 ## 14. `AppSidebar` ignores `item.tooltip` from dynamic nav settings
 
-- **Status:** Fixed in bedrock v0.9.2.
+- **Status:** Resolved in upstream release.
 - **Found:** 2026-09-05, during punchlist review of menu navigation tooltip overrides.
 - **Symptom:** In `AppSidebar.tsx`, the collapsed rail mode hardcodes `{disabled ? ... : item.label}`, ignoring `item.tooltip`.
 - **Impact:** Custom tooltips configured via `tooltip_override` in `app_nav_item_settings` are omitted from the sidebar.
 - **Fix in bedrock:** In `packages/bedrock-ui/src/components/AppSidebar.tsx`, render `item.tooltip` in collapsed `<TooltipContent>` and pass `title={item.tooltip}` on links.
-- **MLBTracker workaround (applied):** Tooltip overrides remain configured in `app_nav_item_settings`; awaiting upstream Bedrock release to display.
+- **Consumer workaround (applied):** Tooltip overrides remain configured in `app_nav_item_settings`; awaiting upstream Bedrock release to display.
 - **Filed:** [bedrock#75](https://github.com/djntechnic/bedrock/issues/75).
 ```
 
@@ -58,7 +58,7 @@ Standard S014 establishes a closed, rigorous protocol for authoring, triaging, a
 name: Bedrock Defect / Enhancement
 about: Platform issue originating from a consumer repository.
 title: "[<Component>] <Concise Platform Capability or Fix>"
-labels: ["origin:mlbtracker", "type:defect"]
+labels: ["origin:<consumer-repo>", "type:defect"]
 ---
 
 ## Goal
@@ -86,8 +86,8 @@ labels: ["type:enhancement", "bedrock-dependency"]
 
 Adopt upstream Bedrock capability once published.
 
-**Dependency:** Blocked by djntechnic/bedrock#75 (Target Release: v0.9.2).
-**Pin Upgrade:** Requires `/bump-bedrock-pin v0.9.2`.
+**Dependency:** Blocked by djntechnic/bedrock#<id> (Target Release: <release-tag>).
+**Pin Upgrade:** Requires `/bump-bedrock-pin <release-tag>`.
 ```
 
 ## Exceptions & Audit Exemptions

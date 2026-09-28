@@ -58,7 +58,7 @@ carries, and the `### For consumers` schema that drives downstream cascade.
 **Markdown — correct `CHANGELOG.md` version entry:**
 
 ```markdown
-## v0.11.0 - 2026-09-22
+## <version> - YYYY-MM-DD
 
 ### Breaking Changes
 None
@@ -78,14 +78,14 @@ None
 
 ### For consumers
 - **Resolves Upstream Issues:** #101, #104
-- **Target Downstream Repositories:** `djntechnic/CollectIt`, `djntechnic/MLBTracker`
-- **Expected Pin Migration:** `/bump-bedrock-pin v0.11.0`
+- **Target Downstream Repositories:** `<registered-consumer-repositories>`
+- **Expected Pin Migration:** `/bump-bedrock-pin <version>`
 ```
 
 **Violation — missing `Origin / Root Cause` child, wrong section order:**
 
 ```markdown
-## v0.11.0 - 2026-09-22
+## <version> - YYYY-MM-DD
 
 ### Fixed
 - [#101] Fix route collision on wildcard admin paths
