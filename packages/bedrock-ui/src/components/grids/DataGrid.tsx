@@ -260,6 +260,14 @@ export interface DataGridProps<T extends Record<string, any>> {
    */
   onReorderColumns?: (nextOrder: string[]) => void;
   /**
+   * Phase 12 (Issue 117): Controlled or caller-supplied initial column order.
+   * When provided, overrides the default config/preference order.
+   * Useful for grids with dynamic runtime columns (e.g. `prependColumns`
+   * in CollectIt's staging grid) that need to restore a saved order
+   * or allow caller-driven ordering.
+   */
+  columnOrder?: string[];
+  /**
    * Phase 7 B2: render the grid as a widget-shaped embed — suppresses the
    * full `<GridHeader>` toolbar and the `<GridWrapper>` pagination shell.
    * The engine still renders the `<Table>` body with striping/sticky/dense/
@@ -489,6 +497,7 @@ export default function DataGrid<T extends Record<string, any>>({
   selectionOverride,
   selectionOptions,
   onReorderColumns,
+  columnOrder: columnOrderProp,
   isEmbedded = false,
   customToolbar,
   columnVisibilityOverride,
@@ -1094,21 +1103,44 @@ export default function DataGrid<T extends Record<string, any>>({
     [rowIdKey],
   );
 
-  // Phase 5: runtime column order. Seeded from the admin→user merged order
-  // (useTableState's mergeUserGridPreference), then owned by the table so
+  // Phase 12 (Issue 117): Extract non-system column IDs from prependColumns so they
+  // can participate in DnD reordering and column order initialization.
+  const prependColumnIds = useMemo(() => {
+    if (!prependColumns) return [];
+    return prependColumns
+      .map((c) => c.id ?? (c as any).accessorKey)
+      .filter(
+        (id): id is string =>
+          typeof id === "string" && !ENGINE_COLUMN_IDS.has(id),
+      );
+  }, [prependColumns]);
+
+  // Phase 5 / Phase 12 (Issue 117): runtime column order. Seeded from caller-supplied
+  // columnOrder prop when provided, or merged admin/user preference with
+  // caller-supplied prependColumns included. Then owned by the table so
   // DnD reorders apply immediately. Callers that persist admin-editor
   // reorders pass onReorderColumns; end-user reorders always persist via
   // persistColumnOrder regardless of whether that prop is set.
-  const configOrder = mergedColumnOrder;
-  const [columnOrder, setColumnOrder] = useState<string[]>(configOrder);
-  const configOrderJson = JSON.stringify(configOrder);
+  const baseOrder = useMemo(() => {
+    if (columnOrderProp) return columnOrderProp;
+    const missingPrepends = prependColumnIds.filter(
+      (id) => !mergedColumnOrder.includes(id),
+    );
+    return [...missingPrepends, ...mergedColumnOrder];
+  }, [columnOrderProp, prependColumnIds, mergedColumnOrder]);
+
+  const [columnOrder, setColumnOrder] = useState<string[]>(baseOrder);
+  const baseOrderJson = JSON.stringify(baseOrder);
   useEffect(() => {
-    setColumnOrder(configOrder);
+    setColumnOrder(baseOrder);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [configOrderJson]);
+  }, [baseOrderJson]);
   const handleColumnOrderChange = (next: string[]) => {
     setColumnOrder(next);
-    persistColumnOrder(next);
+    // Only persist seeded admin columns to the user preferences API;
+    // dynamic/caller-supplied prepend columns are managed by the caller.
+    const seededColumns = next.filter((colId) => colId in config.columns);
+    persistColumnOrder(seededColumns);
     onReorderColumns?.(next);
   };
 
@@ -1345,7 +1377,10 @@ export default function DataGrid<T extends Record<string, any>>({
                   pinnedSide === "left" ? h.column.getStart("left") : undefined;
                 const pinRight =
                   pinnedSide === "right" ? h.column.getAfter("right") : undefined;
-                const isDataCol = columnOrder.includes(h.column.id);
+                const isDataCol =
+                  columnOrder.includes(h.column.id) &&
+                  !ENGINE_COLUMN_IDS.has(h.column.id) &&
+                  !h.column.id.startsWith("__");
                 return (
                   <SortableTableHead
                     key={h.id}

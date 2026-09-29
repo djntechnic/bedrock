@@ -62,6 +62,7 @@ function DataGrid({
   selectionOverride,
   selectionOptions,
   onReorderColumns,
+  columnOrder: columnOrderProp,
   isEmbedded = false,
   customToolbar,
   columnVisibilityOverride,
@@ -488,15 +489,28 @@ function DataGrid({
     } : void 0,
     [rowIdKey]
   );
-  const configOrder = mergedColumnOrder;
-  const [columnOrder, setColumnOrder] = useState(configOrder);
-  const configOrderJson = JSON.stringify(configOrder);
+  const prependColumnIds = useMemo(() => {
+    if (!prependColumns) return [];
+    return prependColumns.map((c) => c.id ?? c.accessorKey).filter(
+      (id) => typeof id === "string" && !ENGINE_COLUMN_IDS.has(id)
+    );
+  }, [prependColumns]);
+  const baseOrder = useMemo(() => {
+    if (columnOrderProp) return columnOrderProp;
+    const missingPrepends = prependColumnIds.filter(
+      (id) => !mergedColumnOrder.includes(id)
+    );
+    return [...missingPrepends, ...mergedColumnOrder];
+  }, [columnOrderProp, prependColumnIds, mergedColumnOrder]);
+  const [columnOrder, setColumnOrder] = useState(baseOrder);
+  const baseOrderJson = JSON.stringify(baseOrder);
   useEffect(() => {
-    setColumnOrder(configOrder);
-  }, [configOrderJson]);
+    setColumnOrder(baseOrder);
+  }, [baseOrderJson]);
   const handleColumnOrderChange = (next) => {
     setColumnOrder(next);
-    persistColumnOrder(next);
+    const seededColumns = next.filter((colId) => colId in config.columns);
+    persistColumnOrder(seededColumns);
     onReorderColumns?.(next);
   };
   const initialGrouping = useMemo(
@@ -670,7 +684,7 @@ function DataGrid({
           const pinnedSide = h.column.getIsPinned();
           const pinLeft = pinnedSide === "left" ? h.column.getStart("left") : void 0;
           const pinRight = pinnedSide === "right" ? h.column.getAfter("right") : void 0;
-          const isDataCol = columnOrder.includes(h.column.id);
+          const isDataCol = columnOrder.includes(h.column.id) && !ENGINE_COLUMN_IDS.has(h.column.id) && !h.column.id.startsWith("__");
           return /* @__PURE__ */ jsx(
             SortableTableHead,
             {

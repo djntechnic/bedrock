@@ -165,6 +165,14 @@ export interface DataGridProps<T extends Record<string, any>> {
      */
     onReorderColumns?: (nextOrder: string[]) => void;
     /**
+     * Phase 12 (Issue 117): Controlled or caller-supplied initial column order.
+     * When provided, overrides the default config/preference order.
+     * Useful for grids with dynamic runtime columns (e.g. `prependColumns`
+     * in CollectIt's staging grid) that need to restore a saved order
+     * or allow caller-driven ordering.
+     */
+    columnOrder?: string[];
+    /**
      * Phase 7 B2: render the grid as a widget-shaped embed — suppresses the
      * full `<GridHeader>` toolbar and the `<GridWrapper>` pagination shell.
      * The engine still renders the `<Table>` body with striping/sticky/dense/
@@ -340,5 +348,5 @@ export interface DataGridProps<T extends Record<string, any>> {
     /** A fill-handle drag: repeat `source`'s values over `target`'s rows. */
     onRangeFill?: (fill: CellRangeFill) => void;
 }
-export default function DataGrid<T extends Record<string, any>>({ gridId, gridRef, rows, isLoading, filtersSlot, onRowClick, onExport, customCells, customHeaders, headerTooltips, emptyMessage, searchPlaceholder, loadingMessage, accessorFor, selectionOverride, selectionOptions, onReorderColumns, isEmbedded, customToolbar, columnVisibilityOverride, variant, overscan, virtualizedMaxHeightClass, prependColumns, rowClassNameFor, onCellCommit, onBulkCommit, onBulkDiscard, confirmBulkDiscard, onBeforeBulkDiscard, bulkDirtyOverride, draftsOverride, renderSubRow, cellSelection, onRangeCopy, onRangePaste, onRangeFill, }: DataGridProps<T>): import("react").JSX.Element;
+export default function DataGrid<T extends Record<string, any>>({ gridId, gridRef, rows, isLoading, filtersSlot, onRowClick, onExport, customCells, customHeaders, headerTooltips, emptyMessage, searchPlaceholder, loadingMessage, accessorFor, selectionOverride, selectionOptions, onReorderColumns, columnOrder: columnOrderProp, isEmbedded, customToolbar, columnVisibilityOverride, variant, overscan, virtualizedMaxHeightClass, prependColumns, rowClassNameFor, onCellCommit, onBulkCommit, onBulkDiscard, confirmBulkDiscard, onBeforeBulkDiscard, bulkDirtyOverride, draftsOverride, renderSubRow, cellSelection, onRangeCopy, onRangePaste, onRangeFill, }: DataGridProps<T>): import("react").JSX.Element;
 export { useRowClickHandler } from "../../hooks/useRowClickHandler";
