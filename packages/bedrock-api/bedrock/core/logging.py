@@ -8,6 +8,7 @@ import sys
 import logging
 from loguru import logger
 from bedrock.core.paths import APP_ROOT, app_path, safe_load_dotenv
+from bedrock.core.config import config
 
 # Ensure environment variables from .env are loaded before initialization.
 # `bedrock.core.config` does this too, but logging is deliberately importable
@@ -59,7 +60,7 @@ def _get_log_level() -> str:
     """
     Determine log level:
     1. Read BACKEND_LOG_LEVEL or LOG_LEVEL environment variable (e.g., "DEBUG", "INFO", "WARNING").
-    2. Fallback to "DEBUG" if Config.DEBUG is True, else "INFO".
+    2. Fallback to "DEBUG" if DEBUG env var is set or config.DEBUG is True, else "INFO".
 
     Never queries the database at module import time (issue #114). Dynamic DB
     overrides from `app_config_settings` are deferred to application lifespan
@@ -69,11 +70,11 @@ def _get_log_level() -> str:
     if env_level:
         return env_level.upper()
 
-    try:
-        from bedrock.core.config import config
-        return "DEBUG" if getattr(config, "DEBUG", False) else "INFO"
-    except Exception:
-        return "INFO"
+    env_debug = os.environ.get("DEBUG", "").strip().lower()
+    if env_debug in ("true", "1", "yes", "on"):
+        return "DEBUG"
+
+    return "DEBUG" if getattr(config, "DEBUG", False) else "INFO"
 
 
 def initialize_backend_logging(

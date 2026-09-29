@@ -79,12 +79,16 @@ def test_get_log_level_env_precedence(monkeypatch):
 def test_get_log_level_fallback(monkeypatch):
     monkeypatch.delenv("BACKEND_LOG_LEVEL", raising=False)
     monkeypatch.delenv("LOG_LEVEL", raising=False)
+    monkeypatch.delenv("DEBUG", raising=False)
 
-    monkeypatch.setattr(config, "DEBUG", True)
+    monkeypatch.setattr("bedrock.core.logging.config.DEBUG", True)
     assert _get_log_level() == "DEBUG"
 
-    monkeypatch.setattr(config, "DEBUG", False)
+    monkeypatch.setattr("bedrock.core.logging.config.DEBUG", False)
     assert _get_log_level() == "INFO"
+
+    monkeypatch.setenv("DEBUG", "true")
+    assert _get_log_level() == "DEBUG"
 
 
 def test_show_source_location_env(monkeypatch):
