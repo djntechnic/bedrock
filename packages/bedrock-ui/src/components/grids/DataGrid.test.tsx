@@ -11,7 +11,7 @@
  *   - Phase 10 B3 bulk-save primitive.
  *   - Phase 3 §S9 grid style tokens (numeralStyle, liveUpdateHighlight, rowAccentReactive).
  */
-import { screen } from "@testing-library/react";
+import { screen, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import type { SortingState } from "@tanstack/react-table";
@@ -38,6 +38,8 @@ afterAll(() => {
 let activeConfig: GridConfig | null = null;
 let activeSorting: SortingState = [];
 let activeColumnVisibility: Record<string, boolean> = {};
+let activeDndWrapperProps: any = null;
+let activePersistColumnOrder = vi.fn();
 
 function seedConfig(overrides: Partial<GridConfig> = {}) {
   const cfg = makeGridConfig({
@@ -69,6 +71,18 @@ vi.mock("../../hooks/useAdminPlatform", async (importOriginal) => ({
   useAdmin: () => ({ logExport: vi.fn() }),
 }));
 
+vi.mock("../../hooks/useDraggableColumns", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("../../hooks/useDraggableColumns")>();
+  return {
+    ...actual,
+    DndColumnWrapper: (props: any) => {
+      activeDndWrapperProps = props;
+      return <actual.DndColumnWrapper {...props} />;
+    },
+  };
+});
+
 vi.mock("../../hooks/useTableState", () => ({
   useTableState: (gridId: string) => {
     const config = activeConfig ?? testConfig(gridId);
@@ -91,7 +105,7 @@ vi.mock("../../hooks/useTableState", () => ({
       pinnedFilters: null,
       columnOrder: config.columnOrder ?? [],
       persistFilters: () => {},
-      persistColumnOrder: () => {},
+      persistColumnOrder: (cols: string[]) => activePersistColumnOrder(cols),
       dashboardPin: false,
       setDashboardPin: () => {},
     };
@@ -859,5 +873,174 @@ describe("DataGrid — Density & Visibility", () => {
     );
     expect(headers).toContain("Name");
     expect(headers).not.toContain("Category");
+  });
+});
+
+// ─── 11. Column Reordering & Prepend Columns (Issue 117) ────────────────────
+describe("DataGrid — Column Reordering & Prepend Columns (Issue 117)", () => {
+  beforeEach(() => {
+    activeConfig = null;
+    vi.clearAllMocks();
+    __clearRowAccentResolver();
+    activePersistColumnOrder.mockClear();
+    activeDndWrapperProps = null;
+  });
+
+  it("assigns dndId and renders reorder handle for prependColumns when allowColumnReorder is enabled", () => {
+    seedConfig({
+      columns: {
+        name: makeColumnSetting({ column_id: "name", label_override: "Name" }),
+      },
+      columnOrder: ["name"],
+      allowColumnReorder: true,
+    });
+
+    const prependCols = [
+      {
+        id: "brand",
+        header: () => "Brand",
+        cell: () => "Nike",
+      },
+    ];
+
+    renderWithGridProviders(
+      <DataGrid
+        gridId="grid_reorder_prepend"
+        rows={[{ id: 1, name: "Card 1" }]}
+        prependColumns={prependCols}
+      />,
+    );
+
+    // Both the prepend column and config column should have drag handles
+    expect(
+      screen.getByRole("button", { name: /reorder brand column/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /reorder name column/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("prepends prependColumns before config columns in default columnOrder when columnOrder prop is omitted", () => {
+    seedConfig({
+      columns: {
+        name: makeColumnSetting({ column_id: "name", label_override: "Name" }),
+        category: makeColumnSetting({
+          column_id: "category",
+          label_override: "Category",
+        }),
+      },
+      columnOrder: ["name", "category"],
+      allowColumnReorder: true,
+    });
+
+    const prependCols = [
+      {
+        id: "brand",
+        header: () => "Brand",
+        cell: () => "Nike",
+      },
+    ];
+
+    const { container } = renderWithGridProviders(
+      <DataGrid
+        gridId="grid_default_order"
+        rows={[{ id: 1, name: "Card 1", category: "Base" }]}
+        prependColumns={prependCols}
+      />,
+    );
+
+    const headers = Array.from(container.querySelectorAll("thead th")).map(
+      (th) => th.textContent?.trim(),
+    );
+    // Brand should appear before Name and Category
+    expect(headers).toEqual(["Brand", "Name", "Category"]);
+  });
+
+  it("respects caller-supplied columnOrder prop to restore or enforce column ordering", () => {
+    seedConfig({
+      columns: {
+        name: makeColumnSetting({ column_id: "name", label_override: "Name" }),
+        category: makeColumnSetting({
+          column_id: "category",
+          label_override: "Category",
+        }),
+      },
+      columnOrder: ["name", "category"],
+      allowColumnReorder: true,
+    });
+
+    const prependCols = [
+      {
+        id: "brand",
+        header: () => "Brand",
+        cell: () => "Nike",
+      },
+    ];
+
+    const { container } = renderWithGridProviders(
+      <DataGrid
+        gridId="grid_controlled_order"
+        rows={[{ id: 1, name: "Card 1", category: "Base" }]}
+        prependColumns={prependCols}
+        columnOrder={["category", "brand", "name"]}
+      />,
+    );
+
+    const headers = Array.from(container.querySelectorAll("thead th")).map(
+      (th) => th.textContent?.trim(),
+    );
+    expect(headers).toEqual(["Category", "Brand", "Name"]);
+  });
+
+  it("fires onReorderColumns with full order and filters seeded columns for persistColumnOrder", () => {
+    seedConfig({
+      columns: {
+        name: makeColumnSetting({ column_id: "name", label_override: "Name" }),
+        category: makeColumnSetting({
+          column_id: "category",
+          label_override: "Category",
+        }),
+      },
+      columnOrder: ["name", "category"],
+      allowColumnReorder: true,
+    });
+
+    const prependCols = [
+      {
+        id: "brand",
+        header: () => "Brand",
+        cell: () => "Nike",
+      },
+    ];
+
+    const onReorderColumns = vi.fn();
+
+    const { container } = renderWithGridProviders(
+      <DataGrid
+        gridId="grid_reorder_event"
+        rows={[{ id: 1, name: "Card 1", category: "Base" }]}
+        prependColumns={prependCols}
+        onReorderColumns={onReorderColumns}
+      />,
+    );
+
+    expect(activeDndWrapperProps).not.toBeNull();
+
+    // Simulate reordering via DnD wrapper
+    act(() => {
+      activeDndWrapperProps.onOrderChange(["category", "brand", "name"]);
+    });
+
+    // onReorderColumns should receive all columns including prepend columns
+    expect(onReorderColumns).toHaveBeenCalledWith(["category", "brand", "name"]);
+
+    // persistColumnOrder should only receive seeded admin columns ("category", "name")
+    expect(activePersistColumnOrder).toHaveBeenCalledWith(["category", "name"]);
+
+    // Table header reflects the new order
+    const headers = Array.from(container.querySelectorAll("thead th")).map(
+      (th) => th.textContent?.trim(),
+    );
+    expect(headers).toEqual(["Category", "Brand", "Name"]);
   });
 });
