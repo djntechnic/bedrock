@@ -8,6 +8,7 @@ import sys
 import logging
 from loguru import logger
 from bedrock.core.paths import APP_ROOT, app_path, safe_load_dotenv
+from bedrock.core.config import config
 
 # Ensure environment variables from .env are loaded before initialization.
 # `bedrock.core.config` does this too, but logging is deliberately importable
@@ -15,6 +16,7 @@ from bedrock.core.paths import APP_ROOT, app_path, safe_load_dotenv
 # depending on import order.
 project_root = APP_ROOT
 safe_load_dotenv()
+
 
 def _backend_log_format(show_source: bool) -> str:
     """
@@ -40,61 +42,53 @@ def _show_source_location() -> bool:
     """
     Whether to include `{name}:{function}:{line}` source annotation in log lines.
 
-    Reads app_config_settings.logging_show_source_location. Defaults to False,
-    which strips the source annotation for cleaner day-to-day pipeline output.
-    Any failure to read config (e.g. DB not yet initialized) falls back to False.
+    Reads BACKEND_LOG_SHOW_SOURCE or LOG_SHOW_SOURCE environment variable (truthy
+    values: 'true', '1', 'yes', 'on'). Defaults to False, which strips the source
+    annotation for cleaner day-to-day pipeline output.
 
-    Bypasses the DB read entirely when the SQLite file is missing or empty —
-    otherwise sqlite3.connect() would create a zero-byte mlbtracker.db and
-    poison test/fresh-checkout runs (conftest copies that empty file instead
-    of initializing the schema).
+    Never queries the database at module import time (issue #114). Dynamic DB
+    overrides from `app_config_settings` are deferred to application lifespan
+    startup via `configure_backend_logging_from_db()`.
     """
-    try:
-        from bedrock.core.database import db
-        if not getattr(db, "is_postgres", False):
-            path = getattr(db, "sqlite_path", None)
-            if not path or not os.path.isfile(path) or os.path.getsize(path) == 0:
-                return False
-        return bool(db.get_config("logging_show_source_location", False))
-    except Exception:
-        return False
+    env_source = os.environ.get("BACKEND_LOG_SHOW_SOURCE") or os.environ.get("LOG_SHOW_SOURCE")
+    if env_source is not None:
+        return env_source.strip().lower() in ("true", "1", "yes", "on")
+    return False
 
 
 def _get_log_level() -> str:
     """
     Determine log level:
-    1. Read LOG_LEVEL environment variable (e.g., "DEBUG", "INFO", "WARNING").
-    2. Read app_config_settings.logging_level from DB.
-    3. Fallback to "DEBUG" if Config.DEBUG is True, else "INFO".
+    1. Read BACKEND_LOG_LEVEL or LOG_LEVEL environment variable (e.g., "DEBUG", "INFO", "WARNING").
+    2. Fallback to "DEBUG" if DEBUG env var is set or config.DEBUG is True, else "INFO".
+
+    Never queries the database at module import time (issue #114). Dynamic DB
+    overrides from `app_config_settings` are deferred to application lifespan
+    startup via `configure_backend_logging_from_db()`.
     """
     env_level = os.environ.get("BACKEND_LOG_LEVEL") or os.environ.get("LOG_LEVEL")
     if env_level:
         return env_level.upper()
 
-    try:
-        from bedrock.core.database import db
-        if not getattr(db, "is_postgres", False):
-            path = getattr(db, "sqlite_path", None)
-            if not path or not os.path.isfile(path) or os.path.getsize(path) == 0:
-                pass
-            else:
-                db_level = db.get_config("logging_level", None)
-                if db_level:
-                    return str(db_level).upper()
-    except Exception:
-        pass
+    env_debug = os.environ.get("DEBUG", "").strip().lower()
+    if env_debug in ("true", "1", "yes", "on"):
+        return "DEBUG"
 
-    try:
-        from bedrock.core.config import config
-        return "DEBUG" if getattr(config, "DEBUG", False) else "INFO"
-    except Exception:
-        return "INFO"
+    return "DEBUG" if getattr(config, "DEBUG", False) else "INFO"
 
 
-def initialize_backend_logging():
+def initialize_backend_logging(
+    log_level: str | None = None,
+    show_source: bool | None = None,
+):
     """
     Completely neutralizes default framework logging sinks and maps
     clean, color-coded, line-tracked streams for local developer terminals.
+
+    :param log_level: Optional explicit log level override. Defaults to
+        environment variables (BACKEND_LOG_LEVEL, LOG_LEVEL) or config.DEBUG.
+    :param show_source: Optional boolean to include/exclude source file and line.
+        Defaults to environment variables (BACKEND_LOG_SHOW_SOURCE).
     """
     # 1. Clear out absolutely all pre-existing standard library handlers
     logging.getLogger().handlers = []
@@ -104,14 +98,15 @@ def initialize_backend_logging():
 
     # 3. Inject our precise development layout window sink
     # Note: We omit complex date components locally to maximize available space for log text.
-    log_level = _get_log_level()
+    effective_level = log_level.upper() if log_level else _get_log_level()
+    effective_show_source = show_source if show_source is not None else _show_source_location()
     log_format = os.environ.get("BACKEND_LOG_FORMAT", "HUMAN").upper()
     is_json = (log_format == "JSON")
 
     logger.add(
         sys.stdout,
-        level=log_level,
-        format=_backend_log_format(show_source=_show_source_location()),
+        level=effective_level,
+        format=_backend_log_format(show_source=effective_show_source),
         colorize=not is_json,
         serialize=is_json,
     )
@@ -137,7 +132,7 @@ def initialize_backend_logging():
     # Configure root logger to intercept all standard logging at or above target level
     root_logger = logging.getLogger()
     root_logger.handlers = [intercept_handler]
-    root_logger.setLevel(getattr(logging, log_level, logging.INFO))
+    root_logger.setLevel(getattr(logging, effective_level, logging.INFO))
 
     # Explicitly clear and intercept Uvicorn's sub-loggers
     for logger_name in ("uvicorn", "uvicorn.meta", "uvicorn.access", "fastapi"):
@@ -146,4 +141,31 @@ def initialize_backend_logging():
         mod_logger.propagate = False  # Prevent logs from multiplying upward to root
 
 
+def configure_backend_logging_from_db():
+    """
+    Read dynamic logging overrides from `app_config_settings` (logging_level,
+    logging_show_source_location) and apply them to the active logging sink.
 
+    Designed for invocation during application lifespan startup (e.g. after_bootstrap)
+    or runtime admin setting change handlers. Never invoked at module import time.
+    """
+    try:
+        from bedrock.core.database import db
+
+        env_level = os.environ.get("BACKEND_LOG_LEVEL") or os.environ.get("LOG_LEVEL")
+        if env_level:
+            level = env_level.upper()
+        else:
+            db_level = db.get_config("logging_level", None)
+            level = str(db_level).upper() if db_level else _get_log_level()
+
+        env_source = os.environ.get("BACKEND_LOG_SHOW_SOURCE") or os.environ.get("LOG_SHOW_SOURCE")
+        if env_source is not None:
+            show_source = env_source.strip().lower() in ("true", "1", "yes", "on")
+        else:
+            db_source = db.get_config("logging_show_source_location", None)
+            show_source = bool(db_source) if db_source is not None else False
+
+        initialize_backend_logging(log_level=level, show_source=show_source)
+    except Exception as e:
+        logger.warning(f"Failed to refresh logging configuration from database: {e}")
