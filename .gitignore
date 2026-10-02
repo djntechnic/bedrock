@@ -120,3 +120,7 @@ debug_tab*.png
 # Project module exclusions
 /Core
 /Cloud
+
+# Prompt queue runner: synced support scripts and runner scratch
+scripts/support/
+scratch/runner/
