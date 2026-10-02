@@ -93,9 +93,7 @@ exemptions = [
 ]
 
 [tool.bedrock.audit.s006]
-ledger_files = [
-  "docs/plans/2026-09-12-consolidated-standards-tooling-and-testing-roadmap.md",
-]
+ledger_files = []
 exemptions = []
 
 [tool.bedrock.audit.s007]
