@@ -31,11 +31,13 @@ tool call happens.
     executing-plans / subagent-driven-development workflows.
   - **`docs/archive/`** — retired specs and plans whose work has landed or
     been abandoned. A doc moves here instead of being deleted so historical
-    intent stays recoverable, but it is no longer a live reference.
+    intent stays recoverable, but it is no longer a live reference. Within
+    `docs/archive/`, documents are partitioned into `docs/archive/specs/`
+    and `docs/archive/plans/`.
 - There is no fifth folder. Adding one means amending this standard's table
   in the same PR.
-- A spec or plan document is retired to `docs/archive/` in the same PR that
-  closes the work it describes — it is not left in `docs/specs/` or
+- A spec or plan document is retired to `docs/archive/specs/` or `docs/archive/plans/`
+  in the same PR that closes the work it describes — it is not left in `docs/specs/` or
   `docs/plans/` to rot.
 - Reference material that is not a standard, spec, or plan (operator guides,
   architecture references, deployment docs) lives at `docs/<topic>.md`
@@ -71,7 +73,8 @@ tool call happens.
 docs/standards/s005-test-coverage-mandatory.md   # non-negotiable contract
 docs/specs/2026-09-12-grid-audit-design.md       # design spec, work in flight
 docs/plans/2026-09-12-grid-audit-plan.md         # implementation plan
-docs/archive/2026-06-01-legacy-auth-plan.md      # retired, work landed
+docs/archive/plans/2026-06-01-legacy-auth-plan.md   # retired plan, work landed
+docs/archive/specs/2026-06-01-legacy-auth-design.md # retired spec, work landed
 ```
 
 **Violation — undeclared folder, unarchived stale plan:**
