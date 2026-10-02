@@ -55,9 +55,3 @@ agents = [
 hooks = [
   "pre-tool-guard.ps1",
 ]
-
-scripts = [
-  "Invoke-PlanRunner.ps1",
-  "Convert-PlanToIntake.ps1",
-  "PROMPT_BUILD_INTAKE.md",
-]
