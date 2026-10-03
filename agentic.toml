@@ -7,7 +7,7 @@ rules = [
   "s003-logging-protocol",
   "s004-no-hardcoded-config-settings",
   "s005-test-coverage-mandatory",
-  "s006-defect-isolation-and-pr-workflow",
+  "s006-sdlc-and-pr-workflow",
   "s007-schema-catalog",
   "s008-documentation-layout-and-naming",
   "s009-design-system",
@@ -54,4 +54,10 @@ agents = [
 
 hooks = [
   "pre-tool-guard.ps1",
+]
+
+scripts = [
+  "Invoke-PlanRunner.ps1",
+  "Convert-PlanToIntake.ps1",
+  "PROMPT_BUILD_INTAKE.md",
 ]

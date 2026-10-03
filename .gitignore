@@ -91,7 +91,7 @@ Desktop.ini
 .claude/agents/
 .claude/rules/
 .claude/hooks/
-scripts/support/
+scripts/maintenance/platform/
 
 # ==============================================================================
 # 7. DOCUMENTATION ARTIFACTS, DESIGNS & EPHEMERAL SCRATCH
@@ -122,5 +122,5 @@ debug_tab*.png
 /Cloud
 
 # Prompt queue runner: synced support scripts and runner scratch
-scripts/support/
+scripts/maintenance/platform/
 scratch/runner/
