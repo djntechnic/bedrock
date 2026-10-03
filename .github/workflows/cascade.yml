@@ -119,3 +119,69 @@ jobs:
             gh issue comment "$issue" --repo "$REPO" --body "Resolved and verified in bedrock release \`$TAG\`."
             gh issue close "$issue" --repo "$REPO" --reason completed
           done
+
+  sync-standards-to-ai-kit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve the release tag
+        id: resolve
+        env:
+          EVENT_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          TAG="${INPUT_TAG:-$EVENT_TAG}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Check out bedrock at the release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.resolve.outputs.tag }}
+          path: bedrock
+
+      - name: Check out bedrock-ai-kit
+        uses: actions/checkout@v4
+        with:
+          repository: djntechnic/bedrock-ai-kit
+          token: ${{ secrets.CASCADE_TOKEN }}
+          path: bedrock-ai-kit
+
+      - name: Mirror and compile the standards
+        # All three directories are passed explicitly: the script's defaults are
+        # built with backslash separators, which are not paths on a Linux runner.
+        shell: pwsh
+        run: |
+          ./bedrock-ai-kit/scripts/Sync-RulesFromStandards.ps1 `
+            -StandardsSourceDir "$PWD/bedrock/docs/standards" `
+            -StandardsTargetDir "$PWD/bedrock-ai-kit/docs/standards" `
+            -RulesTargetDir "$PWD/bedrock-ai-kit/rules"
+
+      - name: Open the sync PR
+        working-directory: bedrock-ai-kit
+        env:
+          GH_TOKEN: ${{ secrets.CASCADE_TOKEN }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ steps.resolve.outputs.tag }}
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "bedrock-ai-kit already matches the standards at $TAG; nothing to sync."
+            exit 0
+          fi
+          BRANCH="feat/standards-sync-$TAG"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add -A
+          git commit -m "feat(standards): sync platform standards from bedrock $TAG"
+          git push --force-with-lease origin "$BRANCH"
+          # Built with printf rather than inline YAML, as in the adoption job.
+          {
+            printf 'Mirrors `docs/standards/` from [bedrock %s](https://github.com/%s/releases/tag/%s) and recompiles `rules/`.\n\n' "$TAG" "$REPO" "$TAG"
+            printf 'Filed automatically by the bedrock cascade workflow (§S015).\n'
+          } > "$RUNNER_TEMP/sync-body.md"
+          if gh pr view "$BRANCH" --json state --jq .state 2>/dev/null | grep -q OPEN; then
+            echo "A sync PR for $BRANCH is already open; branch updated."
+            exit 0
+          fi
+          gh pr create --draft --base master --head "$BRANCH" \
+            --title "feat(standards): sync platform standards from bedrock $TAG" \
+            --body-file "$RUNNER_TEMP/sync-body.md"
