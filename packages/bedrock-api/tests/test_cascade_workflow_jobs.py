@@ -19,12 +19,12 @@ def test_close_upstream_issues_job_exists():
 
 
 def test_close_upstream_issues_uses_default_github_token_not_cascade_token():
+    import re
     text = CASCADE_YML.read_text(encoding="utf-8")
     job_start = text.index("close-upstream-issues:")
-    next_job = text.find("\n  file-adoption-issues:", 0)
-    # job ordering may place close-upstream-issues before or after
-    # file-adoption-issues; slice to end of file if it comes last.
-    job_end = len(text) if next_job == -1 or next_job < job_start else next_job
+    after_header = job_start + len("close-upstream-issues:")
+    m = re.search(r"\n  [a-z0-9_-]+:", text[after_header:])
+    job_end = (after_header + m.start()) if m else len(text)
     job_text = text[job_start:job_end]
     assert "secrets.CASCADE_TOKEN" not in job_text
     assert "secrets.GITHUB_TOKEN" in job_text
@@ -40,3 +40,19 @@ def test_close_upstream_issues_job_has_no_matrix_consumer():
     data = _load()
     job = data["jobs"]["close-upstream-issues"]
     assert "strategy" not in job or "matrix" not in job.get("strategy", {})
+
+
+def test_sync_standards_to_ai_kit_job_exists():
+    data = _load()
+    assert "sync-standards-to-ai-kit" in data["jobs"]
+
+
+def test_sync_standards_to_ai_kit_uses_cascade_token():
+    import re
+    text = CASCADE_YML.read_text(encoding="utf-8")
+    job_start = text.index("sync-standards-to-ai-kit:")
+    after_header = job_start + len("sync-standards-to-ai-kit:")
+    m = re.search(r"\n  [a-z0-9_-]+:", text[after_header:])
+    job_end = (after_header + m.start()) if m else len(text)
+    job_text = text[job_start:job_end]
+    assert "secrets.CASCADE_TOKEN" in job_text
