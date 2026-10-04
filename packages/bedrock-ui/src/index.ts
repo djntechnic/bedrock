@@ -97,6 +97,10 @@ export { default as Breadcrumb } from "./components/Breadcrumb";
 export type { BreadcrumbItem } from "./components/Breadcrumb";
 export { default as AppFooter } from "./components/AppFooter";
 export * from "./components/EmptyState";
+export { default as WorkbenchShell } from "./components/WorkbenchShell/WorkbenchShell";
+export type { WorkbenchFilter, WorkbenchShellProps } from "./components/WorkbenchShell/WorkbenchShell";
+export { useWorkbenchRail, RAIL_COLLAPSED_KEY } from "./components/WorkbenchShell/useWorkbenchRail";
+export type { WorkbenchRail } from "./components/WorkbenchShell/useWorkbenchRail";
 export {
   SortableGrid,
   SortableItem,
