@@ -1,3 +1,30 @@
+## v0.12.0 - 2026-10-05
+
+### Breaking Changes
+None
+
+### Fixed
+None
+
+### Added / Changed
+None
+
+### Platform Maintenance
+- **[#131] feat(release): add automated standards synchronization job to cascade workflow**
+- **[#130] chore(scripts): document scripts directory and allow platform tooling subscription**
+- **[#126] chore(docs): partition archived specs and plans into specs/ and plans/ per §S008**
+- **[#125] fix(audit): align s006 ledger tracking path**
+- **[#124] fix(manifest): remove runner support scripts from bedrock**
+- **[#123] feat(tooling): register prompt queue runner support scripts**
+- **[#122] chore(docs): archive pre-2026-10-01 specs and plans per §S008**
+- **[#118] fix(core): eliminate DB acquisition during module logging initialization**
+- **[#115] chore(tooling): remove deprecated workflow skills from agentic.toml**
+
+### For consumers
+- **Resolves Upstream Issues:** #114
+- **Target Downstream Repositories:** `djntechnic/CollectIt`, `djntechnic/MLBTracker`
+- **Expected Pin Migration:** `/bump-bedrock-pin v0.12.0`
+
 ## v0.12.0 - 2026-10-04
 
 ### Breaking Changes
