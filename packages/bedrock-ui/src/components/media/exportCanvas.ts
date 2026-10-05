@@ -9,7 +9,7 @@
  * the centre of its bounding box, shift by the crop origin, then paint the
  * items in the same rotated-canvas space.
  */
-import { rotatedSize, type Size } from "./imageAnnotation";
+import { EXPORT_BACKGROUND, exportBounds, rotatedSize, type Size } from "./imageAnnotation";
 import type { AnnotationItem, ImageAnnotationState } from "./types";
 
 /** The slice of the 2D context the exporter uses, so a fake can implement it exactly. */
@@ -114,4 +114,41 @@ export function drawAnnotated(ctx: Drawing2D, image: CanvasImageSource, work: Si
   ctx.translate(0 - originX, 0 - originY);
   for (const item of state.items) drawItem(ctx, item);
   ctx.restore();
+}
+
+export const JPEG_QUALITY = 0.92;
+
+export interface ExportResult {
+  blob: Blob;
+  width: number;
+  height: number;
+}
+
+/**
+ * Renders the annotated image to a JPEG entirely client-side. Rejects rather
+ * than resolving with an empty file when the browser cannot supply a 2D
+ * context or refuses to encode (canvas over the platform limit).
+ */
+export function exportToBlob(
+  image: CanvasImageSource,
+  work: Size,
+  state: ImageAnnotationState,
+  quality: number = JPEG_QUALITY,
+): Promise<ExportResult> {
+  const { width, height } = exportBounds(state, work.width, work.height);
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return Promise.reject(new Error("2D canvas is not available"));
+  ctx.fillStyle = EXPORT_BACKGROUND;
+  ctx.fillRect(0, 0, width, height);
+  drawAnnotated(ctx, image, work, state);
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => (blob ? resolve({ blob, width, height }) : reject(new Error("JPEG encoding failed"))),
+      "image/jpeg",
+      quality,
+    );
+  });
 }

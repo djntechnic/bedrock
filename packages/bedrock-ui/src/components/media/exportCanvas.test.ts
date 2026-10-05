@@ -4,8 +4,8 @@
  * 2D context: jsdom has no canvas, and what matters here is the transform
  * order and the draw calls, not pixels.
  */
-import { describe, expect, it } from "vitest";
-import { arrowHeadPoints, drawAnnotated, type Drawing2D } from "./exportCanvas";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { JPEG_QUALITY, arrowHeadPoints, drawAnnotated, exportToBlob, type Drawing2D } from "./exportCanvas";
 import { emptyState } from "./imageAnnotation";
 import type { ImageAnnotationState } from "./types";
 
@@ -129,5 +129,56 @@ describe("arrowHeadPoints", () => {
     const small = arrowHeadPoints([0, 0, 100, 0], 2)[0];
     const big = arrowHeadPoints([0, 0, 100, 0], 12)[0];
     expect(Math.abs(big[1])).toBeGreaterThan(Math.abs(small[1]));
+  });
+});
+
+describe("exportToBlob", () => {
+  function stubCanvas(opts: { ctx?: Drawing2D | null; blob?: Blob | null }) {
+    const created: HTMLCanvasElement[] = [];
+    const proto = HTMLCanvasElement.prototype;
+    const getContext = vi.spyOn(proto, "getContext").mockImplementation(function (this: HTMLCanvasElement) {
+      created.push(this);
+      return (opts.ctx ?? null) as unknown as CanvasRenderingContext2D | null;
+    } as typeof proto.getContext);
+    const toBlob = vi.spyOn(proto, "toBlob").mockImplementation((cb, type, quality) => {
+      toBlobArgs.push([type, quality]);
+      cb(opts.blob === undefined ? new Blob(["jpeg"], { type: "image/jpeg" }) : opts.blob);
+    });
+    return { created, getContext, toBlob };
+  }
+  const toBlobArgs: unknown[][] = [];
+  afterEach(() => {
+    vi.restoreAllMocks();
+    toBlobArgs.length = 0;
+  });
+
+  it("sizes the canvas to the export bounds, flattens onto an opaque fill, and encodes JPEG", async () => {
+    const { ctx, calls } = recorder();
+    const { created } = stubCanvas({ ctx });
+    const state: ImageAnnotationState = { ...emptyState(), rotation: 90 };
+    const result = await exportToBlob(IMAGE, { width: 200, height: 100 }, state);
+    expect(created[0].width).toBe(100);
+    expect(created[0].height).toBe(200);
+    expect(calls[0]).toEqual({ name: "fillRect", args: [0, 0, 100, 200] });
+    expect(result).toMatchObject({ width: 100, height: 200 });
+    expect(result.blob.type).toBe("image/jpeg");
+    expect(toBlobArgs[0]).toEqual(["image/jpeg", JPEG_QUALITY]);
+  });
+
+  it("uses the crop size for the output", async () => {
+    const { ctx } = recorder();
+    stubCanvas({ ctx });
+    const state: ImageAnnotationState = { ...emptyState(), crop: { x: 10, y: 10, width: 64, height: 48 } };
+    expect(await exportToBlob(IMAGE, { width: 200, height: 100 }, state)).toMatchObject({ width: 64, height: 48 });
+  });
+
+  it("rejects when there is no 2D context", async () => {
+    stubCanvas({ ctx: null });
+    await expect(exportToBlob(IMAGE, { width: 10, height: 10 }, emptyState())).rejects.toThrow(/2D canvas/);
+  });
+
+  it("rejects when the browser cannot encode", async () => {
+    stubCanvas({ ctx: recorder().ctx, blob: null });
+    await expect(exportToBlob(IMAGE, { width: 10, height: 10 }, emptyState())).rejects.toThrow(/encoding failed/);
   });
 });

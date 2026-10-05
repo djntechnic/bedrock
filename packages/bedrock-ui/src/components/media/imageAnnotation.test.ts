@@ -210,6 +210,12 @@ describe("history reducer", () => {
     expect(historyReducer(h, { type: "redo" })).toBe(h);
   });
 
+  it("reset discards past and future", () => {
+    let h = historyReducer(createHistory(a), { type: "push", state: b });
+    h = historyReducer(h, { type: "undo" });
+    expect(historyReducer(h, { type: "reset", state: c })).toEqual({ past: [], present: c, future: [] });
+  });
+
   it("ignores a push of the identical state", () => {
     const h = createHistory(a);
     expect(historyReducer(h, { type: "push", state: a })).toBe(h);

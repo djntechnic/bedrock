@@ -184,7 +184,12 @@ export interface History {
   future: ImageAnnotationState[];
 }
 
-export type HistoryAction = { type: "push"; state: ImageAnnotationState } | { type: "undo" } | { type: "redo" };
+export type HistoryAction =
+  | { type: "push"; state: ImageAnnotationState }
+  | { type: "undo" }
+  | { type: "redo" }
+  /** The owner replaced the state out from under the editor; history no longer applies. */
+  | { type: "reset"; state: ImageAnnotationState };
 
 export function createHistory(present: ImageAnnotationState): History {
   return { past: [], present, future: [] };
@@ -195,6 +200,8 @@ export function historyReducer(history: History, action: HistoryAction): History
     case "push":
       if (action.state === history.present) return history;
       return { past: [...history.past, history.present], present: action.state, future: [] };
+    case "reset":
+      return createHistory(action.state);
     case "undo": {
       const previous = history.past[history.past.length - 1];
       if (!previous) return history;
