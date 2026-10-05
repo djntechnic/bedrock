@@ -58,7 +58,7 @@ vi.mock("react-konva", () => {
   };
 });
 
-import { createHistory, historyReducer, normalizeState } from "./imageAnnotation";
+import { CONTENT_COLORS, createHistory, historyReducer, normalizeState } from "./imageAnnotation";
 import { exportToBlob } from "./exportCanvas";
 import * as barrel from "../../index";
 import ImageAnnotatorModal from "./ImageAnnotatorModal";
@@ -253,7 +253,7 @@ describe("@perf", () => {
     const items = Array.from({ length: 50 }, (_, i) => ({
       id: `i${i}`,
       kind: "arrow" as const,
-      color: "#000000",
+      color: CONTENT_COLORS[5].hex,
       strokeWidth: 4,
       points: [0, 0, 100 + i, 100] as [number, number, number, number],
     }));

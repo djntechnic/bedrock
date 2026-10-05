@@ -133,6 +133,15 @@ exemptions = [
   # wrote. Both are fixture data mimicking real inputs, not UI styling.
   "packages/bedrock-ui/src/context/ThemeContext.test.tsx",
   "packages/bedrock-ui/src/hooks/useDocumentHead.test.ts",
+  # Raster annotation content colors: the image annotator draws onto a JPEG
+  # canvas, so annotation stroke colors are pixel content persisted in
+  # ImageAnnotationState (types.ts, imageAnnotation.ts), not UI chrome, and
+  # cannot resolve through CSS tokens. The two test files are fixtures for the
+  # same state model and its canvas export.
+  "packages/bedrock-ui/src/components/media/types.ts",
+  "packages/bedrock-ui/src/components/media/imageAnnotation.ts",
+  "packages/bedrock-ui/src/components/media/imageAnnotation.test.ts",
+  "packages/bedrock-ui/src/components/media/exportCanvas.test.ts",
 ]
 
 [tool.bedrock.audit.s010]
