@@ -51,22 +51,24 @@ import { default as default32 } from "./components/AppFooter.js";
 import "react/jsx-runtime";
 import "lucide-react";
 import { cn } from "./lib/utils.js";
+import { default as default33 } from "./components/WorkbenchShell/WorkbenchShell.js";
+import { RAIL_COLLAPSED_KEY, useWorkbenchRail } from "./components/WorkbenchShell/useWorkbenchRail.js";
 import { SORTABLE_INSTRUCTIONS, SortableGrid, SortableItem, useSortableGrid } from "./components/dnd/SortableGrid.js";
 import { Toaster } from "./components/ui/sonner.js";
 import { toast } from "sonner";
-import { default as default33 } from "./components/HelpPopover.js";
+import { default as default34 } from "./components/HelpPopover.js";
 import { __clearNavItems, getNavItems, isNavItemVisible, registerNavItems } from "./components/navRegistry.js";
 import { __clearSearchSources, getSearchAllTarget, getSearchSources, registerSearchAllTarget, registerSearchSource } from "./components/searchSourceRegistry.js";
 import { __clearCommandRoutes, getCommandRoutes, registerCommandRoutes } from "./lib/commandRoutes.js";
-import { default as default34 } from "./components/ProtectedRoute.js";
-import { default as default35 } from "./components/ModuleDisabled.js";
+import { default as default35 } from "./components/ProtectedRoute.js";
+import { default as default36 } from "./components/ModuleDisabled.js";
 import { AuthContext } from "./context/AuthContext.js";
 import { useAuth } from "./hooks/useAuth.js";
 import { useModules } from "./hooks/useModules.js";
-import { default as default36 } from "./components/auth/SetPasswordPage.js";
-import { default as default37 } from "./components/auth/ForgotPasswordPage.js";
-import { default as default38 } from "./components/auth/VerifyEmailPage.js";
-import { default as default39 } from "./components/auth/AuthFlowCard.js";
+import { default as default37 } from "./components/auth/SetPasswordPage.js";
+import { default as default38 } from "./components/auth/ForgotPasswordPage.js";
+import { default as default39 } from "./components/auth/VerifyEmailPage.js";
+import { default as default40 } from "./components/auth/AuthFlowCard.js";
 import { AUTH_FLOW_PATHS, TOKEN_PARAM, completePasswordReset, confirmEmailVerification, messageFromError, requestEmailVerification, requestPasswordReset } from "./components/auth/authFlowApi.js";
 import { buildGridConfig, useGridConfig } from "./hooks/useGridConfig.js";
 import { mergeUserGridPreference, useTogglePlayerPin, useUnpinUserGridColumn, useUpdateUserGridPreference, useUserGridConfig, useUserGridPreference, useUserGridPreferences, useUserPinnedGrids, useUserPlayerPins } from "./hooks/useUserGridConfig.js";
@@ -144,7 +146,7 @@ export {
   default32 as AppFooter,
   default24 as AppSidebar,
   AuthContext,
-  default39 as AuthFlowCard,
+  default40 as AuthFlowCard,
   BUILT_IN_THEMES,
   Badge,
   default31 as Breadcrumb,
@@ -194,7 +196,7 @@ export {
   DndColumnWrapper,
   default4 as EditableCell,
   EmptyTableRow,
-  default37 as ForgotPasswordPage,
+  default38 as ForgotPasswordPage,
   default26 as GlobalSearchBar,
   default21 as GridEditor,
   default23 as GridFocusMode,
@@ -204,7 +206,7 @@ export {
   GridStatusContent,
   GridStatusRow,
   default6 as GridWrapper,
-  default33 as HelpPopover,
+  default34 as HelpPopover,
   HtmlCodeEditor,
   Input,
   KeyboardShortcutsProvider,
@@ -212,7 +214,7 @@ export {
   Label,
   default8 as LogViewer,
   default17 as MenuNavEditorPanel,
-  default35 as ModuleDisabled,
+  default36 as ModuleDisabled,
   default18 as ModulesPanel,
   OPENAPI_SPEC_URL,
   PLATFORM_EVENT_TYPES,
@@ -231,7 +233,8 @@ export {
   PopoverTrigger,
   PresentationalTableChrome,
   default15 as ProfilePage,
-  default34 as ProtectedRoute,
+  default35 as ProtectedRoute,
+  RAIL_COLLAPSED_KEY,
   default16 as RoleMatrixPanel,
   SORTABLE_INSTRUCTIONS,
   SYSTEM_THEME_ID,
@@ -247,7 +250,7 @@ export {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-  default36 as SetPasswordPage,
+  default37 as SetPasswordPage,
   Sheet,
   SheetClose,
   SheetContent,
@@ -284,7 +287,8 @@ export {
   default19 as UserAccessProfileView,
   default20 as UserOverridesDrawer,
   default11 as UsersPanel,
-  default38 as VerifyEmailPage,
+  default39 as VerifyEmailPage,
+  default33 as WorkbenchShell,
   __clearApiPreviewEndpoints,
   __clearCellRegistry,
   __clearCommandRoutes,
@@ -454,6 +458,7 @@ export {
   useUserOverrides,
   useUserPinnedGrids,
   useUserPlayerPins,
-  useUserSummary
+  useUserSummary,
+  useWorkbenchRail
 };
 //# sourceMappingURL=index.js.map

@@ -1,3 +1,12 @@
+## [Unreleased]
+
+### Added
+- eat(workbench): Generalized WorkbenchShell with ailHeader and optional onCreate/createPermission [Bedrock #127].
+- eat(media): Canvas-driven <ImageAnnotatorModal> manipulation and markup primitive supporting 90-degree step rotation, free angle adjustment, crop bounds, vector annotations, and client-side JPEG export [Bedrock #127].
+
+### Fixed
+- ix(select): Constrain SelectTrigger with min-w-0 and apply 	runcate to value slot.
+
 ## v0.11.1 - 2026-09-28
 
 ### Breaking Changes
