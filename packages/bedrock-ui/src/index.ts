@@ -97,6 +97,10 @@ export { default as Breadcrumb } from "./components/Breadcrumb";
 export type { BreadcrumbItem } from "./components/Breadcrumb";
 export { default as AppFooter } from "./components/AppFooter";
 export * from "./components/EmptyState";
+export { default as WorkbenchShell } from "./components/WorkbenchShell/WorkbenchShell";
+export type { WorkbenchFilter, WorkbenchShellProps } from "./components/WorkbenchShell/WorkbenchShell";
+export { useWorkbenchRail, RAIL_COLLAPSED_KEY } from "./components/WorkbenchShell/useWorkbenchRail";
+export type { WorkbenchRail } from "./components/WorkbenchShell/useWorkbenchRail";
 export {
   SortableGrid,
   SortableItem,
@@ -211,3 +215,19 @@ export * from "./api/routes";
 export * from "./lib/logger";
 export * from "./utils/logger";
 export * from "./config";
+export { default as ImageAnnotatorModal } from "./components/media/ImageAnnotatorModal";
+export type { ImageAnnotatorModalProps } from "./components/media/ImageAnnotatorModal";
+export type {
+  AnnotationItem,
+  AnnotationKind,
+  ArrowAnnotation,
+  CropRect,
+  ExportMeta,
+  ImageAnnotationState,
+  LineAnnotation,
+  RectAnnotation,
+  TextAnnotation,
+} from "./components/media/types";
+export { clampDimensions, normalizeState, emptyState, CONTENT_COLORS } from "./components/media/imageAnnotation";
+export { exportToBlob } from "./components/media/exportCanvas";
+export type { ExportResult } from "./components/media/exportCanvas";

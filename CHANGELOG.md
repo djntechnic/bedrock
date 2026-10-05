@@ -1,3 +1,23 @@
+## v0.12.0 - 2026-10-04
+
+### Breaking Changes
+- None.
+
+### Fixed
+- `fix(select)`: Constrain `SelectTrigger` container with `min-w-0` and apply `truncate` to the value slot (`[&>span]:truncate`) to prevent trigger overflow.
+
+### Added / Changed
+- `feat(workbench)`: Generalized `WorkbenchShell` with optional `railHeader` slot, optional `onCreate` / `createPermission` gating, and persistent collapsible rail state [Bedrock #127].
+- `feat(media)`: Canvas-driven `<ImageAnnotatorModal>` markup and manipulation primitive supporting 90-degree step rotation, free angle adjustment with reset, crop bounding, vector annotations (arrow, rect, line, text), client-side JPEG export, and 16MP / 3200px dimension clamping [Bedrock #127].
+
+### Platform Maintenance
+- `chore(audit)`: Register content-color exemptions under `[tool.bedrock.audit.s009].exemptions` for media raster tools and test fixtures.
+
+### For consumers
+- **Resolves Upstream Issues:** Bedrock #127 (CollectIt #151)
+- **Target Downstream Repositories:** CollectIt, MLBTracker
+- **Expected Pin Migration:** Downstream repositories update pins in lockstep via `/bump-bedrock-pin v0.12.0`.
+
 ## v0.11.1 - 2026-09-28
 
 ### Breaking Changes
