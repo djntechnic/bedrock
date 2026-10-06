@@ -42,6 +42,21 @@ describe("PageHeader", () => {
     expect(root(container).className).toMatch(/\bz-20\b/);
   });
 
+  it("centers title and actions without extra top padding on the actions", () => {
+    const { container } = render(<PageHeader title="Overview" actions={<button>Add</button>} />);
+    const titleRow = root(container).firstElementChild as HTMLElement;
+    expect(titleRow.className).toMatch(/\bitems-center\b/);
+    expect(titleRow.className).not.toMatch(/\bitems-start\b/);
+
+    const actionsContainer = screen.getByRole("button", { name: "Add" }).parentElement;
+    expect(actionsContainer?.className).not.toMatch(/\bpt-0\.5\b/);
+  });
+
+  it("does not render the gradient separator bar", () => {
+    const { container } = render(<PageHeader title="Overview" />);
+    expect(container.querySelector(".bg-gradient-to-r")).toBeNull();
+  });
+
   it("still renders subtitle and actions when pinned", () => {
     render(
       <PageHeader title="Listings" subtitle="All statuses" sticky actions={<button>New</button>} />,

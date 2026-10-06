@@ -163,6 +163,41 @@ def test_s001_flags_multiple_api_routes_maps(tmp_path: Path):
     assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 1
 
 
+def test_s001_flags_local_app_header(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s001]\nexemptions = []\n")
+    _write(
+        tmp_path / "frontend" / "src" / "App.tsx",
+        '<header className="app-header flex items-center"><div>Custom</div></header>',
+    )
+
+    violations = s001_audit_duplicates.find_shell_chrome_violations(tmp_path, [])
+
+    assert len(violations) == 1
+    assert "app-header" in violations[0]
+    assert s001_audit_duplicates.main(["--root", str(tmp_path)]) == 1
+
+
+def test_s001_allows_app_header_with_shadows_marker(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s001]\nexemptions = []\n")
+    _write(
+        tmp_path / "frontend" / "src" / "App.tsx",
+        '/** @shadows AppHeader */\n<header className="app-header"><div>Custom</div></header>',
+    )
+
+    assert s001_audit_duplicates.find_shell_chrome_violations(tmp_path, []) == []
+
+
+def test_s001_passes_without_local_app_header(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s001]\nexemptions = []\n")
+    _write(
+        tmp_path / "frontend" / "src" / "App.tsx",
+        'import { AppShell } from "@djntechnic/bedrock-ui";\n'
+        "export default function App() { return <AppShell>Content</AppShell>; }",
+    )
+
+    assert s001_audit_duplicates.find_shell_chrome_violations(tmp_path, []) == []
+
+
 # ---------------------------------------------------------------------------
 # s002_audit_grids
 # ---------------------------------------------------------------------------

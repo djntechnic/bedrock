@@ -43,6 +43,10 @@ export default function AppFooter({ tagline }: AppFooterProps = {}) {
               <span>{tagline}</span>
             </>
           ) : null}
+          <span className="text-border">·</span>
+          <span data-testid="footer-attribution" className="text-muted-foreground/80">
+            built on bedrock
+          </span>
         </div>
         <div className="flex items-center gap-3">
           <Tooltip>
