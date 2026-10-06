@@ -249,3 +249,9 @@ export type { SaveBarProps, SaveBarHistory } from "./components/SaveBar";
 export { default as UndoRedoControls } from "./components/UndoRedoControls";
 export type { UndoRedoControlsProps } from "./components/UndoRedoControls";
 export { default as UnsavedChangesDialog } from "./components/UnsavedChangesDialog";
+
+// ── Wizard primitives ────────────────────────────────────────────────────────
+export { default as Stepper } from "./components/Stepper";
+export type { StepperProps } from "./components/Stepper";
+export { default as WizardDialog } from "./components/WizardDialog";
+export type { WizardDialogProps, WizardStep } from "./components/WizardDialog";
