@@ -96,6 +96,7 @@ export { default as PageSkeleton } from "./components/PageSkeleton";
 export { default as Breadcrumb } from "./components/Breadcrumb";
 export type { BreadcrumbItem } from "./components/Breadcrumb";
 export { default as AppFooter } from "./components/AppFooter";
+export type { AppFooterProps } from "./components/AppFooter";
 export * from "./components/EmptyState";
 export { default as WorkbenchShell } from "./components/WorkbenchShell/WorkbenchShell";
 export type { WorkbenchFilter, WorkbenchShellProps } from "./components/WorkbenchShell/WorkbenchShell";
