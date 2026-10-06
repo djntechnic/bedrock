@@ -69,10 +69,19 @@ export interface AppSidebarProps {
    * its own.
    */
   profilePath?: string | null;
+  /**
+   * Brand block overrides. `mark` replaces the default first-letter-of-appName
+   * tile; `subtitle` renders under the app name (none by default).
+   */
+  brand?: {
+    mark?: ReactNode;
+    subtitle?: string;
+  };
 }
 
 export default function AppSidebar({
   profilePath = "/profile",
+  brand,
 }: AppSidebarProps = {}) {
   const location = useLocation();
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
@@ -195,7 +204,7 @@ export default function AppSidebar({
       {isMobile && mobileOpen && (
         <div
           data-testid="sidebar-mobile-backdrop"
-          className="fixed inset-0 z-40 bg-black/40"
+          className="fixed inset-0 z-40 bg-scrim/40"
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
         />
@@ -216,41 +225,22 @@ export default function AppSidebar({
             to="/"
             className="flex items-center gap-2.5 min-w-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <div className="shrink-0 h-8 w-8 rounded-lg bg-primary flex items-center justify-center shadow-sm ring-1 ring-primary/20">
-              <svg
-                viewBox="0 0 20 20"
-                className="h-4 w-4 fill-primary-foreground"
-                aria-hidden
-              >
-                <circle
-                  cx="10"
-                  cy="10"
-                  r="8"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  fill="none"
-                  className="stroke-primary-foreground/60"
-                />
-                <path
-                  d="M10 2 Q12 10 10 18 Q8 10 10 2Z"
-                  fill="currentColor"
-                  opacity="0.9"
-                />
-                <path
-                  d="M2 10 Q10 12 18 10 Q10 8 2 10Z"
-                  fill="currentColor"
-                  opacity="0.9"
-                />
-              </svg>
+            <div
+              data-testid="sidebar-brand-mark"
+              className="shrink-0 h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-sm text-sm font-bold"
+            >
+              {brand?.mark ?? system.appName.trim().charAt(0).toUpperCase()}
             </div>
             {!collapsed && (
               <div className="min-w-0">
                 <p className="font-bold text-sm leading-tight text-foreground tracking-tight truncate">
                   {system.appName}
                 </p>
-                <p className="text-[10px] text-muted-foreground leading-tight font-medium tracking-wide uppercase">
-                  Analytics
-                </p>
+                {brand?.subtitle && (
+                  <p className="text-[10px] text-muted-foreground leading-tight font-medium tracking-wide uppercase">
+                    {brand.subtitle}
+                  </p>
+                )}
               </div>
             )}
           </Link>
