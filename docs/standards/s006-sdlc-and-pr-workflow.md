@@ -23,9 +23,11 @@ Standard S006 governs the code modification lifecycle from initial branch cut to
 4. **Failing Test Classification:** A failing test is never bypassed or merged around. It must be classified immediately:
    - **Class A (Minor Regression):** Addressed and fixed inline in the active feature branch before opening or merging the PR.
    - **Class B (Architectural Blocker):** Halts development immediately; requires escalation and formal issue tracking under S014.
-5. **Tiered Verification Protocol:** Testing scales with the development phase:
-   - *During iteration:* Fast, targeted delta tests only (`npx vitest related`, `pytest -m "not integration" --testmon -q`).
-   - *Before PR creation/merge:* Comprehensive scoped test suites (`pytest -m "not integration"`, `npm run test:run`, `npx tsc -b --noEmit`) and domain/platform audit gates (`pwsh -File scripts/run_audit.ps1`).
+5. **Tiered Verification Protocol:** Testing scales with the development phase and runs through the platform QA orchestrator (`python scripts/run_qa.py`, a shim over `bedrock.tools.run_qa` — see `docs/reference/qa-orchestrator.md`), never through hand-assembled per-tool commands:
+   - *During iteration / before every commit:* `--mode fast` — testmon-scoped pytest plus `vitest related` on changed frontend files.
+   - *Before PR creation:* `--mode scoped` — every layer the branch touched since its merge-base, run in full, plus the type check and every platform and domain audit.
+   - *Before merge:* `--mode full` — the entire suite, type check, every audit, and dead-code detection (vulture, knip).
+   - A non-zero orchestrator exit (`1` failed, `2` could not run) blocks the next phase exactly as a failing CI check does. `scripts/run_audit.ps1` remains the audit-only entry point when no test run is wanted.
 6. **PR Creation & Templates:** All pull requests must be opened as a **Draft** targeting the default branch via the GitHub integration or `gh pr create`. Contributors must fully populate `.github/PULL_REQUEST_TEMPLATE.md` with the stated requirement/defect, root cause, and verification command run. Commits must follow Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`).
 7. **Non-Blocking CI Gating:** Continuous Integration checks must be monitored via the background task `gh pr checks <pr> --watch` (yielding the turn to the messaging system). Status-polling loops, `sleep` commands, or manual busy-waiting are strictly banned. All configured CI checks must pass (exit code 0) before draft status is removed or merge is authorized.
 8. **Zero Broken Tests on Master:** A failing test can never be excused or shipped to the default branch (§S005).
@@ -38,7 +40,7 @@ Standard S006 governs the code modification lifecycle from initial branch cut to
 Direct check-ins to the repository default branch are mechanically blocked by three non-bypassable layers:
 1. **Client Guard (`.git/hooks/pre-push`):** Inspects incoming push refspecs via `stdin`; terminates with exit code 1 if targeting `refs/heads/<default_branch>`.
 2. **Server Ruleset (`github.com/djntechnic/<repo>`):** Branch ruleset on `~DEFAULT_BRANCH` with `bypass_actors: []` (zero bypass, including administrators) enforcing PR isolation, squash-merging, and deletion of branch references.
-3. **Lifecycle Orchestrator (`/finalize-pr` / `Invoke-EcosystemLifecycle`):** Canonical automation executing tiered testing, Conventional Commits, draft PR creation, reactive CI watching (`gh pr checks --watch`), squash-merge, and local trunk tree reconciliation.
+3. **Lifecycle Orchestrator (`/finalize-pr` / `Invoke-EcosystemLifecycle`):** Canonical automation executing tiered testing (`scripts/run_qa.py --mode fast|scoped|full`), Conventional Commits, draft PR creation, reactive CI watching (`gh pr checks --watch`), squash-merge, and local trunk tree reconciliation.
 
 ### Commit Message Conventions
 Commits must use Conventional Commits to clearly delineate intent:

@@ -127,6 +127,9 @@ python scripts/run_qa.py --mode scoped  # everything touched since master — be
 python scripts/run_qa.py --mode full    # entire suite + every platform audit — pre-merge / CI
 ```
 
+Run artifacts and the HTML report viewer live under `.qa/`; see
+[`docs/reference/qa-orchestrator.md`](docs/reference/qa-orchestrator.md).
+
 ## Deployment
 
 `deploy/` holds the image, compose and nginx templates an application copies,
