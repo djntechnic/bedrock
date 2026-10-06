@@ -15,6 +15,8 @@ Desc:    Enforcement for [S001-no-duplicate-ui-code](../../../../docs/standards/
            7. No bare `axios` imports; must use platform `apiClient`.
            8. No unshadowed symbol collision with installed `@djntechnic/bedrock-ui`
               exports if package is present.
+           9. No hand-rolled `<header ... app-header ...>` in consumer apps;
+              must compose `AppHeader` / `AppShell` or declare `@shadows AppHeader`.
 
          Exit 0 clean, 1 on a violation, 2 on a configuration error (an
          unreadable/malformed `bedrock.toml`).
@@ -71,6 +73,9 @@ _INLINE_FORMATTER = re.compile(
 
 #: A literal query-key array bypasses the app's single `queryKeys` factory.
 _INLINE_QUERY_KEY = re.compile(r"queryKey:\s*\[")
+
+#: A consumer-rendered app header duplicates the platform's `AppHeader`.
+_LOCAL_APP_HEADER = re.compile(r"<header[^>]*app-header", re.M)
 
 _EXPORT_STAR = re.compile(r'^\s*export\s+\*\s+from\s+["\'](\.[^"\']+)["\']', re.M)
 _EXPORT_NAMED_FROM = re.compile(
@@ -220,6 +225,27 @@ def find_registry_violations(root: Path, exemptions: list[str]) -> list[str]:
     return violations
 
 
+def find_shell_chrome_violations(root: Path, exemptions: list[str]) -> list[str]:
+    """Hand-rolled `<header ... app-header ...>` elements in consumer apps."""
+    violations: list[str] = []
+    for path in _source_files(root):
+        rel = path.relative_to(root).as_posix()
+        if _is_exempt(rel, exemptions):
+            continue
+        if rel.startswith("packages/bedrock-ui/"):
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        if _LOCAL_APP_HEADER.search(text):
+            shadows = _shadows_of(path)
+            if "AppHeader" not in shadows and "AppShell" not in shadows:
+                violations.append(
+                    f"{rel} renders a hand-rolled `<header ... app-header ...>`. "
+                    f"Adopt platform `<AppShell>` / `<AppHeader>` from @djntechnic/bedrock-ui, "
+                    f"or mark the file header with `@shadows AppHeader`."
+                )
+    return violations
+
+
 def find_platform_package_collisions(
     root: Path, exemptions: list[str], package_name: str = _BARREL_SPECIFIER
 ) -> list[str]:
@@ -343,6 +369,15 @@ def main(argv: list[str] | None = None) -> int:
     else:
         reporter.start_check("Checking for collisions against installed platform package")
         reporter.pass_check("no platform collisions found")
+
+    chrome_violations = find_shell_chrome_violations(root, exemptions)
+    if chrome_violations:
+        for violation in chrome_violations:
+            reporter.start_check("Checking application shell chrome components")
+            reporter.fail_check(violation)
+    else:
+        reporter.start_check("Checking application shell chrome components")
+        reporter.pass_check("no hand-rolled app-header elements found")
 
     print(reporter.render())
     return reporter.finish()
