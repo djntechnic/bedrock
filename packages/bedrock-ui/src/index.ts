@@ -255,3 +255,9 @@ export { default as Stepper } from "./components/Stepper";
 export type { StepperProps } from "./components/Stepper";
 export { default as WizardDialog } from "./components/WizardDialog";
 export type { WizardDialogProps, WizardStep } from "./components/WizardDialog";
+
+// ── Bulk edit primitives ─────────────────────────────────────────────────────
+export * from "./components/AdaptiveButton";
+export * from "./components/grids/draftHistory";
+export { default as SelectionDock } from "./components/SelectionDock";
+export type { SelectionDockProps } from "./components/SelectionDock";
