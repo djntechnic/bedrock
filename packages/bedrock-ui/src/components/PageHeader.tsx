@@ -15,7 +15,7 @@ interface PageHeaderProps {
   breadcrumbs?: ReactNode;
   className?: string;
   /**
-   * Pin the header — title, subtitle, actions and the rule — to the top of the
+   * Pin the header — title, subtitle and actions — to the top of the
    * nearest scroll container, so scrolling a long grid does not scroll away the
    * page's identity and its action buttons.
    *
@@ -44,7 +44,7 @@ export default function PageHeader({ title, subtitle, actions, badge, meta, brea
         className,
       )}
     >
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-center justify-between gap-4">
         <div className="min-w-0 space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-bold tracking-tight text-foreground leading-tight">
@@ -60,13 +60,12 @@ export default function PageHeader({ title, subtitle, actions, badge, meta, brea
           )}
         </div>
         {hasRight && (
-          <div className="flex items-center gap-2 shrink-0 pt-0.5">
+          <div className="flex items-center gap-2 shrink-0">
             {meta && <span className="text-xs text-muted-foreground">{meta}</span>}
             {actions}
           </div>
         )}
       </div>
-      <div className="h-[2px] bg-gradient-to-r from-primary/60 via-primary/20 to-transparent" />
     </div>
   );
 }
