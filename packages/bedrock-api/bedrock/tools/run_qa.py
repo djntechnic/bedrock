@@ -655,8 +655,39 @@ def write_report(
     return last
 
 
-def render_text(results: Sequence[StepResult], exit_code: int, duration_ms: float, notes: Sequence[str]) -> str:
+def render_text(
+    results: Sequence[StepResult],
+    exit_code: int,
+    duration_ms: float,
+    notes: Sequence[str],
+    *,
+    quiet: bool = False,
+) -> str:
     banner = "=" * 80
+    counts = {s: sum(1 for r in results if r.status == s) for s in ("pass", "fail", "error", "skip")}
+    summary_line = (
+        f"Total: {len(results)}  Passed: {counts['pass']}  Failed: {counts['fail']}  "
+        f"Errors: {counts['error']}  Skipped: {counts['skip']}  Elapsed: {duration_ms:.0f}ms  Exit: {exit_code}"
+    )
+
+    if quiet:
+        if exit_code == 0:
+            return f"[RUN-QA] ALL PASSED ({summary_line})"
+        lines = [banner, "[RUN-QA] Unified QA Orchestrator (Failures)", banner]
+        for note in notes:
+            lines.append(f"  note: {note}")
+        for r in results:
+            if r.status in ("fail", "error"):
+                marker = r.status.upper()
+                lines.append(f"  [{marker}] {r.lane}/{r.name}  ({r.duration_ms:.0f}ms)  {r.summary}")
+                if r.output_tail:
+                    lines.append(f"    --- last {_FAILURE_TAIL_LINES} lines ---")
+                    lines.extend(f"    {tail_line}" for tail_line in r.output_tail.splitlines())
+        lines.append(banner)
+        lines.append(summary_line)
+        lines.append(banner)
+        return "\n".join(lines)
+
     lines = [banner, "[RUN-QA] Unified QA Orchestrator", banner]
     for note in notes:
         lines.append(f"  note: {note}")
@@ -666,12 +697,8 @@ def render_text(results: Sequence[StepResult], exit_code: int, duration_ms: floa
         if r.output_tail:
             lines.append(f"    --- last {_FAILURE_TAIL_LINES} lines ---")
             lines.extend(f"    {tail_line}" for tail_line in r.output_tail.splitlines())
-    counts = {s: sum(1 for r in results if r.status == s) for s in ("pass", "fail", "error", "skip")}
     lines.append(banner)
-    lines.append(
-        f"Total: {len(results)}  Passed: {counts['pass']}  Failed: {counts['fail']}  "
-        f"Errors: {counts['error']}  Skipped: {counts['skip']}  Elapsed: {duration_ms:.0f}ms  Exit: {exit_code}"
-    )
+    lines.append(summary_line)
     lines.append(banner)
     return "\n".join(lines)
 
@@ -721,6 +748,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--mode", choices=MODES, default="fast", help="test tier to execute")
     parser.add_argument("--dead-code", action="store_true", help="also run vulture and knip (always on in full)")
     parser.add_argument("--json", action="store_true", help="emit one line of machine-readable JSON instead of text")
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        help="suppress passing steps; emit summary only on pass, failing steps on error",
+    )
     parser.add_argument("--force-refresh", action="store_true", help="discard the testmon cache before a fast run")
     parser.add_argument("--no-report", action="store_true", help="do not write .qa/reports/")
     args = parser.parse_args(argv)
@@ -751,10 +784,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.json:
         print(json.dumps(report))
     else:
-        print(render_text(results, exit_code, duration_ms, notes))
-        if "report" in report:
+        print(render_text(results, exit_code, duration_ms, notes, quiet=args.quiet))
+        if not args.quiet and "report" in report:
             print(f"Report: {report['report']}")
             print(f"Viewer: {QA_DIR_NAME}/reports/{qa_report.INDEX_NAME}")
+        elif args.quiet and exit_code != 0 and "report" in report:
+            print(f"Report: {report['report']}")
     return exit_code
 
 

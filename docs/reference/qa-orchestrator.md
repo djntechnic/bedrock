@@ -21,6 +21,7 @@ and MLBTracker use the interpreter on `PATH`.
 | `--mode fast\|scoped\|full` | Tier to run (default `fast`). |
 | `--dead-code` | Also run vulture and knip. Always on in `full`. |
 | `--force-refresh` | Discard the testmon cache before a `fast` run. |
+| `-q`, `--quiet` | Suppress passing steps; emit summary only on pass, failing steps on error. |
 | `--json` | Print one line of machine-readable JSON instead of text. |
 | `--no-report` | Do not write anything under `.qa/reports/`. |
 | `--root <dir>` | Repository root. The shim sets this for you. |
