@@ -236,3 +236,16 @@ export type {
 export { clampDimensions, normalizeState, emptyState, CONTENT_COLORS } from "./components/media/imageAnnotation";
 export { exportToBlob } from "./components/media/exportCanvas";
 export type { ExportResult } from "./components/media/exportCanvas";
+
+// ── Edit session ─────────────────────────────────────────────────────────────
+export { useEditSession } from "./hooks/useEditSession";
+export type { EditSession, EditSessionStatus, UseEditSessionOptions } from "./hooks/useEditSession";
+export { useRecordForm } from "./hooks/useRecordForm";
+export type { RecordForm, UseRecordFormOptions } from "./hooks/useRecordForm";
+export { useEditSessionStore, hasDirtySessions } from "./store/editSessionStore";
+export type { EditSessionStore } from "./store/editSessionStore";
+export { default as SaveBar } from "./components/SaveBar";
+export type { SaveBarProps, SaveBarHistory } from "./components/SaveBar";
+export { default as UndoRedoControls } from "./components/UndoRedoControls";
+export type { UndoRedoControlsProps } from "./components/UndoRedoControls";
+export { default as UnsavedChangesDialog } from "./components/UnsavedChangesDialog";

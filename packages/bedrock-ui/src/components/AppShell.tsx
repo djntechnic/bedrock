@@ -6,6 +6,7 @@ import AppSidebar from "./AppSidebar";
 import AppHeader from "./AppHeader";
 import AppFooter from "./AppFooter";
 import GlobalSearchBar from "./GlobalSearchBar";
+import UnsavedChangesDialog from "./UnsavedChangesDialog";
 
 export interface AppShellProps {
   layout?: "default" | "workbench" | "fullBleed";
@@ -55,6 +56,7 @@ export default function AppShell({
         </main>
         {resolvedFooter}
       </div>
+      <UnsavedChangesDialog />
     </div>
   );
 }

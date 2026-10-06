@@ -9,14 +9,21 @@
  */
 import { ChevronDown, LogOut, Pin, PinOff, User } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { forwardRef, useEffect, useState, type ReactNode } from "react";
-import { Link, useLocation } from "react-router-dom";
+import {
+  forwardRef,
+  useEffect,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+  type ReactNode,
+} from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAppSettings } from "../hooks/useAppSettings";
 import { useAuth } from "../hooks/useAuth";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 import { useModules } from "../hooks/useModules";
 import { useNavSettings } from "../hooks/useNavSettings";
 import { useSecurity } from "../hooks/useSecurity";
+import { useEditSessionStore, hasDirtySessions } from "../store/editSessionStore";
 import { useSidebarStore } from "../store/sidebarStore";
 import { isNavItemVisible, type NavItem, type SubItem } from "./navRegistry";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
@@ -85,6 +92,7 @@ export default function AppSidebar({
   brand,
 }: AppSidebarProps = {}) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
   const { system, grid } = useAppSettings();
   const { hasModule } = useModules();
@@ -198,6 +206,24 @@ export default function AppSidebar({
     return openSections.has(item.to);
   }
 
+  // Cooperative leave guard: while an edit session is dirty, plain left-clicks
+  // on any sidebar link (including tooltip/popover links, which bubble through
+  // the React tree) are parked behind UnsavedChangesDialog instead of navigating.
+  const guardLinkClick = (event: ReactMouseEvent<HTMLElement>) => {
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+      return;
+    }
+    if (!(event.target instanceof Element)) return;
+    const anchor = event.target.closest("a[href]");
+    if (!(anchor instanceof HTMLAnchorElement)) return;
+    const store = useEditSessionStore.getState();
+    if (!hasDirtySessions(store)) return;
+
+    event.preventDefault();
+    const to = `${anchor.pathname}${anchor.search}${anchor.hash}`;
+    store.requestLeave(() => navigate(to));
+  };
+
   // Fully off-canvas on mobile until the hamburger opens it.
   if (isMobile && !mobileOpen) return null;
 
@@ -212,6 +238,7 @@ export default function AppSidebar({
         />
       )}
       <aside
+        onClickCapture={guardLinkClick}
         onMouseEnter={() => !isMobile && !pinned && setHovered(true)}
         onMouseLeave={() => !isMobile && !pinned && setHovered(false)}
         className={[
