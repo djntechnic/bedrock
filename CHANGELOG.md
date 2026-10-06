@@ -1,3 +1,23 @@
+## v0.13.0 - 2026-10-06
+
+### Breaking Changes
+None
+
+### Fixed
+None
+
+### Added / Changed
+None
+
+### Platform Maintenance
+- **[#136] perf(qa): parallel QA orchestrator in bedrock-api with HTML run viewer**
+- **[#135] docs(spec): database maintenance and diagnostics toolset design spec & plan**
+
+### For consumers
+- **Resolves Upstream Issues:** #134
+- **Target Downstream Repositories:** `djntechnic/CollectIt`, `djntechnic/MLBTracker`
+- **Expected Pin Migration:** `/bump-bedrock-pin v0.13.0`
+
 ## v0.12.0 - 2026-10-05
 
 ### Breaking Changes
