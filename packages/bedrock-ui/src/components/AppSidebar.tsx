@@ -8,6 +8,7 @@
  *              a hamburger button in the app header (see App.tsx).
  */
 import { ChevronDown, LogOut, Pin, PinOff, User } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { forwardRef, useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAppSettings } from "../hooks/useAppSettings";
@@ -550,33 +551,55 @@ export default function AppSidebar({
           ) : (
             <div className="flex items-center justify-between gap-1">
               {user ? (
-                <>
-                  <ProfileTarget
-                    to={profilePath}
-                    title={profilePath ? "View profile" : undefined}
-                    className={[
-                      "flex-1 min-w-0 flex items-center gap-2 px-2 py-1 rounded-md text-xs font-medium text-foreground transition-colors outline-none",
-                      profilePath
-                        ? "hover:bg-muted hover:text-primary focus-visible:ring-2 focus-visible:ring-ring"
-                        : "",
-                    ].join(" ")}
-                  >
-                    <User className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <span className="truncate">
-                      {user.display_name || user.email}
-                    </span>
-                  </ProfileTarget>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void logout();
-                    }}
-                    title="Sign out"
-                    className="shrink-0 p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </button>
-                </>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Account menu"
+                      className="flex-1 min-w-0 flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg text-xs font-medium text-foreground hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold shrink-0">
+                          {(user.display_name || user.email || "U")
+                            .trim()
+                            .charAt(0)
+                            .toUpperCase()}
+                        </div>
+                        <span className="truncate">
+                          {user.display_name || user.email}
+                        </span>
+                      </div>
+                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" className="w-56 p-1.5 text-xs">
+                    <div className="px-2 py-1.5 text-muted-foreground border-b border-border mb-1">
+                      <p className="font-semibold text-foreground truncate">
+                        {user.display_name || "Account"}
+                      </p>
+                      <p className="truncate text-[11px]">{user.email}</p>
+                    </div>
+                    {profilePath && (
+                      <Link
+                        to={profilePath}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted text-foreground transition-colors"
+                      >
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span>Profile</span>
+                      </Link>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void logout();
+                      }}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted text-destructive transition-colors text-left"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Sign out</span>
+                    </button>
+                  </PopoverContent>
+                </Popover>
               ) : (
                 <Link
                   to="/login"

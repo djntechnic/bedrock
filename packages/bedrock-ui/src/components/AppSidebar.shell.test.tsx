@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { TooltipProvider } from "./ui/tooltip";
 import AppSidebar, { type AppSidebarProps } from "./AppSidebar";
@@ -166,5 +166,43 @@ describe("AppSidebar Shell Refresh - Indicator & Motion", () => {
       </MemoryRouter>
     );
     expect(aside?.className).not.toContain("transition-[width]");
+  });
+});
+
+describe("AppSidebar Shell Refresh - Account Menu", () => {
+  beforeEach(() => {
+    mockState.pinned = true;
+    mockState.isMobile = false;
+    mockState.mobileOpen = false;
+    mockState.reducedMotion = false;
+    mockAuth.logout.mockClear();
+  });
+
+  it("renders Account menu trigger and opens popover on click", () => {
+    renderSidebar({ profilePath: "/profile" });
+    const trigger = screen.getByRole("button", { name: /Account menu/i });
+    expect(trigger).toBeDefined();
+    expect(trigger.textContent).toContain("Dan N");
+
+    fireEvent.click(trigger);
+
+    expect(screen.getByRole("link", { name: /Profile/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Sign out/i })).toBeDefined();
+  });
+
+  it("omits the Profile link when profilePath is null", () => {
+    renderSidebar({ profilePath: null });
+    fireEvent.click(screen.getByRole("button", { name: /Account menu/i }));
+
+    expect(screen.queryByRole("link", { name: /Profile/i })).toBeNull();
+    expect(screen.getByRole("button", { name: /Sign out/i })).toBeDefined();
+  });
+
+  it("calls logout when Sign out is clicked inside Account menu", () => {
+    renderSidebar();
+    fireEvent.click(screen.getByRole("button", { name: /Account menu/i }));
+
+    fireEvent.click(screen.getByRole("button", { name: /Sign out/i }));
+    expect(mockAuth.logout).toHaveBeenCalled();
   });
 });
