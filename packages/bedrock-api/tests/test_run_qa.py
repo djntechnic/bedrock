@@ -397,3 +397,27 @@ def test_main_survives_a_failure_tail_a_cp1252_stdout_cannot_encode(repo: Path, 
     sys.stdout.flush()
     assert code == 1
     assert b"Total:" in raw.getvalue()
+
+
+def test_main_quiet_passing(repo: Path, monkeypatch, capsys):
+    monkeypatch.setattr(run_qa, "run_step", _ok)
+    code = run_qa.main(["--root", str(repo), "--mode", "scoped", "-q", "--no-report"])
+    out = capsys.readouterr().out
+    assert code == 0
+    assert out.startswith("[RUN-QA] ALL PASSED")
+    assert "Report:" not in out
+    assert "Viewer:" not in out
+
+
+def test_main_quiet_failing(repo: Path, monkeypatch, capsys):
+    def failing(step: Step) -> StepResult:
+        return StepResult(step.name, step.lane, "fail", 1, 1.0, summary="1 failed", output_tail="error tail")
+
+    monkeypatch.setattr(run_qa, "run_step", failing)
+    code = run_qa.main(["--root", str(repo), "--mode", "scoped", "-q", "--no-report"])
+    out = capsys.readouterr().out
+    assert code == 1
+    assert "[RUN-QA] Unified QA Orchestrator (Failures)" in out
+    assert "error tail" in out
+    assert "ALL PASSED" not in out
+
