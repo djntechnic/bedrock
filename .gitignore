@@ -11,6 +11,8 @@ htmlcov/
 # pytest-testmon delta cache (per-developer / per-session local execution state)
 .testmondata*
 .testmon
+# run_qa's testmon cache and run reports (bedrock.tools.run_qa)
+.qa/
 
 # ==============================================================================
 # 2. ENVIRONMENT, SECRETS & DEPENDENCY RUNTIMES

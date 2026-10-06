@@ -41,7 +41,9 @@ pillow = ["Pillow"]
 # pyyaml parses deploy/docker-compose.yml in test_deployment.py — the
 # manifests are checked for the invariants that break a deploy silently.
 # Pillow exercises real image dimension extraction in test_media_service.py.
-dev = ["pytest", "pytest-asyncio", "httpx", "pyyaml", "Pillow"]
+# pytest-testmon backs run_qa's fast tier; vulture is its dead-code pass
+# (bedrock.tools.run_qa --dead-code, always on in --mode full).
+dev = ["pytest", "pytest-asyncio", "httpx", "pyyaml", "Pillow", "pytest-testmon", "vulture"]
 
 # Operational entry points. `bedrock-healthcheck` is what a container's
 # HEALTHCHECK runs — see deploy/Dockerfile.api and docs/reference/deployment.md.
@@ -57,4 +59,4 @@ include = ["bedrock*"]
 # if it ever changes is the quiet kind: the source tree works and the installed
 # package has no baseline and no migrations.
 [tool.setuptools.package-data]
-bedrock = ["schema/*.sql", "schema/migrations/*.sql", "standards/*.md", "templates/scripts/*.ps1"]
+bedrock = ["schema/*.sql", "schema/migrations/*.sql", "standards/*.md", "templates/scripts/*.ps1", "templates/qa/*.html"]

@@ -6,7 +6,7 @@ Developer and CI entrypoints for the bedrock monorepo.
 
 | Script | Purpose |
 |---|---|
-| `run_qa.py` | Tiered QA orchestrator: `--mode fast` (delta, before commit), `--mode scoped` (touched layer, before PR), `--mode full` (everything plus audits, pre-merge/CI). Exit 0 = all steps passed or skipped, 1 = a step failed. Add `--json` for machine-readable output. |
+| `run_qa.py` | Shim for `python -m bedrock.tools.run_qa` (layout from `[tool.bedrock.qa]` in `bedrock.toml`): `--mode fast` (testmon delta, before commit), `--mode scoped` (touched layers vs `master`, before PR), `--mode full` (everything plus audits and dead-code, pre-merge). Backend, frontend, typecheck and audit lanes run concurrently. Exit 0 = all steps passed or skipped, 1 = a step failed, 2 = a step could not run. `--json` for machine-readable output. Everything it writes lives under `.qa/` (gitignored): the testmon cache in `.qa/testmon/`, and `.qa/reports/` with `last-<mode>.json`, a rotating `history.jsonl`, and `index.html` - a self-contained viewer with filters, duration trends and per-step history (rebuild with `python -m bedrock.tools.qa_report --root .`). |
 | `clean_branches.py` | Prunes local branches that are merged or whose remote is gone. `clean_branches.bat` is the Windows launcher. |
 
 ## `audit/`

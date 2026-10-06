@@ -46,6 +46,7 @@ def test_default_ignored_dirs_constant():
         ".pytest_cache",
         ".agents",
         ".claude",
+        ".qa",
     }
     assert DEFAULT_IGNORED_DIRS == expected
 
