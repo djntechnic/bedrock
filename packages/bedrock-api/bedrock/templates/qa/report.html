@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QA Runs · __REPO_NAME__</title>
+<style>
+:root {
+  --bg: #f7f7f5; --panel: #ffffff; --ink: #1c1d21; --muted: #6b6e76; --line: #e4e4e0;
+  --pass: #1f8a5b; --fail: #c2412d; --error: #8f3fb8; --skip: #9a9ca3;
+  --fast: #2f6fde; --scoped: #c97a12; --full: #6a52c9; --accent: #2f6fde;
+  --mono: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #131417; --panel: #1b1d21; --ink: #e8e8ea; --muted: #9a9ca5; --line: #2c2f35;
+    --pass: #3fb67f; --fail: #ec6a55; --error: #b47ae0; --skip: #6e7179;
+    --fast: #5f95f2; --scoped: #e19c3b; --full: #9583ea; --accent: #5f95f2;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 20px 20px 48px; }
+header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; margin-bottom: 18px; }
+h1 { font-size: 20px; margin: 0; letter-spacing: -0.01em; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 10px; font-weight: 600; }
+.sub { color: var(--muted); font-size: 13px; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.grid { display: grid; gap: 14px; }
+.kpis { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-bottom: 14px; }
+.kpi .label { color: var(--muted); font-size: 12px; }
+.kpi .value { font-size: 24px; font-weight: 650; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.kpi .hint { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.filters { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; margin-bottom: 14px; }
+.filters label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+select, input { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; min-width: 120px; }
+input[type=search] { min-width: 200px; }
+button { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+button:hover { border-color: var(--accent); }
+.charts { grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); margin-bottom: 14px; }
+.chart-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 6px; }
+.chart-head h2 { margin: 0; }
+svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { fill: var(--muted); font-size: 10px; font-family: var(--mono); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 12px; color: var(--muted); margin-top: 6px; }
+.swatch { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.latest { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin-bottom: 14px; }
+.latest .meta { color: var(--muted); font-size: 12px; margin-bottom: 8px; font-family: var(--mono); }
+.step { display: grid; grid-template-columns: 14px 1fr auto; gap: 8px; align-items: baseline; padding: 3px 0; border-top: 1px dashed var(--line); }
+.step:first-of-type { border-top: 0; }
+.step .name { font-family: var(--mono); font-size: 12.5px; }
+.step .summary { grid-column: 2 / 4; color: var(--muted); font-size: 12px; }
+.step .ms { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.s-pass { background: var(--pass); } .s-fail { background: var(--fail); } .s-error { background: var(--error); } .s-skip { background: var(--skip); }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 600; color: var(--panel); }
+.pill.pass { background: var(--pass); } .pill.fail { background: var(--fail); } .pill.error { background: var(--error); }
+.mode-tag { font-family: var(--mono); font-size: 12px; font-weight: 600; }
+details.tail { margin-top: 6px; }
+details.tail summary { cursor: pointer; color: var(--fail); font-size: 12px; }
+pre { font-family: var(--mono); font-size: 11.5px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; overflow-x: auto; max-height: 340px; margin: 6px 0 0; white-space: pre; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; color: var(--muted); font-weight: 600; font-size: 12px; padding: 6px 8px; border-bottom: 1px solid var(--line); cursor: pointer; user-select: none; white-space: nowrap; }
+th.sorted::after { content: " ▾"; } th.sorted.asc::after { content: " ▴"; }
+td { padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; font-variant-numeric: tabular-nums; }
+td.mono { font-family: var(--mono); font-size: 12px; }
+tr.run { cursor: pointer; } tr.run:hover td { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+tr.detail td { background: var(--bg); white-space: normal; }
+.bars { display: flex; gap: 2px; height: 14px; align-items: stretch; min-width: 140px; }
+.bars span { display: block; border-radius: 2px; min-width: 3px; }
+.empty { color: var(--muted); padding: 24px; text-align: center; }
+.tbl-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; color: var(--muted); font-size: 12px; }
+.tip { position: fixed; pointer-events: none; background: var(--ink); color: var(--panel); font-size: 12px; padding: 6px 8px; border-radius: 6px; max-width: 320px; z-index: 10; font-family: var(--mono); white-space: pre; }
+@media (max-width: 640px) { .charts { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>QA runs · __REPO_NAME__</h1>
+    <span class="sub" id="generated"></span>
+  </header>
+
+  <section class="grid kpis" id="kpis"></section>
+
+  <section class="panel filters" aria-label="Filters">
+    <label>Mode<select id="f-mode"><option value="">All</option></select></label>
+    <label>Branch<select id="f-branch"><option value="">All</option></select></label>
+    <label>Status<select id="f-status"><option value="">All</option><option value="pass">Pass</option><option value="fail">Fail / error</option></select></label>
+    <label>Step<select id="f-step"><option value="">Any</option></select></label>
+    <label>Since<select id="f-since"><option value="">All time</option><option value="1">Last 24 h</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option></select></label>
+    <label>Search<input type="search" id="f-text" placeholder="commit, branch, step…"></label>
+    <button id="f-reset" type="button">Reset</button>
+  </section>
+
+  <section class="grid charts">
+    <div class="panel">
+      <div class="chart-head"><h2>Run duration</h2><span class="sub" id="dur-note"></span></div>
+      <div id="chart-duration"></div>
+      <div class="legend" id="legend-duration"></div>
+    </div>
+    <div class="panel">
+      <div class="chart-head">
+        <h2>Step duration</h2>
+        <select id="step-pick" aria-label="Step to chart"></select>
+      </div>
+      <div id="chart-step"></div>
+      <div class="legend" id="legend-step"></div>
+    </div>
+    <div class="panel">
+      <div class="chart-head"><h2>Pass rate by day</h2><span class="sub" id="rate-note"></span></div>
+      <div id="chart-rate"></div>
+    </div>
+    <div class="panel">
+      <div class="chart-head"><h2>Slowest steps (median)</h2><span class="sub">filtered runs</span></div>
+      <div id="chart-slow"></div>
+    </div>
+  </section>
+
+  <h2>Latest run per mode</h2>
+  <section class="grid latest" id="latest"></section>
+
+  <section class="panel">
+    <h2>History</h2>
+    <div class="table-wrap">
+      <table id="history">
+        <thead><tr>
+          <th data-key="timestamp" class="sorted">When</th>
+          <th data-key="mode">Mode</th>
+          <th data-key="status">Status</th>
+          <th data-key="duration_ms">Duration</th>
+          <th data-key="branch">Branch</th>
+          <th data-key="head">Commit</th>
+          <th data-key="failed">Failed steps</th>
+          <th>Step timeline</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="tbl-foot"><span id="count"></span><button id="more" type="button">Show more</button></div>
+  </section>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script type="application/json" id="qa-data">__QA_DATA__</script>
+<script>
+(() => {
+  "use strict";
+  const DATA = JSON.parse(document.getElementById("qa-data").textContent);
+  const MODES = ["fast", "scoped", "full"];
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const modeColor = (m) => css("--" + (MODES.includes(m) ? m : "accent"));
+  const statusColor = (s) => css("--" + (["pass", "fail", "error", "skip"].includes(s) ? s : "skip"));
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  const fmtMs = (ms) => {
+    if (ms == null || isNaN(ms)) return "–";
+    if (ms < 1000) return Math.round(ms) + "ms";
+    const s = ms / 1000;
+    if (s < 60) return s.toFixed(s < 10 ? 1 : 0) + "s";
+    return Math.floor(s / 60) + "m " + String(Math.round(s % 60)).padStart(2, "0") + "s";
+  };
+  const fmtWhen = (iso) => {
+    const d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleString(undefined, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  };
+  const median = (xs) => {
+    if (!xs.length) return null;
+    const s = [...xs].sort((a, b) => a - b), m = s.length >> 1;
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  };
+
+  // Normalize history rows.
+  const runs = (DATA.history || []).map((r, i) => {
+    const steps = r.steps || {};
+    const failed = Object.entries(steps).filter(([, s]) => s.status === "fail" || s.status === "error").map(([n]) => n);
+    return {
+      id: i, timestamp: r.timestamp, t: new Date(r.timestamp).getTime(), mode: r.mode, branch: r.branch || "", head: r.head || "",
+      exit: r.exit, status: r.exit === 0 ? "pass" : (r.exit === 2 ? "error" : "fail"), duration_ms: r.duration_ms, steps, failed,
+    };
+  }).filter((r) => !isNaN(r.t));
+
+  const stepNames = [...new Set(runs.flatMap((r) => Object.keys(r.steps)))].sort();
+  const branches = [...new Set(runs.map((r) => r.branch).filter(Boolean))].sort();
+  const modes = [...new Set([...MODES.filter((m) => runs.some((r) => r.mode === m)), ...runs.map((r) => r.mode)])];
+
+  const addOptions = (sel, values) => values.forEach((v) => sel.insertAdjacentHTML("beforeend", `<option value="${esc(v)}">${esc(v)}</option>`));
+  addOptions($("f-mode"), modes); addOptions($("f-branch"), branches); addOptions($("f-step"), stepNames); addOptions($("step-pick"), stepNames);
+  if (stepNames.includes("pytest")) $("step-pick").value = "pytest";
+
+  $("generated").textContent = `generated ${fmtWhen(DATA.generated)} · ${runs.length} run${runs.length === 1 ? "" : "s"} recorded in .qa/reports/history.jsonl`;
+
+  // Filter state, persisted in the URL hash so a view can be bookmarked.
+  const FILTER_IDS = { mode: "f-mode", branch: "f-branch", status: "f-status", step: "f-step", since: "f-since", q: "f-text" };
+  const readHash = () => {
+    const p = new URLSearchParams(location.hash.slice(1));
+    for (const [k, id] of Object.entries(FILTER_IDS)) if (p.has(k)) $(id).value = p.get(k);
+    if (p.has("chart")) $("step-pick").value = p.get("chart");
+  };
+  const writeHash = () => {
+    const p = new URLSearchParams();
+    for (const [k, id] of Object.entries(FILTER_IDS)) if ($(id).value) p.set(k, $(id).value);
+    if ($("step-pick").value) p.set("chart", $("step-pick").value);
+    history.replaceState(null, "", "#" + p.toString());
+  };
+
+  const filtered = () => {
+    const mode = $("f-mode").value, branch = $("f-branch").value, status = $("f-status").value;
+    const step = $("f-step").value, since = Number($("f-since").value), q = $("f-text").value.trim().toLowerCase();
+    const cutoff = since ? Date.now() - since * 86400000 : 0;
+    return runs.filter((r) =>
+      (!mode || r.mode === mode) && (!branch || r.branch === branch) &&
+      (!status || (status === "pass" ? r.status === "pass" : r.status !== "pass")) &&
+      (!step || (step in r.steps && r.steps[step].status !== "skip")) &&
+      (!cutoff || r.t >= cutoff) &&
+      (!q || [r.mode, r.branch, r.head, ...Object.keys(r.steps)].join(" ").toLowerCase().includes(q)));
+  };
+
+  // ---- KPIs ---------------------------------------------------------------
+  const renderKpis = (rows) => {
+    const passRate = rows.length ? Math.round(100 * rows.filter((r) => r.status === "pass").length / rows.length) : null;
+    const last = rows.reduce((a, b) => (a && a.t > b.t ? a : b), null);
+    const cards = [
+      { label: "Runs", value: rows.length, hint: rows.length === runs.length ? "all recorded" : `of ${runs.length} recorded` },
+      { label: "Pass rate", value: passRate == null ? "–" : passRate + "%", hint: `${rows.filter((r) => r.status !== "pass").length} failing` },
+      ...MODES.map((m) => {
+        const ds = rows.filter((r) => r.mode === m).map((r) => r.duration_ms);
+        return { label: `Median ${m}`, value: fmtMs(median(ds)), hint: ds.length ? `${ds.length} run${ds.length === 1 ? "" : "s"} · best ${fmtMs(Math.min(...ds))}` : "no runs", color: modeColor(m) };
+      }),
+      { label: "Last run", value: last ? fmtMs(last.duration_ms) : "–", hint: last ? `${last.mode} · ${fmtWhen(last.timestamp)}` : "" },
+    ];
+    $("kpis").innerHTML = cards.map((c) => `<div class="panel kpi"><div class="label">${c.color ? `<span class="swatch" style="background:${c.color}"></span>` : ""}${esc(c.label)}</div><div class="value">${esc(c.value)}</div><div class="hint">${esc(c.hint)}</div></div>`).join("");
+  };
+
+  // ---- Charts (inline SVG, no dependencies) -------------------------------
+  const W = 560, H = 200, PAD = { l: 46, r: 10, t: 10, b: 24 };
+  const niceMax = (v) => { if (v <= 0) return 1; const p = Math.pow(10, Math.floor(Math.log10(v))); return Math.ceil(v / p) * p; };
+  const axis = (yMax, yFmt, x0, x1) => {
+    let out = "";
+    for (let i = 0; i <= 4; i++) {
+      const v = (yMax * i) / 4, y = PAD.t + (H - PAD.t - PAD.b) * (1 - i / 4);
+      out += `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${y}" y2="${y}" stroke="var(--line)"/>`;
+      out += `<text x="${PAD.l - 6}" y="${y + 3}" text-anchor="end">${esc(yFmt(v))}</text>`;
+    }
+    if (x0 != null) {
+      const d = (t) => new Date(t).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+      out += `<text x="${PAD.l}" y="${H - 6}">${esc(d(x0))}</text><text x="${W - PAD.r}" y="${H - 6}" text-anchor="end">${esc(d(x1))}</text>`;
+    }
+    return out;
+  };
+  const series = (rows, valueOf, groupOf, colorOf, tipOf) => {
+    const pts = rows.map((r) => ({ r, v: valueOf(r) })).filter((p) => p.v != null).sort((a, b) => a.r.t - b.r.t);
+    if (!pts.length) return null;
+    const x0 = pts[0].r.t, x1 = pts[pts.length - 1].r.t, span = Math.max(x1 - x0, 1);
+    const yMax = niceMax(Math.max(...pts.map((p) => p.v)));
+    const X = (t) => pts.length === 1 ? (PAD.l + W - PAD.r) / 2 : PAD.l + (W - PAD.l - PAD.r) * (t - x0) / span;
+    const Y = (v) => PAD.t + (H - PAD.t - PAD.b) * (1 - v / yMax);
+    const groups = {};
+    pts.forEach((p) => (groups[groupOf(p.r)] ||= []).push(p));
+    let body = axis(yMax, fmtMs, x0, x1);
+    for (const [g, gp] of Object.entries(groups)) {
+      if (gp.length > 1) body += `<polyline fill="none" stroke="${colorOf(g)}" stroke-width="1.5" stroke-opacity="0.55" points="${gp.map((p) => `${X(p.r.t).toFixed(1)},${Y(p.v).toFixed(1)}`).join(" ")}"/>`;
+      body += gp.map((p) => {
+        const bad = p.r.status !== "pass";
+        return `<circle cx="${X(p.r.t).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="${bad ? 4 : 3}" fill="${bad ? "var(--panel)" : colorOf(g)}" stroke="${bad ? css("--fail") : colorOf(g)}" stroke-width="${bad ? 2 : 1}" data-tip="${esc(tipOf(p))}" data-run="${p.r.id}"/>`;
+      }).join("");
+    }
+    return `<svg viewBox="0 0 ${W} ${H}" role="img">${body}</svg>`;
+  };
+  const legend = (el, items) => { el.innerHTML = items.map(([label, color]) => `<span><span class="swatch" style="background:${color}"></span>${esc(label)}</span>`).join(""); };
+
+  const renderCharts = (rows) => {
+    const dur = series(rows, (r) => r.duration_ms, (r) => r.mode, modeColor,
+      (p) => `${p.r.mode} · ${fmtMs(p.v)}\n${fmtWhen(p.r.timestamp)}\n${p.r.branch} @ ${p.r.head}${p.r.failed.length ? "\nfailed: " + p.r.failed.join(", ") : ""}`);
+    $("chart-duration").innerHTML = dur || `<div class="empty">No runs match the filters.</div>`;
+    legend($("legend-duration"), [...modes.filter((m) => rows.some((r) => r.mode === m)).map((m) => [m, modeColor(m)]), ["hollow = failed run", css("--fail")]]);
+    const trend = (m) => {
+      const ds = rows.filter((r) => r.mode === m).sort((a, b) => a.t - b.t).map((r) => r.duration_ms);
+      if (ds.length < 4) return "";
+      const half = ds.length >> 1, a = median(ds.slice(0, half)), b = median(ds.slice(half));
+      const pct = Math.round(100 * (b - a) / a);
+      return `${m} ${pct > 0 ? "▲" : pct < 0 ? "▼" : "■"} ${Math.abs(pct)}%`;
+    };
+    $("dur-note").textContent = MODES.map(trend).filter(Boolean).join(" · ");
+
+    const step = $("step-pick").value;
+    const st = step ? series(rows.filter((r) => r.steps[step] && r.steps[step].status !== "skip"), (r) => r.steps[step].ms, (r) => r.mode, modeColor,
+      (p) => `${step} (${p.r.mode}) · ${fmtMs(p.v)}\n${p.r.steps[step].status}${p.r.steps[step].summary ? "\n" + p.r.steps[step].summary : ""}\n${fmtWhen(p.r.timestamp)}`) : null;
+    $("chart-step").innerHTML = st || `<div class="empty">No timed runs of this step in the filtered set.</div>`;
+    legend($("legend-step"), modes.filter((m) => rows.some((r) => r.mode === m && r.steps[step])).map((m) => [m, modeColor(m)]));
+
+    // Pass rate by day: stacked pass/fail bars.
+    const days = {};
+    rows.forEach((r) => { const d = new Date(r.t); const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; (days[k] ||= { pass: 0, fail: 0 })[r.status === "pass" ? "pass" : "fail"]++; });
+    const keys = Object.keys(days).sort().slice(-30);
+    if (!keys.length) { $("chart-rate").innerHTML = `<div class="empty">No runs match the filters.</div>`; $("rate-note").textContent = ""; }
+    else {
+      // Run counts: a multiple of the 4 axis steps, so every tick is a whole number.
+      const max = Math.max(4, Math.ceil(niceMax(Math.max(...keys.map((k) => days[k].pass + days[k].fail))) / 4) * 4);
+      const bw = (W - PAD.l - PAD.r) / keys.length, ih = H - PAD.t - PAD.b;
+      let body = axis(max, (v) => String(Math.round(v)));
+      keys.forEach((k, i) => {
+        const { pass, fail } = days[k], x = PAD.l + i * bw + bw * 0.15, w = Math.max(bw * 0.7, 2);
+        const hp = ih * pass / max, hf = ih * fail / max, base = PAD.t + ih;
+        const tip = `${k}\n${pass} passed · ${fail} failed`;
+        body += `<rect x="${x.toFixed(1)}" y="${(base - hp).toFixed(1)}" width="${w.toFixed(1)}" height="${hp.toFixed(1)}" fill="${css("--pass")}" rx="1.5" data-tip="${esc(tip)}"/>`;
+        body += `<rect x="${x.toFixed(1)}" y="${(base - hp - hf).toFixed(1)}" width="${w.toFixed(1)}" height="${hf.toFixed(1)}" fill="${css("--fail")}" rx="1.5" data-tip="${esc(tip)}"/>`;
+      });
+      body += `<text x="${PAD.l}" y="${H - 6}">${esc(keys[0])}</text><text x="${W - PAD.r}" y="${H - 6}" text-anchor="end">${esc(keys[keys.length - 1])}</text>`;
+      $("chart-rate").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img">${body}</svg>`;
+      const tot = keys.reduce((a, k) => a + days[k].pass + days[k].fail, 0), ok = keys.reduce((a, k) => a + days[k].pass, 0);
+      $("rate-note").textContent = `${Math.round(100 * ok / tot)}% over ${keys.length} day${keys.length === 1 ? "" : "s"}`;
+    }
+
+    // Slowest steps: horizontal bars of median duration.
+    const med = stepNames.map((n) => [n, median(rows.map((r) => r.steps[n]).filter((s) => s && s.status !== "skip").map((s) => s.ms))]).filter(([, v]) => v != null).sort((a, b) => b[1] - a[1]).slice(0, 8);
+    if (!med.length) { $("chart-slow").innerHTML = `<div class="empty">No timed steps in the filtered set.</div>`; }
+    else {
+      const rowH = 22, h = med.length * rowH + 6, lw = 150, max = med[0][1];
+      const body = med.map(([n, v], i) => {
+        const w = Math.max((W - lw - 70) * v / max, 2), y = i * rowH + 3;
+        return `<text x="${lw - 8}" y="${y + 13}" text-anchor="end">${esc(n.length > 22 ? n.slice(0, 21) + "…" : n)}</text><rect x="${lw}" y="${y + 2}" width="${w.toFixed(1)}" height="${rowH - 8}" rx="3" fill="${css("--accent")}" fill-opacity="0.75" data-tip="${esc(n + " · median " + fmtMs(v))}"/><text x="${lw + w + 6}" y="${y + 13}">${esc(fmtMs(v))}</text>`;
+      }).join("");
+      $("chart-slow").innerHTML = `<svg viewBox="0 0 ${W} ${h}" role="img">${body}</svg>`;
+    }
+  };
+
+  // ---- Latest run per mode (full report incl. failure output) -------------
+  const renderLatest = () => {
+    const latest = DATA.latest || {};
+    const keys = MODES.filter((m) => latest[m]).concat(Object.keys(latest).filter((m) => !MODES.includes(m)));
+    if (!keys.length) { $("latest").innerHTML = `<div class="panel empty">No runs recorded yet. Run <code>python -m bedrock.tools.run_qa</code>.</div>`; return; }
+    $("latest").innerHTML = keys.map((m) => {
+      const r = latest[m], status = r.exit === 0 ? "pass" : (r.exit === 2 ? "error" : "fail");
+      const fails = Object.fromEntries((r.failures || []).map((f) => [f.name, f]));
+      const steps = (r.steps || []).map((s) => {
+        const f = fails[s.name];
+        return `<div class="step"><span class="dot s-${esc(s.status)}" title="${esc(s.status)}"></span><span class="name">${esc(s.lane)}/${esc(s.name)}</span><span class="ms">${s.status === "skip" ? "skip" : fmtMs(s.duration_ms)}</span>${s.summary ? `<span class="summary">${esc(s.summary)}</span>` : ""}${f && f.output_tail ? `<details class="tail" style="grid-column:2/4"><summary>output (last lines)</summary><pre>${esc(f.output_tail)}</pre></details>` : ""}</div>`;
+      }).join("");
+      const notes = (r.notes || []).map((n) => `<div class="summary">note: ${esc(n)}</div>`).join("");
+      return `<div class="panel"><div class="chart-head"><span class="mode-tag" style="color:${modeColor(m)}">${esc(m)}</span><span><span class="pill ${status}">${status}</span> <span class="ms">${fmtMs(r.duration_ms)}</span></span></div><div class="meta">${esc(fmtWhen(r.timestamp))} · ${esc(r.branch)} @ ${esc(r.head)}</div>${notes}${steps}</div>`;
+    }).join("");
+  };
+
+  // ---- History table --------------------------------------------------------
+  let sortKey = "timestamp", sortAsc = false, limit = 50;
+  const open = new Set();
+  const renderTable = (rows) => {
+    const val = (r) => sortKey === "failed" ? r.failed.length : sortKey === "timestamp" ? r.t : r[sortKey];
+    const sorted = [...rows].sort((a, b) => { const x = val(a), y = val(b); return (x > y ? 1 : x < y ? -1 : 0) * (sortAsc ? 1 : -1); });
+    const shown = sorted.slice(0, limit);
+    $("history").querySelector("tbody").innerHTML = shown.length ? shown.map((r) => {
+      const total = Object.values(r.steps).reduce((a, s) => a + (s.ms || 0), 0) || 1;
+      const bars = Object.entries(r.steps).filter(([, s]) => s.status !== "skip").map(([n, s]) => `<span style="flex:${Math.max(s.ms, total * 0.01)};background:${statusColor(s.status)}" data-tip="${esc(`${n} · ${s.status} · ${fmtMs(s.ms)}`)}"></span>`).join("");
+      const detail = open.has(r.id) ? `<tr class="detail"><td colspan="8">${Object.entries(r.steps).map(([n, s]) => `<div class="step"><span class="dot s-${esc(s.status)}"></span><span class="name">${esc(n)}</span><span class="ms">${s.status === "skip" ? "skip" : fmtMs(s.ms)}</span>${s.summary ? `<span class="summary">${esc(s.summary)}</span>` : ""}</div>`).join("")}</td></tr>` : "";
+      return `<tr class="run" data-id="${r.id}"><td>${esc(fmtWhen(r.timestamp))}</td><td class="mode-tag" style="color:${modeColor(r.mode)}">${esc(r.mode)}</td><td><span class="pill ${r.status}">${r.status}</span></td><td class="mono">${fmtMs(r.duration_ms)}</td><td class="mono">${esc(r.branch)}</td><td class="mono">${esc(r.head)}</td><td class="mono">${esc(r.failed.join(", ") || "–")}</td><td><div class="bars">${bars}</div></td></tr>${detail}`;
+    }).join("") : `<tr><td colspan="8" class="empty">No runs match the filters.</td></tr>`;
+    $("count").textContent = `Showing ${shown.length} of ${rows.length} filtered run${rows.length === 1 ? "" : "s"}`;
+    $("more").hidden = shown.length >= rows.length;
+    document.querySelectorAll("#history th[data-key]").forEach((th) => { th.classList.toggle("sorted", th.dataset.key === sortKey); th.classList.toggle("asc", th.dataset.key === sortKey && sortAsc); });
+  };
+
+  const render = () => { const rows = filtered(); renderKpis(rows); renderCharts(rows); renderTable(rows); writeHash(); };
+
+  // ---- Wiring ---------------------------------------------------------------
+  Object.values(FILTER_IDS).forEach((id) => $(id).addEventListener("input", () => { limit = 50; render(); }));
+  $("step-pick").addEventListener("input", render);
+  $("f-reset").addEventListener("click", () => { Object.values(FILTER_IDS).forEach((id) => ($(id).value = "")); render(); });
+  $("more").addEventListener("click", () => { limit += 100; render(); });
+  document.querySelectorAll("#history th[data-key]").forEach((th) => th.addEventListener("click", () => {
+    if (sortKey === th.dataset.key) sortAsc = !sortAsc; else { sortKey = th.dataset.key; sortAsc = false; }
+    render();
+  }));
+  $("history").addEventListener("click", (e) => {
+    const tr = e.target.closest("tr.run"); if (!tr) return;
+    const id = Number(tr.dataset.id); open.has(id) ? open.delete(id) : open.add(id); renderTable(filtered());
+  });
+  const tip = $("tip");
+  document.addEventListener("mousemove", (e) => {
+    const el = e.target.closest("[data-tip]");
+    if (!el) { tip.hidden = true; return; }
+    tip.textContent = el.getAttribute("data-tip"); tip.hidden = false;
+    const x = Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 8), y = Math.min(e.clientY + 14, window.innerHeight - tip.offsetHeight - 8);
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  });
+  document.addEventListener("click", (e) => {
+    const dot = e.target.closest("circle[data-run]"); if (!dot) return;
+    const id = Number(dot.dataset.run); open.add(id);
+    const r = runs[id]; $("f-mode").value = ""; render();
+    const row = document.querySelector(`tr.run[data-id="${id}"]`);
+    if (row) row.scrollIntoView({ behavior: "smooth", block: "center" }); else if (r) { limit = runs.length; render(); document.querySelector(`tr.run[data-id="${id}"]`)?.scrollIntoView({ block: "center" }); }
+  });
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+  // A pasted or back-navigated view changes only the hash, which reloads nothing.
+  window.addEventListener("hashchange", () => { readHash(); render(); });
+
+  readHash();
+  renderLatest();
+  render();
+})();
+</script>
+</body>
+</html>

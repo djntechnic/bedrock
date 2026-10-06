@@ -38,6 +38,8 @@ DEFAULT_IGNORED_DIRS: frozenset[str] = frozenset(
         ".pytest_cache",
         ".agents",
         ".claude",
+        # run_qa's testmon cache and run reports (bedrock.tools.run_qa).
+        ".qa",
     }
 )
 
@@ -359,3 +361,85 @@ def load_bedrock_config(repo_root: Path | None = None) -> BedrockConfig:
         ),
         **section_kwargs,
     )
+
+
+
+
+# ---------------------------------------------------------------------------
+# [tool.bedrock.qa] - the QA orchestrator's repo layout (bedrock.tools.run_qa)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class QaConfig:
+    """Where `bedrock.tools.run_qa` finds each layer. Every path is relative
+    to the repository root. The defaults describe the consumer layout
+    (`api/` + `frontend/`); the bedrock monorepo overrides them."""
+
+    # pytest's working directory (where pytest.ini / testpaths resolve).
+    backend_dir: str = "."
+    # Where package.json and node_modules live; vitest/tsc/knip run here.
+    frontend_dir: str = "frontend"
+    # Source root `vitest related` draws changed .ts/.tsx files from.
+    frontend_src: str = "frontend/src"
+    # Globs (fnmatch, `*` crosses `/`) that mark a layer touched in scoped mode.
+    backend_paths: tuple[str, ...] = (
+        "api/*",
+        "bedrock_app/*",
+        "migrations/*",
+        "requirements*.txt",
+        "pyproject.toml",
+        "pytest.ini",
+        "conftest.py",
+    )
+    frontend_paths: tuple[str, ...] = ("frontend/*",)
+    # Extra arguments for the full vitest run (e.g. `--project` shards).
+    vitest_args: tuple[str, ...] = ()
+    # Type-check command; the first element is resolved from node_modules/.bin.
+    typecheck: tuple[str, ...] = ("tsc", "-b", "--noEmit")
+    # Glob for the consumer's own domain audit scripts; "" disables them.
+    domain_audits: str = "scripts/audit/s1*_audit_*.py"
+    # Paths vulture scans; empty disables it.
+    vulture_paths: tuple[str, ...] = ()
+    vulture_min_confidence: int = 80
+    knip: bool = True
+    base_branch: str = "master"
+    # Lines kept in .qa/reports/history.jsonl.
+    history_limit: int = 500
+
+
+def load_qa_config(repo_root: Path) -> QaConfig:
+    """Read `[tool.bedrock.qa]` from `<repo_root>/bedrock.toml`. A missing
+    file or section yields the defaults; a wrongly-typed value raises
+    ValueError rather than running the wrong commands."""
+    toml_path = Path(repo_root) / "bedrock.toml"
+    raw: dict[str, Any] = {}
+    if toml_path.exists():
+        with toml_path.open("rb") as fh:
+            raw = tomllib.load(fh).get("tool", {}).get("bedrock", {}).get("qa", {})
+
+    defaults = QaConfig()
+    kwargs: dict[str, Any] = {}
+    for f in fields(QaConfig):
+        if f.name not in raw:
+            continue
+        value = raw[f.name]
+        default = getattr(defaults, f.name)
+        if isinstance(default, tuple):
+            if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
+                raise ValueError(f"[tool.bedrock.qa] {f.name} must be a list of strings")
+            value = tuple(value)
+        elif isinstance(default, bool):
+            if not isinstance(value, bool):
+                raise ValueError(f"[tool.bedrock.qa] {f.name} must be true or false")
+        elif isinstance(default, int):
+            if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+                raise ValueError(f"[tool.bedrock.qa] {f.name} must be a positive integer")
+        elif not isinstance(value, str):
+            raise ValueError(f"[tool.bedrock.qa] {f.name} must be a string")
+        kwargs[f.name] = value
+
+    known = {f.name for f in fields(QaConfig)}
+    for key in sorted(set(raw) - known):
+        logger.warning("Ignoring unrecognized key {key} in [tool.bedrock.qa]", key=key)
+    return QaConfig(**kwargs)

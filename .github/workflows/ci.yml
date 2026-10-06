@@ -6,23 +6,70 @@ on:
     tags: ["v*"]
   pull_request:
 
+# A new push to a PR branch supersedes the run already in flight for it.
+# master and tag runs are never cancelled: each one gates a release.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  workflows:
-    name: workflow files parse
+  changes:
+    name: detect changed layers
     runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          # bedrock.toml configures the audits and the QA orchestrator, both
+          # tested by the backend suite; .github/ is in both because a
+          # workflow edit has to prove itself against every job it touches.
+          filters: |
+            backend:
+              - 'packages/bedrock-api/**'
+              - 'bedrock.toml'
+              - 'scripts/**'
+              - '.claude/rules/**'
+              - '.github/**'
+            frontend:
+              - 'packages/bedrock-ui/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'vitest.*'
+              - 'tsconfig*.json'
+              - '.github/**'
+
+  backend:
+    name: bedrock-api (pytest)
+    needs: changes
+    # A skipped job satisfies a required check, so a docs-only PR merges
+    # without running a suite it cannot affect. master and tags always run.
+    if: needs.changes.outputs.backend == 'true' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/bedrock-api
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - name: Install PyYAML
-        run: python -m pip install --quiet pyyaml
+          cache: pip
+          cache-dependency-path: packages/bedrock-api/pyproject.toml
+      - name: Install
+        run: pip install -e ".[dev]"
       # A workflow file that does not parse fails as a 0s run with no jobs and
       # no check attached to any PR — v0.6.0 shipped a cascade.yml that had
       # been broken since it was written because nothing here ever read it.
       # safe_load rejects the specific defect that caused it: a bare `---` at
       # column 1 inside a `run: |` block, which ends the YAML document.
+      # PyYAML is already a dev dependency, so this rides on the install
+      # above instead of paying for a job of its own.
       - name: Parse every workflow as a single YAML document
+        working-directory: .
         run: |
           python - <<'PY'
           import pathlib, sys, yaml
@@ -37,55 +84,43 @@ jobs:
                   print(f"{path}: ok")
           sys.exit(1 if failed else 0)
           PY
-
-  backend:
-    name: bedrock-api (pytest)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: packages/bedrock-api
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Install
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
       - name: Test
         run: pytest
 
   frontend:
     name: bedrock-ui (vitest + tsc)
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true' || github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: npm
       - name: Install
         # The package ships source and declares only peers. npm 7+ installs
-        # peerDependencies alongside devDependencies, so a plain `npm install`
-        # now gets both — the manual peer install this replaced predates the
-        # test stack being declared at all.
+        # peerDependencies alongside devDependencies, so a clean install gets
+        # both. `npm ci` installs exactly what package-lock.json records,
+        # which is also what makes the npm cache above effective.
         #
         # Note the absence of --legacy-peer-deps: it makes npm skip the peer
         # install entirely, and both the type check and the tests then pass on
         # modules that are not there.
-        run: npm install --no-audit --no-fund
-      - name: Build
-        # `prepare` already runs this on install, but only when scripts are
+        run: npm ci --no-audit --no-fund
+      - name: Build + type check
+        # `prepare` already builds on install, but only when scripts are
         # enabled. Doing it explicitly means `packaging.test.ts` always has a
         # dist to check, which is the only place the published layout is
         # verified against the `exports` map.
+        #
+        # `build:types` compiles packages/bedrock-ui/tsconfig.json - the same
+        # project, test files included, that `npm run typecheck` checks - so
+        # it is the type check. A separate typecheck step compiled the whole
+        # project a second time.
         run: npm run build && npm run build:types
       - name: Test
         run: npm test
-      - name: Type check
-        # After the tests, so a genuine failure is reported rather than a
-        # missing matcher type on a test file.
-        run: npm run typecheck
 
   release-version-parity:
     name: release version parity
@@ -96,11 +131,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+          cache: pip
+          cache-dependency-path: packages/bedrock-api/pyproject.toml
       - name: Install
         working-directory: packages/bedrock-api
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+        run: pip install -e ".[dev]"
       # Blocks a tag whose package.json and pyproject.toml versions do not
       # both equal the tag being cut - see bedrock#56. github.ref_name is the
       # tag itself on a tag push (e.g. "v0.8.1"), which is exactly what the

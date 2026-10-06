@@ -41,6 +41,8 @@ exemptions = [
   "packages/bedrock-api/bedrock/tools/s*.py",
   "packages/bedrock-api/bedrock/tools/remediate_taxonomy_and_casing.py",
   "packages/bedrock-api/bedrock/tools/run_all.py",
+  "packages/bedrock-api/bedrock/tools/run_qa.py",
+  "packages/bedrock-api/bedrock/tools/qa_report.py",
   "packages/bedrock-api/bedrock/tools/sync_standards.py",
   # Dependency-free by design (see module docstring) so it can probe
   # readiness before the app itself can import loguru.
@@ -73,6 +75,9 @@ exemptions = [
   # Dependency-free by design (see module docstring) so it can probe
   # readiness before the app itself can import the config/db stack.
   "packages/bedrock-api/bedrock/tools/healthcheck.py",
+  # Developer CLI, not application code: it reads no setting, only copies the
+  # parent environment into each child test process (plus TESTMON_DATAFILE).
+  "packages/bedrock-api/bedrock/tools/run_qa.py",
   # The audit source itself: its own regex patterns and diagnostic strings
   # contain the literal text this audit scans for.
   "packages/bedrock-api/bedrock/tools/audit_s004_config.py",
@@ -185,3 +190,17 @@ exemptions = []
 
 [tool.bedrock.ecosystem]
 consumers = ["CollectIt", "MLBTracker"]
+
+# The QA orchestrator's layout (bedrock.tools.run_qa). The defaults describe a
+# consumer (api/ + frontend/); the monorepo keeps its suites under packages/.
+# Every audit under scripts/audit is a platform audit, already run by
+# bedrock.tools.run_all, so there is no domain set.
+[tool.bedrock.qa]
+backend_dir = "packages/bedrock-api"
+frontend_dir = "."
+frontend_src = "packages/bedrock-ui/src"
+backend_paths = ["packages/bedrock-api/*", "bedrock.toml", "scripts/*"]
+frontend_paths = ["packages/bedrock-ui/*", "package.json", "package-lock.json", "vitest.*", "tsconfig*.json"]
+typecheck = ["tsc", "--noEmit", "-p", "packages/bedrock-ui/tsconfig.json"]
+vulture_paths = ["packages/bedrock-api/bedrock", "scripts/maintenance/vulture_whitelist.py"]
+domain_audits = ""

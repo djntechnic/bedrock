@@ -20,7 +20,10 @@ TEMPLATE = (
 )
 
 
-def _run(tmp_path: Path, *args: str, with_domain_audit: bool) -> tuple[int, list[str]]:
+def _run(
+    tmp_path: Path, *args: str, with_domain_audit: bool, fail_on: str | None = None
+) -> tuple[int, list[str]]:
+    """`fail_on` makes the stub exit 3 for any call whose argv contains it."""
     pwsh = shutil.which("pwsh")
     assert pwsh, "PowerShell 7 (pwsh) is required to exercise the runner template"
     assert TEMPLATE.exists(), f"template missing: {TEMPLATE}"
@@ -37,12 +40,14 @@ def _run(tmp_path: Path, *args: str, with_domain_audit: bool) -> tuple[int, list
     shim_dir = tmp_path / "shim"
     shim_dir.mkdir()
     if sys.platform == "win32":
+        fail = f'@echo %* | findstr /C:"{fail_on}" >nul && exit /b 3\r\n' if fail_on else ""
         (shim_dir / "python.cmd").write_text(
-            f'@echo %*>> "{log}"\r\n@exit /b 0\r\n', encoding="utf-8"
+            f'@echo %*>> "{log}"\r\n{fail}@exit /b 0\r\n', encoding="utf-8"
         )
     else:
+        fail = f'case "$*" in *"{fail_on}"*) exit 3;; esac\n' if fail_on else ""
         shim = shim_dir / "python"
-        shim.write_text(f'#!/bin/sh\necho "$@" >> "{log}"\nexit 0\n', encoding="utf-8")
+        shim.write_text(f'#!/bin/sh\necho "$@" >> "{log}"\n{fail}exit 0\n', encoding="utf-8")
         shim.chmod(shim.stat().st_mode | stat.S_IEXEC)
 
     env = {**os.environ, "PATH": f"{shim_dir}{os.pathsep}{os.environ['PATH']}"}
@@ -85,4 +90,13 @@ def test_no_switch_runs_platform_and_domain(tmp_path: Path):
 
     assert code == 0
     assert any("bedrock.tools.run_all" in c for c in calls)
+    assert any("s101_audit_example.py" in c for c in calls)
+
+
+def test_a_failing_check_sets_the_exit_code_and_the_others_still_run(tmp_path: Path):
+    # Checks run concurrently; one failing must neither hide the others nor
+    # be masked by a later pass - the runner exits with the worst code seen.
+    code, calls = _run(tmp_path, with_domain_audit=True, fail_on="bedrock.tools.run_all")
+
+    assert code == 3
     assert any("s101_audit_example.py" in c for c in calls)
