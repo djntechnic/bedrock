@@ -55,7 +55,18 @@ matter of reviewer discipline.
   maintenance drag without a corresponding correctness guarantee.
 - CI re-runs the full path-scoped suite on every PR. A local fast/scoped test
   tier is a speed optimization for the agent loop, never a substitute for the
-  CI gate.
+  CI gate. Conversely, CI never runs the local fast tier: a runner starts with
+  no testmon cache, so "fast" there re-runs the whole suite for no signal.
+- Local tiers run through the platform QA orchestrator
+  (`bedrock.tools.run_qa`, configured by `[tool.bedrock.qa]` in
+  `bedrock.toml`), not a per-repository script. A consumer keeps only the
+  `scripts/run_qa.py` shim, so a fix to tier selection ships once, from the
+  pin.
+- Test-tool state and run reports live under the gitignored `.qa/` directory
+  (`.qa/testmon/` for the testmon dependency database, `.qa/reports/` for the
+  per-run JSON reports, history, and HTML viewer) — never in the repository
+  root. A tool that cannot be redirected there is configured to, or the
+  orchestrator migrates its files there.
 - Background test jobs and CI runs are never polled with a busy-wait loop
   (a fixed `sleep` retried in a loop, or repeated manual status checks). The
   triggering process yields after launching the job and resumes on the

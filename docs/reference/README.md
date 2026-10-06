@@ -16,4 +16,5 @@ flight; they're amended in place as the platform evolves.
 | [`object-storage.md`](object-storage.md) | Storage provider protocol (Cloudflare R2, S3-compatible backends). |
 | [`pagination.md`](pagination.md) | Pagination conventions across the API. |
 | [`seo.md`](seo.md) | SEO routes and the nginx blocks they need. |
+| [`qa-orchestrator.md`](qa-orchestrator.md) | `scripts/run_qa.py` tiers (fast / scoped / full), `[tool.bedrock.qa]` config, `.qa/` artifacts, and the HTML report viewer. |
 | [`roadmap.md`](roadmap.md) | Longer-horizon platform roadmap. |
