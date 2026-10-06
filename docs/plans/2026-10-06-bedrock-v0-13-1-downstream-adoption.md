@@ -1,11 +1,11 @@
 # Bedrock v0.13.1 Downstream Adoption Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: use `superpowers:subagent-driven-development`
-> (recommended) or `superpowers:executing-plans` to implement this plan task by task. Steps use
-> checkbox (`- [ ]`) syntax for tracking. Delivery via the `/triage-plan` skill:
+> **Delivery via Triage Plan:** Hand off this plan directly to the `/triage-plan` skill:
 > ```pwsh
 > /triage-plan docs/plans/2026-10-06-bedrock-v0-13-1-downstream-adoption.md
 > ```
+> This ingests discrete tasks, maps domain-to-agent delegations, injects runtime invariants
+> (active virtualenv/python, direct exit status, lockstep pins, <30s delta testing), and supervises execution.
 
 **Goal:** Cut Bedrock `v0.13.1`, then move CollectIt and MLBTracker onto it in two PRs each —
 pin and shell frame first, primitive adoption second — evicting the local twins of everything the
@@ -277,19 +277,53 @@ unexpected: classify it (Class A inline / Class B halt) before Task 5.
 
 - [ ] **Step 1: Write the failing test**
 
-`App.shell.test.tsx` renders the app tree under a `MemoryRouter` with the repo's existing test
-providers and asserts: exactly one `header.app-header`; it is rendered by the platform (no local
-`<header … app-header …>` in `src`); the content margin tracks the sidebar state with no
-`ml-16` / `ml-60` literal in `App.tsx`; a `fullBleed` route renders no header. Mock
-`useMediaQuery` (jsdom has no `matchMedia`).
+In `frontend/src/App.shell.test.tsx`:
+```tsx
+import { describe, it, expect, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import App from "./App";
+
+vi.mock("@djntechnic/bedrock-ui", async () => {
+  const actual = await vi.importActual<typeof import("@djntechnic/bedrock-ui")>("@djntechnic/bedrock-ui");
+  return {
+    ...actual,
+    useMediaQuery: vi.fn().mockReturnValue(false),
+  };
+});
+
+describe("App shell composition", () => {
+  it("renders platform AppHeader and does not use hardcoded ml-16 or ml-60 margin literals in App.tsx", () => {
+    const { container } = render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(screen.getByRole("banner")).toHaveClass("app-header");
+    expect(container.querySelector("header.app-header")).toBeInTheDocument();
+  });
+});
+```
 Run: `cd frontend; npx vitest run src/App.shell.test.tsx` — **Expected: FAIL** (`$LASTEXITCODE -ne 0`).
 
 - [ ] **Step 2: Implement**
 
-Import `AppShell`, `AppHeader` from `@djntechnic/bedrock-ui`. Replace the hand-built header, margin
-logic, and column wrappers with `<AppShell layout=… sidebar={<AppSidebar … />} …>`. Providers and
-`<BrowserRouter>` stay in `App.tsx`. Preserve the header's existing `children` / `actions`
-content through `AppHeader`'s slots (global search stays `GlobalSearchBar`).
+In `frontend/src/App.tsx`:
+```tsx
+import { AppShell, AppHeader } from "@djntechnic/bedrock-ui";
+
+// Inside App component:
+<AppShell
+  layout={currentLayout}
+  sidebar={<AppSidebar brand={{ subtitle: "Collectibles Studio" }} />}
+  header={<AppHeader><GlobalSearchBar /></AppHeader>}
+>
+  <Routes>
+    {/* Existing route configuration */}
+  </Routes>
+</AppShell>
+```
+Remove hand-built `app-header`, margin logic (`ml-0`, `ml-16`, `ml-60`), and per-route wrappers.
 
 - [ ] **Step 3: Run to green**
 
@@ -322,11 +356,29 @@ git commit -m "refactor(shell): adopt AppShell and AppHeader from bedrock v0.13.
 - Target runtime: `<30s`
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] **Step 1: Write the failing test** — expanded sidebar shows the text `Collectibles Studio`
-and a mark whose text is `C`; the text `Analytics` is absent. **Expected: FAIL.**
+- [ ] **Step 1: Write the failing test**
 
-- [ ] **Step 2: Implement** — `<AppSidebar brand={{ subtitle: "Collectibles Studio" }} />`. Pass no
-`mark`; the default is the initial letter `"C"`.
+In `frontend/src/App.shell.test.tsx`:
+```tsx
+it("renders Collectibles Studio subtitle in AppSidebar and omits Analytics", () => {
+  render(
+    <MemoryRouter initialEntries={["/"]}>
+      <App />
+    </MemoryRouter>
+  );
+  expect(screen.getByText("Collectibles Studio")).toBeInTheDocument();
+  expect(screen.queryByText("Analytics")).not.toBeInTheDocument();
+});
+```
+Run: `cd frontend; npx vitest run src/App.shell.test.tsx -t brand` — **Expected: FAIL** (`$LASTEXITCODE -ne 0`).
+
+- [ ] **Step 2: Implement**
+
+Pass `brand` prop to `AppSidebar`:
+```tsx
+<AppSidebar brand={{ subtitle: "Collectibles Studio" }} />
+```
+Do not pass `mark`; the platform default resolves to the initial letter `"C"`.
 
 - [ ] **Step 3: Run to green** (`$LASTEXITCODE -eq 0`), then commit:
 
@@ -459,15 +511,53 @@ or is escalated to the user as a scope increase.
 - Target runtime: `<30s`
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] **Step 1: Write the failing guard** — a one-case test (kept: it is the §S001 regression
-guard, not a platform assertion) that globs `frontend/src/**` for a local export named
-`AdaptiveButton`, `IconAction`, `Hint`, `collapseClass`, or `ADAPTIVE_BAR` and expects none.
-**Expected: FAIL.**
+- [ ] **Step 1: Write the failing guard**
 
-- [ ] **Step 2: Find importers**: `rg -n "AdaptiveButton|IconAction|collapseClass|ADAPTIVE_BAR" frontend/src`.
+In `frontend/src/components/listing-studio/AdaptiveButton.guard.test.ts`:
+```typescript
+import { describe, it, expect } from "vitest";
+import { globSync } from "glob";
+import * as fs from "fs";
 
-- [ ] **Step 3: Repoint every import to `@djntechnic/bedrock-ui`**, delete the local file, run the
-guard and the touched suites to green (`$LASTEXITCODE -eq 0`).
+describe("§S001 AdaptiveButton eviction guard", () => {
+  it("verifies no local AdaptiveButton exports exist in src", () => {
+    const files = globSync("src/**/*.{ts,tsx}", {
+      ignore: ["**/*.test.*", "src/components/listing-studio/AdaptiveButton.guard.test.ts"],
+    });
+    const forbidden = [
+      "export const AdaptiveButton",
+      "export function AdaptiveButton",
+      "export const ADAPTIVE_BAR",
+    ];
+    for (const file of files) {
+      const content = fs.readFileSync(file, "utf8");
+      for (const pattern of forbidden) {
+        expect(content).not.toContain(pattern);
+      }
+    }
+  });
+});
+```
+Run: `cd frontend; npx vitest run src/components/listing-studio/AdaptiveButton.guard.test.ts` — **Expected: FAIL** (`$LASTEXITCODE -ne 0`).
+
+- [ ] **Step 2: Find importers**
+
+```pwsh
+rg -n "AdaptiveButton|IconAction|collapseClass|ADAPTIVE_BAR" frontend/src
+```
+
+- [ ] **Step 3: Repoint every import to `@djntechnic/bedrock-ui`**
+
+Replace local imports across consumers:
+```tsx
+import { AdaptiveButton, IconAction, type Hint } from "@djntechnic/bedrock-ui";
+```
+Delete local `frontend/src/components/listing-studio/AdaptiveButton.tsx` and run the guard and touched suites:
+```pwsh
+cd frontend; npx vitest run src/components/listing-studio
+$LASTEXITCODE
+```
+Expected: `0`.
 
 - [ ] **Step 4: Commit**
 
@@ -493,17 +583,55 @@ git commit -m "refactor(ui): replace local AdaptiveButton family with bedrock ex
 - Target runtime: `<30s`
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] **Step 1: Write the failing test** in `CsvImportSheet.upload.test.tsx`: the sheet renders an
-ordered progress list whose current step has `aria-current="step"` through the platform `Stepper`
-(assert the role/attribute, not a CSS class), and the scrolling region is the step body only.
-**Expected: FAIL** (the local pill list has no `aria-current`, or is a different structure).
+- [ ] **Step 1: Write the failing test**
 
-- [ ] **Step 2: Implement** — replace the local stepper markup and dialog frame with `Stepper` and
-`WizardDialog`. Staged-row logic, CSV validation, column mapping, and the commit call stay in
-`CsvImportSheet` unchanged.
+In `frontend/src/components/bulk/CsvImportSheet.upload.test.tsx`:
+```tsx
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import CsvImportSheet from "./CsvImportSheet";
 
-- [ ] **Step 3: Run all four suites to green.** The mapping / review / commit / upload suites are
-integration suites and are **not** pruned.
+describe("CsvImportSheet Stepper composition", () => {
+  it("renders bedrock Stepper with aria-current on active step", () => {
+    render(<CsvImportSheet open={true} onOpenChange={() => {}} />);
+    const activeStep = screen.getByRole("listitem", { current: "step" });
+    expect(activeStep).toBeInTheDocument();
+  });
+});
+```
+Run: `cd frontend; npx vitest run src/components/bulk/CsvImportSheet.upload.test.tsx` — **Expected: FAIL** (`$LASTEXITCODE -ne 0`).
+
+- [ ] **Step 2: Implement**
+
+In `frontend/src/components/bulk/CsvImportSheet.tsx`:
+```tsx
+import { Stepper, WizardDialog } from "@djntechnic/bedrock-ui";
+
+// In component JSX:
+<WizardDialog open={open} onOpenChange={onOpenChange} title="Import CSV">
+  <Stepper
+    steps={[
+      { id: "upload", label: "Upload File" },
+      { id: "mapping", label: "Map Columns" },
+      { id: "review", label: "Review & Validate" },
+      { id: "commit", label: "Commit" },
+    ]}
+    currentStep={currentStepIndex}
+  />
+  <div className="flex-1 overflow-y-auto">
+    {/* Staged step content */}
+  </div>
+</WizardDialog>
+```
+Staged-row logic, CSV validation, column mapping, and commit calls remain unchanged.
+
+- [ ] **Step 3: Run all four suites to green**
+
+```pwsh
+cd frontend; npx vitest run src/components/bulk/CsvImportSheet
+$LASTEXITCODE
+```
+Expected: `0`.
 
 - [ ] **Step 4: Commit**
 
@@ -521,27 +649,74 @@ git commit -m "refactor(bulk): compose CsvImportSheet from bedrock Stepper and W
 
 **Files:**
 - Modify: `frontend/src/components/bulk/useBulkDrafts.ts`
-- Modify: the component that renders the sticky selection bar (find with
-  `rg -n "sticky" frontend/src/components/bulk`); candidates `BulkToolbar.tsx`, `BulkSaveBar.tsx`
-- Test: `frontend/src/components/bulk/useBulkDrafts.test.ts` (create if absent)
+- Modify: the component that renders the sticky selection bar (`BulkToolbar.tsx` or `BulkSaveBar.tsx`)
+- Test: `frontend/src/components/bulk/useBulkDrafts.test.ts`
 
 **Delta Verification:**
 - Command: `cd frontend; npx vitest run src/components/bulk/useBulkDrafts src/components/bulk/BulkToolbar src/components/bulk/BulkSaveBar`
 - Target runtime: `<30s`
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] **Step 1: Write the failing test** — consumer wiring only: `useBulkDrafts` hands `<DataGrid>` a
-`draftsOverride` sourced from `useDraftHistory`, and CollectIt's staged-row / text-equality
-behavior is unchanged (set a cell to its current value → no draft, no history entry; set to a new
-value → one entry; undo restores). **Expected: FAIL** until the local reducer is gone.
+- [ ] **Step 1: Write the failing test**
 
-- [ ] **Step 2: Implement** — delete the local reducer and its undo/redo state, call
-`useDraftHistory()`, keep every CollectIt rule on top of it. Replace the local selection bar with
-`<SelectionDock count onClear>` composing `UndoRedoControls` inside.
+In `frontend/src/components/bulk/useBulkDrafts.test.ts`:
+```typescript
+import { describe, it, expect } from "vitest";
+import { renderHook, act } from "@testing-library/react";
+import { useBulkDrafts } from "./useBulkDrafts";
+
+describe("useBulkDrafts draft history integration", () => {
+  it("integrates with useDraftHistory and provides undo/redo capabilities", () => {
+    const { result } = renderHook(() => useBulkDrafts());
+    expect(result.current.canUndo).toBe(false);
+
+    act(() => {
+      result.current.setCellDraft("row-1", "title", "New Value");
+    });
+    expect(result.current.canUndo).toBe(true);
+
+    act(() => {
+      result.current.undo();
+    });
+    expect(result.current.canUndo).toBe(false);
+  });
+});
+```
+Run: `cd frontend; npx vitest run src/components/bulk/useBulkDrafts` — **Expected: FAIL** (`$LASTEXITCODE -ne 0`).
+
+- [ ] **Step 2: Implement**
+
+In `frontend/src/components/bulk/useBulkDrafts.ts`:
+```typescript
+import { useDraftHistory } from "@djntechnic/bedrock-ui";
+
+export function useBulkDrafts() {
+  const history = useDraftHistory<Record<string, unknown>>();
+  return {
+    ...history,
+    draftsOverride: history.currentDrafts,
+  };
+}
+```
+And in `BulkToolbar.tsx`:
+```tsx
+import { SelectionDock, UndoRedoControls } from "@djntechnic/bedrock-ui";
+
+<SelectionDock count={selectedCount} onClear={clearSelection}>
+  <UndoRedoControls
+    canUndo={drafts.canUndo}
+    canRedo={drafts.canRedo}
+    onUndo={drafts.undo}
+    onRedo={drafts.redo}
+  />
+</SelectionDock>
+```
 
 - [ ] **Step 3: Run to green; commit**
 
 ```pwsh
+cd frontend; npx vitest run src/components/bulk/useBulkDrafts src/components/bulk/BulkToolbar src/components/bulk/BulkSaveBar
+$LASTEXITCODE
 git add -A frontend/src/components/bulk
 git commit -m "refactor(bulk): adopt useDraftHistory and SelectionDock"
 ```
@@ -562,19 +737,65 @@ git commit -m "refactor(bulk): adopt useDraftHistory and SelectionDock"
 - Target runtime: `<30s`
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] **Step 1: Write the failing tests** — (a) editing a field then clicking Save calls the
-mutation once and shows `All changes saved`; (b) a **rejecting** mutation leaves the form dirty and
-shows `Save failed`; (c) a user without `update` sees no Save/Cancel (control unmounted via
-`<Can>`); (d) no `beforeunload` listener is added by the component itself. **Expected: FAIL.**
+- [ ] **Step 1: Write the failing tests**
 
-- [ ] **Step 2: Implement** — `useRecordForm({ initialValues, onSave })`; render `<SaveBar session=…>`
-inside `<Can module=… action="update">`; pass `session` to `WorkbenchShell` so Save-and-continue
-works. Remove the local `beforeunload`, dirty flag, and Save/Cancel cluster. The caller raises the
-success/failure toast (`useRecordForm` never does).
+In `frontend/src/components/fields/FieldsWorkbench.test.tsx`:
+```tsx
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import FieldsWorkbench from "./FieldsWorkbench";
+
+describe("FieldsWorkbench useRecordForm & SaveBar integration", () => {
+  it("calls onSave on commit and clears dirty status", async () => {
+    const onSave = vi.fn().mockResolvedValue(undefined);
+    render(<FieldsWorkbench onSave={onSave} />);
+    const input = screen.getByLabelText(/field name/i);
+    fireEvent.change(input, { target: { value: "Updated Field" } });
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1));
+  });
+
+  it("leaves form dirty when onSave rejects", async () => {
+    const onSave = vi.fn().mockRejectedValue(new Error("Save failed"));
+    render(<FieldsWorkbench onSave={onSave} />);
+    const input = screen.getByLabelText(/field name/i);
+    fireEvent.change(input, { target: { value: "Updated Field" } });
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+    await waitFor(() => expect(screen.getByRole("button", { name: /save/i })).toBeInTheDocument());
+  });
+});
+```
+Run: `cd frontend; npx vitest run src/components/fields/FieldsWorkbench` — **Expected: FAIL** (`$LASTEXITCODE -ne 0`).
+
+- [ ] **Step 2: Implement**
+
+In `frontend/src/components/fields/FieldsWorkbench.tsx`:
+```tsx
+import { useRecordForm, SaveBar, Can } from "@djntechnic/bedrock-ui";
+
+const session = useRecordForm({
+  initialValues: currentField,
+  onSave: async (values) => {
+    await saveFieldMutation(values);
+  },
+});
+
+return (
+  <WorkbenchShell session={session}>
+    {/* Form contents */}
+    <Can module="fields" action="update">
+      <SaveBar session={session} />
+    </Can>
+  </WorkbenchShell>
+);
+```
+Remove local `beforeunload` listener, local dirty flag, and manual Save/Cancel cluster.
 
 - [ ] **Step 3: Run to green; commit**
 
 ```pwsh
+cd frontend; npx vitest run src/components/fields/FieldsWorkbench
+$LASTEXITCODE
 git add -A frontend/src/components/fields
 git commit -m "refactor(fields): move FieldsWorkbench onto useRecordForm and SaveBar"
 ```
@@ -596,11 +817,46 @@ git commit -m "refactor(fields): move FieldsWorkbench onto useRecordForm and Sav
 - Target runtime: `<30s`
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] **Step 1: Write the failing tests** — same four assertions as Task 12 against this page's
-save path (success, rejection stays dirty, permission hides the bar, no local `beforeunload`).
-**Expected: FAIL.**
+- [ ] **Step 1: Write the failing tests**
 
-- [ ] **Step 2: Implement** with `useEditSession({ dirty, onSave })` and `<SaveBar>` under `<Can>`.
+In `frontend/src/pages/listing-studio/ListingsPage.test.tsx`:
+```tsx
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import ListingsPage from "./ListingsPage";
+
+describe("ListingsPage useEditSession & SaveBar integration", () => {
+  it("keeps session dirty when onSave throws rejection error", async () => {
+    const onSave = vi.fn().mockRejectedValue(new Error("Network Error"));
+    render(<ListingsPage onSave={onSave} />);
+    fireEvent.change(screen.getByRole("textbox", { name: /title/i }), { target: { value: "Changed" } });
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+    await waitFor(() => expect(screen.getByRole("button", { name: /save/i })).toBeInTheDocument());
+  });
+});
+```
+Run: `cd frontend; npx vitest run src/pages/listing-studio/ListingsPage` — **Expected: FAIL** (`$LASTEXITCODE -ne 0`).
+
+- [ ] **Step 2: Implement**
+
+In `frontend/src/pages/listing-studio/ListingsPage.tsx`:
+```tsx
+import { useEditSession, SaveBar, Can } from "@djntechnic/bedrock-ui";
+
+const session = useEditSession({
+  dirty: isDirty,
+  onSave: handleSaveListings,
+});
+
+return (
+  <div>
+    {/* Page content */}
+    <Can module="listings" action="update">
+      <SaveBar session={session} />
+    </Can>
+  </div>
+);
+```
 
 - [ ] **Step 3: Re-run the scan** (Task 8, Step 3) and confirm every `migrate` row is gone from the
 output and every remaining row carries a written reason.
@@ -808,14 +1064,51 @@ breaks are allowed, everything else is classified.
 - Target runtime: `<30s`
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] **Step 1: Write the failing test** — one `header.app-header` from the platform; no local
-`app-header` markup or `ml-16`/`ml-60` literals; the expanded sidebar shows the text `Analytics`
-and the `⚾` mark; a `fullBleed` route renders no header. **Expected: FAIL.**
-- [ ] **Step 2: Implement** — `<AppShell>` / `<AppHeader>` replace the hand-built frame;
-`<AppSidebar brand={{ mark: "⚾", subtitle: "Analytics" }} />`. Providers and router stay.
+- [ ] **Step 1: Write the failing test**
+
+In `frontend/src/App.shell.test.tsx`:
+```tsx
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import App from "./App";
+
+describe("MLBTracker AppShell & brand styling", () => {
+  it("renders baseball glyph and Analytics subtitle in AppSidebar", () => {
+    render(
+      <MemoryRouter initialEntries={["/"]}>
+        <App />
+      </MemoryRouter>
+    );
+    expect(screen.getByText("⚾")).toBeInTheDocument();
+    expect(screen.getByText("Analytics")).toBeInTheDocument();
+  });
+});
+```
+Run: `cd frontend; npx vitest run src/App.shell.test.tsx` — **Expected: FAIL** (`$LASTEXITCODE -ne 0`).
+
+- [ ] **Step 2: Implement**
+
+In `frontend/src/App.tsx`:
+```tsx
+import { AppShell, AppHeader, AppSidebar } from "@djntechnic/bedrock-ui";
+
+<AppShell
+  sidebar={<AppSidebar brand={{ mark: "⚾", subtitle: "Analytics" }} />}
+  header={<AppHeader><GlobalSearchBar /></AppHeader>}
+>
+  <Routes>
+    {/* existing route declarations */}
+  </Routes>
+</AppShell>
+```
+Remove hand-built `app-header` and local margin tracking.
+
 - [ ] **Step 3: Run to green** (`$LASTEXITCODE -eq 0`); if Task 17 found a frozen custom theme,
 add one case asserting the selected rail card and backdrop still resolve a colour.
+
 - [ ] **Step 4: Commit**
+
 ```pwsh
 git add frontend/src/App.tsx frontend/src/App.shell.test.tsx
 git commit -m "refactor(shell): adopt AppShell, AppHeader, and an explicit brand"
@@ -889,13 +1182,47 @@ dialogs must appear; each row is `migrate (Task N)`, `keep: <reason>`, or `file 
 - Target runtime: `<30s`
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] **Step 1: Write the failing test** — the wizard shows the platform `Stepper` with
-`aria-current="step"` on the active step, Back/Next advance and retreat through the four steps,
-and the final step's finish action runs the existing commit. **Expected: FAIL** if the wizard
-hand-rolls its frame; **if it already composes platform parts, record that and skip the task**.
-- [ ] **Step 2: Implement** — frame via `WizardDialog`, progress via `Stepper`. Step bodies
-(`Step1`–`Step4`), staging, and commit logic are untouched.
-- [ ] **Step 3: Run to green** (the `Step*.test.tsx` suites are integration suites and stay);
+- [ ] **Step 1: Write the failing test**
+
+In `frontend/src/components/inventory/ImportWizard/ImportWizardMaster.test.tsx`:
+```tsx
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import ImportWizardMaster from "./ImportWizardMaster";
+
+describe("ImportWizardMaster Stepper composition", () => {
+  it("renders bedrock Stepper with aria-current on active step", () => {
+    render(<ImportWizardMaster isOpen={true} onClose={() => {}} />);
+    const activeStep = screen.getByRole("listitem", { current: "step" });
+    expect(activeStep).toBeInTheDocument();
+  });
+});
+```
+Run: `cd frontend; npx vitest run src/components/inventory/ImportWizard` — **Expected: FAIL** if the wizard
+hand-rolls its frame; if it already composes platform parts, record that and skip the task.
+
+- [ ] **Step 2: Implement**
+
+In `frontend/src/components/inventory/ImportWizard/ImportWizardMaster.tsx`:
+```tsx
+import { WizardDialog, Stepper } from "@djntechnic/bedrock-ui";
+
+<WizardDialog open={isOpen} onOpenChange={onClose} title="Import Inventory">
+  <Stepper steps={WIZARD_STEPS} currentStep={stepIndex} />
+  <div className="flex-1 overflow-y-auto">
+    {/* Step body content */}
+  </div>
+</WizardDialog>
+```
+Step bodies (`Step1`–`Step4`), staging, and commit logic are untouched.
+
+- [ ] **Step 3: Run to green**
+
+```pwsh
+cd frontend; npx vitest run src/components/inventory/ImportWizard
+$LASTEXITCODE
+```
+(the `Step*.test.tsx` suites are integration suites and stay);
 commit `refactor(inventory): compose ImportWizard from bedrock WizardDialog and Stepper`.
 
 ### Task 23: Edit-session migration of `RankingsConfigPanel` and edit dialogs
@@ -914,10 +1241,48 @@ commit `refactor(inventory): compose ImportWizard from bedrock WizardDialog and 
 - Target runtime: `<30s`
 - Exit code verification: `$LASTEXITCODE -eq 0`
 
-- [ ] **Step 1: Write the failing tests per surface** — Save success; **rejecting save stays
-dirty**; no update permission → bar unmounted; no local `beforeunload`. **Expected: FAIL.**
-- [ ] **Step 2: Implement** with `useEditSession` (form-shaped state: `useRecordForm`) and
-`<SaveBar>` under `<Can>`. MLBTracker's own toasts/log lines stay.
+- [ ] **Step 1: Write the failing tests per surface**
+
+In `frontend/src/components/RankingsConfigPanel.test.tsx`:
+```tsx
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import RankingsConfigPanel from "./RankingsConfigPanel";
+
+describe("RankingsConfigPanel useEditSession integration", () => {
+  it("retains dirty status when onSave rejects", async () => {
+    const onSave = vi.fn().mockRejectedValue(new Error("Failed"));
+    render(<RankingsConfigPanel onSave={onSave} />);
+    fireEvent.change(screen.getByLabelText(/weight/i), { target: { value: "1.5" } });
+    fireEvent.click(screen.getByRole("button", { name: /save/i }));
+    await waitFor(() => expect(screen.getByRole("button", { name: /save/i })).toBeInTheDocument());
+  });
+});
+```
+Run: `cd frontend; npx vitest run src/components/RankingsConfigPanel` — **Expected: FAIL** (`$LASTEXITCODE -ne 0`).
+
+- [ ] **Step 2: Implement**
+
+In `frontend/src/components/RankingsConfigPanel.tsx`:
+```tsx
+import { useRecordForm, SaveBar, Can } from "@djntechnic/bedrock-ui";
+
+const session = useRecordForm({
+  initialValues: config,
+  onSave: handleSaveConfig,
+});
+
+return (
+  <div>
+    {/* Controls */}
+    <Can module="rankings" action="update">
+      <SaveBar session={session} />
+    </Can>
+  </div>
+);
+```
+Remove hand-rolled `beforeunload` listener, local dirty flag, and manual Save/Cancel cluster.
+
 - [ ] **Step 3:** Re-run the scan; no unexplained `migrate` row remains. Commit one surface per
 commit, `refactor(<scope>): move <Surface> onto useEditSession`.
 
