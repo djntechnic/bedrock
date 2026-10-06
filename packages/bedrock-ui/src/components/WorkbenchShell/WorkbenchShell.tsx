@@ -15,6 +15,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { PanelLeftClose, PanelLeftOpen, Plus } from "lucide-react";
 import { cn } from "../../lib/utils";
+import type { EditSession } from "../../hooks/useEditSession";
 import { PermissionButton, type ActionType } from "../../hooks/useSecurity";
 import EmptyState from "../EmptyState";
 import PageHeader from "../PageHeader";
@@ -100,8 +101,10 @@ export interface WorkbenchShellProps<T extends { id: string | number }> {
   tabs?: { value: string; label: string }[];
   activeTab?: string;
   onTabChange?: (tab: string) => void;
-  /** The detail has unsaved edits; navigation waits behind the guard. */
-  dirty: boolean;
+  /** The detail has unsaved edits; navigation waits behind the guard. Superseded by `session.dirty` when a session is given. */
+  dirty?: boolean;
+  /** Supplies the dirty state and adds "Save and continue" to the guard; Discard cancels it. */
+  session?: EditSession;
   /** Called when the operator discards, before the parked navigation runs. */
   onDiscard?: () => void;
   detailHeader?: ReactNode;
@@ -132,6 +135,7 @@ export default function WorkbenchShell<T extends { id: string | number }>({
   activeTab,
   onTabChange,
   dirty,
+  session,
   onDiscard,
   detailHeader,
   footer,
@@ -139,6 +143,7 @@ export default function WorkbenchShell<T extends { id: string | number }>({
   bodyOverride,
   children,
 }: WorkbenchShellProps<T>) {
+  const isDirty = session?.dirty ?? dirty ?? false;
   const baseId = useId();
   const guardLabelId = `${baseId}-guard`;
   const createReasonId = `${baseId}-create-reason`;
@@ -173,12 +178,12 @@ export default function WorkbenchShell<T extends { id: string | number }>({
 
   // A save elsewhere cleared the dirty state: the parked navigation is moot.
   useEffect(() => {
-    if (!dirty) setPending(null);
-  }, [dirty]);
+    if (!isDirty) setPending(null);
+  }, [isDirty]);
 
   /** Runs a navigation now, or parks it behind the guard when the detail is dirty. */
   const guard = (action: () => void) => {
-    if (dirty) {
+    if (isDirty) {
       returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
       setPending(() => action);
     } else action();
@@ -192,8 +197,19 @@ export default function WorkbenchShell<T extends { id: string | number }>({
   const discard = () => {
     const action = pending;
     setPending(null);
+    session?.cancel();
     onDiscard?.();
     action?.();
+  };
+
+  const saveAndContinue = async () => {
+    if (!session) return;
+    const action = pending;
+    const ok = await session.save();
+    if (ok) {
+      setPending(null);
+      action?.();
+    }
   };
 
   const select = (index: number) => {
@@ -237,6 +253,16 @@ export default function WorkbenchShell<T extends { id: string | number }>({
                   <Button ref={keepEditingRef} variant="outline" size="sm" onClick={keepEditing}>
                     Keep editing
                   </Button>
+                  {session && (
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        void saveAndContinue();
+                      }}
+                    >
+                      Save and continue
+                    </Button>
+                  )}
                   <Button variant="destructive" size="sm" onClick={discard}>
                     Discard
                   </Button>
@@ -330,8 +356,8 @@ export default function WorkbenchShell<T extends { id: string | number }>({
                     aria-selected={isSelected}
                     onClick={() => select(index)}
                     className={cn(
-                      "cursor-pointer rounded-md border-l-2 border-transparent px-3 py-2 text-sm text-foreground",
-                      !isSelected && "hover:bg-accent/50",
+                      "cursor-pointer rounded-lg border-l-2 border-transparent px-3 py-2 text-sm text-foreground motion-safe:transition-colors",
+                      !isSelected && "hover:bg-muted",
                       index === activeIndex && "bg-muted",
                       isSelected && "border-primary bg-secondary text-foreground-strong font-medium",
                     )}

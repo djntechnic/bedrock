@@ -531,9 +531,9 @@ describe("WorkbenchShell", () => {
     it("tints inactive cards on hover but never the selected one", () => {
       renderRail();
       const options = screen.getAllByRole("option");
-      expect(options[1].className).toContain("hover:bg-accent/50");
+      expect(options[1].className).toContain("hover:bg-muted");
       const selected = options.find((o) => o.getAttribute("aria-selected") === "true")!;
-      expect(selected.className).not.toContain("hover:bg-accent/50");
+      expect(selected.className).not.toContain("hover:bg-muted");
       expect(selected.className).toContain("border-primary");
     });
 
