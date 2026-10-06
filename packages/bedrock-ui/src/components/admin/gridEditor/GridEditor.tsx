@@ -2,8 +2,8 @@
  * @file GridEditor.tsx
  * @module frontend/src/components/admin/gridEditor
  * @description Redesigned admin Grid Editor. Two-pane workspace:
- *              • Header — Screen + Grid selects, dirty indicator, Save/Cancel,
- *                Focus-mode toggle.
+ *              • Header — Screen + Grid selects, SaveBar (dirty/Save/Cancel via
+ *                useEditSession), Focus-mode toggle.
  *              • Left panel — collapsible (w-[360px] ↔ w-12), three shadcn Tabs:
  *                Grid Settings, Custom Columns (rank/selection/rank highlight),
  *                Column Settings.
@@ -19,8 +19,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
-  Save,
-  RotateCcw,
   Maximize2,
   PanelLeftClose,
   PanelLeftOpen,
@@ -31,7 +29,6 @@ import {
 } from "lucide-react";
 import { Button } from "../../ui/button";
 import { Label } from "../../ui/label";
-import { Badge } from "../../ui/badge";
 import {
   Select,
   SelectContent,
@@ -53,6 +50,8 @@ import {
 import { cn } from "../../../lib/utils";
 import { useGridPages, useGridSettings } from "../../../hooks/useAdminPlatform";
 import { usePersistedDisclosure } from "../../../hooks/usePersistedDisclosure";
+import { useEditSession } from "../../../hooks/useEditSession";
+import SaveBar from "../../SaveBar";
 import { log } from "../../../utils/logger";
 import { useGridDraft } from "./useGridDraft";
 import GridPreview from "./GridPreview";
@@ -128,11 +127,9 @@ export default function GridEditor({ initialGridId = null }: GridEditorProps = {
     [grids, selectedGridId],
   );
 
-  const handleSave = useCallback(async () => {
-    const d = draftRef.current;
-    if (!d.isDirty || d.isSaving) return;
+  const saveDraft = useCallback(async () => {
     try {
-      await d.save();
+      await draftRef.current.save();
       toast.success("Grid settings saved");
       log.info(
         { gridId: selectedGridId, action: "save.success" },
@@ -144,8 +141,16 @@ export default function GridEditor({ initialGridId = null }: GridEditorProps = {
         { err: error, gridId: selectedGridId, action: "save.error" },
         "GridEditor: save failed",
       );
+      throw error;
     }
   }, [selectedGridId]);
+
+  const session = useEditSession({
+    dirty: draft.isDirty,
+    onSave: saveDraft,
+    onCancel: () => draftRef.current.reset(),
+    saveShortcut: true,
+  });
 
   function commitScreenChange(v: string) {
     setSelectedPage(v);
@@ -191,15 +196,10 @@ export default function GridEditor({ initialGridId = null }: GridEditorProps = {
     log.info({ gridId: v, action: "select-grid" }, "GridEditor: grid selected");
   }
 
-  // Keyboard shortcuts: ⌘S / Ctrl+S save; F toggle focus mode.
+  // Keyboard shortcut: F toggles focus mode (⌘S / Ctrl+S is owned by useEditSession).
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       const isMod = e.metaKey || e.ctrlKey;
-      if (isMod && (e.key === "s" || e.key === "S")) {
-        e.preventDefault();
-        handleSave();
-        return;
-      }
       // Toggle focus mode only when not typing into a form control.
       const target = e.target as HTMLElement | null;
       const inField =
@@ -217,18 +217,7 @@ export default function GridEditor({ initialGridId = null }: GridEditorProps = {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [selectedGridId, handleSave]);
-
-  // Warn on tab close / navigation if dirty.
-  useEffect(() => {
-    function onBeforeUnload(e: BeforeUnloadEvent) {
-      if (!draftRef.current.isDirty) return;
-      e.preventDefault();
-      e.returnValue = "";
-    }
-    window.addEventListener("beforeunload", onBeforeUnload);
-    return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, []);
+  }, [selectedGridId]);
 
   const emptyBody = !selectedGridId
     ? "Select a screen and grid to begin editing."
@@ -283,12 +272,6 @@ export default function GridEditor({ initialGridId = null }: GridEditorProps = {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          {draft.isDirty && (
-            <Badge variant="outline" className="gap-1.5 text-warning border-warning/50">
-              <span className="h-1.5 w-1.5 rounded-full bg-warning" />
-              Unsaved changes
-            </Badge>
-          )}
           <Button
             type="button"
             variant="outline"
@@ -336,24 +319,7 @@ export default function GridEditor({ initialGridId = null }: GridEditorProps = {
           >
             <Maximize2 className="h-3.5 w-3.5" /> Focus
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={!draft.isDirty || draft.isSaving}
-            onClick={draft.reset}
-            className="gap-1.5"
-          >
-            <RotateCcw className="h-3.5 w-3.5" /> Cancel
-          </Button>
-          <Button
-            size="sm"
-            disabled={!draft.isDirty || draft.isSaving}
-            onClick={handleSave}
-            className="gap-1.5"
-          >
-            <Save className="h-3.5 w-3.5" />
-            {draft.isSaving ? "Saving…" : "Save"}
-          </Button>
+          <SaveBar session={session} />
         </div>
       </div>
 
