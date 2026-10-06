@@ -15,7 +15,12 @@ Usage:   python scripts/run_qa.py --mode fast
 import sys
 from pathlib import Path
 
+repo_root = Path(__file__).resolve().parent.parent
+bedrock_api_pkg = repo_root / "packages" / "bedrock-api"
+if bedrock_api_pkg.is_dir() and str(bedrock_api_pkg) not in sys.path:
+    sys.path.insert(0, str(bedrock_api_pkg))
+
 from bedrock.tools.run_qa import main
 
 if __name__ == "__main__":
-    sys.exit(main(["--root", str(Path(__file__).resolve().parent.parent), *sys.argv[1:]]))
+    sys.exit(main(["--root", str(repo_root), *sys.argv[1:]]))
