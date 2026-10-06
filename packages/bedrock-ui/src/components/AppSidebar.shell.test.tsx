@@ -131,3 +131,40 @@ describe("AppSidebar Shell Refresh - Brand & Backdrop", () => {
     expect(backdrop.className).not.toContain("bg-black/40");
   });
 });
+
+describe("AppSidebar Shell Refresh - Indicator & Motion", () => {
+  beforeEach(() => {
+    mockState.pinned = true;
+    mockState.isMobile = false;
+    mockState.mobileOpen = false;
+    mockState.reducedMotion = false;
+  });
+
+  it("renders active indicator bar and rounded-lg rows without ring box", () => {
+    renderSidebar({}, "/");
+    const activeIndicator = screen.getByTestId("nav-active-indicator");
+    expect(activeIndicator).toBeDefined();
+    expect(activeIndicator.className).toContain("bg-primary");
+
+    const dashboardLink = screen.getByRole("link", { name: /Dashboard/i });
+    expect(dashboardLink.className).toContain("rounded-lg");
+    expect(dashboardLink.className).not.toContain("ring-1");
+  });
+
+  it("gates sidebar width transition on reduced motion", () => {
+    mockState.reducedMotion = false;
+    const { container, rerender } = renderSidebar();
+    const aside = container.querySelector("aside.app-sidebar");
+    expect(aside?.className).toContain("transition-[width]");
+
+    mockState.reducedMotion = true;
+    rerender(
+      <MemoryRouter initialEntries={["/"]}>
+        <TooltipProvider>
+          <AppSidebar />
+        </TooltipProvider>
+      </MemoryRouter>
+    );
+    expect(aside?.className).not.toContain("transition-[width]");
+  });
+});

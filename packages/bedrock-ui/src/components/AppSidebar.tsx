@@ -92,6 +92,7 @@ export default function AppSidebar({
   const { user, isAdmin, hasRole, logout } = useAuth();
 
   const isMobile = useMediaQuery("(max-width: 1023px)");
+  const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const pinned = useSidebarStore((s) => s.pinned);
   const hovered = useSidebarStore((s) => s.hovered);
   const mobileOpen = useSidebarStore((s) => s.mobileOpen);
@@ -215,7 +216,9 @@ export default function AppSidebar({
         className={[
           "app-sidebar fixed left-0 top-0 h-screen flex flex-col",
           "bg-card border-r border-border z-50",
-          "transition-all duration-200 ease-in-out motion-reduce:transition-none",
+          prefersReducedMotion
+            ? ""
+            : "transition-[width] duration-[var(--motion-base)] ease-[var(--ease-standard)]",
           collapsed ? "w-16" : "w-60",
         ].join(" ")}
       >
@@ -293,10 +296,10 @@ export default function AppSidebar({
                 <Link
                   to={item.to}
                   className={[
-                    "flex items-center justify-center px-2.5 py-2 rounded-md",
+                    "flex items-center justify-center px-2.5 py-2 rounded-lg",
                     "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     active
-                      ? "bg-primary/10 text-primary ring-1 ring-primary/20"
+                      ? "bg-primary/10 text-primary font-semibold"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground",
                   ].join(" ")}
                 >
@@ -372,13 +375,20 @@ export default function AppSidebar({
                       to={item.to}
                       title={item.tooltip || item.label}
                       className={[
-                        "flex-1 flex items-center gap-3 px-2.5 py-2 rounded-md text-sm font-medium",
+                        "relative flex-1 flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm font-medium",
                         "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
                         active
-                          ? "bg-primary/10 text-primary font-semibold ring-1 ring-primary/20"
+                          ? "bg-primary/10 text-primary font-semibold"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground",
                       ].join(" ")}
                     >
+                      {active && (
+                        <span
+                          data-testid="nav-active-indicator"
+                          aria-hidden="true"
+                          className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-primary"
+                        />
+                      )}
                       <Icon className="shrink-0 h-[18px] w-[18px]" />
                       <span className="truncate">{item.label}</span>
                     </Link>
@@ -416,7 +426,7 @@ export default function AppSidebar({
                             to={child.to}
                             title={child.tooltip || child.label}
                             className={[
-                              "flex items-center px-2 py-1.5 rounded-md text-xs font-medium",
+                              "flex items-center px-2 py-1.5 rounded-lg text-xs font-medium",
                               "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
                               childActive
                                 ? "bg-primary/10 text-primary font-semibold"
@@ -445,7 +455,7 @@ export default function AppSidebar({
                                   to={child.to}
                                   title={child.tooltip || child.label}
                                   className={[
-                                    "flex items-center px-2 py-1.5 rounded-md text-xs font-medium",
+                                    "flex items-center px-2 py-1.5 rounded-lg text-xs font-medium",
                                     "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
                                     childActive
                                       ? "bg-primary/10 text-primary font-semibold"
