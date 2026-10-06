@@ -8,6 +8,7 @@
  *              a hamburger button in the app header (see App.tsx).
  */
 import { ChevronDown, LogOut, Pin, PinOff, User } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { forwardRef, useEffect, useState, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAppSettings } from "../hooks/useAppSettings";
@@ -69,10 +70,19 @@ export interface AppSidebarProps {
    * its own.
    */
   profilePath?: string | null;
+  /**
+   * Brand block overrides. `mark` replaces the default first-letter-of-appName
+   * tile; `subtitle` renders under the app name (none by default).
+   */
+  brand?: {
+    mark?: ReactNode;
+    subtitle?: string;
+  };
 }
 
 export default function AppSidebar({
   profilePath = "/profile",
+  brand,
 }: AppSidebarProps = {}) {
   const location = useLocation();
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
@@ -83,6 +93,7 @@ export default function AppSidebar({
   const { user, isAdmin, hasRole, logout } = useAuth();
 
   const isMobile = useMediaQuery("(max-width: 1023px)");
+  const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const pinned = useSidebarStore((s) => s.pinned);
   const hovered = useSidebarStore((s) => s.hovered);
   const mobileOpen = useSidebarStore((s) => s.mobileOpen);
@@ -195,7 +206,7 @@ export default function AppSidebar({
       {isMobile && mobileOpen && (
         <div
           data-testid="sidebar-mobile-backdrop"
-          className="fixed inset-0 z-40 bg-black/40"
+          className="fixed inset-0 z-40 bg-scrim/40"
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
         />
@@ -206,7 +217,9 @@ export default function AppSidebar({
         className={[
           "app-sidebar fixed left-0 top-0 h-screen flex flex-col",
           "bg-card border-r border-border z-50",
-          "transition-all duration-200 ease-in-out motion-reduce:transition-none",
+          prefersReducedMotion
+            ? ""
+            : "transition-[width] duration-[var(--motion-base)] ease-[var(--ease-standard)]",
           collapsed ? "w-16" : "w-60",
         ].join(" ")}
       >
@@ -216,41 +229,22 @@ export default function AppSidebar({
             to="/"
             className="flex items-center gap-2.5 min-w-0 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <div className="shrink-0 h-8 w-8 rounded-lg bg-primary flex items-center justify-center shadow-sm ring-1 ring-primary/20">
-              <svg
-                viewBox="0 0 20 20"
-                className="h-4 w-4 fill-primary-foreground"
-                aria-hidden
-              >
-                <circle
-                  cx="10"
-                  cy="10"
-                  r="8"
-                  stroke="currentColor"
-                  strokeWidth="1.5"
-                  fill="none"
-                  className="stroke-primary-foreground/60"
-                />
-                <path
-                  d="M10 2 Q12 10 10 18 Q8 10 10 2Z"
-                  fill="currentColor"
-                  opacity="0.9"
-                />
-                <path
-                  d="M2 10 Q10 12 18 10 Q10 8 2 10Z"
-                  fill="currentColor"
-                  opacity="0.9"
-                />
-              </svg>
+            <div
+              data-testid="sidebar-brand-mark"
+              className="shrink-0 h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center shadow-sm text-sm font-bold"
+            >
+              {brand?.mark ?? system.appName.trim().charAt(0).toUpperCase()}
             </div>
             {!collapsed && (
               <div className="min-w-0">
                 <p className="font-bold text-sm leading-tight text-foreground tracking-tight truncate">
                   {system.appName}
                 </p>
-                <p className="text-[10px] text-muted-foreground leading-tight font-medium tracking-wide uppercase">
-                  Analytics
-                </p>
+                {brand?.subtitle && (
+                  <p className="text-[10px] text-muted-foreground leading-tight font-medium tracking-wide uppercase">
+                    {brand.subtitle}
+                  </p>
+                )}
               </div>
             )}
           </Link>
@@ -303,10 +297,10 @@ export default function AppSidebar({
                 <Link
                   to={item.to}
                   className={[
-                    "flex items-center justify-center px-2.5 py-2 rounded-md",
+                    "flex items-center justify-center px-2.5 py-2 rounded-lg",
                     "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
                     active
-                      ? "bg-primary/10 text-primary ring-1 ring-primary/20"
+                      ? "bg-primary/10 text-primary font-semibold"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground",
                   ].join(" ")}
                 >
@@ -382,13 +376,20 @@ export default function AppSidebar({
                       to={item.to}
                       title={item.tooltip || item.label}
                       className={[
-                        "flex-1 flex items-center gap-3 px-2.5 py-2 rounded-md text-sm font-medium",
+                        "relative flex-1 flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm font-medium",
                         "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
                         active
-                          ? "bg-primary/10 text-primary font-semibold ring-1 ring-primary/20"
+                          ? "bg-primary/10 text-primary font-semibold"
                           : "text-muted-foreground hover:bg-muted hover:text-foreground",
                       ].join(" ")}
                     >
+                      {active && (
+                        <span
+                          data-testid="nav-active-indicator"
+                          aria-hidden="true"
+                          className="absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-full bg-primary"
+                        />
+                      )}
                       <Icon className="shrink-0 h-[18px] w-[18px]" />
                       <span className="truncate">{item.label}</span>
                     </Link>
@@ -426,7 +427,7 @@ export default function AppSidebar({
                             to={child.to}
                             title={child.tooltip || child.label}
                             className={[
-                              "flex items-center px-2 py-1.5 rounded-md text-xs font-medium",
+                              "flex items-center px-2 py-1.5 rounded-lg text-xs font-medium",
                               "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
                               childActive
                                 ? "bg-primary/10 text-primary font-semibold"
@@ -455,7 +456,7 @@ export default function AppSidebar({
                                   to={child.to}
                                   title={child.tooltip || child.label}
                                   className={[
-                                    "flex items-center px-2 py-1.5 rounded-md text-xs font-medium",
+                                    "flex items-center px-2 py-1.5 rounded-lg text-xs font-medium",
                                     "transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
                                     childActive
                                       ? "bg-primary/10 text-primary font-semibold"
@@ -550,33 +551,55 @@ export default function AppSidebar({
           ) : (
             <div className="flex items-center justify-between gap-1">
               {user ? (
-                <>
-                  <ProfileTarget
-                    to={profilePath}
-                    title={profilePath ? "View profile" : undefined}
-                    className={[
-                      "flex-1 min-w-0 flex items-center gap-2 px-2 py-1 rounded-md text-xs font-medium text-foreground transition-colors outline-none",
-                      profilePath
-                        ? "hover:bg-muted hover:text-primary focus-visible:ring-2 focus-visible:ring-ring"
-                        : "",
-                    ].join(" ")}
-                  >
-                    <User className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <span className="truncate">
-                      {user.display_name || user.email}
-                    </span>
-                  </ProfileTarget>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void logout();
-                    }}
-                    title="Sign out"
-                    className="shrink-0 p-1.5 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <LogOut className="h-4 w-4" />
-                  </button>
-                </>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Account menu"
+                      className="flex-1 min-w-0 flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg text-xs font-medium text-foreground hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-semibold shrink-0">
+                          {(user.display_name || user.email || "U")
+                            .trim()
+                            .charAt(0)
+                            .toUpperCase()}
+                        </div>
+                        <span className="truncate">
+                          {user.display_name || user.email}
+                        </span>
+                      </div>
+                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="start" className="w-56 p-1.5 text-xs">
+                    <div className="px-2 py-1.5 text-muted-foreground border-b border-border mb-1">
+                      <p className="font-semibold text-foreground truncate">
+                        {user.display_name || "Account"}
+                      </p>
+                      <p className="truncate text-[11px]">{user.email}</p>
+                    </div>
+                    {profilePath && (
+                      <Link
+                        to={profilePath}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted text-foreground transition-colors"
+                      >
+                        <User className="h-4 w-4 text-muted-foreground" />
+                        <span>Profile</span>
+                      </Link>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void logout();
+                      }}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-muted text-destructive transition-colors text-left"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span>Sign out</span>
+                    </button>
+                  </PopoverContent>
+                </Popover>
               ) : (
                 <Link
                   to="/login"
