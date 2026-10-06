@@ -101,7 +101,7 @@ function fgFor(hex: string): string {
 }
 
 /** Derives the full CSS variable map from the 6 key palette colors. */
-function buildCssVars(palette: ThemePalette): Record<string, string> {
+export function buildCssVars(palette: ThemePalette): Record<string, string> {
   if (palette.cssVars) return palette.cssVars;
   const bgDark = isDark(palette.colorBackground);
   const mutedHex = bgDark
@@ -132,6 +132,12 @@ function buildCssVars(palette: ThemePalette): Record<string, string> {
     "--border": hexToHsl(palette.colorBorder),
     "--input": hexToHsl(palette.colorBorder),
     "--ring": hexToHsl(palette.colorPrimary),
+    "--foreground-strong": bgDark
+      ? "210 40% 98%"
+      : isDark(palette.colorPrimary)
+        ? hexToHsl(palette.colorPrimary)
+        : fg,
+    "--scrim": bgDark ? "220 40% 4%" : "222 47% 11%",
     // Scoreboard tokens (§S009) — theme-invariant identity colors, bumped
     // lighter for dark backgrounds to match the built-in themes' pattern.
     "--scoreboard-accent": bgDark ? "38 92% 62%" : "38 92% 55%",
@@ -158,6 +164,9 @@ const CHART_TOKEN_KEYS = ["--chart-1", "--chart-2", "--chart-3"] as const;
 /** The full set of §S009 rank-medal token keys every theme surface must define. */
 const RANK_TOKEN_KEYS = ["--rank-gold", "--rank-silver", "--rank-bronze"] as const;
 
+/** The shell token keys (foreground-strong, scrim) every theme surface must define. */
+const SHELL_TOKEN_KEYS = ["--foreground-strong", "--scrim"] as const;
+
 /**
  * One-shot migration: a custom theme created before §S009 may carry a frozen
  * `cssVars` snapshot (e.g. imported/patched by a future admin flow) missing
@@ -165,12 +174,13 @@ const RANK_TOKEN_KEYS = ["--rank-gold", "--rank-silver", "--rank-bronze"] as con
  * defaults as {@link buildCssVars}, leaving themes that already have them —
  * or that have no frozen `cssVars` at all — untouched.
  */
-function patchLegacyCssVars(palette: ThemePalette): ThemePalette {
+export function patchLegacyCssVars(palette: ThemePalette): ThemePalette {
   if (!palette.cssVars) return palette;
   const missingScoreboard = SCOREBOARD_TOKEN_KEYS.some((key) => !(key in palette.cssVars!));
   const missingChart = CHART_TOKEN_KEYS.some((key) => !(key in palette.cssVars!));
   const missingRank = RANK_TOKEN_KEYS.some((key) => !(key in palette.cssVars!));
-  if (!missingScoreboard && !missingChart && !missingRank) return palette;
+  const missingShell = SHELL_TOKEN_KEYS.some((key) => !(key in palette.cssVars!));
+  if (!missingScoreboard && !missingChart && !missingRank && !missingShell) return palette;
   return {
     ...palette,
     cssVars: {
@@ -182,6 +192,10 @@ function patchLegacyCssVars(palette: ThemePalette): ThemePalette {
       "--chart-1": "var(--primary)",
       "--chart-2": "var(--scoreboard-accent)",
       "--chart-3": "var(--positive)",
+      "--foreground-strong": palette.isDark
+        ? "210 40% 98%"
+        : (palette.cssVars["--primary"] ?? "222 47% 11%"),
+      "--scrim": palette.isDark ? "220 40% 4%" : "222 47% 11%",
       ...palette.cssVars,
     },
   };
