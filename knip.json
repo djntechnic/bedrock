@@ -9,6 +9,6 @@
     "packages/bedrock-ui/src/components/admin/index.ts"
   ],
   "project": ["packages/bedrock-ui/src/**/*.{ts,tsx}"],
-  "ignore": ["packages/bedrock-ui/dist/**"],
+  "ignore": ["packages/bedrock-ui/dist/**", "packages/bedrock-ui/src/types/htmlhint.d.ts"],
   "ignoreExportsUsedInFile": true
 }
