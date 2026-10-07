@@ -167,6 +167,7 @@ def create_app(
     @asynccontextmanager
     async def lifespan(_app: FastAPI):
         from bedrock.core import database, db_health, migrations, schema_drift
+        from bedrock.core.logging import configure_backend_logging_from_db
 
         database.db.validate_connection()
         _run_hooks(before_migrations, "before_migrations")
@@ -179,6 +180,8 @@ def create_app(
         # Fail fast if the database is corrupt or was silently rebuilt empty.
         # Set BEDROCK_ALLOW_EMPTY_DB=1 on a fresh checkout.
         db_health.assert_database_healthy()
+        # Apply the admin-configured log level/format now that the DB is up.
+        configure_backend_logging_from_db()
         _run_hooks(after_bootstrap, "after_bootstrap")
         yield
         _run_hooks(on_shutdown, "on_shutdown")

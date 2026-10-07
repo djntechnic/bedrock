@@ -186,7 +186,7 @@ def test_root_probe_reports_the_message():
 @pytest.fixture
 def boot_recorder(monkeypatch):
     """Replace every step of the boot sequence with a call recorder."""
-    from bedrock.core import database, db_health, migrations, schema_drift
+    from bedrock.core import database, db_health, logging as bedrock_logging, migrations, schema_drift
 
     calls: list[str] = []
 
@@ -201,6 +201,7 @@ def boot_recorder(monkeypatch):
     monkeypatch.setattr(migrations, "apply_migrations", record("migrate"))
     monkeypatch.setattr(schema_drift, "warn_on_drift", record("drift"))
     monkeypatch.setattr(db_health, "assert_database_healthy", record("health"))
+    monkeypatch.setattr(bedrock_logging, "configure_backend_logging_from_db", record("logging"))
     return calls
 
 
@@ -221,7 +222,7 @@ def test_boot_sequence_runs_in_the_documented_order(boot_recorder):
         on_shutdown=[down],
     )
     with TestClient(app):
-        assert boot_recorder == ["validate", "before", "migrate", "drift", "health", "after"]
+        assert boot_recorder == ["validate", "before", "migrate", "drift", "health", "logging", "after"]
 
     assert boot_recorder == [
         "validate",
@@ -229,10 +230,16 @@ def test_boot_sequence_runs_in_the_documented_order(boot_recorder):
         "migrate",
         "drift",
         "health",
+        "logging",
         "after",
         "down",
         "close",
     ]
+
+
+def test_lifespan_configures_logging_from_db(boot_recorder):
+    with TestClient(create_app(title="Test")):
+        assert boot_recorder.count("logging") == 1
 
 
 def test_hooks_run_in_the_order_given(boot_recorder):

@@ -105,6 +105,18 @@ def test_s005_ignores_venv_and_site_packages(tmp_path: Path):
     assert s005_audit_testing.main(["--root", str(tmp_path)]) == 0
 
 
+def test_s005_ignores_test_files_under_routes_and_services_folders(tmp_path: Path):
+    _write_toml(tmp_path, "[tool.bedrock.audit.s005]\nexemptions = []\n")
+    # Production route with paired test
+    _write(tmp_path / "bedrock" / "routes" / "health.py", "def get_health(): ...\n")
+    _write(tmp_path / "tests" / "test_health.py", "def test_get_health(): ...\n")
+    # Nested test files inside tests/routes/ and tests/services/
+    _write(tmp_path / "tests" / "routes" / "test_health_extra.py", "def test_extra(): ...\n")
+    _write(tmp_path / "tests" / "services" / "test_auth_flow.py", "def test_auth(): ...\n")
+
+    assert s005_audit_testing.main(["--root", str(tmp_path)]) == 0
+
+
 # ---------------------------------------------------------------------------
 # s006_audit_pr_workflow
 # ---------------------------------------------------------------------------

@@ -5,9 +5,10 @@
     "packages/bedrock-ui/src/styles/tokens.css",
     "packages/bedrock-ui/src/components/grids/cellRenderers.tsx",
     "packages/bedrock-ui/src/components/grids/DataGrid.tsx",
-    "packages/bedrock-ui/src/hooks/useRowClickHandler.ts"
+    "packages/bedrock-ui/src/hooks/useRowClickHandler.ts",
+    "packages/bedrock-ui/src/components/admin/index.ts"
   ],
   "project": ["packages/bedrock-ui/src/**/*.{ts,tsx}"],
-  "ignore": ["packages/bedrock-ui/dist/**"],
+  "ignore": ["packages/bedrock-ui/dist/**", "packages/bedrock-ui/src/types/htmlhint.d.ts"],
   "ignoreExportsUsedInFile": true
 }
