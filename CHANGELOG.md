@@ -1,3 +1,34 @@
+## v0.13.1 - 2026-10-06
+
+### Breaking Changes
+None
+
+### Fixed
+None
+
+### Added / Changed
+None
+
+### Platform Maintenance
+- **[#167] docs(plan): enrich v0.13.1 adoption plan with detailed code blocks and purge subagent-driven-development**
+- **[#166] docs(specs): author downstream adoption design, plan, and intake json for bedrock v0.13.1**
+- **[#163] chore(qa): support --quiet in run_qa and archive shell-refresh docs**
+- **[#156] feat(bulk): promote AdaptiveButton, draftHistory, and SelectionDock primitives**
+- **[#154] feat(wizard): implement Stepper and WizardDialog primitives**
+- **[#153] feat(workbench): integrate EditSession into WorkbenchShell with Save and Continue guard**
+- **[#151] feat(edit-session): introduce standard edit session engine and adopt in GridEditor**
+- **[#145] feat(shell): implement AppShell, AppHeader, and S001 chrome audit gate**
+- **[#144] docs(qa): add QA orchestrator reference and align S005/S006 with run_qa tiers**
+- **[#142] feat(sidebar): modernize AppSidebar with brand slot, active bar indicator, and account popover**
+- **[#140] fix(tokens): define the shell tokens WorkbenchShell references**
+- **[#138] docs(shell-refresh): spec and implementation plan**
+- **[#137] chore(release): land v0.13.0 version bump and CHANGELOG**
+
+### For consumers
+- **Resolves Upstream Issues:** #139, #141, #150, #152, #155, #157
+- **Target Downstream Repositories:** `djntechnic/CollectIt`, `djntechnic/MLBTracker`
+- **Expected Pin Migration:** `/bump-bedrock-pin v0.13.1`
+
 ## v0.13.0 - 2026-10-06
 
 ### Breaking Changes
