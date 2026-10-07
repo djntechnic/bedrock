@@ -357,4 +357,3 @@ function ImageAnnotatorModal({ open, onOpenChange, src, value, onChange, onSave,
 }
 
 export default ImageAnnotatorModal;
-export { ImageAnnotatorModal };
