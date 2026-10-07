@@ -9,7 +9,7 @@
  *              at all (e.g. `/health`, `/admin/approval-queue`) still need an
  *              entry here to stay reachable.
  */
-import type { LucideIcon } from "lucide-react";
+import type { ComponentType } from "react";
 import type { ActionType } from "../hooks/useSecurity";
 
 /** A single jump-to-destination entry surfaced in the command palette. */
@@ -24,7 +24,7 @@ export interface CommandRouteItem {
   group: string;
   /** Destination path (may include a query string). */
   to: string;
-  icon: LucideIcon;
+  icon: ComponentType<{ className?: string }>;
   /** Module slug gating visibility, matching `useModules().hasModule()`. Omit for always-visible items. */
   module?: string;
   /** Capability action required on module (defaults to 'view') */
