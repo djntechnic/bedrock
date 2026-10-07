@@ -18,6 +18,7 @@ rules = [
 
 skills = [
   "anti-ui-slop",
+  "audit-issue-backlog",
   "audit-ui-runtime",
   "brainstorming",
   "bump-bedrock-pin",
