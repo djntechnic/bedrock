@@ -81,7 +81,10 @@ def _check_test_pairing(root: Path, exemptions: list[str]) -> list[TestingViolat
             continue
         if path.parent.name not in _ROUTE_SERVICE_DIRS:
             continue
-        rel = path.relative_to(root).as_posix()
+        rel_path = path.relative_to(root)
+        if path.name.startswith("test_") or "tests" in rel_path.parts:
+            continue
+        rel = rel_path.as_posix()
         if _is_exempt(rel, exemptions):
             continue
 
