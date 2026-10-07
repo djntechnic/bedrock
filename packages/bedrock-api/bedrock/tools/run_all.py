@@ -53,7 +53,6 @@ from bedrock.tools import (
     s012_audit_pins,
     s013_audit_api_docs,
     s014_audit_ledger_freshness,
-    s015_audit_release_notes,
     s100_audit_domain_registry,
 )
 

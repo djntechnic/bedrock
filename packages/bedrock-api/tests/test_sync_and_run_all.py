@@ -221,3 +221,9 @@ def test_sync_standards_falls_back_to_package_bundled(tmp_path: Path):
     mirrors = list((target_root / "docs" / "standards").glob("*.md"))
     assert len(mirrors) == 15
 
+
+def test_run_all_has_no_unused_s015_import():
+    run_all_path = Path(__file__).parent.parent / "bedrock" / "tools" / "run_all.py"
+    source = run_all_path.read_text(encoding="utf-8")
+    assert "s015_audit_release_notes" not in source, "s015_audit_release_notes is unused in run_all.py"
+
