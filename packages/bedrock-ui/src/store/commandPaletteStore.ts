@@ -7,13 +7,19 @@
  */
 import { create } from "zustand";
 
-const RECENTS_KEY = "mlbtracker-command-recents";
-const PINNED_KEY = "mlbtracker-command-pinned";
+const RECENTS_KEY = "bedrock-command-recents";
+const LEGACY_RECENTS_KEY = "mlbtracker-command-recents";
+const PINNED_KEY = "bedrock-command-pinned";
+const LEGACY_PINNED_KEY = "mlbtracker-command-pinned";
 const MAX_RECENTS = 8;
 
-function readIds(key: string): string[] {
+function readIds(key: string, legacyKey: string): string[] {
   try {
-    const raw = localStorage.getItem(key);
+    let raw = localStorage.getItem(key);
+    if (raw === null) {
+      raw = localStorage.getItem(legacyKey);
+      if (raw !== null) localStorage.setItem(key, raw);
+    }
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed)
@@ -48,8 +54,8 @@ interface CommandPaletteStore {
 
 export const useCommandPaletteStore = create<CommandPaletteStore>((set) => ({
   open: false,
-  recentIds: readIds(RECENTS_KEY),
-  pinnedIds: readIds(PINNED_KEY),
+  recentIds: readIds(RECENTS_KEY, LEGACY_RECENTS_KEY),
+  pinnedIds: readIds(PINNED_KEY, LEGACY_PINNED_KEY),
 
   setOpen: (open) => set({ open }),
   toggle: () => set((state) => ({ open: !state.open })),

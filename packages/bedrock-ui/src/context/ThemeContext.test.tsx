@@ -237,3 +237,32 @@ describe("ThemeProvider toast surface", () => {
     expect(screen.queryByTestId("toaster")).toBeNull();
   });
 });
+
+describe("ThemeProvider storage keys", () => {
+  beforeEach(() => localStorage.clear());
+
+  function ActiveId() {
+    return <span data-testid="active">{useTheme().activeThemeId}</span>;
+  }
+
+  it("carries a legacy mlbtracker-theme choice over to bedrock-theme", () => {
+    localStorage.setItem("mlbtracker-theme", SYSTEM_THEME_ID);
+    render(
+      <ThemeProvider toaster={false}>
+        <ActiveId />
+      </ThemeProvider>,
+    );
+    expect(screen.getByTestId("active").textContent).toBe(SYSTEM_THEME_ID);
+    expect(localStorage.getItem("bedrock-theme")).toBe(SYSTEM_THEME_ID);
+  });
+
+  it("carries legacy custom palettes over to bedrock-custom-palettes", () => {
+    localStorage.setItem("mlbtracker-custom-palettes", JSON.stringify([light("legacy-custom")]));
+    render(
+      <ThemeProvider toaster={false}>
+        <ActiveId />
+      </ThemeProvider>,
+    );
+    expect(JSON.parse(localStorage.getItem("bedrock-custom-palettes") ?? "[]")).toHaveLength(1);
+  });
+});
