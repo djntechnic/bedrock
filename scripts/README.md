@@ -25,7 +25,7 @@ Exit codes: 0 = pass, 1 = violation, 2 = configuration error.
 
 | File | Purpose |
 |---|---|
-| `Cut-BedrockRelease.ps1` | Local release orchestrator: validates clean master, resolves the version, builds the CHANGELOG entry, runs pre-tag gates, tags, pushes, and publishes the GitHub Release. Supports `-TargetVersion`, `-Resume`, `-Force`. |
+| `Cut-BedrockRelease.ps1` | Local release orchestrator: validates clean tree, ensures a dedicated feature branch, resolves the version, builds the CHANGELOG entry, runs pre-tag gates (`run_qa -q`), tags, pushes, ensures release PR, and publishes the GitHub Release. Supports `-TargetVersion`, `-Resume`, `-Force`. |
 | `CutBedrockRelease.Helpers.psm1` | Helper module for the release script (tests in `CutBedrockRelease.Helpers.Tests.ps1`). |
 | `vulture_whitelist.py` | Dead-code whitelist used by `run_qa.py --dead-code`. |
 

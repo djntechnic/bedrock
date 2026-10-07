@@ -146,4 +146,46 @@ function Test-RemoteReleaseState {
     return [pscustomobject]@{ Phase = "Published" }
 }
 
-Export-ModuleMember -Function Resolve-TargetVersion, ConvertTo-PromotedReleaseBody, Build-ChangelogEntry, Test-RemoteReleaseState
+function Get-ReleaseBranchName {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)] [string]$Version,
+        [string]$CurrentBranch
+    )
+
+    $rawVersion = if ($Version.StartsWith("v")) { $Version } else { "v$Version" }
+    $defaultBranch = "chore/release-$rawVersion"
+
+    if (-not $CurrentBranch -or $CurrentBranch -eq "master" -or $CurrentBranch -eq "main") {
+        return $defaultBranch
+    }
+
+    return $CurrentBranch
+}
+
+function Test-ValidFeatureBranch {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)] [string]$BranchName
+    )
+
+    if ($BranchName -eq "master" -or $BranchName -eq "main") {
+        return $false
+    }
+    return $true
+}
+
+function Get-PreTagGateQaArgs {
+    [CmdletBinding()]
+    param(
+        [switch]$Quiet
+    )
+
+    $qaArgs = @("scripts/run_qa.py", "--mode", "full")
+    if ($Quiet) {
+        $qaArgs += "-q"
+    }
+    return $qaArgs
+}
+
+Export-ModuleMember -Function Resolve-TargetVersion, ConvertTo-PromotedReleaseBody, Build-ChangelogEntry, Test-RemoteReleaseState, Get-ReleaseBranchName, Test-ValidFeatureBranch, Get-PreTagGateQaArgs

@@ -114,3 +114,57 @@ Describe "Test-RemoteReleaseState (three-fact resume check)" {
         $state.Phase | Should -Be "Published"
     }
 }
+
+Describe "Get-ReleaseBranchName" {
+    It 'returns chore/release-<version> when CurrentBranch is master' {
+        $branch = Get-ReleaseBranchName -Version "v0.14.0" -CurrentBranch "master"
+        $branch | Should -Be "chore/release-v0.14.0"
+    }
+
+    It 'returns chore/release-<version> when CurrentBranch is main' {
+        $branch = Get-ReleaseBranchName -Version "v0.14.0" -CurrentBranch "main"
+        $branch | Should -Be "chore/release-v0.14.0"
+    }
+
+    It 'returns chore/release-<version> when CurrentBranch is omitted or empty' {
+        $branch = Get-ReleaseBranchName -Version "v0.14.0"
+        $branch | Should -Be "chore/release-v0.14.0"
+    }
+
+    It "preserves an existing feature branch name when already on one" {
+        $branch = Get-ReleaseBranchName -Version "v0.14.0" -CurrentBranch "chore/release-v0.14.0"
+        $branch | Should -Be "chore/release-v0.14.0"
+
+        $custom = Get-ReleaseBranchName -Version "v0.14.0" -CurrentBranch "feat/my-custom-release"
+        $custom | Should -Be "feat/my-custom-release"
+    }
+}
+
+Describe "Test-ValidFeatureBranch" {
+    It "rejects master and main" {
+        Test-ValidFeatureBranch -BranchName "master" | Should -Be $false
+        Test-ValidFeatureBranch -BranchName "main" | Should -Be $false
+    }
+
+    It "accepts feature branches" {
+        Test-ValidFeatureBranch -BranchName "chore/release-v0.14.0" | Should -Be $true
+        Test-ValidFeatureBranch -BranchName "feat/new-feature" | Should -Be $true
+        Test-ValidFeatureBranch -BranchName "fix/bug-123" | Should -Be $true
+    }
+}
+
+Describe "Get-PreTagGateQaArgs" {
+    It "includes -q when Quiet switch is passed" {
+        $args = Get-PreTagGateQaArgs -Quiet
+        $args | Should -Contain "-q"
+        $args | Should -Contain "--mode"
+        $args | Should -Contain "full"
+    }
+
+    It "omits -q when Quiet switch is absent" {
+        $args = Get-PreTagGateQaArgs
+        $args | Should -Not -Contain "-q"
+        $args | Should -Contain "--mode"
+        $args | Should -Contain "full"
+    }
+}
