@@ -16,7 +16,18 @@ export function collapseClass(below: CollapseBelow): string {
   return COLLAPSE_BELOW[below];
 }
 
-export function Hint({ label, children }: { label: string; children: ReactNode }) {
+export function Hint({
+  label,
+  children,
+  disabled,
+}: {
+  label: string;
+  children: ReactNode;
+  disabled?: boolean;
+}) {
+  if (disabled) {
+    return <>{children}</>;
+  }
   return (
     <Tooltip>
       <TooltipTrigger asChild>{children}</TooltipTrigger>
@@ -49,13 +60,15 @@ export function AdaptiveButton({
   square = false,
   hint,
   className,
+  disabled,
   ...props
 }: AdaptiveButtonProps) {
   return (
-    <Hint label={hint ?? label}>
+    <Hint label={hint ?? label} disabled={disabled}>
       <Button
         size={size}
         className={cn(square && ["h-8 shrink-0", SQUARE_BELOW[collapseBelow]], className)}
+        disabled={disabled}
         {...props}
       >
         {icon}
@@ -71,10 +84,10 @@ export interface IconActionProps
   label: string;
 }
 
-export function IconAction({ icon, label, ...props }: IconActionProps) {
+export function IconAction({ icon, label, disabled, ...props }: IconActionProps) {
   return (
-    <Hint label={label}>
-      <Button size="icon" variant="ghost" aria-label={label} {...props}>
+    <Hint label={label} disabled={disabled}>
+      <Button size="icon" variant="ghost" aria-label={label} disabled={disabled} {...props}>
         {icon}
       </Button>
     </Hint>
