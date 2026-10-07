@@ -8,11 +8,19 @@
  */
 import { create } from "zustand";
 
-const PIN_KEY = "mlbtracker-sidebar-pinned";
+const PIN_KEY = "bedrock-sidebar-pinned";
+const LEGACY_PIN_KEY = "mlbtracker-sidebar-pinned";
 
 function readPinned(): boolean {
   try {
-    return localStorage.getItem(PIN_KEY) === "true";
+    const current = localStorage.getItem(PIN_KEY);
+    if (current !== null) return current === "true";
+    const legacy = localStorage.getItem(LEGACY_PIN_KEY);
+    if (legacy !== null) {
+      localStorage.setItem(PIN_KEY, legacy);
+      return legacy === "true";
+    }
+    return false;
   } catch {
     return false;
   }

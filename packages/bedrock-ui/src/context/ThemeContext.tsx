@@ -205,8 +205,27 @@ export function patchLegacyCssVars(palette: ThemePalette): ThemePalette {
 
 const ThemeContext = createContext<ThemeContextType | null>(null);
 
-const ACTIVE_KEY = "mlbtracker-theme";
-const CUSTOM_KEY = "mlbtracker-custom-palettes";
+const ACTIVE_KEY = "bedrock-theme";
+const LEGACY_ACTIVE_KEY = "mlbtracker-theme";
+const CUSTOM_KEY = "bedrock-custom-palettes";
+const LEGACY_CUSTOM_KEY = "mlbtracker-custom-palettes";
+
+/**
+ * Reads `key`, falling back to the pre-rename `legacyKey` and copying its value
+ * forward so the migration runs once. Storage can throw (private mode); that
+ * reads as "nothing stored".
+ */
+function readMigrated(key: string, legacyKey: string): string | null {
+  try {
+    const current = localStorage.getItem(key);
+    if (current !== null) return current;
+    const legacy = localStorage.getItem(legacyKey);
+    if (legacy !== null) localStorage.setItem(key, legacy);
+    return legacy;
+  } catch {
+    return null;
+  }
+}
 
 /** Applies a palette's CSS vars to document.documentElement and toggles .dark. */
 function applyTheme(palette: ThemePalette) {
@@ -288,7 +307,7 @@ export function ThemeProvider({
   toaster = true,
 }: ThemeProviderProps) {
   const [activeThemeId, setActiveThemeId] = useState<string>(
-    () => localStorage.getItem(ACTIVE_KEY) ?? "mlb-classic"
+    () => readMigrated(ACTIVE_KEY, LEGACY_ACTIVE_KEY) ?? "mlb-classic"
   );
   const [prefersDark, setPrefersDark] = useState<boolean>(prefersDarkNow);
 
@@ -304,7 +323,7 @@ export function ThemeProvider({
   const [customPalettes, setCustomPalettes] = useState<ThemePalette[]>(() => {
     let stored: ThemePalette[];
     try {
-      stored = JSON.parse(localStorage.getItem(CUSTOM_KEY) ?? "[]");
+      stored = JSON.parse(readMigrated(CUSTOM_KEY, LEGACY_CUSTOM_KEY) ?? "[]");
     } catch {
       return [];
     }
