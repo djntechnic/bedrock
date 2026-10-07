@@ -25,6 +25,8 @@ import {
   CommandItem,
 } from "./ui/command";
 import { getCommandRoutes, type CommandRouteItem } from "../lib/commandRoutes";
+import { getNavItems, type NavItem } from "./navRegistry";
+import { useEditSessionStore } from "../store/editSessionStore";
 import { fuzzyFilter } from "../lib/fuzzyMatch";
 import { useModules } from "../hooks/useModules";
 import { useSecurity } from "../hooks/useSecurity";
@@ -119,6 +121,69 @@ function groupRoutes(items: CommandRouteItem[]): Map<CommandRouteItem["group"], 
   return map;
 }
 
+/**
+ * Flattens the registered nav tree into palette destinations, so the palette
+ * and the sidebar share one source of truth for where the app can go.
+ */
+export function flattenNavItems(items: NavItem[]): CommandRouteItem[] {
+  const routes: CommandRouteItem[] = [];
+  for (const item of items) {
+    const hasNested = (item.children?.length ?? 0) > 0 || (item.groups?.length ?? 0) > 0;
+    if (!hasNested) {
+      routes.push({
+        id: item.to,
+        label: item.label,
+        group: "Navigation",
+        to: item.to,
+        icon: item.icon,
+        module: item.module,
+        action: item.action,
+        keywords: [item.label],
+      });
+    }
+    for (const child of item.children ?? []) {
+      routes.push({
+        id: child.to,
+        label: child.label,
+        group: item.label,
+        to: child.to,
+        icon: item.icon,
+        module: child.module ?? item.module,
+        action: child.action ?? item.action,
+        keywords: [child.label],
+      });
+    }
+    for (const group of item.groups ?? []) {
+      for (const sub of group.items) {
+        routes.push({
+          id: sub.to,
+          label: sub.label,
+          group: `${item.label}: ${group.label}`,
+          to: sub.to,
+          icon: item.icon,
+          module: sub.module ?? group.module ?? item.module,
+          action: sub.action ?? group.action ?? item.action,
+          keywords: [sub.label],
+        });
+      }
+    }
+  }
+  return routes;
+}
+
+/** Nav-derived routes first; explicit command routes fill in what nav lacks. */
+function mergeRoutes(navRoutes: CommandRouteItem[], explicit: CommandRouteItem[]): CommandRouteItem[] {
+  const seen = new Set(navRoutes.map((r) => r.to));
+  const merged = [...navRoutes];
+  for (const r of explicit) {
+    if (!seen.has(r.to)) {
+      merged.push(r);
+      seen.add(r.to);
+    }
+  }
+  return merged;
+}
+
 export interface CommandPaletteProps {
   /**
    * Prompt text, matching whatever the app's `GlobalSearchBar` shows. Same
@@ -175,14 +240,18 @@ export default function CommandPalette({
     if (!open) setQuery("");
   }, [open]);
 
+  // Snapshotted like the sources: registration is import-time.
+  const [configuredRoutes] = useState(() =>
+    mergeRoutes(flattenNavItems(getNavItems()), getCommandRoutes())
+  );
   const visibleRoutes = useMemo(
     () =>
-      getCommandRoutes().filter((r) => {
+      configuredRoutes.filter((r) => {
         if (r.module && !hasModule(r.module)) return false;
         if (r.module && r.action && !can(r.module, r.action)) return false;
         return true;
       }),
-    [hasModule, can]
+    [configuredRoutes, hasModule, can]
   );
   const visibleById = useMemo(
     () => new Map(visibleRoutes.map((r) => [r.id, r] as const)),
@@ -227,8 +296,8 @@ export default function CommandPalette({
   function runRoute(item: CommandRouteItem) {
     addRecent(item.id);
     logger.info("CommandPalette: navigated", { to: item.to, source: "route", id: item.id });
-    navigate(item.to);
     setOpen(false);
+    useEditSessionStore.getState().requestLeave(() => navigate(item.to));
   }
 
   const runSourceResult = useCallback(
@@ -238,8 +307,8 @@ export default function CommandPalette({
         source: source.id,
         id: String(result.id),
       });
-      navigate(result.to);
       setOpen(false);
+      useEditSessionStore.getState().requestLeave(() => navigate(result.to));
     },
     [navigate, setOpen]
   );
@@ -249,8 +318,8 @@ export default function CommandPalette({
     if (!q || !allTarget) return;
     const to = allTarget.to(q);
     logger.info("CommandPalette: navigated", { to, source: "see-all", query: q });
-    navigate(to);
     setOpen(false);
+    useEditSessionStore.getState().requestLeave(() => navigate(to));
   }
 
   return (
