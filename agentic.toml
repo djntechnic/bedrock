@@ -59,6 +59,7 @@ hooks = [
 
 scripts = [
   "Invoke-PlanRunner.ps1",
+  "task-contract.md",
   "Convert-PlanToIntake.ps1",
   "PROMPT_BUILD_INTAKE.md",
 ]
