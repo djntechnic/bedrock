@@ -18,7 +18,7 @@ rules = [
 
 skills = [
   "anti-ui-slop",
-  "audit-issue-backlog",
+  "issue-review",
   "audit-ui-runtime",
   "brainstorming",
   "bump-bedrock-pin",
@@ -37,11 +37,12 @@ skills = [
   "systematic-debugging",
   "tanstack-intent",
   "test-driven-development",
-  "triage-plan",
+  "deliver-plan",
   "using-superpowers",
   "verification-before-completion",
   "writing-plans",
   "writing-skills",
+  "claude-review",
 ]
 
 
@@ -51,6 +52,7 @@ agents = [
   "quality-gatekeeper",
   "ui-sentinel",
   "ui-stitch-builder",
+  "plan-orchestrator",
 ]
 
 hooks = [
@@ -59,6 +61,7 @@ hooks = [
 
 scripts = [
   "Invoke-PlanRunner.ps1",
+  "Invoke-PlanSupervisor.ps1",
   "task-contract.md",
   "Convert-PlanToIntake.ps1",
   "PROMPT_BUILD_INTAKE.md",
