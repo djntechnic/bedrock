@@ -14,46 +14,45 @@ rules = [
   "s010-granular-security-model",
   "s011-config-driven-navigation",
   "s012-dual-pin-platform-governance",
+  "s013-api-standards",
+  "s014-issue-logging-and-ecosystem-governance",
+  "s015-release-automation-and-changelog-contract"
 ]
 
 skills = [
-  "anti-ui-slop",
-  "issue-review",
-  "audit-ui-runtime",
+  "align-and-clean-repos",
   "brainstorming",
   "bump-bedrock-pin",
+  "claude-review",
   "cut-release",
+  "deliver-plan",
   "deliver-task",
+  "doc-create",
+  "doc-update",
   "finalize-pr",
   "grid-guru",
-  "impeccable",
+  "implement-issue"
+  "issue-review",
   "issue-triage",
   "react-best-practices",
   "receiving-code-review",
   "requesting-code-review",
+  "review-plans",
   "run-tests",
   "sql-sentinel",
   "stitch-bedrock-sync",
   "systematic-debugging",
   "tanstack-intent",
   "test-driven-development",
-  "deliver-plan",
-  "using-superpowers",
   "verification-before-completion",
   "writing-plans",
-  "writing-skills",
-  "claude-review",
-  "doc-create",
-  "doc-update",
+  "writing-skills"
 ]
-
 
 agents = [
   "backend-api-engineer",
   "frontend-ui-engineer",
   "quality-gatekeeper",
-  "ui-sentinel",
-  "ui-stitch-builder",
   "plan-orchestrator",
 ]
 
