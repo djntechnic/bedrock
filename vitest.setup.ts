@@ -35,3 +35,35 @@ if (!Element.prototype.releasePointerCapture) {
 if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {};
 }
+
+// ── Node 22+ Web Storage (localStorage / sessionStorage) shadowing fix ──────
+//
+// In Node 22+, Node defines experimental `localStorage` and `sessionStorage` getters
+// on `globalThis`. Vitest's `populateGlobal` checks `if (k in global) return keysArray.includes(k)`.
+// Because `"localStorage"` and `"sessionStorage"` are in `global` but omitted from
+// Vitest's hardcoded `keysArray`, Vitest skips copying `dom.window.*Storage` to `global`.
+// Node's getters remain on `globalThis` and return undefined without `--localstorage-file`.
+// Restoring jsdom's storage instances onto `globalThis` and `window` ensures bare
+// references in components and tests resolve to jsdom's Storage implementation.
+const jsdomWin = (globalThis as any).jsdom?.window;
+if (jsdomWin) {
+  for (const storageKey of ["localStorage", "sessionStorage"] as const) {
+    const storage = jsdomWin[storageKey];
+    if (storage) {
+      Object.defineProperty(globalThis, storageKey, {
+        value: storage,
+        writable: true,
+        configurable: true,
+        enumerable: true,
+      });
+      if (typeof window !== "undefined") {
+        Object.defineProperty(window, storageKey, {
+          value: storage,
+          writable: true,
+          configurable: true,
+          enumerable: true,
+        });
+      }
+    }
+  }
+}
