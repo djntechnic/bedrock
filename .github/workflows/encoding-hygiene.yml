@@ -24,6 +24,4 @@ jobs:
           python-version: "3.11"
 
       - name: Run byte-level encoding hygiene scanner
-        run: |
-          curl -sSL https://raw.githubusercontent.com/djntechnic/bedrock-ai-kit/master/scripts/maintenance/managed/check_encoding_hygiene.py -o check_encoding_hygiene.py
-          python check_encoding_hygiene.py
+        run: python scripts/check_encoding_hygiene.py
