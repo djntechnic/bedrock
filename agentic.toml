@@ -66,4 +66,7 @@ scripts = [
   "task-contract.md",
   "Convert-PlanToIntake.ps1",
   "PROMPT_BUILD_INTAKE.md",
+  "clean_branches.py",
+  "clean_branches.bat",
+  "check_encoding_hygiene.py",
 ]

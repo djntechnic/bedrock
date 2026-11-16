@@ -80,7 +80,6 @@ Desktop.ini
 # ==============================================================================
 # Agent state caches & sandboxes
 .playwright-mcp/
-.superpowers/
 .claude/state/
 .claude/worktrees/
 .claude/settings.local.json
@@ -94,7 +93,7 @@ Desktop.ini
 .claude/agents/
 .claude/rules/
 .claude/hooks/
-scripts/maintenance/platform/
+scripts/maintenance/managed/
 
 # ==============================================================================
 # 7. DOCUMENTATION ARTIFACTS, DESIGNS & EPHEMERAL SCRATCH
@@ -107,14 +106,12 @@ scripts/maintenance/platform/
 docs/project/*/reference/
 
 # Ephemeral developer scratch and punchlists
+.issues/
 scratch/
 docs/project/punchlists/
 docs/reference/punchlists/
 
 # Deprecated/pre-eviction directory guards (prevent accidental re-commit via git add -A)
-docs/punchlists/
-docs/artifacts/
-docs/screenshots/
 docs/working files/
 
 # Large binaries / screenshots outside designated design roots
@@ -125,5 +122,5 @@ debug_tab*.png
 /Cloud
 
 # Prompt queue runner: synced support scripts and runner scratch
-scripts/maintenance/platform/
+scripts/maintenance/managed/
 scratch/runner/
