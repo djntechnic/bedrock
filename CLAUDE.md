@@ -155,6 +155,8 @@ banned as fixes.
 **Answer with the decision, not the journey.** Test results as counts, one line
 each. No passing output, no recaps, no preamble.
 
+Managed maintenance scripts in `scripts/maintenance/managed/` are read-only hardlinks deployed from `agentic-kit`. Never edit them here; edit canonically in `agentic-kit`.
+
 Breaking changes to a consumer-visible surface — an export, prop, hook
 signature, extension-point contract, or route shape — are called out explicitly
 in the CHANGELOG. Internal refactors behind a stable export are not breaking.

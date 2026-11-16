@@ -17,12 +17,13 @@ Exit codes:
   0 - Clean. All tracked files passed validation.
   1 - Violations detected or fatal scan error.
 """
+
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -35,6 +36,9 @@ BINARY_EXTENSIONS = {
     ".webp",
     ".woff",
     ".woff2",
+    ".ttf",
+    ".otf",
+    ".eot",
     ".zip",
     ".gz",
     ".tar",
@@ -71,13 +75,11 @@ def scan_file(path: Path) -> list[str]:
 
     violations: list[str] = []
 
-    if data.startswith(b"\xef\xbb\xbf"):
-        if suffix not in APPROVED_BOM_EXTENSIONS:
-            violations.append("contains UTF-8 BOM")
+    if data.startswith(b"\xef\xbb\xbf") and suffix not in APPROVED_BOM_EXTENSIONS:
+        violations.append("contains UTF-8 BOM")
 
-    if b"\r\n" in data:
-        if suffix not in APPROVED_CRLF_EXTENSIONS:
-            violations.append("contains CRLF line endings")
+    if b"\r\n" in data and suffix not in APPROVED_CRLF_EXTENSIONS:
+        violations.append("contains CRLF line endings")
 
     return violations
 
@@ -100,7 +102,7 @@ def main(argv: list[str] | None = None) -> int:
         "--root",
         type=Path,
         default=REPO_ROOT,
-        help="Repository root directory. Defaults to repo root.",
+        help="Repository root directory. Defaults to bedrock-ai-kit root.",
     )
 
     args = parser.parse_args(argv if argv is not None else [])
