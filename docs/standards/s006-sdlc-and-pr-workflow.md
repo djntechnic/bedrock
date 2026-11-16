@@ -32,6 +32,7 @@ Standard S006 governs the code modification lifecycle from initial branch cut to
 7. **Non-Blocking CI Gating:** Continuous Integration checks must be monitored via the background task `gh pr checks <pr> --watch` (yielding the turn to the messaging system). Status-polling loops, `sleep` commands, or manual busy-waiting are strictly banned. All configured CI checks must pass (exit code 0) before draft status is removed or merge is authorized.
 8. **Zero Broken Tests on Master:** A failing test can never be excused or shipped to the default branch (§S005).
 9. **Post-Merge Clean Tree Verification:** Following merge and local trunk synchronization (`git pull origin <default_branch>`), the local checkout must be verified clean: `git status --porcelain` must be 100% empty before yielding completion.
+10. **Zero-BOM & Universal LF Line-Ending Hygiene (§S006.7):** All tracked repository text files must use UTF-8 encoding strictly without Byte Order Mark (`0xEF 0xBB 0xBF`) and Unix line endings (`LF`, `0x0A`), except for explicit Windows command files (`*.bat`, `*.cmd`) which retain CRLF. Every repository must maintain a canonical root `.editorconfig` and automated CI byte-level verification gate (`encoding-hygiene.yml`) executing `scripts/check_encoding_hygiene.py`.
 
 ## Architecture & Code Contracts
 
@@ -80,6 +81,14 @@ def audit_bugfix_has_test(diff_files: list[str], commit_message: str) -> bool:
     touches_test = any("test_" in f or f.endswith("_test.py") or ".test." in f for f in diff_files)
     return not is_fix or touches_test
 ```
+
+### §S006.7: Zero-BOM & Universal LF Line-Ending Hygiene
+
+To eliminate phantom diffs and cross-editor drift between Windows and Linux/container environments, all text-based files tracked in Git must strictly conform to:
+1. **UTF-8 Without BOM:** Files must not start with the 3-byte Byte Order Mark (`0xEF 0xBB 0xBF`).
+2. **Universal Unix LF Line Terminators:** All text lines must end with `\n` (`0x0A`), not `\r\n` (`0x0D 0x0A`). Explicit Windows command scripts (`*.bat`, `*.cmd`) and Visual Studio solution files (`*.sln` where required by MSBuild) are the sole approved exceptions.
+3. **Repository Templates:** Every repository must maintain a canonical `.editorconfig` enforcing `charset = utf-8` and `end_of_line = lf`, `.gitattributes` normalizing line endings via `* text=auto eol=lf`, and IDE settings (`.vscode/settings.json`) enforcing UTF-8 and LF.
+4. **Automated CI Byte-Level Gating:** Every PR and push to `master` must be gated by a fast byte-level hygiene scanner (`scripts/check_encoding_hygiene.py` invoked via `.github/workflows/encoding-hygiene.yml`) that verifies raw bytes of all tracked files.
 
 ## Exceptions & Audit Exemptions
 
